@@ -206,6 +206,21 @@ const ICONS = {
   logout: stroke(<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />, {
     width: 1.8,
   }),
+
+  home: stroke(<path d="M3 11.5 12 4l9 7.5M5 10v10h5v-6h4v6h5V10" />),
+  'trophy-line': stroke(
+    <>
+      <path d="M7 4h10v5a5 5 0 0 1-10 0V4Z" />
+      <path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3M9 19h6M10 15.5V19M14 15.5V19M8 22h8" />
+    </>,
+  ),
+  'users-f': filled(
+    <>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 20a5.5 5.5 0 0 1 11 0H3.5ZM19.2 5.5a3.2 3.2 0 1 1 0 6M17 20a5.5 5.5 0 0 0-3-4.9" />
+    </>,
+  ),
+  'book-f': filled(<path d="M6.5 2A2.5 2.5 0 0 0 4 4.5v15A2.5 2.5 0 0 0 6.5 22H20V2H6.5Z" />),
 } satisfies Record<string, IconRenderer>;
 
 export type IconName = keyof typeof ICONS;
