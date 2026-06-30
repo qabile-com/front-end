@@ -1,0 +1,16 @@
+# Normalize line endings to LF in the repository for everyone, regardless of OS.
+# This prevents "the whole file changed" diffs when Windows (CRLF) and
+# macOS/Linux (LF) developers touch the same files. Git stores LF; checks out LF.
+* text=auto eol=lf
+
+# Binary files must never be touched by line-ending normalization.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary

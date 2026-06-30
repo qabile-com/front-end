@@ -1,0 +1,10 @@
+# Build output & generated files (never format these)
+.next/
+out/
+build/
+coverage/
+node_modules/
+next-env.d.ts
+pnpm-lock.yaml
+
+# Keep the architecture plan formatted by hand
