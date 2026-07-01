@@ -153,8 +153,8 @@ export function HeroSection() {
 function PhoenixVisual() {
   return (
     <div className="relative aspect-square w-full">
-      <PhoenixArt className="size-full" />
-      <OptionalImage src="/assets/phoenix.png" alt="ققنوس" className="object-contain" />
+      {/* <PhoenixArt className="size-full" /> */}
+      <OptionalImage src="/assets/hero-phoenix.webp" alt="ققنوس" className="object-contain" />
     </div>
   );
 }
