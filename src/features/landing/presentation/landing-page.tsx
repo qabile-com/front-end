@@ -1,7 +1,7 @@
 import { BackgroundField } from '@/shared/ui';
 import { SiteNav } from './sections/site-nav';
 import { HeroSection } from './sections/hero-section';
-// import { StatsSection } from './sections/stats-section';
+import { StatsSection } from './sections/stats-section';
 import { PillarsSection } from './sections/pillars-section';
 import { RoadmapSection } from './sections/roadmap-section';
 import { LeaderboardSection } from './sections/leaderboard-section';
@@ -18,9 +18,9 @@ export function LandingPage() {
       <SiteNav />
       <main className="relative">
         <HeroSection />
-        {/* <div className="py-14 md:py-20">
+        <div className="py-14 md:py-20">
           <StatsSection />
-        </div> */}
+        </div>
         <Section id="pillars">
           <PillarsSection />
         </Section>

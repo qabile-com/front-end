@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Button, Container, Icon } from '@/shared/ui';
+import { Button, Container, Icon, OptionalImage } from '@/shared/ui';
 
 const TRUST_AVATARS = [
   'linear-gradient(135deg,#ff8a3d,#cc4308)',
@@ -126,7 +126,7 @@ export function HeroSection() {
               className="phoenix-glow pointer-events-none absolute inset-[-15%] z-0 rounded-full [background:radial-gradient(ellipse_70%_60%_at_50%_42%,rgba(255,98,0,.22),rgba(204,67,8,.08)_45%,transparent_70%)]"
             />
             <div ref={imgRef} className="phoenix-img relative z-[1] w-full max-w-[520px]">
-              {/* <PhoenixVisual /> */}
+              <PhoenixVisual />
             </div>
 
             {CHIPS.map((chip) => (
@@ -150,10 +150,10 @@ export function HeroSection() {
   );
 }
 
-// function PhoenixVisual() {
-//   return (
-//     <div className="relative aspect-square w-full">
-//       <OptionalImage src="/assets/hero-phoenix.webp" alt="ققنوس" className="object-contain" />
-//     </div>
-//   );
-// }
+function PhoenixVisual() {
+  return (
+    <div className="relative aspect-square w-full">
+      <OptionalImage src="/assets/hero-phoenix.webp" alt="ققنوس" className="object-contain" />
+    </div>
+  );
+}
