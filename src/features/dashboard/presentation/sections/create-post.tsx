@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Icon } from '@/shared/ui';
+// import { Icon } from '@/shared/ui';
 import type { Post } from '@/features/dashboard/domain/social.data';
 
 interface Props {
