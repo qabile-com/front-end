@@ -12,6 +12,7 @@ import {
 } from '@/features/dashboard/domain/social.data';
 import { Panel } from '../components/panel';
 import { AdamAvatar } from './dashboard-sidebar';
+import { CreatePost } from './create-post';
 
 type Feed = 'for-you' | 'following';
 
@@ -19,14 +20,16 @@ export function SocialTab() {
   const [feed, setFeed] = useState<Feed>('for-you');
   const [query, setQuery] = useState('');
 
+  const [userPosts, setUserPosts] = useState<Post[]>([]);
+
   const visible = useMemo(() => {
-    let list = POSTS;
+    let list = [...userPosts, ...POSTS];
     if (feed === 'following')
       list = list.filter((p) => p.authorId === 'adam' || p.authorId === 'arash');
     const q = query.trim();
     if (q) list = list.filter((p) => p.text.includes(q) || p.author.includes(q));
     return list;
-  }, [feed, query]);
+  }, [feed, query, userPosts]);
 
   return (
     <div className="grid gap-7 min-[1100px]:grid-cols-[1fr_300px]">
@@ -110,6 +113,13 @@ export function SocialTab() {
           </div>
         </Panel>
       </div>
+      <>
+        {visible.map((post) => (
+          <PostCard key={post.id} post={post} />
+        ))}
+
+        <CreatePost onPublish={(post) => setUserPosts((prev) => [post, ...prev])} />
+      </>
     </div>
   );
 }
@@ -148,6 +158,7 @@ function PostCard({ post }: { post: Post }) {
               {post.time}
             </small>
           </div>
+          {post.location && <div className="mt-3 text-sm text-orange-300">📍 {post.location}</div>}
         </div>
 
         <p className="mt-3.5 text-[14.5px] leading-[1.8] whitespace-pre-line">{post.text}</p>

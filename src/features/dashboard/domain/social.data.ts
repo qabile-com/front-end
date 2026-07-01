@@ -26,6 +26,9 @@ export interface Post {
   hasImage?: boolean;
   likes: number;
   comments: PostComment[];
+  location?: string;
+  emoji?: string;
+  image?: string;
 }
 
 export interface ActiveUser {
