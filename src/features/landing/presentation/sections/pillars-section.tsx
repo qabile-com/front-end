@@ -69,7 +69,7 @@ export function PillarsSection() {
           </BentoCell>
         </Reveal>
 
-        <Reveal as="div" delay={2} className="md:col-span-2">
+        <Reveal as="div" delay={2} className="md:col-span-3">
           <BentoCell icon="bolt" title="گیمیفیکیشن">
             امتیاز، نشان، سطح و زنجیره؛ هر تلاش پاداش می‌گیرد و یادگیری به یک بازی اعتیادآور تبدیل
             می‌شود.
@@ -81,7 +81,7 @@ export function PillarsSection() {
             کن.
           </BentoCell>
         </Reveal>
-        <Reveal as="div" delay={4} className="md:col-span-2">
+        <Reveal as="div" delay={4} className="md:col-span-4">
           <BentoCell icon="users" title="انجمن و رشد جمعی">
             تنها رشد نکن. در چالش‌های گروهی شرکت کن، تجربه به اشتراک بگذار و در دلِ یک قبیله‌ی واقعی
             پیش برو.
