@@ -64,7 +64,7 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section className="relative flex min-h-screen items-center pt-[160px] pb-[90px]">
+    <section className="relative flex min-h-dvh items-center pt-[160px] pb-[90px]">
       <Container>
         <div className="grid items-center gap-11 lg:grid-cols-[1.1fr_.9fr]">
           <div>
