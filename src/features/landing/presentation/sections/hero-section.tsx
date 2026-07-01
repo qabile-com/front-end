@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Button, Container, Icon, OptionalImage } from '@/shared/ui';
+import { Button, Container, Icon } from '@/shared/ui';
 
 const TRUST_AVATARS = [
   'linear-gradient(135deg,#ff8a3d,#cc4308)',
