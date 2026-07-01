@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Button, Container, Icon, OptionalImage, PhoenixArt } from '@/shared/ui';
+import { Button, Container, Icon, OptionalImage } from '@/shared/ui';
 
 const TRUST_AVATARS = [
   'linear-gradient(135deg,#ff8a3d,#cc4308)',
@@ -153,7 +153,7 @@ export function HeroSection() {
 function PhoenixVisual() {
   return (
     <div className="relative aspect-square w-full">
-      {/* <PhoenixArt className="size-full" /> */}
+      {/* className="size-full" /> */}
       <OptionalImage src="/assets/hero-phoenix.webp" alt="ققنوس" className="object-contain" />
     </div>
   );
