@@ -266,7 +266,7 @@
   .phoenix-img {
     filter: drop-shadow(0 0 32px rgba(255, 98, 0, 0.65))
       drop-shadow(0 8px 60px rgba(200, 60, 0, 0.35));
-    /* animation: pfloat 7s ease-in-out infinite; */
+    animation: pfloat 7s ease-in-out infinite;
     transform-origin: 50% 55%;
   }
 
