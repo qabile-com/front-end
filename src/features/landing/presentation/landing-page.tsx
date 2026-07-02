@@ -16,7 +16,7 @@ export function LandingPage() {
     <>
       <BackgroundField />
       <SiteNav />
-      <main className="relative">
+      <main className="relative overflow-x-hidden">
         <HeroSection />
         <div className="py-14 md:py-20">
           <StatsSection />

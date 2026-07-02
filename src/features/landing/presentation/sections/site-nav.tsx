@@ -18,10 +18,15 @@ export function SiteNav() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout>;
+    let ticking = false;
     const onScroll = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => setScrolled(window.scrollY > 24), 50);
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 24);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
