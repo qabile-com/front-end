@@ -13,7 +13,7 @@ export function StatsSection() {
             <span className="text-ember grid size-9 place-items-center rounded-sm [background:var(--glass-2)]">
               <Icon name={stat.icon as IconName} size={18} />
             </span>
-            <span className="text-[clamp(28px,3.2vw,40px)] leading-none font-black">
+            <span className="min-w-[5ch] text-[clamp(28px,3.2vw,40px)] leading-none font-black tabular-nums">
               <CountUp to={stat.count} decimals={stat.decimals} suffix={stat.suffix} />
             </span>
             <span className="text-ink-3 text-[13px]">{stat.label}</span>

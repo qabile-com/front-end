@@ -18,7 +18,7 @@ export function TestimonialsSection() {
         />
       </Container>
 
-      <div className="marquee-mask flex gap-4">
+      <div className="marquee-mask flex gap-4 overflow-hidden">
         <div className="marquee-track flex gap-4">
           {loop.map((t, i) => (
             <GlassCard key={i} className="w-[300px] shrink-0 rounded-lg p-[22px]">
