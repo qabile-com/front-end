@@ -59,7 +59,9 @@
   html {
     scroll-behavior: auto;
   }
-
+  header {
+    will-change: backdrop-filter;
+  }
   body {
     background: var(--color-bg);
     color: var(--color-ink);
@@ -291,6 +293,7 @@
   }
 
   [data-reveal] {
+    will-change: transform, opacity;
     opacity: 1;
     transform: none;
   }
