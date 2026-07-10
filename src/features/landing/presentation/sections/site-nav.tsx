@@ -59,12 +59,12 @@ export function SiteNav() {
 
         <div className="flex items-center gap-2.5">
           <Link href="/auth" className="hidden sm:block">
-            <Button variant="ghost" className="px-[22px] py-[11px]">
+            <Button variant="ghost" className="rounded-md px-[22px] py-[11px]">
               ورود
             </Button>
           </Link>
           <Link href="/auth">
-            <Button variant="primary" className="px-6 py-[11px]">
+            <Button variant="primary" className="rounded-md px-6 py-[11px]">
               شروع رایگان
             </Button>
           </Link>
