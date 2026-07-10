@@ -35,12 +35,16 @@ export function SocialTab() {
     <div className="grid gap-7 min-[1100px]:grid-cols-[1fr_300px]">
       <div className="flex flex-col gap-4">
         <div className="relative">
-          <Icon name="target" size={18} className="text-ink-3 absolute inset-y-0 end-3.5 my-auto" />
+          <Icon
+            name="target"
+            size={18}
+            className="text-ink-3 absolute inset-y-0 start-3.5 my-auto"
+          />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="جستجوی پست، کاربر یا #هشتگ"
-            className="text-ink border-hair placeholder:text-ink-3 focus:border-hair-2 h-12 w-full rounded-xl border ps-4 pe-11 text-[14px] outline-none [background:var(--glass-2)]"
+            className="text-ink border-hair placeholder:text-ink-3 focus:border-hair-2 h-12 w-full rounded-xl border ps-4 pe-11 pr-10 text-[14px] outline-none [background:var(--glass-2)]"
           />
         </div>
 
@@ -90,7 +94,7 @@ export function SocialTab() {
         </Panel>
 
         <Panel title={undefined}>
-          <h4 className="mb-3 text-[14px] font-extrabold">اعضای فعال</h4>
+          <h4 className="mb-3 text-[14px] font-extrabold text-[#FDEEE299]">اعضای فعال</h4>
           <div className="flex flex-col gap-3">
             {ACTIVE_USERS.map((u) => (
               <div key={u.name} className="flex items-center gap-2.5">
@@ -104,8 +108,8 @@ export function SocialTab() {
                   <small className="text-ink-3 text-[11px]">{u.role}</small>
                 </span>
                 {u.canFollow && (
-                  <button className="rounded-full px-2.5 py-1 text-[11px] font-extrabold text-[#1a0a00] [background:var(--fire-grad)]">
-                    دنبال
+                  <button className="text-gold rounded-full border-1 border-[gradient(--gold-grad)] px-2.5 py-1 text-[11px] font-extrabold text-[#1a0a00]">
+                    هم پرواز شدن
                   </button>
                 )}
               </div>
@@ -144,18 +148,17 @@ function PostCard({ post }: { post: Post }) {
             <span className="size-11 shrink-0 rounded-full" style={{ background: post.avatar }} />
           )}
           <div className="min-w-0 flex-1 leading-tight">
-            <div className="flex items-center gap-1.5">
+            <div className="mb-1 flex items-center gap-1.5">
               <b className="truncate text-sm font-extrabold">{post.author}</b>
-              {post.verified && <Icon name="check" size={13} className="text-ember shrink-0" />}
-              {post.badge && (
-                <span className="rounded-[6px] px-1.5 py-px text-[10px] font-extrabold text-[#1a0a00] [background:var(--fire-grad)]">
-                  {post.badge}
+              {/* {post.verified && <Icon name="check" size={13} className="text-ember shrink-0" />} */}
+              {post.isAdam && (
+                <span className="text-gold rounded-xs border border-[rgba(255,98,0,.18)] px-2 py-1 text-[10px] font-extrabold shadow-[0_4px_16px_-8px_rgba(255,98,0,.25)] [background:linear-gradient(135deg,rgba(255,98,0,.16),rgba(243,186,99,.08))]">
+                  موسس
                 </span>
               )}
             </div>
-            <small className="text-ink-3 text-[12px]">
-              {post.isAdam ? 'پیام از بنیان‌گذار · ' : ''}
-              {post.time}
+            <small className={`${post.isAdam ? 'text-gold' : 'text-ink-3'} text-[12px]`}>
+              {post.isAdam ? 'ققنوس' : post.badge}
             </small>
           </div>
           {post.location && <div className="mt-3 text-sm text-orange-300">📍 {post.location}</div>}
@@ -183,28 +186,35 @@ function PostCard({ post }: { post: Post }) {
           </div>
         )}
 
-        <div className="text-ink-3 mt-4 flex items-center gap-5 text-[13px]">
-          <button
-            type="button"
-            onClick={() => setLiked((l) => !l)}
-            className={cn('flex items-center gap-1.5 transition-colors', liked && 'text-[#ff5a5a]')}
-          >
-            <Icon name="heart" size={18} className={liked ? 'fill-current' : ''} />
-            {toPersianDigits(likes)}
-          </button>
-          <button
-            type="button"
-            className="hover:text-ink flex items-center gap-1.5 transition-colors"
-          >
-            <Icon name="msg" size={18} />
-            {toPersianDigits(post.comments.length)}
-          </button>
-          <button
-            type="button"
-            className="hover:text-ink flex items-center gap-1.5 transition-colors"
-          >
-            <Icon name="share" size={18} />
-          </button>
+        <div className="text-ink-3 mt-4 flex items-center justify-between gap-5 text-[13px]">
+          <div className="flex gap-10">
+            <button
+              type="button"
+              onClick={() => setLiked((l) => !l)}
+              className={cn(
+                'flex items-center gap-1.5 transition-colors',
+                liked && 'text-[#ff5a5a]',
+              )}
+            >
+              <Icon name="heart" size={18} className={liked ? 'fill-current' : ''} />
+              {toPersianDigits(likes)}
+            </button>
+            <button
+              type="button"
+              className="hover:text-ink flex items-center gap-1.5 transition-colors"
+            >
+              <Icon name="msg" size={18} />
+              {toPersianDigits(post.comments.length)}
+            </button>
+            <button
+              type="button"
+              className="hover:text-ink flex items-center gap-1.5 transition-colors"
+            >
+              <Icon name="share" size={18} />
+              اشتراک‌گذاری
+            </button>
+          </div>
+          {post.time}
         </div>
       </div>
     </article>
