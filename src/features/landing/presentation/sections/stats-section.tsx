@@ -1,11 +1,15 @@
 import { Container, CountUp, Icon, Reveal, type IconName } from '@/shared/ui';
-import { STATS } from '@/features/landing/domain/landing.data';
+import type { StatItem } from '../../domain/landing.types';
 
-export function StatsSection() {
+interface StatsSectionProps {
+  stats: StatItem[];
+}
+
+export function StatsSection({ stats }: StatsSectionProps) {
   return (
     <Container>
       <Reveal className="border-hair grid grid-cols-2 gap-px overflow-hidden rounded-lg border md:grid-cols-4">
-        {STATS.map((stat) => (
+        {stats.map((stat) => (
           <div
             key={stat.label}
             className="flex flex-col items-center gap-2 px-5 py-8 text-center [background:linear-gradient(180deg,var(--color-panel),var(--color-bg-2))]"
