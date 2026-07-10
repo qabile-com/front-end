@@ -1,8 +1,12 @@
 import { Container, GlassCard, SectionHead } from '@/shared/ui';
-import { TESTIMONIALS } from '@/features/landing/domain/landing.data';
+import type { Testimonial } from '../../domain/landing.types';
 
-export function TestimonialsSection() {
-  const loop = [...TESTIMONIALS, ...TESTIMONIALS];
+interface TestimonialsSectionProps {
+  testimonials: Testimonial[];
+}
+
+export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) {
+  const loop = [...testimonials, ...testimonials];
   return (
     <>
       <Container>
@@ -22,7 +26,7 @@ export function TestimonialsSection() {
         <div className="marquee-track flex gap-4">
           {loop.map((t, i) => (
             <GlassCard key={i} className="w-[300px] shrink-0 rounded-lg p-[22px]">
-              <div className="text-hair-2 text-[44px] leading-none font-black">”</div>
+              {/* <div className="text-hair-2 text-[44px] leading-none font-black">”</div> */}
               <div className="text-gold text-[13.5px] tracking-[2px]">★★★★★</div>
               <p className="text-ink mt-2 text-[14.5px] leading-[1.85]">{t.quote}</p>
               <div className="border-hair mt-4 flex items-center gap-3 border-t pt-4">
