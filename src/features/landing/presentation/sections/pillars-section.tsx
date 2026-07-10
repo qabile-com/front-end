@@ -1,7 +1,11 @@
 import { Container, GlassCard, Icon, Reveal, SectionHead, type IconName } from '@/shared/ui';
-import { PILLAR_FEATURES } from '@/features/landing/domain/landing.data';
+import type { PillarFeatureRow } from '../../domain/landing.types';
 
-export function PillarsSection() {
+interface PillarsSectionProps {
+  pillarFeatures: PillarFeatureRow[];
+}
+
+export function PillarsSection({ pillarFeatures }: PillarsSectionProps) {
   return (
     <Container>
       <SectionHead
@@ -21,13 +25,13 @@ export function PillarsSection() {
             مسیرهای مرحله‌به‌مرحله که تو را از مبانی تا تسلط می‌برند؛ از رشد فردی و توسعه‌ی مهارت تا
             سواد مالی و ترید — هر گام، یک قدم نزدیک‌تر به هدف.
             <ul className="mt-5 flex flex-col gap-2.5">
-              {PILLAR_FEATURES.map((f) => (
+              {pillarFeatures.map((f) => (
                 <li
                   key={f.step}
-                  className={`border-hair flex items-center gap-3 rounded-xl border px-3.5 py-3 [background:var(--glass)] ${f.locked ? 'opacity-45' : ''}`}
+                  className={`border-hair flex items-center gap-3 rounded-md border px-3.5 py-3 [background:var(--glass)] ${f.locked ? 'opacity-45' : ''}`}
                 >
                   <span
-                    className={`grid size-7 shrink-0 place-items-center rounded-lg text-xs font-extrabold ${f.locked ? 'text-ink-3 [background:var(--glass-2)]' : 'text-[#1a0a00] [background:var(--fire-grad)]'}`}
+                    className={`grid size-7 shrink-0 place-items-center rounded-sm text-xs font-extrabold ${f.locked ? 'text-ink-3 [background:var(--glass-2)]' : 'text-[#1a0a00] [background:var(--fire-grad)]'}`}
                   >
                     {f.step}
                   </span>
@@ -47,10 +51,10 @@ export function PillarsSection() {
             یک همراه هوشمند که ۲۴ ساعته کنارت است؛ سؤال‌هایت را پاسخ می‌دهد، مسیرت را شخصی‌سازی
             می‌کند و در لحظه‌های سخت، انگیزه‌ات را زنده نگه می‌دارد.
             <div className="mt-5 flex flex-col gap-2.5">
-              <div className="max-w-[82%] self-end rounded-[15px] rounded-es-[4px] px-3.5 py-3 text-sm font-semibold text-[#1a0a00] [background:var(--fire-grad)]">
+              <div className="max-w-[82%] self-end rounded-[15px] rounded-ee-[4px] px-3.5 py-3 text-sm font-semibold text-[#1a0a00] [background:var(--fire-grad)]">
                 چطور انضباطم را در یادگیری حفظ کنم؟
               </div>
-              <div className="border-hair max-w-[82%] self-start rounded-[15px] rounded-ee-[4px] border px-3.5 py-3 text-sm [background:var(--glass-2)]">
+              <div className="border-hair max-w-[82%] self-start rounded-[15px] rounded-es-[4px] border px-3.5 py-3 text-sm [background:var(--glass-2)]">
                 <span className="mb-1.5 flex items-center gap-2">
                   <span className="text-gold grid size-5 place-items-center rounded-[6px] text-[#1a0a00] [background:var(--fire-grad)]">
                     <Icon name="flame" size={12} />
@@ -60,7 +64,7 @@ export function PillarsSection() {
                 بیا با یک زنجیره‌ی ۷ روزه شروع کنیم؛ هر روز فقط ۲۰ دقیقه. من یادآوری‌ها و امتیازهایت
                 را مدیریت می‌کنم. 🔥
               </div>
-              <div className="border-hair inline-flex gap-1 self-start rounded-[15px] rounded-ee-[4px] border px-4 py-3 [background:var(--glass-2)]">
+              <div className="border-hair inline-flex gap-1 self-start rounded-[15px] rounded-es-[4px] border px-4 py-3 [background:var(--glass-2)]">
                 <i className="typing-dot bg-gold size-1.5 rounded-full" />
                 <i className="typing-dot bg-gold size-1.5 rounded-full [animation-delay:.2s]" />
                 <i className="typing-dot bg-gold size-1.5 rounded-full [animation-delay:.4s]" />
