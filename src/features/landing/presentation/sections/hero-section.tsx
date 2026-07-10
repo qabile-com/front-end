@@ -13,9 +13,9 @@ const TRUST_AVATARS = [
 ];
 
 const CHIPS = [
-  { cls: 'top-[10%] start-0', icon: 'bolt', value: '۲٬۴۸۰', label: 'امتیاز امروز' },
-  { cls: 'bottom-[16%] start-[-4%]', icon: 'flame', value: '۳۱ روز', label: 'زنجیره‌ی پیوسته' },
-  { cls: 'bottom-[8%] end-[4%]', icon: 'medal', value: 'سطح ۲۴', label: 'ققنوس طلایی' },
+  { cls: 'top-[10%] start-[35%]', icon: 'bolt', value: '۲٬۴۸۰', label: 'امتیاز امروز' },
+  { cls: 'bottom-[12%] start-[5%]', icon: 'flame', value: '۳۱ روز', label: 'زنجیره‌ی پیوسته' },
+  { cls: 'bottom-[-6%] end-[4%]', icon: 'medal', value: 'سطح ۲۴', label: 'ققنوس طلایی' },
 ] as const;
 
 export function HeroSection() {
@@ -76,14 +76,14 @@ export function HeroSection() {
             </span>
 
             <h1 className="text-[clamp(34px,6vw,58px)] leading-[1.08] font-black tracking-[-0.02em]">
-              از خاکستر،
-              <br />
+              از خاکستر،&nbsp;
               <span className="text-gradient-fire">برخیز.</span>
             </h1>
 
             <p className="text-ink-2 mt-5 max-w-[520px] text-[clamp(15px,1.5vw,18px)] leading-[1.9]">
-              قبیله ققنوس یک اکوسیستم یادگیریِ گیمیفای‌شده است؛ با نقشه‌راه‌های ساختاریافته، منتور
-              هوش مصنوعی، رقابتِ سالم و دستاوردهای واقعی — هر روز نسخه‌ای قوی‌تر از خودت بساز.
+              در قبیله ققنوس، یادگیری به یک مسیر جذاب و هدفمند تبدیل می‌شود. با همراهی منتور هوش
+              مصنوعی، مسیرهای ساختاریافته و چالش‌های متنوع، هر روز قدمی به سمت بهترین نسخه خودت
+              بردار.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3.5">
@@ -95,8 +95,8 @@ export function HeroSection() {
               </Link>
               <Link href="/dashboard" className="max-sm:flex-1">
                 <Button variant="ghost" size="lg" block>
-                  تماشای دمو
                   <Icon name="play" />
+                  تماشای دمو
                 </Button>
               </Link>
             </div>
