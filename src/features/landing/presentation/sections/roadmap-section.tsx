@@ -1,11 +1,16 @@
 import { Container, GlassCard, Icon, Reveal, SectionHead, type IconName } from '@/shared/ui';
-import { ROADMAP_STEPS } from '@/features/landing/domain/landing.data';
+import type { RoadmapStep } from '../../domain/landing.types';
 
-export function RoadmapSection() {
+interface RoadmapSectionProps {
+  roadmapSteps: RoadmapStep[];
+}
+
+export function RoadmapSection({ roadmapSteps }: RoadmapSectionProps) {
   return (
     <Container>
       <SectionHead
         eyebrow="سفر تحول"
+        center
         title={
           <>
             از جرقه تا <span className="text-gradient-fire">شعله</span>
@@ -17,7 +22,7 @@ export function RoadmapSection() {
       <Reveal as="div">
         <GlassCard className="rounded-lg p-7">
           <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-4">
-            {ROADMAP_STEPS.map((step) => (
+            {roadmapSteps.map((step) => (
               <div key={step.title}>
                 <span className="border-hair text-gold mb-4 grid size-[46px] place-items-center rounded-[13px] border [background:var(--glass-2)]">
                   <Icon name={step.icon as IconName} size={24} />
