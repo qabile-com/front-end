@@ -7,6 +7,7 @@ export function AppSection() {
         <div className="pointer-events-none absolute start-1/4 -top-20 size-[280px] rounded-full opacity-50 [background:radial-gradient(circle,var(--glow),transparent_70%)]" />
         <div className="relative">
           <span className="border-hair text-gold mb-5 inline-flex items-center gap-[7px] rounded-full border py-1.5 ps-3 pe-3.5 text-xs font-bold [background:var(--glass)]">
+            <span className="bg-ember inline-block size-1.5 rounded-full shadow-[0_0_8px_var(--color-ember)]" />
             اپلیکیشن موبایل
           </span>
           <h2 className="text-[clamp(26px,3.6vw,44px)] leading-[1.18] font-black">
@@ -42,7 +43,7 @@ export function AppSection() {
               <a
                 key={store.big}
                 href="#"
-                className="flex items-center gap-2.5 rounded-xl bg-[#fdf6ef] px-5 py-2.5 text-[#160805] transition-transform hover:-translate-y-0.5"
+                className="flex items-center gap-2.5 rounded-sm bg-[#fdf6ef] px-5 py-3 text-[#160805] transition-transform hover:-translate-y-0.5"
               >
                 <Icon name={store.icon as 'apple'} size={24} />
                 <span className="leading-tight">
@@ -66,7 +67,7 @@ export function AppSection() {
 function PhoneFront() {
   return (
     <div className="border-hair-2 relative z-10 [aspect-ratio:234/482] w-[234px] rounded-[38px] border p-2.5 shadow-[0_36px_80px_-28px_rgba(0,0,0,.88)] [background:linear-gradient(160deg,#1e1008,#0a0503)]">
-      <span className="absolute start-1/2 top-3 z-10 h-5 w-20 -translate-x-1/2 rounded-full bg-black" />
+      <span className="absolute start-1/2 top-3 z-10 h-5 w-20 translate-x-1/2 rounded-full bg-black" />
       <div className="size-full overflow-hidden rounded-[30px] p-4 pt-9 [background:var(--color-bg-2)]">
         <p className="text-sm font-bold">سلام، آرش 🔥</p>
         <div className="mt-3 h-1.5 overflow-hidden rounded-full [background:var(--glass-2)]">
