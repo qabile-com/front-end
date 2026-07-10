@@ -1,9 +1,15 @@
-import { Container, GlassCard, Icon, Reveal, SectionHead } from '@/shared/ui';
+import { Container, GlassCard, Icon, OptionalImage, Reveal, SectionHead } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
 import { cn } from '@/core/lib/cn';
-import { LEADERBOARD, PODIUM } from '@/features/landing/domain/landing.data';
+import type { PodiumPlace, LeaderboardRow } from '../../domain/landing.types';
+import Image from 'next/image';
 
-export function LeaderboardSection() {
+interface LeaderboardSectionProps {
+  podium: PodiumPlace[];
+  leaderboard: LeaderboardRow[];
+}
+
+export function LeaderboardSection({ podium, leaderboard }: LeaderboardSectionProps) {
   return (
     <Container>
       <SectionHead
@@ -18,7 +24,7 @@ export function LeaderboardSection() {
 
       <div className="grid gap-10 lg:grid-cols-[1fr_1.15fr]">
         <Reveal as="div" className="grid grid-cols-3 items-end gap-3">
-          {PODIUM.map((place) => {
+          {podium.map((place) => {
             const first = place.rank === 1;
             return (
               <GlassCard
@@ -26,17 +32,19 @@ export function LeaderboardSection() {
                 className={cn(
                   'relative rounded-lg px-3.5 pt-6 pb-5 text-center',
                   first &&
-                    '-translate-y-3 border-[rgba(243,186,99,.44)] shadow-[0_24px_60px_-24px_rgba(243,186,99,.35)]',
+                    'border-[rgba(243,186,99,.44)] shadow-[0_24px_60px_-24px_rgba(243,186,99,.35)]',
                 )}
               >
                 {first && (
                   <Icon
                     name="crown"
                     size={24}
-                    className="text-gold absolute start-1/2 -top-3 -translate-x-1/2"
+                    className="text-gold absolute start-1/2 -top-0 translate-x-1/2"
                   />
                 )}
-                <span className="border-hair text-gold absolute start-3 top-3 grid size-7 place-items-center rounded-lg border text-xs font-extrabold [background:var(--glass-2)]">
+                <span
+                  className={`absolute start-3 top-3 grid size-7 place-items-center rounded-sm border text-xs font-extrabold ${place.rank === 1 ? 'text-[#1a0a00] [background:var(--fire-grad)]' : 'border-hair text-gold [background:var(--glass-2)]'}`}
+                >
                   {toPersianDigits(place.rank)}
                 </span>
                 <span
@@ -49,9 +57,18 @@ export function LeaderboardSection() {
                   style={{ background: place.avatar }}
                 />
                 <p className="mt-3 text-[15px] font-extrabold">{place.name}</p>
-                <p className="text-gold text-xl font-black">
-                  {toPersianDigits(place.score.toLocaleString('en-US').replace(/,/g, '٬'))}
-                </p>
+                <div className="flex items-center justify-center gap-1">
+                  <p className="text-gold text-xl font-black">
+                    {toPersianDigits(place.score.toLocaleString('en-US').replace(/,/g, '٬'))}
+                  </p>
+                  <Image
+                    src="/assets/phoenix_badge.webp"
+                    alt="phoenix badge"
+                    width={16}
+                    height={16}
+                    className="size-5 shrink-0 rounded-full object-cover"
+                  />
+                </div>
                 <p className="text-ink-3 text-[11.5px]">{place.tag}</p>
               </GlassCard>
             );
@@ -70,13 +87,13 @@ export function LeaderboardSection() {
           </div>
 
           <div className="flex flex-col gap-2.5">
-            {LEADERBOARD.map((row) => (
+            {leaderboard.map((row) => (
               <div
                 key={row.rank}
                 className={cn(
                   'flex items-center gap-3 rounded-[14px] border px-4 py-3 transition-[transform,border-color,background,box-shadow] duration-300',
                   row.isYou
-                    ? 'border-transparent text-[#1a0a00] shadow-[0_8px_24px_-10px_var(--glow)] [background:var(--fire-grad)]'
+                    ? 'border-none text-[#1a0a00] shadow-[0_8px_24px_-10px_var(--glow)] [background:var(--fire-grad)]'
                     : 'border-hair hover:border-hair-2 [background:var(--glass)] hover:[background:var(--glass-2)]',
                 )}
               >
@@ -113,19 +130,14 @@ export function LeaderboardSection() {
                 <span className="font-black tabular-nums">
                   {toPersianDigits(row.points.replace(/,/g, '٬'))}
                 </span>
-                <span
-                  className={cn(
-                    'text-xs font-bold',
-                    row.isYou
-                      ? 'text-[#1a0a00]'
-                      : row.direction === 'up'
-                        ? 'text-[#6dde6d]'
-                        : 'text-[#ff6b6b]',
-                  )}
-                >
-                  {row.direction === 'up' ? '▲' : '▼'}
-                  {toPersianDigits(row.delta)}
-                </span>
+
+                <Image
+                  src="/assets/phoenix_badge.webp"
+                  alt="phoenix badge"
+                  width={16}
+                  height={16}
+                  className="size-5 shrink-0 rounded-full object-cover"
+                />
               </div>
             ))}
           </div>
