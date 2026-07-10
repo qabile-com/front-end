@@ -56,7 +56,7 @@ export function SiteFooter() {
         </div>
 
         <div className="border-hair text-ink-3 mt-12 flex flex-col items-center justify-between gap-3 border-t pt-6 text-[13px] sm:flex-row">
-          <span>© ۱۴۰۴ قبیله ققنوس — تمامی حقوق محفوظ است.</span>
+          <span>© ۱۴۰۵ قبیله ققنوس — تمامی حقوق محفوظ است.</span>
           <div className="flex gap-5">
             <a href="#" className="hover:text-ink transition-colors">
               شرایط استفاده
