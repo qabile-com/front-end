@@ -3,9 +3,13 @@
 import { useState } from 'react';
 import { Container, GlassCard, Icon, SectionHead } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
-import { FAQS } from '@/features/landing/domain/landing.data';
+import type { FaqItem } from '../../domain/landing.types';
 
-export function FaqSection() {
+interface FaqSectionProps {
+  faqs: FaqItem[];
+}
+
+export function FaqSection({ faqs }: FaqSectionProps) {
   const [open, setOpen] = useState(0);
 
   return (
@@ -21,7 +25,7 @@ export function FaqSection() {
       />
 
       <div className="mx-auto flex max-w-[800px] flex-col gap-3">
-        {FAQS.map((item, i) => {
+        {faqs.map((item, i) => {
           const isOpen = open === i;
           return (
             <GlassCard
@@ -29,7 +33,7 @@ export function FaqSection() {
               className={cn(
                 'overflow-hidden rounded',
                 isOpen &&
-                  'border-s-ember border-s-2 border-[rgba(255,98,0,.28)] shadow-[0_8px_32px_-16px_var(--glow)] [background:var(--glass-2)]',
+                  'border-s-2 border-[rgba(255,98,0,.28)] border-s-[#ff6220] shadow-[0_8px_32px_-16px_var(--glow)] [background:var(--glass-2)]',
               )}
             >
               <button
@@ -41,9 +45,9 @@ export function FaqSection() {
                 {item.q}
                 <span
                   className={cn(
-                    'ms-auto grid size-7 shrink-0 place-items-center rounded-lg transition-[transform,background] duration-300',
+                    'ms-auto grid size-7 shrink-0 place-items-center rounded-xs transition-[transform,background] duration-300',
                     isOpen
-                      ? 'rotate-45 text-[#1a0a00] [background:var(--fire-grad)]'
+                      ? 'rotate-45 border-[0.8px_1.6px_0.8px_0.8px] border-solid text-[#1a0a00] [background:var(--fire-grad)] [border-image-slice:1]'
                       : 'text-gold [background:var(--glass-2)]',
                   )}
                 >
