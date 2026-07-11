@@ -1,12 +1,22 @@
 import type {
-  FaqItem,
-  LeaderboardRow,
-  PillarFeatureRow,
-  PodiumPlace,
-  RoadmapStep,
   StatItem,
+  PillarFeatureRow,
+  RoadmapStep,
+  PodiumPlace,
+  LeaderboardRow,
   Testimonial,
+  FaqItem,
 } from './landing.types';
+
+export interface LandingData {
+  stats: StatItem[];
+  pillarFeatures: PillarFeatureRow[];
+  roadmapSteps: RoadmapStep[];
+  podium: PodiumPlace[];
+  leaderboard: LeaderboardRow[];
+  testimonials: Testimonial[];
+  faqs: FaqItem[];
+}
 
 export const STATS: StatItem[] = [
   { icon: 'users', count: 52, suffix: ' هزار+', label: 'عضو فعال قبیله' },
@@ -26,7 +36,7 @@ export const ROADMAP_STEPS: RoadmapStep[] = [
   {
     icon: 'sparkle',
     title: '۱ · جرقه',
-    text: 'ارزیابی اولیه و انتخاب نقشه‌راهِ متناسب با هدف تو.',
+    text: 'ارزیابی اولیه و انتخاب نقشه راهِ متناسب با هدف تو.',
   },
   { icon: 'route', title: '۲ · مسیر', text: 'پیشروی روزانه با درس‌های کوتاه و تمرین‌های عملی.' },
   {
@@ -125,7 +135,7 @@ export const LEADERBOARD: LeaderboardRow[] = [
 export const TESTIMONIALS: Testimonial[] = [
   {
     quote:
-      'سه ماه پیش فقط یک ایده‌ی مبهم داشتم. نقشه‌راه‌های قبیله مسیرم را شفاف کرد و حالا هر روز با انگیزه بیدار می‌شوم.',
+      'سه ماه پیش فقط یک ایده‌ی مبهم داشتم. نقشه راه‌های قبیله مسیرم را شفاف کرد و حالا هر روز با انگیزه بیدار می‌شوم.',
     name: 'نگار حسینی',
     role: 'طراح محصول',
     avatar: 'linear-gradient(135deg,#ff8a3d,#cc4308)',
@@ -168,11 +178,11 @@ export const TESTIMONIALS: Testimonial[] = [
 export const FAQS: FaqItem[] = [
   {
     q: 'قبیله ققنوس دقیقاً چه چیزی است؟',
-    a: 'یک اکوسیستم یادگیریِ گیمیفای‌شده برای رشد فردی و توسعه‌ی مهارت. تو در نقشه‌راه‌های ساختاریافته پیش می‌روی، دستاورد می‌گیری، در لیدربورد رقابت می‌کنی، با انجمن تعامل داری و از منتور هوش مصنوعی راهنمایی می‌گیری. آموزش ترید فقط یکی از ده‌ها دسته‌ی این اکوسیستم است.',
+    a: 'یک اکوسیستم یادگیریِ گیمیفای‌شده برای رشد فردی و توسعه‌ی مهارت. تو در نقشه راه‌های ساختاریافته پیش می‌روی، دستاورد می‌گیری، در لیدربورد رقابت می‌کنی، با انجمن تعامل داری و از منتور هوش مصنوعی راهنمایی می‌گیری. آموزش ترید فقط یکی از ده‌ها دسته‌ی این اکوسیستم است.',
   },
   {
     q: 'آیا برای شروع باید هزینه‌ای بپردازم؟',
-    a: 'خیر. عضویت و شروعِ سفر کاملاً رایگان است. می‌توانی نقشه‌راه‌ها را آغاز کنی، امتیاز جمع کنی و در رقابت‌ها شرکت کنی. برای امکانات پیشرفته، پلن‌های اختیاری در دسترس است.',
+    a: 'خیر. عضویت و شروعِ سفر کاملاً رایگان است. می‌توانی نقشه راه‌ها را آغاز کنی، امتیاز جمع کنی و در رقابت‌ها شرکت کنی. برای امکانات پیشرفته، پلن‌های اختیاری در دسترس است.',
   },
   {
     q: 'منتور هوش مصنوعی چطور به من کمک می‌کند؟',
