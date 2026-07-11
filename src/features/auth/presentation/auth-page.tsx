@@ -25,7 +25,7 @@ export function AuthPage() {
             }}
           />
           <div className="relative z-[1] flex flex-1 flex-col">
-            <Link href="/" className="flex items-center gap-3 text-[19px] font-extrabold">
+            {/* <Link href="/" className="flex items-center gap-3 text-[19px] font-extrabold">
               <span className="grid size-[42px] place-items-center rounded-[13px] text-[#1a0a00] shadow-[0_0_20px_-2px_var(--glow),inset_0_1px_0_rgba(255,255,255,.42)] [background:var(--fire-grad)]">
                 <Icon name="flame" size={22} />
               </span>
@@ -35,20 +35,19 @@ export function AuthPage() {
                   PHOENIX TRIBE
                 </small>
               </span>
-            </Link>
+            </Link> */}
 
             <div className="my-auto py-8">
               <h2 className="text-[clamp(28px,2.8vw,38px)] leading-[1.15] font-black tracking-[-0.015em]">
-                از خاکستر،
-                <br />
-                <GradText>برخیز.</GradText>
+                ققنوس از آتش نمی‌ترسد؛ &nbsp;<GradText>از سکون می‌ترسد.</GradText>
               </h2>
-              <p className="text-ink-2 mt-3.5 max-w-[320px] text-[16px] leading-[1.85]">
-                به اکوسیستمی بپیوند که هر روز نسخه‌ی قوی‌تری از تو می‌سازد.
+              <p className="text-ink-2 mt-3.5 max-w-[500px] text-[16px] leading-[1.85]">
+                ققنوس از دل آتش متولد می‌شود؛ تو هم با هر قدم، به نسخه‌ای بهتر از خودت نزدیک‌تر
+                می‌شوی.
               </p>
             </div>
 
-            <div className="border-hair flex flex-wrap gap-5 border-t pt-8">
+            <div className="border-hair flex max-w-125 flex-wrap justify-between gap-5 border-t pt-8">
               {[
                 { b: '۵۲ هزار+', s: 'عضو فعال' },
                 { b: '۴٫۹ ★', s: 'رضایت کاربران' },
@@ -64,7 +63,7 @@ export function AuthPage() {
         </aside>
 
         <div className="relative flex min-h-screen flex-1 flex-col items-center justify-center px-5 py-10 max-lg:justify-start max-lg:px-5 max-lg:pt-7 max-lg:pb-10">
-          <Link
+          {/* <Link
             href="/"
             className="mb-7 flex items-center gap-2.5 text-[17px] font-extrabold lg:hidden"
           >
@@ -75,7 +74,7 @@ export function AuthPage() {
               قبیله ققنوس
               <small className="text-ink-3 block text-[10px] tracking-[0.1em]">PHOENIX TRIBE</small>
             </span>
-          </Link>
+          </Link> */}
 
           <AuthCard />
 

@@ -49,7 +49,7 @@ export function AuthCard() {
 function CardHeader({ title, sub }: { title: string; sub: React.ReactNode }) {
   return (
     <>
-      <div className="mx-auto mb-[18px] grid size-12 place-items-center rounded-[15px] text-[#1a0a00] shadow-[0_0_22px_-4px_var(--glow),inset_0_1px_0_rgba(255,255,255,.42)] [background:var(--fire-grad)]">
+      <div className="mx-auto mb-[18px] grid size-12 place-items-center rounded-[15px] text-[#fff] shadow-[0_0_22px_-4px_var(--glow),inset_0_1px_0_rgba(255,255,255,.42)] [background:var(--fire-grad)]">
         <Icon name="flame" size={26} />
       </div>
       <h1 className="text-center text-[22px] font-black tracking-[-0.01em]">{title}</h1>
@@ -164,8 +164,8 @@ function PasswordForm({
         ورود به قبیله
       </AuthButton>
       <Divider />
-      <AuthButton variant="alt">
-        <Icon name="mail" />
+      <AuthButton variant="alt" className="text-[#FDEEE299]">
+        <Icon name="mail" color="#FDEEE299" />
         ادامه با ایمیل
       </AuthButton>
       <BottomLink>
@@ -238,7 +238,7 @@ function OtpLoginForm({
             type="button"
             onClick={sendOtp}
             disabled={sending}
-            className="mb-4 shrink-0 self-stretch rounded-[11px] px-4 text-[13.5px] font-extrabold whitespace-nowrap text-[#1a0a00] shadow-[0_6px_20px_-8px_var(--glow)] transition-transform [background:var(--fire-grad)] enabled:hover:-translate-y-0.5 disabled:opacity-50"
+            className="mb-4 h-[53px] shrink-0 rounded-[11px] px-4 text-[13.5px] font-extrabold whitespace-nowrap text-[#1a0a00] shadow-[0_6px_20px_-8px_var(--glow)] transition-transform [background:var(--fire-grad)] enabled:hover:-translate-y-0.5 disabled:opacity-50"
           >
             {sending ? '...' : 'دریافت کد'}
           </button>

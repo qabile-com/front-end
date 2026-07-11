@@ -17,7 +17,7 @@ export function AuthTabs<T extends string>({ tabs, active, onChange }: AuthTabsP
   return (
     <div className="border-hair relative my-5 mb-6 grid grid-cols-2 rounded-[11px] border p-1 [background:var(--glass-2)]">
       <span
-        className="absolute inset-y-1 w-[calc(50%-4px)] rounded-lg shadow-[0_4px_16px_-6px_var(--glow),inset_0_1px_0_rgba(255,255,255,.36)] transition-transform duration-300 ease-[var(--ease-out-soft)] [background:var(--fire-grad)]"
+        className="absolute inset-y-1 w-[calc(50%-4px)] rounded-sm shadow-[0_4px_16px_-6px_var(--glow),inset_0_1px_0_rgba(255,255,255,.36)] transition-transform duration-300 ease-[var(--ease-out-soft)] [background:var(--fire-grad)]"
         style={{
           insetInlineStart: '4px',
           transform: `translateX(${activeIndex === 0 ? '0' : 'calc(-100% - 0px)'})`,
