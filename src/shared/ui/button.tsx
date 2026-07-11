@@ -2,7 +2,7 @@ import type { ComponentProps } from 'react';
 import { cn } from '@/core/lib/cn';
 
 type ButtonVariant = 'primary' | 'ghost';
-type ButtonSize = 'md' | 'lg';
+type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends ComponentProps<'button'> {
   variant?: ButtonVariant;
@@ -22,6 +22,7 @@ const variants: Record<ButtonVariant, string> = {
 };
 
 const sizes: Record<ButtonSize, string> = {
+  sm: 'px-[20px] py-[10px] text-[13px]',
   md: 'px-[26px] py-[13px]',
   lg: 'px-8 py-[15px] text-[15px] rounded-[13px]',
 };
