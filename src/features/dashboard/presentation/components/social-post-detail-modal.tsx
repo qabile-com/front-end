@@ -2,7 +2,6 @@
 'use client';
 
 import { useState } from 'react';
-import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
 import { GlassCard, Button, Icon, Input } from '@/shared/ui';
 import type { Post } from '../../domain/social.data';

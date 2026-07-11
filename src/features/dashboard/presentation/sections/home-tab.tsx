@@ -13,7 +13,6 @@ import type {
   ChatMessage,
 } from '@/features/dashboard/domain/dashboard.types';
 import { Panel } from '../components/panel';
-import { RoadmapDetailView } from '../components/roadmap-detail-view';
 import { AdamAvatar, PhoenixIcon } from './dashboard-sidebar';
 import { MockRoadmapStepRepository } from '../../infrastructure/mock-roadmap-repository';
 import { useRoadmapStepDetail } from '../../application/use-roadmap-step-detail';

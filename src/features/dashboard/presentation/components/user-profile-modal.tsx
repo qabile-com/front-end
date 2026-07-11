@@ -2,7 +2,6 @@
 'use client';
 
 import { useState } from 'react';
-import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
 import { GlassCard, Button, Icon } from '@/shared/ui';
 import type { UserProfileData } from '../../domain/user-profile-repository';

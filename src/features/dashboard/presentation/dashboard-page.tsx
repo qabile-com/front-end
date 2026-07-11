@@ -20,7 +20,7 @@ import {
   MockUserDetailRepository,
   MockUserRepository,
 } from '../infrastructure/mock-dashboard-repository';
-import { useDashboardData } from '../application/use-dashboard-data';
+
 import { useUser } from '../application/use-user';
 import { useHomeData } from '../application/use-home-data';
 import { useLeaderboard } from '../application/use-leaderboard';

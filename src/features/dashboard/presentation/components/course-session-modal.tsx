@@ -2,7 +2,6 @@
 'use client';
 
 import { cn } from '@/core/lib/cn';
-import { toPersianDigits } from '@/core/lib/persian';
 import { GlassCard, Button, Icon } from '@/shared/ui';
 import type { CoursePart } from '../../domain/courses.data';
 

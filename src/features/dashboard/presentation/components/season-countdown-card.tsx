@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
-import { OptionalImage, PhoenixArt } from '@/shared/ui';
+import { OptionalImage } from '@/shared/ui';
 
 interface SeasonCountdownCardProps {
   targetDate: Date;

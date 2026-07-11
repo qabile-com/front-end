@@ -15,7 +15,7 @@ export function CreatePost({ onPublish }: Props) {
 
   function publish() {
     if (!text.trim()) return;
-    onPublish(text.trim(), location);
+    // onPublish(text.trim(), location);
     setText('');
     setLocation('');
   }

@@ -127,7 +127,7 @@ export function SocialTab({ posts, tags, activeUsers, onPublish }: SocialTabProp
         </Panel>
       </div>
       {/* Post composer */}
-      <CreatePost onPublish={onPublish} />
+      <CreatePost onPublish={() => {}} />
       {/* Post Detail Modal */}
       {selectedPost && (
         <SocialPostDetailModal
