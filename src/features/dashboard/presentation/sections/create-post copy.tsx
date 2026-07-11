@@ -1,11 +1,11 @@
+// src/features/dashboard/presentation/sections/create-post.tsx
 'use client';
 
 import { useRef, useState } from 'react';
-import type { Post } from '@/features/dashboard/domain/social.data';
 import { Icon } from '@/shared/ui';
 
 interface Props {
-  onPublish(post: Post): void;
+  onPublish: (text: string, location?: string, emoji?: string) => void;
 }
 
 export function CreatePost({ onPublish }: Props) {
@@ -21,16 +21,25 @@ export function CreatePost({ onPublish }: Props) {
   }
 
   return (
-    <article className="border-hair rounded-[20px] border bg-[var(--glass)] p-5">
+    <div className="bg-panel border-ember/50 font-vazirmatn flex flex-col rounded-[20px] border p-4">
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="جرقه‌ی بعدی را ثبت کن..."
-        rows={5}
-        className="w-full resize-none rounded-xl bg-[var(--glass-2)] p-4 outline-none"
+        rows={4}
+        className="bg-bg-2 text-ink placeholder:text-ink-3 focus:border-hair-2 w-full resize-none rounded-xl border border-transparent p-4 text-right text-[14px] leading-relaxed transition-colors outline-none"
       />
 
-      <div className="mt-4 flex flex-wrap items-center gap-2 place-self-end">
+      <div className="border-hair/50 mt-4 flex items-center justify-between border-t pt-3">
+        {/* Publish button */}
+        <button
+          onClick={publish}
+          className="bg-ember hover:bg-ember-deep rounded-lg px-5 py-2 text-[13px] font-bold text-white shadow-[0_4px_12px_-4px_rgba(255,98,0,0.3)] transition-colors"
+        >
+          انتشار
+        </button>
+
+        {/* Action icons + user badge */}
         <div className="text-ember flex items-center gap-2.5">
           {/* TODO: Add icon names to your Icon component: paperclip, emoji, location, gif */}
           <button
@@ -66,19 +75,14 @@ export function CreatePost({ onPublish }: Props) {
             <Icon name="location" size={20} />
           </button>
         </div>
-
-        <input hidden type="file" ref={fileRef} />
-
-        <button
-          type="button"
-          onClick={publish}
-          className="rounded-md px-5 py-2 font-bold text-[#1a0a00] [background:var(--fire-grad)]"
-        >
-          انتشار
-        </button>
       </div>
 
-      {location && <div className="mt-3 text-sm text-orange-300">📍 {location}</div>}
-    </article>
+      {location && (
+        <div className="text-ink-3 mt-3 flex items-center gap-1.5 text-sm">
+          <Icon name="location" size={16} className="text-ember" />
+          {location}
+        </div>
+      )}
+    </div>
   );
 }

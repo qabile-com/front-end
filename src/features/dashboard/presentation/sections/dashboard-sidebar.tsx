@@ -3,23 +3,24 @@
 import Link from 'next/link';
 import { Icon, OptionalImage, type IconName } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
-import { NAV, USER } from '@/features/dashboard/domain/dashboard.data';
-import type { DashboardTab } from '@/features/dashboard/domain/dashboard.types';
+import type { CurrentUser, NavItem, DashboardTab } from '../../domain/dashboard.types';
 import { toPersianDigits } from '@/core/lib/persian';
 
 interface SidebarProps {
   active: DashboardTab;
   onChange: (tab: DashboardTab) => void;
+  user: CurrentUser;
+  nav: NavItem[];
 }
 
-export function DashboardSidebar({ active, onChange }: SidebarProps) {
-  const xpPct = Math.round((USER.xp / USER.xpMax) * 100);
+export function DashboardSidebar({ active, onChange, user, nav }: SidebarProps) {
+  const xpPct = Math.round((user.xp / user.xpMax) * 100);
 
   return (
     <aside className="border-hair fixed inset-y-0 start-0 z-50 hidden w-65 shrink-0 flex-col border-e px-4.5 py-7 [backdrop-filter:blur(24px)] [background:rgba(8,5,2,.92)] lg:flex">
       <div className="mb-8 flex items-center gap-3">
         <span className="grid size-10 place-items-center overflow-hidden rounded-[13px] shadow-[0_0_18px_-4px_var(--glow)] [background:var(--fire-grad)]">
-          <PhoenixIcon />
+          <PhoenixIcon className="size-10" />
         </span>
         <span className="leading-tight">
           <b className="text-[17px] font-extrabold">قبیله ققنوس</b>
@@ -30,16 +31,16 @@ export function DashboardSidebar({ active, onChange }: SidebarProps) {
       <div className="border-hair mb-5 flex items-center gap-3 rounded-[20px] border px-3.5 py-3 [background:var(--glass-2)]">
         <span
           className="grid size-10 place-items-center rounded-full border-2 border-[rgba(255,130,50,.3)] text-base font-black text-[#1a0a00]"
-          style={{ background: USER.avatar }}
+          style={{ background: user.avatar }}
         >
-          {USER.initial}
+          {user.initial}
         </span>
         <span className="min-w-0 flex-1 leading-tight">
-          <b className="block truncate text-[13.5px] font-extrabold">{USER.name}</b>
-          <small className="text-gold text-[11px]">{USER.title}</small>
+          <b className="block truncate text-[13.5px] font-extrabold">{user.name}</b>
+          <small className="text-gold text-[11px]">{user.title}</small>
         </span>
         <span className="rounded-[7px] px-2 py-0.5 text-[11px] font-extrabold text-[#1a0a00] [background:var(--fire-grad)]">
-          L{toPersianDigits(USER.level)}
+          L{toPersianDigits(user.level)}
         </span>
       </div>
 
@@ -50,17 +51,20 @@ export function DashboardSidebar({ active, onChange }: SidebarProps) {
             تجربه (XP)
           </span>
           <span className="text-gold font-bold tabular-nums">
-            {toPersianDigits(USER.xp.toLocaleString('en-US').replace(/,/g, '٬'))} /{' '}
-            {toPersianDigits(USER.xpMax.toLocaleString('en-US').replace(/,/g, '٬'))}
+            {toPersianDigits(user.xp.toLocaleString('en-US').replace(/,/g, '٬'))} /{' '}
+            {toPersianDigits(user.xpMax.toLocaleString('en-US').replace(/,/g, '٬'))}
           </span>
         </div>
         <div className="h-1.5 overflow-hidden rounded-full [background:var(--glass-2)]">
-          <div className="h-full [background:var(--fire-grad)]" style={{ width: `${xpPct}%` }} />
+          <div
+            className="h-full rounded-full [background:var(--fire-grad)]"
+            style={{ width: `${xpPct}%` }}
+          />
         </div>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1">
-        {NAV.map((item) => {
+        {nav.map((item) => {
           const isActive = item.id === active;
           return (
             <button
@@ -104,10 +108,11 @@ export function DashboardSidebar({ active, onChange }: SidebarProps) {
       >
         <AdamAvatar className="size-11" />
         <span className="leading-tight">
-          <span className="mb-1 inline-flex items-center gap-1 rounded-[6px] px-1.5 py-px text-[10px] font-extrabold text-[#1a0a00] [background:var(--fire-grad)]">
-            منتور هوشمند <Icon name="sparkle" size={9} />
+          <span className="mb-1 inline-flex items-center gap-1 rounded-[6px] px-1.5 py-1 text-[10px] font-extrabold text-[#1a0a00] [background:var(--fire-grad)]">
+            <Icon name="sparkle" size={9} />
+            منتور هوشمند
           </span>
-          <b className="block text-[13.5px] font-extrabold">از آدم بپرس</b>
+          <b className="my-1 block text-[13.5px] font-extrabold">از آدم بپرس</b>
           <span className="text-ink-2 text-[12px]">همیشه آنلاین</span>
         </span>
       </Link>
@@ -118,8 +123,8 @@ export function DashboardSidebar({ active, onChange }: SidebarProps) {
 export function PhoenixIcon({ className }: { className?: string }) {
   return (
     <span className={cn('relative grid size-5.5 place-items-center text-[#1a0a00]', className)}>
-      <Icon name="flame" size={14} className="text-[#1a0a00]" />
-      <OptionalImage src="/assets/phoenix-icon.png" alt="" className="object-contain" />
+      {/* <Icon name="flame" size={28} className="text-[#1a0a00]" /> */}
+      <OptionalImage src="/assets/phoenix_badge.webp" alt="" className="object-contain" />
     </span>
   );
 }
