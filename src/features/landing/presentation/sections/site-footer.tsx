@@ -2,7 +2,7 @@ import { Container, Icon, type IconName } from '@/shared/ui';
 import { BrandMark } from '../components/brand-mark';
 
 const COLUMNS: { title: string; links: string[] }[] = [
-  { title: 'محصول', links: ['امکانات', 'نقشه‌راه‌ها', 'لیدربورد', 'اپلیکیشن'] },
+  { title: 'محصول', links: ['امکانات', 'نقشه راه‌ها', 'لیدربورد', 'اپلیکیشن'] },
   { title: 'منابع', links: ['وبلاگ', 'راهنمای شروع', 'سؤالات پرتکرار', 'انجمن'] },
   { title: 'قبیله', links: ['درباره ما', 'تماس با ما', 'قوانین', 'حریم خصوصی'] },
 ];

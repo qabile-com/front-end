@@ -111,7 +111,7 @@ function PhoneBack() {
         </div>
         <div className="mt-4 flex flex-col gap-2.5">
           <div className="rounded-xl px-3 py-2.5 text-[11px] [background:var(--glass-2)]">
-            <b className="block">نقشه‌راه رشد فردی</b>
+            <b className="block">نقشه راه رشد فردی</b>
             <small className="text-ink-3">۸ از ۱۲ درس</small>
           </div>
           <div className="rounded-xl px-3 py-2.5 text-[11px] [background:var(--glass-2)]">

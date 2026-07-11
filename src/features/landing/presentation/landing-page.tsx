@@ -1,3 +1,5 @@
+'use client';
+
 import { BackgroundField } from '@/shared/ui';
 import { SiteNav } from './sections/site-nav';
 import { HeroSection } from './sections/hero-section';

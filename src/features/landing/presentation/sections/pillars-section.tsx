@@ -21,7 +21,7 @@ export function PillarsSection({ pillarFeatures }: PillarsSectionProps) {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4 lg:grid-cols-6">
         <Reveal as="div" className="lg:col-span-3 lg:row-span-2">
-          <BentoCell icon="route" title="نقشه‌راه‌های یادگیری">
+          <BentoCell icon="route" title="نقشه راه‌های یادگیری">
             مسیرهای مرحله‌به‌مرحله که تو را از مبانی تا تسلط می‌برند؛ از رشد فردی و توسعه‌ی مهارت تا
             سواد مالی و ترید — هر گام، یک قدم نزدیک‌تر به هدف.
             <ul className="mt-5 flex flex-col gap-2.5">
