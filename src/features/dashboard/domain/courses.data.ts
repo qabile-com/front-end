@@ -5,6 +5,7 @@ export interface CoursePart {
   duration: string;
   status: PartStatus;
   progress?: number;
+  steps?: { id: string; text: string; isCompleted: boolean }[];
 }
 
 export interface Course {
@@ -44,7 +45,16 @@ export const COURSES: Course[] = [
     views: '۴،۸۲۰',
     xp: 400,
     parts: [
-      { title: 'روانشناسی ترس و طمع', duration: '۱۴:۲۰', status: 'done' },
+      {
+        title: 'روانشناسی ترس و طمع',
+        duration: '۱۴:۲۰',
+        status: 'done',
+        steps: [
+          { id: 's1', text: 'تعریف ترس و طمع در معاملات', isCompleted: true },
+          { id: 's2', text: 'شناسایی الگوهای رفتاری', isCompleted: true },
+          { id: 's3', text: 'تمرین تنفس و مدیریت هیجان', isCompleted: false },
+        ],
+      },
       { title: 'اثر لنگر ذهنی', duration: '۱۲:۴۵', status: 'partial', progress: 65 },
       { title: 'تله‌های تصمیم‌گیری', duration: '۱۱:۳۰', status: 'none' },
       { title: 'ساخت قوانین شخصی', duration: '۱۳:۲۵', status: 'none' },

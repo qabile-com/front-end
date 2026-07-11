@@ -21,18 +21,18 @@ export const USER: CurrentUser = {
 };
 
 export const NAV: NavItem[] = [
-  { id: 'home', label: 'خانه', icon: 'home-f' },
-  { id: 'lb', label: 'لیدربورد', icon: 'trophy' },
-  { id: 'social', label: 'انجمن', icon: 'users' },
-  { id: 'courses', label: 'کورس‌ها', icon: 'book' },
-  { id: 'profile', label: 'پروفایل', icon: 'user-f' },
+  { id: 'home', label: 'خانه', icon: 'home-m' },
+  { id: 'lb', label: 'پرچم داران', icon: 'leaderboard' },
+  { id: 'social', label: 'انجمن', icon: 'community' },
+  { id: 'courses', label: 'تالار دانش', icon: 'social' },
+  { id: 'profile', label: 'پروفایل', icon: 'profile' },
 ];
 
 export const TAB_TITLES: Record<string, string> = {
   home: 'خانه',
-  lb: 'لیدربورد',
+  lb: 'پرچم داران',
   social: 'انجمن',
-  courses: 'کورس‌ها',
+  courses: 'تالار دانش',
   profile: 'پروفایل',
 };
 
@@ -145,11 +145,11 @@ export const AI_QUICK = [
   { label: 'چطور انضباطم رو حفظ کنم؟', send: 'چطور انضباطم رو در یادگیری حفظ کنم؟' },
   { label: 'بهترین زمان مطالعه؟', send: 'بهترین زمان مطالعه چه وقته؟' },
   { label: 'تمرکز بیشتر', send: 'چطور تمرکزم رو بیشتر کنم؟' },
-  { label: 'مرحله بعدی من چیه؟', send: 'مرحله بعدی من توی نقشه‌راه چیه؟' },
+  { label: 'مرحله بعدی من چیه؟', send: 'مرحله بعدی من توی نقشه راه چیه؟' },
 ];
 
 export const AI_REPLIES = [
   'سوال خوبیه! بیا از یه قدم کوچیک شروع کنیم. هر روز فقط ۲۰ دقیقه برنامه داشته باش 🔥',
   'این دقیقاً همون چیزیه که اعضای موفق قبیله بهش رسیدن. راز اصلی ثبات روزانه‌ست!',
-  'عالیه که اینو پرسیدی! بر اساس پیشرفتت پیشنهادم اینه که نقشه‌راه رشد فردی رو ادامه بدی.',
+  'عالیه که اینو پرسیدی! بر اساس پیشرفتت پیشنهادم اینه که نقشه راه رشد فردی رو ادامه بدی.',
 ];
