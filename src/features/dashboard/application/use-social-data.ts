@@ -45,16 +45,35 @@ export function useSocialData(repo: ISocialRepository) {
   }, [repo]);
 
   const publishPost = useCallback(
-    async (text: string, location?: string, emoji?: string) => {
+    async (
+      text: string,
+      location?: string,
+      emoji?: string,
+      imageFile?: File | null,
+      gifUrl?: string,
+    ) => {
       try {
-        const newPost = await repo.createPost(text, location, emoji);
+        const newPost = await repo.createPost(text, location, emoji, imageFile, gifUrl);
         setPosts((prev) => [newPost, ...prev]);
       } catch (e) {
-        // handle error (optional)
+        // optionally handle error
+      }
+    },
+    [repo],
+  );
+  const addComment = useCallback(
+    async (postId: string, text: string) => {
+      try {
+        const newComment = await repo.addComment(postId, text);
+        setPosts((prev) =>
+          prev.map((p) => (p.id === postId ? { ...p, comments: [...p.comments, newComment] } : p)),
+        );
+      } catch (e) {
+        // optionally handle error
       }
     },
     [repo],
   );
 
-  return { posts, tags, activeUsers, loading, error, publishPost };
+  return { posts, tags, activeUsers, loading, error, publishPost, addComment };
 }
