@@ -45,7 +45,7 @@ export function CoursesTab({ courses }: CoursesTabProps) {
                   style={{ background: course.gradient }}
                 >
                   <Icon name="play" size={34} className="text-white/90" />
-                  <span className="absolute end-2.5 top-2.5 rounded-md bg-black/30 px-2 py-0.5 text-[11px] font-bold text-white">
+                  <span className="absolute inset-e-2.5 top-2.5 rounded-md bg-black/30 px-2 py-0.5 text-[11px] font-bold text-white">
                     {course.duration}
                   </span>
                 </div>
@@ -62,7 +62,7 @@ export function CoursesTab({ courses }: CoursesTabProps) {
                       {toPersianDigits(course.xp)}+
                     </span>
                   </div>
-                  <div className="mt-3 h-[3px] justify-items-end overflow-hidden rounded-full [background:var(--color-hair)]">
+                  <div className="mt-3 h-0.75 justify-items-end overflow-hidden rounded-full [background:var(--color-hair)]">
                     <div
                       className="h-full [background:linear-gradient(90deg,var(--color-ember),var(--color-gold))]"
                       style={{ width: `${pct}%` }}
@@ -74,7 +74,7 @@ export function CoursesTab({ courses }: CoursesTabProps) {
           })}
         </div>
 
-        <div className="border-hair sticky top-[88px] h-fit overflow-hidden rounded-[20px] border [background:var(--glass)] max-[1200px]:static">
+        <div className="border-hair sticky top-22 h-fit overflow-hidden rounded-[20px] border [background:var(--glass)] max-[1200px]:static">
           {selected ? (
             <CourseDetail course={selected} onPartClick={setSelectedPart} />
           ) : (
@@ -101,7 +101,7 @@ export function CoursesTab({ courses }: CoursesTabProps) {
 
 function DetailEmpty() {
   return (
-    <div className="text-ink-3 grid min-h-[300px] place-items-center p-8 text-center">
+    <div className="text-ink-3 grid min-h-75 place-items-center p-8 text-center">
       <div>
         <Icon name="book" size={40} className="mx-auto mb-3 opacity-50" />
         یک کورس رو انتخاب کن تا سرفصل بخش‌هاش رو ببینی
@@ -123,7 +123,7 @@ function CourseDetail({
       <div className="border-hair border-b p-5">
         <span className="text-[11px] font-bold text-[#FF6200]">{course.category}</span>
         <h3 className="mt-1 text-lg font-black">{course.title}</h3>
-        <div className="text-gold mt-2 flex items-center gap-3 rounded-[14px] border border-[#F3BA632E] px-3.5 py-3 text-[14.5px] font-extrabold font-semibold shadow-[0_4px_16px_-8px_#F3BA632E] transition-colors [background:linear-gradient(135deg,#F3BA6314,rgba(243,186,99,.08))]">
+        <div className="text-gold mt-2 flex items-center gap-3 rounded-[14px] border border-[#F3BA632E] px-3.5 py-3 text-[14.5px] font-extrabold shadow-[0_4px_16px_-8px_#F3BA632E] transition-colors [background:linear-gradient(135deg,#F3BA6314,rgba(243,186,99,.08))]">
           <PhoenixIcon className="size-10 rounded-full" />
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
@@ -169,7 +169,7 @@ function PartRow({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center justify-between gap-3 p-3 text-start transition-colors hover:cursor-pointer hover:bg-[var(--glass-3)]"
+      className="flex w-full items-center justify-between gap-3 p-3 text-start transition-colors hover:cursor-pointer hover:bg-(--glass-3)"
     >
       <div className="flex items-center gap-3">
         {part.status === 'done' ? (
