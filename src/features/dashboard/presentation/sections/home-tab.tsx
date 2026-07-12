@@ -17,6 +17,7 @@ import { AdamAvatar, PhoenixIcon } from './dashboard-sidebar';
 import { MockRoadmapStepRepository } from '../../infrastructure/mock-roadmap-repository';
 import { useRoadmapStepDetail } from '../../application/use-roadmap-step-detail';
 import { StepModal } from '../components/step-modal';
+import { StepModalContainer } from '../components/step-modal-container';
 
 const STAT_TONES: Record<string, string> = {
   fire: 'text-ember [background:rgba(255,98,0,.15)]',
@@ -26,7 +27,7 @@ const STAT_TONES: Record<string, string> = {
 };
 
 interface HomeTabProps {
-  user: CurrentUser; // new: needed for the roadmap modal
+  user: CurrentUser;
   stats: StatCard[];
   roadmap: RoadmapItem[];
   aiSeed: ChatMessage;
@@ -35,9 +36,24 @@ interface HomeTabProps {
 
 const roadmapStepRepo = new MockRoadmapStepRepository();
 
-export function HomeTab({ user, stats, roadmap, aiSeed, aiQuickReplies }: HomeTabProps) {
+export function HomeTab({
+  user,
+  stats,
+  roadmap: initialRoadmap,
+  aiSeed,
+  aiQuickReplies,
+}: HomeTabProps) {
+  const [roadmap, setRoadmap] = useState<RoadmapItem[]>(initialRoadmap);
   const [selectedStepId, setSelectedStepId] = useState<number | null>(null);
-  const { detail, loading: stepLoading } = useRoadmapStepDetail(roadmapStepRepo, selectedStepId);
+
+  const handleCompleteStep = (stepNum: number) => {
+    setRoadmap((prev) =>
+      prev.map((item) =>
+        item.num === stepNum ? { ...item, status: 'done' as RoadmapStatus } : item,
+      ),
+    );
+    setSelectedStepId(null);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -67,15 +83,13 @@ export function HomeTab({ user, stats, roadmap, aiSeed, aiQuickReplies }: HomeTa
         <RoadmapPanel roadmap={roadmap} user={user} onItemClick={(num) => setSelectedStepId(num)} />
         <AiPanel seedMessage={aiSeed} quickReplies={aiQuickReplies} />
       </div>
-      {selectedStepId !== null && detail && (
-        <StepModal
-          isOpen={!!detail}
+
+      {selectedStepId !== null && (
+        <StepModalContainer
+          stepId={selectedStepId}
           onClose={() => setSelectedStepId(null)}
-          onComplete={() => {
-            // TODO: update status in repo/local state
-            setSelectedStepId(null);
-          }}
-          detail={detail}
+          onComplete={() => handleCompleteStep(selectedStepId!)}
+          repository={roadmapStepRepo}
         />
       )}
     </div>
