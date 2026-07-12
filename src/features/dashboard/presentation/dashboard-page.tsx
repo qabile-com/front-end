@@ -57,6 +57,7 @@ export function DashboardPage() {
     loading: socialLoading,
     error: socialError,
     publishPost,
+    addComment,
   } = useSocialData(socialRepo);
   const { data: seasonData, loading: seasonLoading, error: seasonError } = useSeason(seasonRepo);
 
@@ -140,6 +141,7 @@ export function DashboardPage() {
               tags={tags}
               activeUsers={activeUsers}
               onPublish={publishPost}
+              onAddComment={addComment}
             />
           )}
           {tab === 'courses' && loadedTabs.has('courses') && (
@@ -267,17 +269,33 @@ function SocialTabWrapper({
   tags,
   activeUsers,
   onPublish,
+  onAddComment,
 }: {
   loading: boolean;
   error: string | null;
   posts: Post[];
   tags: string[];
   activeUsers: ActiveUser[];
-  onPublish: (text: string, location?: string, emoji?: string) => void;
+  onPublish: (
+    text: string,
+    location?: string,
+    emoji?: string,
+    imageFile?: File | null,
+    gifUrl?: string,
+  ) => void;
+  onAddComment: (postId: string, text: string) => void;
 }) {
   if (loading) return <TabLoader />;
   if (error) return <TabError error={error} />;
-  return <SocialTab posts={posts} tags={tags} activeUsers={activeUsers} onPublish={onPublish} />;
+  return (
+    <SocialTab
+      posts={posts}
+      tags={tags}
+      activeUsers={activeUsers}
+      onPublish={onPublish}
+      onAddComment={onAddComment}
+    />
+  );
 }
 
 function TabLoader() {
