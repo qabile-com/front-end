@@ -57,12 +57,12 @@ export function LeaderboardTab({
                     <Icon
                       name="star"
                       size={32}
-                      className="text-gold absolute start-1/2 -top-[18px] translate-x-1/2"
+                      className="text-gold absolute inset-s-1/2 -top-4.5 translate-x-1/2"
                     />
                   )}
                   <span
                     className={cn(
-                      'absolute start-3 top-3 grid size-[26px] place-items-center rounded-xs text-xs font-extrabold',
+                      'absolute inset-s-3 top-3 grid size-6.5 place-items-center rounded-xs text-xs font-extrabold',
                       first
                         ? 'text-[#1a0a00] [background:var(--fire-grad)]'
                         : 'border-hair text-ink-3 text-gold border [background:var(--glass-2)]',
@@ -71,7 +71,7 @@ export function LeaderboardTab({
                     {toPersianDigits(p.rank)}
                   </span>
                   <span
-                    className="border-hair-2 mx-auto block size-[70px] rounded-full border-2"
+                    className="border-hair-2 mx-auto block size-17.5 rounded-full border-2"
                     style={{ background: p.avatar }}
                   />
                   <p className="mt-3 text-[15px] font-extrabold">{p.name}</p>
@@ -113,7 +113,7 @@ export function LeaderboardTab({
                     <td className="px-2 py-3">
                       <div className="flex items-center gap-2.5">
                         <span
-                          className="size-[38px] shrink-0 rounded-full"
+                          className="size-9.5 shrink-0 rounded-full"
                           style={{ background: row.avatar }}
                         />
                         <b className="text-sm font-bold">{row.name}</b>
@@ -133,7 +133,7 @@ export function LeaderboardTab({
           </Panel>
         </div>
         {/* </div> */}
-        <div className="border-hair sticky top-[88px] h-fit overflow-hidden rounded-[20px] border [background:var(--glass)] max-[1200px]:static">
+        <div className="border-hair sticky top-22 h-fit overflow-hidden rounded-[20px] border [background:var(--glass)] max-[1200px]:static">
           <SeasonCountdownCard
             targetDate={seasonTargetDate}
             pointsNeeded={seasonPointsNeeded}
