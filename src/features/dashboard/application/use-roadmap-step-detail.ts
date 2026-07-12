@@ -5,20 +5,15 @@ import { useState, useEffect } from 'react';
 import type { IRoadmapStepRepository } from '../domain/roadmap-repository';
 import type { RoadmapStepDetail } from '../domain/roadmap.types';
 
-export function useRoadmapStepDetail(repo: IRoadmapStepRepository, stepId: number | null) {
+export function useRoadmapStepDetail(repo: IRoadmapStepRepository, stepId: number) {
   const [detail, setDetail] = useState<RoadmapStepDetail | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // starts true because remount resets state
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (stepId === null) {
-      setDetail(null);
-      setLoading(false);
-      return;
-    }
     let cancelled = false;
-    setLoading(true);
-    (async () => {
+
+    const fetchDetail = async () => {
       try {
         const data = await repo.getStepDetail(stepId);
         if (!cancelled) {
@@ -31,7 +26,10 @@ export function useRoadmapStepDetail(repo: IRoadmapStepRepository, stepId: numbe
           setLoading(false);
         }
       }
-    })();
+    };
+
+    fetchDetail();
+
     return () => {
       cancelled = true;
     };
