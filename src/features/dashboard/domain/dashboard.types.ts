@@ -8,6 +8,7 @@ export interface CurrentUser {
   xp: number;
   xpMax: number;
   avatar: string;
+  achievments?: Achievement[];
 }
 
 export interface NavItem {
