@@ -37,12 +37,12 @@ export function StepModal({ isOpen, onClose, onComplete, detail }: StepModalProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-      <GlassCard className="bg-panel border-hair text-ink flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-[24px] shadow-2xl">
+      <GlassCard className="bg-panel border-hair text-ink flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl shadow-2xl">
         {/* Header */}
         <div className="border-hair flex shrink-0 items-center justify-between border-b p-5">
           <button
             onClick={onClose}
-            className="text-ink-2 hover:text-ink group flex items-center gap-1.5 text-[14px] font-medium transition-colors"
+            className="text-gold hover:text-ink group flex items-center gap-1.5 text-[14px] font-medium transition-colors"
           >
             <Icon
               name="arrow-right"
@@ -56,15 +56,16 @@ export function StepModal({ isOpen, onClose, onComplete, detail }: StepModalProp
             <span className="text-gold text-[14px] font-bold">
               +{toPersianDigits(detail.xpReward)}
             </span>
-            <span className="text-ink-3 text-[12px]">امتیاز</span>
+            <span className="text-gold text-[12px]">امتیاز</span>
+            <span className="bg-gold inline-block size-1.5 rounded-full shadow-[0_0_8px_var(--color-gold)]" />
           </div>
         </div>
 
         {/* Body */}
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
           {/* Type Badge */}
-          <div className="flex justify-end">
-            <span className="bg-ember rounded-lg px-4 py-1.5 text-[12px] font-bold text-[#1a0a00] shadow-[0_4px_12px_-4px_rgba(255,98,0,0.3)]">
+          <div className="flex justify-start">
+            <span className="bg-ember/10 text-ember border-ember rounded-sm border px-4 py-1.5 text-[12px] font-bold shadow-[0_4px_12px_-4px_rgba(255,98,0,0.3)]">
               {typeLabel}
             </span>
           </div>
@@ -72,7 +73,7 @@ export function StepModal({ isOpen, onClose, onComplete, detail }: StepModalProp
           <p className="text-ink-2 text-right text-[15px] leading-[1.8]">{detail.introText}</p>
 
           {detail.type === 'lesson' ? (
-            <div className="bg-bg-2 border-hair text-ink-2 rounded-[20px] border p-6 text-right text-[14.5px] leading-[1.9] whitespace-pre-line">
+            <div className="border-hair text-ink-2 rounded-[20px] border bg-[rgba(255,98,0,0.1)] p-6 text-right text-[14.5px] leading-[1.9] whitespace-pre-line">
               {detail.contentText}
             </div>
           ) : (
@@ -94,7 +95,7 @@ export function StepModal({ isOpen, onClose, onComplete, detail }: StepModalProp
                   >
                     <div
                       className={cn(
-                        'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px] border-2 transition-all duration-200',
+                        'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border-2 transition-all duration-200',
                         isChecked
                           ? 'bg-ember border-ember text-[#1a0a00]'
                           : 'border-hair text-transparent',
@@ -118,20 +119,23 @@ export function StepModal({ isOpen, onClose, onComplete, detail }: StepModalProp
         </div>
 
         {/* Footer */}
-        <div className="border-hair bg-bg flex shrink-0 items-center justify-between rounded-b-[24px] border-t p-5">
+        <div className="border-hair bg-bg flex shrink-0 items-center justify-between rounded-b-3xl border-t p-5">
           <div className="text-ink-3 text-[13px]">
             با تکمیل این مرحله{' '}
-            <span className="text-gold font-extrabold">+{toPersianDigits(detail.xpReward)}</span>{' '}
-            امتیاز دریافت می‌کنی
+            <span className="text-gold font-extrabold">
+              +{toPersianDigits(detail.xpReward)} امتیاز
+            </span>{' '}
+            دریافت می‌کنی
           </div>
           <Button
             variant="primary"
-            size="lg"
+            size="sm"
             onClick={handleComplete}
             disabled={detail.type === 'exercise' && !isAllChecked}
+            className="text-white"
           >
-            <Icon name="check" size={20} />
             تکمیل شد
+            <Icon name="check" size={20} />
           </Button>
         </div>
       </GlassCard>
