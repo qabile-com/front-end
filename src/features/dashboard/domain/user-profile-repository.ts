@@ -1,6 +1,7 @@
 // src/features/dashboard/domain/user-profile-repository.ts
 
 import type { Post } from '../domain/social.data'; // need to adjust path
+import { Achievement } from './dashboard.types';
 
 export interface UserProfileData {
   id: string;
@@ -15,6 +16,7 @@ export interface UserProfileData {
     peersFollowing: number;
   };
   posts: Post[];
+  achievements?: Achievement[];
 }
 
 export interface IUserProfileRepository {

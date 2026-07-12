@@ -5,6 +5,7 @@ import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
 import { GlassCard, Button, Icon } from '@/shared/ui';
 import type { CurrentUser, RoadmapItem } from '../../domain/dashboard.types';
+import { useScrollLock } from '../../application/use-scroll-lock';
 
 interface Props {
   isOpen: boolean;
@@ -14,6 +15,8 @@ interface Props {
 }
 
 export function RoadmapDetailView({ isOpen, onClose, user, roadmap }: Props) {
+  useScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   return (

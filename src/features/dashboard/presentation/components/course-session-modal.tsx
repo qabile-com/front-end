@@ -28,7 +28,7 @@ export function CourseSessionModal({ isOpen, onClose, session, onMarkComplete }:
 
         {/* Video Player Placeholder */}
         <div className="relative flex aspect-video w-full items-center justify-center bg-black">
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent" />
           <button className="bg-ember hover:bg-ember-deep group z-10 flex h-16 w-16 items-center justify-center rounded-full shadow-lg transition-colors">
             <Icon
               name="play"
@@ -60,16 +60,16 @@ export function CourseSessionModal({ isOpen, onClose, session, onMarkComplete }:
 
           {/* Exercise Steps */}
           {session.steps && session.steps.length > 0 && (
-            <div className="space-y-3 rounded-xl bg-[var(--glass-2)] p-4">
+            <div className="space-y-3 rounded-xl bg-(--glass-2) p-4">
               <h3 className="text-ink-2 mb-2 font-bold">مراحل تمرین:</h3>
               {session.steps.map((step) => (
                 <label
                   key={step.id}
-                  className="group flex cursor-pointer items-start gap-3 rounded-lg bg-[var(--color-panel)] p-3 transition-colors hover:bg-[var(--glass)]"
+                  className="group bg-panel flex cursor-pointer items-start gap-3 rounded-lg p-3 transition-colors hover:bg-(--glass)"
                 >
                   <div
                     className={cn(
-                      'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border transition-colors',
+                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-colors',
                       step.isCompleted
                         ? 'bg-ember border-ember text-white'
                         : 'border-hair group-hover:border-ink-4 text-transparent',
@@ -84,7 +84,7 @@ export function CourseSessionModal({ isOpen, onClose, session, onMarkComplete }:
           )}
 
           {/* Comments Section */}
-          <div className="rounded-xl bg-[var(--glass-2)] p-4">
+          <div className="rounded-xl bg-(--glass-2) p-4">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-ink-2 text-sm font-bold">نظرات کاربران (۳)</h3>
             </div>
