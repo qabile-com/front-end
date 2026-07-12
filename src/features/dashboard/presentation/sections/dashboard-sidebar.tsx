@@ -17,7 +17,7 @@ export function DashboardSidebar({ active, onChange, user, nav }: SidebarProps) 
   const xpPct = Math.round((user.xp / user.xpMax) * 100);
 
   return (
-    <aside className="border-hair fixed inset-y-0 start-0 z-50 hidden w-65 shrink-0 flex-col border-e px-4.5 py-7 [backdrop-filter:blur(24px)] [background:rgba(8,5,2,.92)] lg:flex">
+    <aside className="border-hair fixed inset-y-0 inset-s-0 z-50 hidden w-65 shrink-0 flex-col border-e px-4.5 py-7 [backdrop-filter:blur(24px)] [background:rgba(8,5,2,.92)] lg:flex">
       <div className="mb-8 flex items-center gap-3">
         <span className="grid size-10 place-items-center overflow-hidden rounded-[13px] shadow-[0_0_18px_-4px_var(--glow)] [background:var(--fire-grad)]">
           <PhoenixIcon className="size-10" />
@@ -94,7 +94,7 @@ export function DashboardSidebar({ active, onChange, user, nav }: SidebarProps) 
 
       <Link
         href="/"
-        className="text-ink-3 mb-2 flex items-center gap-3 rounded-[14px] border border-transparent px-3.5 py-3 text-[14.5px] font-semibold transition-colors hover:border-[rgba(255,90,90,.18)] hover:text-[#ff5a5a] hover:[background:rgba(255,90,90,.08)]"
+        className="text-ink-3 hover:text-danger mb-2 flex items-center gap-3 rounded-[14px] border border-transparent px-3.5 py-3 text-[14.5px] font-semibold transition-colors hover:border-[rgba(255,90,90,.18)] hover:[background:rgba(255,90,90,.08)]"
       >
         <span className="grid size-9 place-items-center rounded-[11px] [background:var(--glass-2)]">
           <Icon name="logout" size={20} />
@@ -108,7 +108,7 @@ export function DashboardSidebar({ active, onChange, user, nav }: SidebarProps) 
       >
         <AdamAvatar className="size-11" />
         <span className="leading-tight">
-          <span className="mb-1 inline-flex items-center gap-1 rounded-[6px] px-1.5 py-1 text-[10px] font-extrabold text-[#1a0a00] [background:var(--fire-grad)]">
+          <span className="mb-1 inline-flex items-center gap-1 rounded-xs px-1.5 py-1 text-[10px] font-extrabold text-[#1a0a00] [background:var(--fire-grad)]">
             <Icon name="sparkle" size={9} />
             منتور هوشمند
           </span>
