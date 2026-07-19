@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Icon } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import {
@@ -14,22 +13,20 @@ import { AuthButton } from './auth-button';
 import { AuthTabs } from './auth-tabs';
 import { Field } from './field';
 import { OtpInput } from './otp-input';
-
+import { IAuthRepository } from '../../domain/auth-repository';
+import { useAuth } from '../../application/use-auth';
 type View = 'login' | 'signup';
 type LoginTab = 'pass' | 'otp';
 
-const RESEND_SECONDS = 60;
+const RESEND_SECONDS = 120;
 
-export function AuthCard() {
-  const router = useRouter();
+interface AuthCardProps {
+  repository: IAuthRepository;
+}
+
+export function AuthCard({ repository }: AuthCardProps) {
   const [view, setView] = useState<View>('login');
-  const [success, setSuccess] = useState<{ title: string; msg: string } | null>(null);
-
-  useEffect(() => {
-    if (!success) return;
-    const t = setTimeout(() => router.push('/dashboard'), 1200);
-    return () => clearTimeout(t);
-  }, [success, router]);
+  const { loading, success, requestOtp, verifyOtp, clearSuccess } = useAuth(repository);
 
   return (
     <div className="border-hair relative w-full max-w-[420px] overflow-hidden rounded-[28px] border p-9 px-8 shadow-[0_32px_80px_-28px_rgba(0,0,0,.7),0_0_0_1px_rgba(255,255,255,.03)_inset] [backdrop-filter:blur(var(--glass-blur))_saturate(140%)] [background:var(--glass)]">
@@ -38,9 +35,19 @@ export function AuthCard() {
       {success && <SuccessOverlay title={success.title} msg={success.msg} />}
 
       {view === 'login' ? (
-        <LoginView onSuccess={setSuccess} onGoSignup={() => setView('signup')} />
+        <LoginView
+          onGoSignup={() => setView('signup')}
+          requestOtp={requestOtp}
+          verifyOtp={verifyOtp}
+          loading={loading}
+        />
       ) : (
-        <SignupView onSuccess={setSuccess} onGoLogin={() => setView('login')} />
+        <SignupView
+          onGoLogin={() => setView('login')}
+          requestOtp={requestOtp}
+          verifyOtp={verifyOtp}
+          loading={loading}
+        />
       )}
     </div>
   );
@@ -59,11 +66,15 @@ function CardHeader({ title, sub }: { title: string; sub: React.ReactNode }) {
 }
 
 function LoginView({
-  onSuccess,
   onGoSignup,
+  requestOtp,
+  verifyOtp,
+  loading,
 }: {
-  onSuccess: (s: { title: string; msg: string }) => void;
   onGoSignup: () => void;
+  requestOtp: (identifier: string) => Promise<boolean>;
+  verifyOtp: (identifier: string, code: string, name?: string) => Promise<void>;
+  loading: boolean;
 }) {
   const [tab, setTab] = useState<LoginTab>('pass');
 
@@ -79,21 +90,19 @@ function LoginView({
         onChange={setTab}
       />
       {tab === 'pass' ? (
-        <PasswordForm onSuccess={onSuccess} onGoSignup={onGoSignup} />
+        <PasswordForm onGoSignup={onGoSignup} />
       ) : (
-        <OtpLoginForm onSuccess={onSuccess} onGoSignup={onGoSignup} />
+        <OtpLoginForm
+          onGoSignup={onGoSignup}
+          requestOtp={requestOtp}
+          verifyOtp={verifyOtp}
+          loading={loading}
+        />
       )}
     </>
   );
 }
-
-function PasswordForm({
-  onSuccess,
-  onGoSignup,
-}: {
-  onSuccess: (s: { title: string; msg: string }) => void;
-  onGoSignup: () => void;
-}) {
+function PasswordForm({ onGoSignup }: { onGoSignup: () => void }) {
   const [id, setId] = useState('');
   const [pw, setPw] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -111,7 +120,7 @@ function PasswordForm({
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      onSuccess({ title: 'خوش آمدی! 🔥', msg: 'ورود موفقیت‌آمیز بود. در حال ورود به قبیله...' });
+      // Password login not implemented – show a message or keep as placeholder
     }, 1400);
   };
 
@@ -177,42 +186,40 @@ function PasswordForm({
     </>
   );
 }
-
 function OtpLoginForm({
-  onSuccess,
   onGoSignup,
+  requestOtp,
+  verifyOtp,
+  loading,
 }: {
-  onSuccess: (s: { title: string; msg: string }) => void;
   onGoSignup: () => void;
+  requestOtp: (phone: string) => Promise<boolean>;
+  verifyOtp: (phone: string, code: string) => Promise<void>;
+  loading: boolean;
 }) {
   const [phone, setPhone] = useState('');
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const { cooldown, start } = useCooldown();
   const [code, setCode] = useState('');
-  const [codeErr, setCodeErr] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
 
-  const sendOtp = () => {
+  const handleSendOtp = async () => {
     if (!isValidIranPhone(phone)) {
       setError('شماره موبایل معتبر نیست');
       return;
     }
     setSending(true);
-    setTimeout(() => {
-      setSending(false);
+    const ok = await requestOtp(phone);
+    setSending(false);
+    if (ok) {
       setSent(true);
       start(RESEND_SECONDS);
-    }, 900);
+    }
   };
 
-  const verify = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      onSuccess({ title: 'خوش آمدی! 🔥', msg: 'ورود موفقیت‌آمیز بود. در حال ورود به قبیله...' });
-    }, 1200);
+  const handleVerify = () => {
+    verifyOtp(phone, code);
   };
 
   if (!sent) {
@@ -236,7 +243,7 @@ function OtpLoginForm({
           </div>
           <button
             type="button"
-            onClick={sendOtp}
+            onClick={handleSendOtp}
             disabled={sending}
             className="mb-4 h-[53px] shrink-0 rounded-[11px] px-4 text-[13.5px] font-extrabold whitespace-nowrap text-[#1a0a00] shadow-[0_6px_20px_-8px_var(--glow)] transition-transform [background:var(--fire-grad)] enabled:hover:-translate-y-0.5 disabled:opacity-50"
           >
@@ -263,17 +270,9 @@ function OtpLoginForm({
         <br />
         ارسال شد
       </p>
-      <OtpInput
-        value={code}
-        onChange={(c) => {
-          setCode(c);
-          setCodeErr(false);
-        }}
-        error={codeErr}
-        ok={isCompleteOtp(code)}
-      />
+      <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} />
       <ResendRow cooldown={cooldown} onResend={() => start(RESEND_SECONDS)} />
-      <AuthButton loading={loading} disabled={!isCompleteOtp(code)} onClick={verify}>
+      <AuthButton loading={loading} disabled={!isCompleteOtp(code)} onClick={handleVerify}>
         تایید و ورود
       </AuthButton>
       <BottomLink>
@@ -284,63 +283,72 @@ function OtpLoginForm({
     </>
   );
 }
-
 function SignupView({
-  onSuccess,
   onGoLogin,
+  requestOtp,
+  verifyOtp,
+  loading,
 }: {
-  onSuccess: (s: { title: string; msg: string }) => void;
   onGoLogin: () => void;
+  requestOtp: (identifier: string) => Promise<boolean>;
+  verifyOtp: (identifier: string, code: string, name?: string) => Promise<void>;
+  loading: boolean;
 }) {
   const [step, setStep] = useState<1 | 2>(1);
   const [phone, setPhone] = useState('');
+  const [name, setName] = useState('');
 
   if (step === 2) {
     return (
       <SignupStep2
         phone={phone}
+        name={name}
         onBack={() => setStep(1)}
-        onSuccess={() =>
-          onSuccess({ title: 'حساب ساخته شد! 🔥', msg: 'به قبیله ققنوس خوش آمدی. سفرت شروع شد.' })
-        }
+        verifyOtp={verifyOtp}
+        loading={loading}
       />
     );
   }
   return (
     <SignupStep1
       onGoLogin={onGoLogin}
-      onNext={(p) => {
+      onNext={(p, n) => {
         setPhone(p);
+        setName(n);
         setStep(2);
       }}
+      requestOtp={requestOtp}
     />
   );
 }
-
 function SignupStep1({
   onNext,
   onGoLogin,
+  requestOtp,
 }: {
-  onNext: (phone: string) => void;
+  onNext: (phone: string, name: string) => void;
   onGoLogin: () => void;
+  requestOtp: (phone: string) => Promise<boolean>;
 }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [ref, setRef] = useState('');
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
-  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  const submit = () => {
+  const submit = async () => {
     const next: typeof errors = {};
     if (!isNonEmpty(name)) next.name = 'نام و نام خانوادگی را وارد کنید';
     if (!isValidIranPhone(phone)) next.phone = 'شماره موبایل معتبر نیست';
     setErrors(next);
     if (Object.keys(next).length) return;
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      onNext(phone);
-    }, 1300);
+
+    setSending(true);
+    const ok = await requestOtp(phone);
+    setSending(false);
+    if (ok) {
+      onNext(phone, name);
+    }
   };
 
   return (
@@ -385,7 +393,7 @@ function SignupStep1({
         onChange={(e) => setRef(e.target.value)}
         autoComplete="off"
       />
-      <AuthButton loading={loading} onClick={submit}>
+      <AuthButton loading={sending} onClick={submit}>
         دریافت کد تایید
         <Icon name="flame" size={16} />
       </AuthButton>
@@ -399,25 +407,27 @@ function SignupStep1({
   );
 }
 
+// -----------------------------------------------
+// Signup step 2 – verify OTP
+// -----------------------------------------------
 function SignupStep2({
   phone,
+  name,
   onBack,
-  onSuccess,
+  verifyOtp,
+  loading,
 }: {
   phone: string;
+  name: string;
   onBack: () => void;
-  onSuccess: () => void;
+  verifyOtp: (identifier: string, code: string, name?: string) => Promise<void>;
+  loading: boolean;
 }) {
   const [code, setCode] = useState('');
-  const [loading, setLoading] = useState(false);
   const { cooldown, start } = useCooldown(RESEND_SECONDS);
 
-  const verify = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      onSuccess();
-    }, 1500);
+  const handleVerify = () => {
+    verifyOtp(phone, code, name);
   };
 
   return (
@@ -443,13 +453,16 @@ function SignupStep2({
       <div className="h-5" />
       <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} />
       <ResendRow cooldown={cooldown} onResend={() => start(RESEND_SECONDS)} />
-      <AuthButton loading={loading} disabled={!isCompleteOtp(code)} onClick={verify}>
+      <AuthButton loading={loading} disabled={!isCompleteOtp(code)} onClick={handleVerify}>
         ساخت حساب و ورود
       </AuthButton>
     </>
   );
 }
 
+// -----------------------------------------------
+// Shared helpers
+// -----------------------------------------------
 function Divider() {
   return (
     <div className="text-ink-3 my-[18px] flex items-center gap-3.5 text-[13px] before:h-px before:flex-1 before:[background:var(--color-hair)] after:h-px after:flex-1 after:[background:var(--color-hair)]">
