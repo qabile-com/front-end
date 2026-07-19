@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button, Container, Icon, OptionalImage } from '@/shared/ui';
+import { toPersianDigits } from '@/core/lib/persian';
 
 const TRUST_AVATARS = [
   'linear-gradient(135deg,#ff8a3d,#cc4308)',
@@ -12,13 +13,19 @@ const TRUST_AVATARS = [
   'linear-gradient(135deg,#ff5a5a,#c01616)',
 ];
 
-const CHIPS = [
-  { cls: 'top-[10%] start-[35%]', icon: 'bolt', value: '۲٬۴۸۰', label: 'امتیاز امروز' },
-  { cls: 'bottom-[12%] start-[5%]', icon: 'flame', value: '۳۱ روز', label: 'زنجیره‌ی پیوسته' },
-  { cls: 'bottom-[-6%] end-[4%]', icon: 'medal', value: 'سطح ۲۴', label: 'ققنوس طلایی' },
+const CHIP_POSITIONS = [
+  'top-[10%] start-[35%]',
+  'bottom-[12%] start-[5%]',
+  'bottom-[-6%] end-[4%]',
 ] as const;
 
-export function HeroSection() {
+interface HeroSectionProps {
+  totalMembers?: number;
+  rating?: number;
+  chips?: { icon: string; value: string; label: string }[] | null;
+}
+
+export function HeroSection({ totalMembers = 52000, rating = 4.9, chips }: HeroSectionProps) {
   const imgRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
 
@@ -63,6 +70,14 @@ export function HeroSection() {
     };
   }, []);
 
+  // Merge dynamic chip data with static positions
+  const displayChips = chips
+    ? chips.slice(0, CHIP_POSITIONS.length).map((chip, i) => ({
+        ...chip,
+        cls: CHIP_POSITIONS[i],
+      }))
+    : [];
+
   return (
     <section className="relative flex min-h-svh items-center overflow-x-hidden pt-[160px] pb-[90px]">
       <Container>
@@ -72,7 +87,7 @@ export function HeroSection() {
               <span className="rounded-full px-2.25 py-0.75 text-[10.5px] font-extrabold text-[#1a0a00] [background:var(--gold-grad)]">
                 نسخه ۲٫۰
               </span>
-              بیش از ۵۲٬۰۰۰ ققنوس در حال پرواز
+              بیش از {toPersianDigits(totalMembers)}+ ققنوس در حال پرواز
             </span>
 
             <h1 className="text-[clamp(34px,6vw,58px)] leading-[1.08] font-black tracking-[-0.02em]">
@@ -113,9 +128,9 @@ export function HeroSection() {
               </div>
               <div className="text-[13px] leading-tight">
                 <p className="text-ink-2">
-                  <b className="text-ink">۵۲٬۰۰۰+</b> عضو فعال قبیله
+                  <b className="text-ink">{toPersianDigits(totalMembers)}+</b> عضو فعال قبیله
                 </p>
-                <p className="text-gold">★★★★★ امتیاز ۴٫۹ از ۵</p>
+                <p className="text-gold">★★★★★ امتیاز {rating} از ۵</p>
               </div>
             </div>
           </div>
@@ -129,13 +144,13 @@ export function HeroSection() {
               <PhoenixVisual />
             </div>
 
-            {CHIPS.map((chip) => (
+            {displayChips.map((chip) => (
               <div
                 key={chip.label}
                 className={`chip-float border-hair absolute z-[3] flex items-center gap-2.25 rounded-[13px] border px-3.25 py-2.25 shadow-[0_10px_28px_-10px_rgba(0,0,0,.7)] backdrop-blur-lg [background:rgba(15,9,5,.72)] ${chip.cls}`}
               >
                 <span className="text-gold grid size-8 place-items-center rounded-[9px] [background:var(--glass-2)]">
-                  <Icon name={chip.icon} size={16} />
+                  <Icon name={chip.icon as any} size={16} />
                 </span>
                 <span className="leading-tight">
                   <b className="block text-sm font-extrabold">{chip.value}</b>
