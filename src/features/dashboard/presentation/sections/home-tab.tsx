@@ -14,10 +14,9 @@ import type {
 } from '@/features/dashboard/domain/dashboard.types';
 import { Panel } from '../components/panel';
 import { AdamAvatar, PhoenixIcon } from './dashboard-sidebar';
-import { MockRoadmapStepRepository } from '../../infrastructure/mock-roadmap-repository';
-import { useRoadmapStepDetail } from '../../application/use-roadmap-step-detail';
-import { StepModal } from '../components/step-modal';
+
 import { StepModalContainer } from '../components/step-modal-container';
+import { roadmapStepRepo } from '../../infrastructure/repository-factory';
 
 const STAT_TONES: Record<string, string> = {
   fire: 'text-ember [background:rgba(255,98,0,.15)]',
@@ -34,7 +33,7 @@ interface HomeTabProps {
   aiQuickReplies: { label: string; send: string }[];
 }
 
-const roadmapStepRepo = new MockRoadmapStepRepository();
+// const roadmapStepRepo = new MockRoadmapStepRepository();
 
 export function HomeTab({
   user,

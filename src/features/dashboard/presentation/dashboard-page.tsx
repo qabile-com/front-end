@@ -19,7 +19,7 @@ import {
   MockProfileRepository,
   MockUserDetailRepository,
   MockUserRepository,
-} from '../infrastructure/mock-dashboard-repository';
+} from '../infrastructure/mock/mock-dashboard-repository';
 
 import { useUser } from '../application/use-user';
 import { useHomeData } from '../application/use-home-data';
@@ -27,28 +27,37 @@ import { useLeaderboard } from '../application/use-leaderboard';
 import { useCourses } from '../application/use-courses';
 import { useProfile } from '../application/use-profile';
 import { Course } from '../domain/courses.data';
-import { MockSocialRepository } from '../infrastructure/mock-social-repository';
+
 import { useSocialData } from '../application/use-social-data';
 import { ActiveUser, Post } from '../domain/social.data';
-import { IUserDetailRepository } from '../domain/dashboard-repository';
-import { MockSeasonRepository } from '../infrastructure/mock-season-repository';
-import { useSeason } from '../application/use-season';
 
-// Repositories (singletons)
-const userRepo = new MockUserRepository();
-const homeRepo = new MockHomeRepository();
-const leaderboardRepo = new MockLeaderboardRepository();
-const coursesRepo = new MockCoursesRepository();
-const profileRepo = new MockProfileRepository();
-const userDetailRepo = new MockUserDetailRepository();
-const socialRepo = new MockSocialRepository();
+import { MockSeasonRepository } from '../infrastructure/mock/mock-season-repository';
+import { useSeason } from '../application/use-season';
 const seasonRepo = new MockSeasonRepository();
+import {
+  userRepo,
+  homeRepo,
+  leaderboardRepo,
+  coursesRepo,
+  profileRepo,
+  socialRepo,
+  userProfileRepo,
+} from '../infrastructure/repository-factory';
+import { IUserProfileRepository } from '../domain/user-profile-repository';
+// Repositories (singletons)
+// const userRepo = new MockUserRepository();
+// const homeRepo = new MockHomeRepository();
+// const leaderboardRepo = new MockLeaderboardRepository();
+// const coursesRepo = new MockCoursesRepository();
+// const profileRepo = new MockProfileRepository();
+// const userDetailRepo = new MockUserDetailRepository();
+// const socialRepo = new MockSocialRepository();
+// const seasonRepo = new MockSeasonRepository();
 
 export function DashboardPage() {
   const [tab, setTab] = useState<DashboardTab>('home');
   const [loadedTabs, setLoadedTabs] = useState<Set<DashboardTab>>(new Set(['home']));
 
-  // Always fetch user
   const { user, loading: userLoading, error: userError } = useUser(userRepo);
   const {
     posts,
@@ -61,7 +70,6 @@ export function DashboardPage() {
   } = useSocialData(socialRepo);
   const { data: seasonData, loading: seasonLoading, error: seasonError } = useSeason(seasonRepo);
 
-  // Lazy tab data hooks – only call when tab is loaded
   const home = useHomeData(homeRepo);
   const lb = useLeaderboard(leaderboardRepo);
   const courses = useCourses(coursesRepo);
@@ -115,7 +123,7 @@ export function DashboardPage() {
 
         <MobileHeader title={title} />
 
-        <div className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 lg:p-8 lg:pb-8">
+        <div className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
           {tab === 'home' && loadedTabs.has('home') && (
             <HomeTabWrapper
               user={user}
@@ -130,7 +138,7 @@ export function DashboardPage() {
               error={lb.error || seasonError}
               data={lb.data}
               seasonData={seasonData}
-              userDetailRepo={userDetailRepo}
+              userDetailRepo={userProfileRepo}
             />
           )}
           {tab === 'social' && loadedTabs.has('social') && (
@@ -205,7 +213,7 @@ function LeaderboardTabWrapper({
   error: string | null;
   data: ReturnType<typeof useLeaderboard>['data'];
   seasonData: ReturnType<typeof useSeason>['data'];
-  userDetailRepo: IUserDetailRepository;
+  userDetailRepo: IUserProfileRepository;
 }) {
   if (loading) return <TabLoader />;
   if (error) return <TabError error={error} />;

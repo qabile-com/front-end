@@ -7,8 +7,8 @@ import { toPersianDigits } from '@/core/lib/persian';
 import { Panel } from '../components/panel';
 import type { PodiumPlace, LbRow } from '../../domain/dashboard.types';
 import { IUserDetailRepository } from '../../domain/dashboard-repository';
-import { useState } from 'react';
-import { MockUserProfileRepository } from '../../infrastructure/mock-user-profile-repository';
+import { useMemo, useState } from 'react';
+import { MockUserProfileRepository } from '../../infrastructure/mock/mock-user-profile-repository';
 
 import { UserProfileModalContainer } from '../components/user-profile-modal-container';
 import { SeasonCountdownCard } from '../components/season-countdown-card';
@@ -23,6 +23,11 @@ interface LeaderboardTabProps {
   seasonName: string;
 }
 
+interface DayLeft {
+  total: number;
+  days: number;
+}
+
 export function LeaderboardTab({
   podium,
   leaderboard,
@@ -35,13 +40,27 @@ export function LeaderboardTab({
 
   const openUser = (userId: string) => setSelectedUserId(userId);
 
+  const orderedPodium = useMemo(() => {
+    const sorted = [...podium].sort((a, b) => a.rank - b.rank);
+    if (sorted.length < 3) return sorted;
+    return [sorted[1], sorted[0], sorted[2]] as PodiumPlace[];
+  }, [podium]);
+
+  function calculateDayLeft(target: Date): DayLeft {
+    const now = Date.now();
+    const diff = Math.max(0, target.getTime() - now);
+    return {
+      total: diff,
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+    };
+  }
   return (
     <>
       <div className="grid gap-6 min-[1200px]:grid-cols-[1fr_350px]">
         {/* <div className="grid grid-cols-1 gap-5 min-[1500px]:grid-cols-3 sm:grid-cols-2"> */}
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-3 items-end gap-4">
-            {podium.map((p) => {
+            {orderedPodium.map((p) => {
               const first = p.rank === 1;
               return (
                 <div
@@ -82,8 +101,12 @@ export function LeaderboardTab({
           </div>
 
           <Panel
-            title="لیگ ققنوس طلایی · فصل ۷"
-            action={<span className="text-ember text-[13px] font-extrabold">۶ روز مانده</span>}
+            title={seasonName}
+            action={
+              <span className="text-ember text-[13px] font-extrabold">
+                {toPersianDigits(calculateDayLeft(seasonTargetDate).days)} روز مانده
+              </span>
+            }
             bodyClassName="p-0"
           >
             <table className="w-full">

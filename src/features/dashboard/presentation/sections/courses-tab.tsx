@@ -8,6 +8,9 @@ import { toPersianDigits } from '@/core/lib/persian';
 import type { Course, CoursePart } from '../../domain/courses.data';
 import { CourseSessionModal } from '../components/course-session-modal';
 import { PhoenixIcon } from './dashboard-sidebar';
+import { useSessionDetail } from '../../application/use-session-detail';
+import { commentsRepo, sessionRepo } from '../../infrastructure/repository-factory';
+import { useSessionComments } from '../../application/use-session-comments';
 
 interface CoursesTabProps {
   courses: Course[];
@@ -16,6 +19,24 @@ interface CoursesTabProps {
 export function CoursesTab({ courses }: CoursesTabProps) {
   const [selected, setSelected] = useState<Course | null>(null);
   const [selectedPart, setSelectedPart] = useState<CoursePart | null>(null);
+  // const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+
+  const { data: sessionDetail, isLoading } = useSessionDetail(
+    sessionRepo,
+    selected?.id ?? null,
+    selectedPart?.title ?? null,
+  );
+  const commentsQuery = useSessionComments(
+    commentsRepo,
+    selected?.id ?? null,
+    selectedPart?.title ?? null,
+  );
+
+  const handleAddComment = (text: string) => {
+    // TODO: Replace with a proper mutation to add comment
+    console.log('New comment:', text);
+    // You can optimistically update the commentsQuery cache here
+  };
 
   return (
     <div>
@@ -24,7 +45,7 @@ export function CoursesTab({ courses }: CoursesTabProps) {
         <p className="text-ink-2 text-sm">آموزش‌های ویدیویی تخصصی قبیله ققنوس</p>
       </div>
 
-      <div className="grid gap-6 min-[1200px]:grid-cols-[1fr_380px]">
+      <div className="grid items-start gap-6 min-[1200px]:grid-cols-[1fr_380px]">
         <div className="grid grid-cols-1 gap-5 min-[1500px]:grid-cols-3 sm:grid-cols-2">
           {courses.map((course) => {
             const done = course.parts.filter((p) => p.status === 'done').length;
@@ -36,37 +57,43 @@ export function CoursesTab({ courses }: CoursesTabProps) {
                 type="button"
                 onClick={() => setSelected(course)}
                 className={cn(
-                  'border-hair hover:border-hair-2 overflow-hidden rounded-[18px] border text-start transition-[transform,border-color] duration-300 [background:var(--glass)] hover:-translate-y-1',
+                  'flex h-full flex-col overflow-hidden rounded-[18px] border text-start transition-[transform,border-color] duration-300 [background:var(--glass)] hover:-translate-y-1',
+                  'border-hair hover:border-hair-2',
                   isSel && 'border-[rgba(255,98,0,.4)] shadow-[0_12px_36px_-16px_var(--glow)]',
                 )}
               >
+                {/* Fixed‑height image area */}
                 <div
-                  className="relative grid h-45 place-items-center"
+                  className="relative grid h-40 shrink-0 place-items-center"
                   style={{ background: course.gradient }}
                 >
                   <Icon name="play" size={34} className="text-white/90" />
-                  <span className="absolute inset-e-2.5 top-2.5 rounded-md bg-black/30 px-2 py-0.5 text-[11px] font-bold text-white">
+                  <span className="absolute end-2.5 top-2.5 rounded-md bg-black/30 px-2 py-0.5 text-[11px] font-bold text-white">
                     {course.duration}
                   </span>
                 </div>
-                <div className="p-4">
+
+                {/* Text content – fills remaining space */}
+                <div className="flex flex-1 flex-col p-4">
                   <span className="text-gold text-[11px] font-bold">{course.category}</span>
                   <h3 className="mt-1 text-[15px] font-extrabold">{course.title}</h3>
-                  <div className="text-ink-3 mt-2 flex items-center justify-between gap-3 text-[12px]">
-                    <span className="flex items-center gap-1">
-                      <Icon name="eye" size={12} />
-                      {course.views}
-                    </span>
-                    <span className="text-gold flex items-center gap-1">
-                      <PhoenixIcon className="size-3.5 rounded-full" />
-                      {toPersianDigits(course.xp)}+
-                    </span>
-                  </div>
-                  <div className="mt-3 h-0.75 justify-items-end overflow-hidden rounded-full [background:var(--color-hair)]">
-                    <div
-                      className="h-full [background:linear-gradient(90deg,var(--color-ember),var(--color-gold))]"
-                      style={{ width: `${pct}%` }}
-                    />
+                  <div className="mt-auto">
+                    <div className="text-ink-3 mt-2 flex items-center justify-between gap-3 text-[12px]">
+                      <span className="flex items-center gap-1">
+                        <Icon name="eye" size={12} />
+                        {course.views}
+                      </span>
+                      <span className="text-gold flex items-center gap-1">
+                        <PhoenixIcon className="size-3.5 rounded-full" />
+                        {toPersianDigits(course.xp)}+
+                      </span>
+                    </div>
+                    <div className="mt-3 h-0.75 justify-items-end overflow-hidden rounded-full [background:var(--color-hair)]">
+                      <div
+                        className="h-full [background:linear-gradient(90deg,var(--color-ember),var(--color-gold))]"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
               </button>
@@ -84,15 +111,19 @@ export function CoursesTab({ courses }: CoursesTabProps) {
       </div>
 
       {/* Course Session Modal */}
-      {selectedPart && (
+      {selectedPart && sessionDetail && (
         <CourseSessionModal
-          isOpen={!!selectedPart}
-          onClose={() => setSelectedPart(null)}
-          session={selectedPart}
-          onMarkComplete={() => {
-            // TODO: update part status via repository / local state
+          isOpen={!!selectedPart && !isLoading}
+          onClose={() => {
             setSelectedPart(null);
           }}
+          session={sessionDetail.part}
+          videoUrl={sessionDetail.videoUrl}
+          commentsQuery={commentsQuery}
+          onMarkComplete={() => {
+            setSelectedPart(null);
+          }}
+          onAddComment={handleAddComment}
         />
       )}
     </div>

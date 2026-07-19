@@ -9,12 +9,12 @@ interface MobileNavProps {
   onChange: (tab: DashboardTab) => void;
 }
 
-const ITEMS: { id: DashboardTab; label: string; icon: IconName; iconActive: IconName }[] = [
-  { id: 'home', label: 'خانه', icon: 'home', iconActive: 'home-f' },
-  { id: 'lb', label: 'میدان رقابت', icon: 'trophy-line', iconActive: 'trophy' },
-  { id: 'social', label: 'انجمن', icon: 'users', iconActive: 'users-f' },
-  { id: 'courses', label: 'کورس‌ها', icon: 'book', iconActive: 'book-f' },
-  { id: 'profile', label: 'پروفایل', icon: 'user', iconActive: 'user-f' },
+const ITEMS: { id: DashboardTab; label: string; icon: IconName }[] = [
+  { id: 'home', label: 'خانه', icon: 'home-m' },
+  { id: 'lb', label: 'پرچم داران', icon: 'leaderboard' },
+  { id: 'social', label: 'انجمن', icon: 'community' },
+  { id: 'courses', label: 'تالار دانش', icon: 'social' },
+  { id: 'profile', label: 'پروفایل', icon: 'profile' },
 ];
 
 export function MobileNav({ active, onChange }: MobileNavProps) {
@@ -33,7 +33,7 @@ export function MobileNav({ active, onChange }: MobileNavProps) {
             )}
           >
             <Icon
-              name={isActive ? item.iconActive : item.icon}
+              name={item.icon}
               size={24}
               className={cn(
                 'ease-back transition-transform duration-300',
