@@ -81,7 +81,7 @@
 1. **Nav** (fixed, `.scrolled` glass after 24px) — brand + links (امکانات، مسیر رشد، رقابت، دیدگاه‌ها، سؤالات) + CTAs (ورود، شروع رایگان)
 2. **Hero** — H1 «از خاکستر، برخیز.» + lead + 2 CTAs + trust row + phoenix image with 3 floating chips
 3. **Stats band** — 4 count-up stats (۵۲ هزار+ عضو، ۸۹۰ هزار درس، ۴٫۵ میلیون گفت‌وگو، ۹۸٪ رضایت)
-4. **Pillars** (bento 6-col) — نقشه‌راه‌ها، منتور هوش مصنوعی (chat mock), گیمیفیکیشن، رقابت سالم، انجمن
+4. **Pillars** (bento 6-col) — نقشه راه‌ها، منتور هوش مصنوعی (chat mock), گیمیفیکیشن، رقابت سالم، انجمن
 5. **Roadmap** — 4 steps: جرقه → مسیر → رشد → تحول
 6. **Leaderboard** — podium (top 3) + ranked list, current user row highlighted («تو»)
 7. **Testimonials** — infinite marquee of 6 cards

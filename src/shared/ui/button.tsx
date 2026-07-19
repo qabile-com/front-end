@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 import { cn } from '@/core/lib/cn';
 
-type ButtonVariant = 'primary' | 'ghost';
+type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends ComponentProps<'button'> {
@@ -16,6 +16,8 @@ const base =
 const variants: Record<ButtonVariant, string> = {
   primary:
     'text-[#1a0a00] font-extrabold [background:var(--fire-grad)] shadow-[0_8px_28px_-6px_var(--glow),inset_0_1px_0_rgba(255,255,255,.38)] hover:-translate-y-0.5 hover:opacity-[.94] hover:shadow-[0_14px_40px_-8px_var(--glow),inset_0_1px_0_rgba(255,255,255,.46)]',
+  secondary:
+    'border-hair hover:border-hair-2 flex items-center gap-3 rounded-[14px] border px-3.5 py-3 text-start transition-[transform,border-color] [background:var(--glass-2)] hover:-translate-x-[3px]',
 
   ghost:
     'text-ink border-hair [background:var(--glass-2)] [backdrop-filter:blur(var(--glass-blur))] hover:-translate-y-0.5 hover:border-hair-2 hover:shadow-[0_10px_28px_-12px_var(--glow)]',
