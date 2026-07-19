@@ -1,8 +1,8 @@
 // src/features/dashboard/infrastructure/mock-social-repository.ts
 
-import type { ISocialRepository } from '../domain/social-repository';
-import type { Post, ActiveUser, PostComment } from '../domain/social.data';
-import { POSTS, TRENDING_TAGS, ACTIVE_USERS } from '../domain/social.data';
+import type { ISocialRepository } from '../../domain/social-repository';
+import type { Post, ActiveUser, PostComment } from '../../domain/social.data';
+import { POSTS, TRENDING_TAGS, ACTIVE_USERS } from '../../domain/social.data';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

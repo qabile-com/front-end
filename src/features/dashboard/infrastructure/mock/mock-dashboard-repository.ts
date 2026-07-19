@@ -6,18 +6,20 @@ import type {
   ILeaderboardRepository,
   ICoursesRepository,
   IProfileRepository,
-  IUserDetailRepository,
-} from '../domain/dashboard-repository';
-import type { CurrentUser } from '../domain/dashboard.types';
-import { USER, STATS, ROADMAP, AI_SEED, AI_QUICK } from '../domain/dashboard.data';
+} from '../../domain/dashboard-repository';
+import type { CurrentUser } from '../../domain/dashboard.types';
+import { USER as CURRENT_USER } from '../../domain/dashboard.data';
+import { USER, STATS, ROADMAP, AI_SEED, AI_QUICK } from '../../domain/dashboard.data';
 import {
   PODIUM,
   LEADERBOARD,
   ACHIEVEMENTS,
   SETTINGS,
   PROFILE_STATS,
-} from '../domain/dashboard.data';
-import { Course, COURSES } from '../domain/courses.data';
+} from '../../domain/dashboard.data';
+import { Course, COURSES } from '../../domain/courses.data';
+import { IUserProfileRepository, UserProfileData } from '../../domain/user-profile-repository';
+import { POSTS } from '../../domain/social.data';
 
 // ---------- User Repository ----------
 export class MockUserRepository implements IUserRepository {
@@ -81,36 +83,75 @@ export class MockProfileRepository implements IProfileRepository {
 }
 
 // ---------- User Detail Repository (for modal) ----------
-export class MockUserDetailRepository implements IUserDetailRepository {
-  async getUserDetail(userId: string): Promise<{
-    id: string;
-    name: string;
-    avatar: string;
-    level: number;
-    title: string;
-    xp: number;
-    streak: number;
-  }> {
+export class MockUserDetailRepository implements IUserProfileRepository {
+  async getUserProfile(userId: string): Promise<UserProfileData> {
     await delay(200);
-    const row = LEADERBOARD.find((r) => r.name === userId || r.rank.toString() === userId);
-    if (!row) throw new Error('User not found');
+    let name = userId;
+    let avatar = 'linear-gradient(135deg,#ff8a3d,#cc4308)';
+    let title = 'ققنوس طلایی';
+    let level = 24;
+    let xp = 6800;
+    let xpMax = 10000;
+    let streak = 31;
+    const peersFollowed = 120;
+    const peersFollowing = 85;
+    const phone = '09123456789';
+    const email = null;
 
-    const streak = parseInt(row.streak, 10) || 0;
-    const xp = parseInt(row.points.replace(/\D/g, ''), 10) || 0;
+    if (userId === CURRENT_USER.name) {
+      name = CURRENT_USER.name;
+      avatar = CURRENT_USER.avatar;
+      title = CURRENT_USER.title;
+      level = CURRENT_USER.level;
+      xp = CURRENT_USER.xp;
+      xpMax = CURRENT_USER.xpMax;
+      // streak not in CurrentUser, we'll keep default
+    } else {
+      const row = LEADERBOARD.find((r) => r.name === userId);
+      if (row) {
+        name = row.name;
+        avatar = row.avatar;
+        const streakNum = parseInt(row.streak, 10) || 0;
+        level = Math.floor(streakNum / 3) + 1 || 1;
+        title = getTitleFromStreak(streakNum);
+        xp = parseInt(row.points.replace(/\D/g, ''), 10) || 0;
+        xpMax = 10000;
+        streak = streakNum;
+      }
+    }
 
-    const level = Math.floor(streak / 3) + 1;
-
-    // Simple title mapping
-    const title = getTitleFromStreak(streak);
+    const userPosts = POSTS.filter(
+      (p) => p.authorId === (userId === CURRENT_USER.name ? 'arash' : 'other'),
+    )
+      .slice(0, 3)
+      .map((p) => ({
+        id: p.id,
+        text: p.text,
+        likes: p.likes,
+        comments: p.comments,
+        time: p.time,
+      }));
 
     return {
-      id: row.rank.toString(),
-      name: row.name,
-      avatar: row.avatar,
-      level,
+      id: userId,
+      name,
+      avatar,
       title,
+      level,
+      phone,
+      email,
+      role: 'user',
       xp,
+      xpMax,
       streak,
+      stats: {
+        xp,
+        streak,
+        peersFollowed,
+        peersFollowing,
+      },
+      profileStats: [{ value: `${streak}`, label: 'روز زنجیره' }],
+      posts: userPosts,
     };
   }
 }

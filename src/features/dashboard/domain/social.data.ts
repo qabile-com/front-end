@@ -29,6 +29,7 @@ export interface Post {
   location?: string;
   emoji?: string;
   image?: string;
+  tags?: string[];
 }
 
 export interface ActiveUser {

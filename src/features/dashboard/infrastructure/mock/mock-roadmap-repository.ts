@@ -1,7 +1,7 @@
 // src/features/dashboard/infrastructure/mock-roadmap-repository.ts
 
-import type { IRoadmapStepRepository } from '../domain/roadmap-repository';
-import type { RoadmapStepDetail } from '../domain/roadmap.types';
+import type { IRoadmapStepRepository } from '../../domain/roadmap-repository';
+import type { RoadmapStepDetail } from '../../domain/roadmap.types';
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

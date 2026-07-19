@@ -6,6 +6,7 @@ export interface CoursePart {
   status: PartStatus;
   progress?: number;
   steps?: { id: string; text: string; isCompleted: boolean }[];
+  views?: number;
 }
 
 export interface Course {

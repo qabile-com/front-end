@@ -1,22 +1,36 @@
 // src/features/dashboard/domain/user-profile-repository.ts
 
-import type { Post } from '../domain/social.data'; // need to adjust path
-import { Achievement } from './dashboard.types';
+import type { Post, PostComment } from '../domain/social.data';
 
 export interface UserProfileData {
   id: string;
   name: string;
-  avatar: string; // gradient string
+  avatar: string;
   title: string;
   level: number;
+  phone?: string | null;
+  email?: string | null;
+  role?: string;
+  xp: number;
+  xpMax: number;
+  streak: number;
   stats: {
     xp: number;
     streak: number;
     peersFollowed: number;
     peersFollowing: number;
   };
-  posts: Post[];
-  achievements?: Achievement[];
+  profileStats: {
+    value: string;
+    label: string;
+  }[];
+  posts: {
+    id: string;
+    text: string;
+    likes: number;
+    comments: PostComment[];
+    time: string;
+  }[];
 }
 
 export interface IUserProfileRepository {

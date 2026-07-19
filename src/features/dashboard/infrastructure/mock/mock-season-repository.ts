@@ -1,4 +1,4 @@
-import type { ISeasonRepository, SeasonData } from '../domain/season-repository';
+import type { ISeasonRepository, SeasonData } from '../../domain/season-repository';
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

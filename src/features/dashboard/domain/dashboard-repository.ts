@@ -56,15 +56,15 @@ export interface IProfileRepository {
  * User detail for the leaderboard modal.
  * Returns a subset of user info (name, avatar, level, stats, etc.)
  */
-export interface IUserDetailRepository {
-  getUserDetail(userId: string): Promise<{
-    id: string;
-    name: string;
-    avatar: string;
-    level: number;
-    title: string;
-    xp: number;
-    streak: number;
-    // add more fields as needed later
-  }>;
-}
+// export interface IUserDetailRepository {
+//   getUserProfile(userId: string): Promise<{
+//     id: string;
+//     name: string;
+//     avatar: string;
+//     level: number;
+//     title: string;
+//     xp: number;
+//     streak: number;
+//     // add more fields as needed later
+//   }>;
+// }

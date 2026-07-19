@@ -1,8 +1,8 @@
 // src/features/dashboard/infrastructure/mock-user-profile-repository.ts
 
-import type { IUserProfileRepository, UserProfileData } from '../domain/user-profile-repository';
-import { LEADERBOARD, USER as CURRENT_USER } from '../domain/dashboard.data';
-import { POSTS } from '../domain/social.data';
+import type { IUserProfileRepository, UserProfileData } from '../../domain/user-profile-repository';
+import { LEADERBOARD, USER as CURRENT_USER } from '../../domain/dashboard.data';
+import { POSTS } from '../../domain/social.data';
 
 // Utility: derive a Persian title from a streak number
 function getTitleFromStreak(streak: number): string {
