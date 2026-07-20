@@ -1,7 +1,7 @@
 // src/features/dashboard/presentation/sections/courses-tab.tsx
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Icon, OptionalImage } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
@@ -46,25 +46,7 @@ export function CoursesTab({ courses }: CoursesTabProps) {
   const addComment = useAddSessionComment(commentsRepo);
   const reportWatchProgress = useReportSectionWatchProgress(coursesRepo);
 
-  const handleAddComment = (text: string) => {
-    if (!selected || !selectedPart) return;
-    addComment.mutate({ courseId: selected.id, sectionId: selectedPart.id, text });
-  };
-
-  const handleWatchProgress = (body: SectionWatchProgressInput) => {
-    if (!selectedPart) return;
-    reportWatchProgress.mutate(
-      {
-        sectionId: selectedPart.id,
-        body,
-      },
-      {
-        onSuccess: handleWatchProgressResult,
-      },
-    );
-  };
-
-  const handleWatchProgressResult = (result: SectionWatchProgressResult) => {
+  const handleWatchProgressResult = useCallback((result: SectionWatchProgressResult) => {
     setSelectedPart((part) =>
       part && part.id === result.section.id
         ? {
@@ -81,7 +63,29 @@ export function CoursesTab({ courses }: CoursesTabProps) {
     if (result.reward?.xpGranted) setEarnedXp(result.reward.xpGranted);
     if (result.reward?.streak?.increased) setStreakReward(result.reward.streak.current);
     if (result.reward?.achievements?.[0]) setEarnedAchievement(result.reward.achievements[0]);
+  }, []);
+
+  const handleAddComment = (text: string) => {
+    if (!selected || !selectedPart) return;
+    addComment.mutate({ courseId: selected.id, sectionId: selectedPart.id, text });
   };
+
+  const handleWatchProgress = useCallback(
+    (body: SectionWatchProgressInput) => {
+      if (!selectedPart) return;
+
+      reportWatchProgress.mutate(
+        {
+          sectionId: selectedPart.id,
+          body,
+        },
+        {
+          onSuccess: handleWatchProgressResult,
+        },
+      );
+    },
+    [selectedPart?.id, reportWatchProgress],
+  );
 
   const handleNextSession = () => {
     const nextSectionId = sessionDetail?.part.nextSectionId ?? selectedPart?.nextSectionId;

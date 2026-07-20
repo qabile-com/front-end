@@ -1,3 +1,4 @@
+// src/features/dashboard/presentation/components/course-session-modal.tsx
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -39,8 +40,15 @@ export function CourseSessionModal({
   const maxWatchedTimeRef = useRef(0);
   const lastReportAtRef = useRef(0);
   const thresholdReportedRef = useRef(session.status === 'done');
+  const reportProgressRef = useRef(onWatchProgress);
   const [watchProgressBySession, setWatchProgressBySession] = useState<Record<string, number>>({});
   const [commentText, setCommentText] = useState('');
+
+  // Stabilize the callback ref so effects don't depend on it
+  useEffect(() => {
+    reportProgressRef.current = onWatchProgress;
+  }, [onWatchProgress]);
+
   const watchProgress = Math.max(watchProgressBySession[session.id] ?? 0, session.progress ?? 0);
 
   const buildWatchPayload = useCallback(
@@ -64,6 +72,7 @@ export function CourseSessionModal({
     [session.courseId, session.durationSeconds],
   );
 
+  // Stable version of reportWatchProgress that doesn't set state
   const reportWatchProgress = useCallback(
     (event: SectionWatchEvent, force = false) => {
       const payload = buildWatchPayload(event);
@@ -72,17 +81,19 @@ export function CourseSessionModal({
       const now = Date.now();
       const watchedSeconds = calculateWatchedSeconds(watchedRangesRef.current);
       const progress = Math.min(100, Math.floor((watchedSeconds / payload.duration) * 100));
-      setWatchProgressBySession((previous) => ({
-        ...previous,
-        [session.id]: Math.max(previous[session.id] ?? 0, progress),
-      }));
+
+      // Avoid setting state during unmount or on every small update
+      setWatchProgressBySession((previous) => {
+        if (previous[session.id] === progress) return previous;
+        return { ...previous, [session.id]: Math.max(previous[session.id] ?? 0, progress) };
+      });
 
       if (!force && now - lastReportAtRef.current < 12_000 && progress < 80) return;
 
       lastReportAtRef.current = now;
-      onWatchProgress(payload);
+      reportProgressRef.current(payload); // use the stable ref
     },
-    [buildWatchPayload, onWatchProgress, session.id],
+    [buildWatchPayload, session.id],
   );
 
   const rememberWatchedTime = useCallback(() => {
@@ -102,10 +113,10 @@ export function CourseSessionModal({
 
     const watchedSeconds = calculateWatchedSeconds(watchedRangesRef.current);
     const progress = Math.min(100, Math.floor((watchedSeconds / video.duration) * 100));
-    setWatchProgressBySession((previous) => ({
-      ...previous,
-      [session.id]: Math.max(previous[session.id] ?? 0, progress),
-    }));
+    setWatchProgressBySession((previous) => {
+      if (previous[session.id] === progress) return previous;
+      return { ...previous, [session.id]: Math.max(previous[session.id] ?? 0, progress) };
+    });
 
     if (progress >= 80 && !thresholdReportedRef.current) {
       thresholdReportedRef.current = true;
@@ -116,6 +127,7 @@ export function CourseSessionModal({
     reportWatchProgress('timeupdate');
   }, [reportWatchProgress, session.id]);
 
+  // Reset state when session changes
   useEffect(() => {
     watchedRangesRef.current = [];
     lastTimeRef.current = 0;
@@ -124,11 +136,15 @@ export function CourseSessionModal({
     thresholdReportedRef.current = session.status === 'done';
   }, [session.id, session.status, session.watchedSeconds]);
 
+  // Cleanup on close – report final progress using the stable ref
   useEffect(() => {
     return () => {
-      reportWatchProgress('close', true);
+      const payload = buildWatchPayload('close');
+      if (payload) {
+        reportProgressRef.current(payload);
+      }
     };
-  }, [reportWatchProgress]);
+  }, [buildWatchPayload]);
 
   if (!isOpen) return null;
 
@@ -142,7 +158,10 @@ export function CourseSessionModal({
   };
 
   const handleClose = () => {
-    reportWatchProgress('close', true);
+    const payload = buildWatchPayload('close');
+    if (payload) {
+      reportProgressRef.current(payload);
+    }
     onClose();
   };
 
@@ -164,7 +183,6 @@ export function CourseSessionModal({
               بازگشت
             </div>
           </button>
-
           <button
             onClick={handleClose}
             className="text-ink-2 hover:text-ink rounded-lg p-2 transition-colors"
@@ -202,9 +220,6 @@ export function CourseSessionModal({
                 <Icon name="play" size={22} className="text-white" />
               </button>
             )}
-            {/* <div className="absolute right-4 bottom-4 rounded-full bg-black/60 px-3 py-1 text-xs text-white/80">
-              {session.duration}
-            </div> */}
           </div>
 
           {/* Info bar */}
@@ -224,12 +239,7 @@ export function CourseSessionModal({
                 </div>
               </button>
             </div>
-            {/* <h2 className="text-lg font-bold">{session.title}</h2> */}
             <div className="flex items-center gap-2">
-              <span className="border-hair text-ink-2 flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold">
-                {session.status === 'done' ? 'کامل شده' : 'تکمیل خودکار در ۸۰٪'}
-                <Icon name={session.status === 'done' ? 'check' : 'play'} size={16} />
-              </span>
               <button
                 type="button"
                 onClick={onNextSession}
@@ -242,20 +252,16 @@ export function CourseSessionModal({
             </div>
           </div>
           <h2 className="p-3 pr-6 text-lg font-bold">{session.title}</h2>
-          {videoUrl && (
+          {/* {videoUrl && (
             <div className="px-6 pt-4">
-              <div className="text-ink-3 mb-2 flex items-center justify-between text-xs">
-                <span>پیشرفت مشاهده ویدیو</span>
-                <span>{watchProgress >= 100 ? 'کامل شده' : `${watchProgress}%`}</span>
-              </div>
               <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
                 <div
-                  className="h-full rounded-full [background:var(--fire-grad)] transition-[width] duration-300"
+                  className="h-full rounded-full transition-[width] duration-300 [background:var(--fire-grad)]"
                   style={{ width: `${Math.min(100, watchProgress)}%` }}
                 />
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Exercise Steps */}
           {session.steps && session.steps.length > 0 && (
@@ -355,11 +361,7 @@ export function CourseSessionModal({
   );
 }
 
-function addWatchedRange(
-  start: number,
-  end: number,
-  ranges: { start: number; end: number }[],
-) {
+function addWatchedRange(start: number, end: number, ranges: { start: number; end: number }[]) {
   if (end <= start) return;
 
   ranges.push({ start, end });
