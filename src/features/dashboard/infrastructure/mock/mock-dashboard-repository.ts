@@ -5,9 +5,13 @@ import type {
   IHomeRepository,
   ILeaderboardRepository,
   ICoursesRepository,
-  IProfileRepository,
 } from '../../domain/dashboard-repository';
-import type { CurrentUser } from '../../domain/dashboard.types';
+import type {
+  ActionRewardResult,
+  CurrentUser,
+  SectionWatchProgressInput,
+  SectionWatchProgressResult,
+} from '../../domain/dashboard.types';
 import { USER as CURRENT_USER } from '../../domain/dashboard.data';
 import { USER, STATS, ROADMAP, AI_SEED, AI_QUICK } from '../../domain/dashboard.data';
 import {
@@ -19,7 +23,16 @@ import {
 } from '../../domain/dashboard.data';
 import { Course, COURSES } from '../../domain/courses.data';
 import { IUserProfileRepository, UserProfileData } from '../../domain/user-profile-repository';
+import type {
+  IProfileRepository,
+  MyProfile,
+  ProfileSecuritySettings,
+  ProfileSettingField,
+  UpdateProfileInput,
+  VerificationResult,
+} from '../../domain/profile-repository';
 import { POSTS } from '../../domain/social.data';
+import { applyMockWatchState, recordMockWatchProgress } from './mock-course-watch-store';
 
 // ---------- User Repository ----------
 export class MockUserRepository implements IUserRepository {
@@ -61,24 +74,191 @@ export class MockCoursesRepository implements ICoursesRepository {
   async getCourses(): Promise<Course[]> {
     if (!this.cache) {
       await delay(250);
-      this.cache = [...COURSES];
+      this.cache = COURSES.map((course) => ({
+        ...course,
+        parts: course.parts.map((part) => applyMockWatchState({ ...part })),
+      }));
     }
+    this.cache = this.cache.map((course) => ({
+      ...course,
+      parts: course.parts.map((part) => applyMockWatchState(part)),
+    }));
     return this.cache;
+  }
+
+  async updateSectionProgress(
+    sectionId: string,
+    body: { status: string; progress?: number },
+  ): Promise<ActionRewardResult> {
+    const courses = await this.getCourses();
+    const part = courses.flatMap((course) => course.parts).find((item) => item.id === sectionId);
+    if (!part) throw new Error('Section not found');
+    part.status = body.status === 'done' ? 'done' : body.status === 'partial' ? 'partial' : 'none';
+    part.progress = body.progress;
+    return {
+      streak: {
+        increased: true,
+        previous: 23,
+        current: 24,
+        freezesRemaining: 2,
+      },
+      achievements:
+        sectionId === 'c1-s1'
+          ? [
+              {
+                icon: 'flame',
+                label: 'آتش‌افروز',
+                unlocked: true,
+                slug: 'atash-afrooz',
+                count: 1,
+                isShareable: true,
+                conditions: [
+                  {
+                    id: 'first-exercise',
+                    label: 'انجام اولین تمرین',
+                    passed: true,
+                  },
+                ],
+              },
+            ]
+          : [],
+    };
+  }
+
+  async reportSectionWatchProgress(
+    sectionId: string,
+    body: SectionWatchProgressInput,
+  ): Promise<SectionWatchProgressResult> {
+    await delay(200);
+    const result = recordMockWatchProgress(sectionId, body);
+    if (this.cache) {
+      this.cache = this.cache.map((course) => ({
+        ...course,
+        parts: course.parts.map((part) =>
+          part.id === sectionId ? { ...part, ...result.section } : part,
+        ),
+      }));
+    }
+    return result;
   }
 }
 
 // ---------- Profile Repository ----------
 export class MockProfileRepository implements IProfileRepository {
-  private cache: Awaited<ReturnType<IProfileRepository['getProfileData']>> | null = null;
-  async getProfileData() {
+  private cache: MyProfile | null = null;
+  private securitySettings: ProfileSecuritySettings = {
+    dailyReminder: true,
+    autoLogout: true,
+    weeklySummary: true,
+  };
+
+  async getMyProfile(): Promise<MyProfile> {
     if (this.cache) return this.cache;
     await delay(300);
     this.cache = {
+      id: 'current-user',
+      name: USER.name,
+      username: 'Sample',
+      initial: USER.initial,
+      avatar: USER.avatar,
+      title: USER.title,
+      level: USER.level,
+      xp: USER.xp,
+      xpMax: USER.xpMax,
+      streak: 31,
+      phone: '09123456789',
+      isPhoneVerified: true,
+      email: 'arash.karimi@example.com',
+      isEmailVerified: true,
+      role: 'user',
+      securitySettings: this.securitySettings,
       profileStats: PROFILE_STATS,
       achievements: ACHIEVEMENTS,
       settings: SETTINGS,
+      posts: POSTS.filter((post) => post.authorId === 'arash')
+        .slice(0, 3)
+        .map((post) => ({
+          id: post.id,
+          text: post.text,
+          likes: post.likes,
+          commentsCount: post.comments.length,
+          time: post.time,
+        })),
     };
     return this.cache;
+  }
+
+  async updateMyProfile(input: UpdateProfileInput): Promise<MyProfile> {
+    await delay(250);
+    const profile = await this.getMyProfile();
+    this.cache = {
+      ...profile,
+      name: input.name?.trim() || profile.name,
+      username: input.username ?? profile.username,
+      email: input.email ?? profile.email,
+      isEmailVerified: input.email && input.email !== profile.email ? false : profile.isEmailVerified,
+    };
+    return this.cache;
+  }
+
+  async updateProfileAvatar(file: File): Promise<MyProfile> {
+    await delay(300);
+    const profile = await this.getMyProfile();
+    const objectUrl =
+      typeof URL !== 'undefined' && URL.createObjectURL
+        ? URL.createObjectURL(file)
+        : profile.avatar;
+    this.cache = { ...profile, avatar: objectUrl };
+    return this.cache;
+  }
+
+  async requestEmailVerification(): Promise<void> {
+    await delay(250);
+  }
+
+  async deleteMyAccount(): Promise<void> {
+    await delay(250);
+  }
+
+  async updateSecuritySetting(
+    field: ProfileSettingField,
+    value: boolean,
+  ): Promise<ProfileSecuritySettings> {
+    await delay(200);
+    this.securitySettings = { ...this.securitySettings, [field]: value };
+    if (this.cache) {
+      this.cache = { ...this.cache, securitySettings: this.securitySettings };
+    }
+    return this.securitySettings;
+  }
+
+  async requestPhoneChangeCode(): Promise<void> {
+    await delay(250);
+  }
+
+  async verifyPhoneChangeCode(): Promise<VerificationResult> {
+    await delay(250);
+    return { verificationToken: 'mock-phone-verification-token' };
+  }
+
+  async confirmPhoneChange(newPhone: string): Promise<MyProfile> {
+    await delay(250);
+    const profile = await this.getMyProfile();
+    this.cache = { ...profile, phone: newPhone };
+    return this.cache;
+  }
+
+  async requestPasswordChangeCode(): Promise<void> {
+    await delay(250);
+  }
+
+  async verifyPasswordChangeCode(): Promise<VerificationResult> {
+    await delay(250);
+    return { verificationToken: 'mock-password-verification-token' };
+  }
+
+  async confirmPasswordChange(): Promise<void> {
+    await delay(250);
   }
 }
 
@@ -96,7 +276,7 @@ export class MockUserDetailRepository implements IUserProfileRepository {
     const peersFollowed = 120;
     const peersFollowing = 85;
     const phone = '09123456789';
-    const email = null;
+    const email = 'arash.karimi@example.com';
 
     if (userId === CURRENT_USER.name) {
       name = CURRENT_USER.name;
@@ -151,6 +331,7 @@ export class MockUserDetailRepository implements IUserProfileRepository {
         peersFollowing,
       },
       profileStats: [{ value: `${streak}`, label: 'روز زنجیره' }],
+      achievements: [],
       posts: userPosts,
     };
   }
