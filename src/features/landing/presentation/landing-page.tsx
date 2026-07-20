@@ -25,7 +25,7 @@ export function LandingPage() {
     <>
       <BackgroundField />
       <SiteNav />
-      <main className="relative overflow-x-hidden">
+      <main className="landing-page relative w-full overflow-x-clip">
         {/* Hero section receives dynamic stats and chips */}
         <HeroSection
           totalMembers={stats.data?.totalMembers}

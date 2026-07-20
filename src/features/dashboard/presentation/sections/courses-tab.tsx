@@ -9,6 +9,7 @@ import type { Course, CoursePart } from '../../domain/courses.data';
 import { CourseSessionModal } from '../components/course-session-modal';
 import { StreakSuccessModal } from '../components/streak-success-modal';
 import { AchievementEarnedModal } from '../components/achievement-earned-modal';
+import { XpEarnedModal } from '../components/xp-earned-modal';
 import { PhoenixIcon } from './dashboard-sidebar';
 import { useSessionDetail } from '../../application/use-session-detail';
 import { commentsRepo, coursesRepo, sessionRepo } from '../../infrastructure/repository-factory';
@@ -27,6 +28,7 @@ interface CoursesTabProps {
 export function CoursesTab({ courses }: CoursesTabProps) {
   const [selected, setSelected] = useState<Course | null>(null);
   const [selectedPart, setSelectedPart] = useState<CoursePart | null>(null);
+  const [earnedXp, setEarnedXp] = useState<number | null>(null);
   const [streakReward, setStreakReward] = useState<number | null>(null);
   const [earnedAchievement, setEarnedAchievement] = useState<Achievement | null>(null);
   // const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
@@ -76,6 +78,7 @@ export function CoursesTab({ courses }: CoursesTabProps) {
         : part,
     );
 
+    if (result.reward?.xpGranted) setEarnedXp(result.reward.xpGranted);
     if (result.reward?.streak?.increased) setStreakReward(result.reward.streak.current);
     if (result.reward?.achievements?.[0]) setEarnedAchievement(result.reward.achievements[0]);
   };
@@ -196,6 +199,11 @@ export function CoursesTab({ courses }: CoursesTabProps) {
         isOpen={streakReward !== null}
         streak={streakReward ?? 0}
         onClose={() => setStreakReward(null)}
+      />
+      <XpEarnedModal
+        xp={earnedXp}
+        description="امتیاز این جلسه به حساب قبیله‌ات اضافه شد."
+        onClose={() => setEarnedXp(null)}
       />
       <AchievementEarnedModal
         achievement={earnedAchievement}

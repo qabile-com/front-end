@@ -83,6 +83,7 @@ export interface StreakReward {
 }
 
 export interface ActionRewardResult {
+  xpGranted?: number;
   streak?: StreakReward | null;
   achievements?: Achievement[];
 }
@@ -112,7 +113,7 @@ export interface SectionWatchProgressResult {
     completedAt?: string | null;
     xpGrantedAt?: string | null;
   };
-  reward?: (ActionRewardResult & { xpGranted?: number }) | null;
+  reward?: ActionRewardResult | null;
 }
 
 export interface SettingItem {

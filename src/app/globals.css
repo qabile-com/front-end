@@ -71,6 +71,11 @@
     text-rendering: optimizeLegibility;
   }
 
+  html,
+  body {
+    max-width: 100%;
+  }
+
   ::selection {
     background: rgba(255, 98, 0, 0.32);
     color: #fff;
@@ -274,6 +279,18 @@
 
   .chip-float {
     animation: floaty 6s ease-in-out infinite;
+  }
+
+  .landing-page {
+    overflow-x: hidden;
+  }
+
+  @supports (overflow: clip) {
+    html,
+    body,
+    .landing-page {
+      overflow-x: clip;
+    }
   }
 
   .typing-dot {

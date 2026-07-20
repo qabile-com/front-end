@@ -96,6 +96,7 @@ export class MockCoursesRepository implements ICoursesRepository {
     part.status = body.status === 'done' ? 'done' : body.status === 'partial' ? 'partial' : 'none';
     part.progress = body.progress;
     return {
+      xpGranted: part.xp ?? 50,
       streak: {
         increased: true,
         previous: 23,

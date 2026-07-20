@@ -79,7 +79,9 @@ export class MockRoadmapStepRepository implements IRoadmapStepRepository {
 
   async completeStep(stepId: number): Promise<ActionRewardResult> {
     await delay(250);
+    const detail = stepDetails[stepId];
     return {
+      xpGranted: detail?.xpReward ?? 0,
       streak: {
         increased: true,
         previous: 23,

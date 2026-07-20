@@ -18,6 +18,7 @@ import { AdamAvatar, PhoenixIcon } from './dashboard-sidebar';
 import { StepModalContainer } from '../components/step-modal-container';
 import { StreakSuccessModal } from '../components/streak-success-modal';
 import { AchievementEarnedModal } from '../components/achievement-earned-modal';
+import { XpEarnedModal } from '../components/xp-earned-modal';
 import { roadmapStepRepo } from '../../infrastructure/repository-factory';
 import { useCompleteRoadmapStep } from '../../application/use-complete-roadmap-step';
 import type { Achievement } from '../../domain/dashboard.types';
@@ -48,6 +49,7 @@ export function HomeTab({
 }: HomeTabProps) {
   const [roadmap, setRoadmap] = useState<RoadmapItem[]>(initialRoadmap);
   const [selectedStepId, setSelectedStepId] = useState<number | null>(null);
+  const [earnedXp, setEarnedXp] = useState<number | null>(null);
   const [streakReward, setStreakReward] = useState<number | null>(null);
   const [earnedAchievement, setEarnedAchievement] = useState<Achievement | null>(null);
   const completeStep = useCompleteRoadmapStep(roadmapStepRepo);
@@ -60,6 +62,7 @@ export function HomeTab({
       ),
     );
     setSelectedStepId(null);
+    if (reward.xpGranted) setEarnedXp(reward.xpGranted);
     if (reward.streak?.increased) setStreakReward(reward.streak.current);
     if (reward.achievements?.[0]) setEarnedAchievement(reward.achievements[0]);
   };
@@ -107,6 +110,11 @@ export function HomeTab({
         isOpen={streakReward !== null}
         streak={streakReward ?? 0}
         onClose={() => setStreakReward(null)}
+      />
+      <XpEarnedModal
+        xp={earnedXp}
+        description="امتیاز این قدم از نقشه راه به حساب قبیله‌ات اضافه شد."
+        onClose={() => setEarnedXp(null)}
       />
       <AchievementEarnedModal
         achievement={earnedAchievement}

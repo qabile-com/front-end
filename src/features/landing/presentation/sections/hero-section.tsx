@@ -79,7 +79,7 @@ export function HeroSection({ totalMembers = 52000, rating = 4.9, chips }: HeroS
     : [];
 
   return (
-    <section className="relative flex min-h-svh items-center overflow-x-hidden pt-[160px] pb-[90px]">
+    <section className="relative isolate flex min-h-screen items-center pt-[160px] pb-[90px]">
       <Container>
         <div className="grid items-center gap-11 lg:grid-cols-[1.1fr_.9fr]">
           <div>
@@ -135,7 +135,7 @@ export function HeroSection({ totalMembers = 52000, rating = 4.9, chips }: HeroS
             </div>
           </div>
 
-          <div className="relative mx-auto grid w-full max-w-[580px] place-items-center max-lg:max-w-[380px]">
+          <div className="relative mx-auto grid w-full max-w-[580px] place-items-center overflow-visible max-lg:max-w-[380px]">
             <div
               ref={glowRef}
               className="phoenix-glow pointer-events-none absolute inset-[-15%] z-0 rounded-full [background:radial-gradient(ellipse_70%_60%_at_50%_42%,rgba(255,98,0,.22),rgba(204,67,8,.08)_45%,transparent_70%)]"
@@ -147,7 +147,7 @@ export function HeroSection({ totalMembers = 52000, rating = 4.9, chips }: HeroS
             {displayChips.map((chip) => (
               <div
                 key={chip.label}
-                className={`chip-float border-hair absolute z-[3] flex items-center gap-2.25 rounded-[13px] border px-3.25 py-2.25 shadow-[0_10px_28px_-10px_rgba(0,0,0,.7)] backdrop-blur-lg [background:rgba(15,9,5,.72)] ${chip.cls}`}
+                className={`chip-float border-hair absolute z-[3] flex max-w-[calc(100vw-2rem)] items-center gap-2.25 rounded-[13px] border px-3.25 py-2.25 shadow-[0_10px_28px_-10px_rgba(0,0,0,.7)] backdrop-blur-lg [background:rgba(15,9,5,.72)] ${chip.cls}`}
               >
                 <span className="text-gold grid size-8 place-items-center rounded-[9px] [background:var(--glass-2)]">
                   <Icon name={chip.icon as IconName} size={16} />
