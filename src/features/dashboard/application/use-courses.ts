@@ -1,38 +1,68 @@
 // src/features/dashboard/application/use-courses.ts
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ICoursesRepository } from '../domain/dashboard-repository';
-import type { Course } from '../domain/courses.data';
+import type { SectionWatchProgressInput } from '../domain/dashboard.types';
 
 export function useCourses(repo: ICoursesRepository) {
-  const [courses, setCourses] = useState<Course[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const fetched = useRef(false);
+  const query = useQuery({
+    queryKey: ['dashboard', 'courses'],
+    queryFn: () => repo.getCourses(),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    if (fetched.current) return;
-    fetched.current = true;
-    let cancelled = false;
-    (async () => {
-      try {
-        const list = await repo.getCourses();
-        if (!cancelled) {
-          setCourses(list);
-          setLoading(false);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : 'خطا');
-          setLoading(false);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [repo]);
+  return {
+    ...query,
+    courses: query.data ?? null,
+    loading: query.isLoading,
+    error: query.error instanceof Error ? query.error.message : null,
+  };
+}
 
-  return { courses, loading, error };
+export function useUpdateSectionProgress(repo: ICoursesRepository) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      sectionId,
+      body,
+    }: {
+      sectionId: string;
+      body: { status: string; progress?: number };
+    }) => repo.updateSectionProgress(sectionId, body),
+    onSuccess: async (_data, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'courses'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'session'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'comments'] }),
+      ]);
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'section', variables.sectionId] });
+    },
+  });
+}
+
+export function useReportSectionWatchProgress(repo: ICoursesRepository) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      sectionId,
+      body,
+    }: {
+      sectionId: string;
+      body: SectionWatchProgressInput;
+    }) => repo.reportSectionWatchProgress(sectionId, body),
+    onSuccess: async (result) => {
+      if (result.section.status !== 'done') return;
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'courses'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'session'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] }),
+      ]);
+    },
+  });
 }

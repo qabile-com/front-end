@@ -11,10 +11,17 @@ interface StepModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: () => void;
+  isCompleting?: boolean;
   detail: RoadmapStepDetail;
 }
 
-export function StepModal({ isOpen, onClose, onComplete, detail }: StepModalProps) {
+export function StepModal({
+  isOpen,
+  onClose,
+  onComplete,
+  isCompleting = false,
+  detail,
+}: StepModalProps) {
   const [checkedStepIds, setCheckedStepIds] = useState<string[]>([]);
 
   if (!isOpen) return null;
@@ -131,10 +138,10 @@ export function StepModal({ isOpen, onClose, onComplete, detail }: StepModalProp
             variant="primary"
             size="sm"
             onClick={handleComplete}
-            disabled={detail.type === 'exercise' && !isAllChecked}
+            disabled={isCompleting || (detail.type === 'exercise' && !isAllChecked)}
             className="text-white"
           >
-            تکمیل شد
+            {isCompleting ? 'در حال ثبت...' : 'تکمیل شد'}
             <Icon name="check" size={20} />
           </Button>
         </div>

@@ -2,15 +2,23 @@
 'use client';
 
 import { useState } from 'react';
-import { Icon } from '@/shared/ui';
+import { Icon, OptionalImage } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
 import type { Course, CoursePart } from '../../domain/courses.data';
 import { CourseSessionModal } from '../components/course-session-modal';
+import { StreakSuccessModal } from '../components/streak-success-modal';
+import { AchievementEarnedModal } from '../components/achievement-earned-modal';
 import { PhoenixIcon } from './dashboard-sidebar';
 import { useSessionDetail } from '../../application/use-session-detail';
-import { commentsRepo, sessionRepo } from '../../infrastructure/repository-factory';
-import { useSessionComments } from '../../application/use-session-comments';
+import { commentsRepo, coursesRepo, sessionRepo } from '../../infrastructure/repository-factory';
+import { useReportSectionWatchProgress } from '../../application/use-courses';
+import { useAddSessionComment, useSessionComments } from '../../application/use-session-comments';
+import type {
+  Achievement,
+  SectionWatchProgressInput,
+  SectionWatchProgressResult,
+} from '../../domain/dashboard.types';
 
 interface CoursesTabProps {
   courses: Course[];
@@ -19,23 +27,71 @@ interface CoursesTabProps {
 export function CoursesTab({ courses }: CoursesTabProps) {
   const [selected, setSelected] = useState<Course | null>(null);
   const [selectedPart, setSelectedPart] = useState<CoursePart | null>(null);
+  const [streakReward, setStreakReward] = useState<number | null>(null);
+  const [earnedAchievement, setEarnedAchievement] = useState<Achievement | null>(null);
   // const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
   const { data: sessionDetail, isLoading } = useSessionDetail(
     sessionRepo,
     selected?.id ?? null,
-    selectedPart?.title ?? null,
+    selectedPart?.id ?? null,
   );
   const commentsQuery = useSessionComments(
     commentsRepo,
     selected?.id ?? null,
-    selectedPart?.title ?? null,
+    selectedPart?.id ?? null,
   );
+  const addComment = useAddSessionComment(commentsRepo);
+  const reportWatchProgress = useReportSectionWatchProgress(coursesRepo);
 
   const handleAddComment = (text: string) => {
-    // TODO: Replace with a proper mutation to add comment
-    console.log('New comment:', text);
-    // You can optimistically update the commentsQuery cache here
+    if (!selected || !selectedPart) return;
+    addComment.mutate({ courseId: selected.id, sectionId: selectedPart.id, text });
+  };
+
+  const handleWatchProgress = (body: SectionWatchProgressInput) => {
+    if (!selectedPart) return;
+    reportWatchProgress.mutate(
+      {
+        sectionId: selectedPart.id,
+        body,
+      },
+      {
+        onSuccess: handleWatchProgressResult,
+      },
+    );
+  };
+
+  const handleWatchProgressResult = (result: SectionWatchProgressResult) => {
+    setSelectedPart((part) =>
+      part && part.id === result.section.id
+        ? {
+            ...part,
+            status: result.section.status,
+            progress: result.section.progress,
+            watchedSeconds: result.section.watchedSeconds,
+            completedAt: result.section.completedAt,
+            xpGrantedAt: result.section.xpGrantedAt,
+          }
+        : part,
+    );
+
+    if (result.reward?.streak?.increased) setStreakReward(result.reward.streak.current);
+    if (result.reward?.achievements?.[0]) setEarnedAchievement(result.reward.achievements[0]);
+  };
+
+  const handleNextSession = () => {
+    const nextSectionId = sessionDetail?.part.nextSectionId ?? selectedPart?.nextSectionId;
+    if (!selected || !nextSectionId) return;
+    const nextPart = selected.parts.find((part) => part.id === nextSectionId);
+    setSelectedPart(
+      nextPart ?? {
+        id: nextSectionId,
+        title: '',
+        duration: '',
+        status: 'none',
+      },
+    );
   };
 
   return (
@@ -62,18 +118,27 @@ export function CoursesTab({ courses }: CoursesTabProps) {
                   isSel && 'border-[rgba(255,98,0,.4)] shadow-[0_12px_36px_-16px_var(--glow)]',
                 )}
               >
-                {/* Fixed‑height image area */}
                 <div
-                  className="relative grid h-40 shrink-0 place-items-center"
-                  style={{ background: course.gradient }}
+                  className="relative grid h-40 shrink-0 place-items-center overflow-hidden"
+                  style={{ background: getCourseFallbackGradient(course.id) }}
                 >
+                  {course.imageUrl && (
+                    <>
+                      <OptionalImage
+                        src={course.imageUrl}
+                        alt={course.title}
+                        className="object-cover"
+                        loading="lazy"
+                      />
+                      <span className="absolute inset-0 bg-black/35" />
+                    </>
+                  )}
                   <Icon name="play" size={34} className="text-white/90" />
                   <span className="absolute end-2.5 top-2.5 rounded-md bg-black/30 px-2 py-0.5 text-[11px] font-bold text-white">
                     {course.duration}
                   </span>
                 </div>
 
-                {/* Text content – fills remaining space */}
                 <div className="flex flex-1 flex-col p-4">
                   <span className="text-gold text-[11px] font-bold">{course.category}</span>
                   <h3 className="mt-1 text-[15px] font-extrabold">{course.title}</h3>
@@ -120,14 +185,38 @@ export function CoursesTab({ courses }: CoursesTabProps) {
           session={sessionDetail.part}
           videoUrl={sessionDetail.videoUrl}
           commentsQuery={commentsQuery}
-          onMarkComplete={() => {
-            setSelectedPart(null);
-          }}
+          onNextSession={handleNextSession}
+          onWatchProgress={handleWatchProgress}
           onAddComment={handleAddComment}
+          isAddingComment={addComment.isPending}
         />
       )}
+
+      <StreakSuccessModal
+        isOpen={streakReward !== null}
+        streak={streakReward ?? 0}
+        onClose={() => setStreakReward(null)}
+      />
+      <AchievementEarnedModal
+        achievement={earnedAchievement}
+        onClose={() => setEarnedAchievement(null)}
+      />
     </div>
   );
+}
+
+const COURSE_FALLBACK_GRADIENTS = [
+  'linear-gradient(135deg,#1f8a5b,#2bd4a8)',
+  'linear-gradient(135deg,#ff6200,#f3ba63)',
+  'linear-gradient(135deg,#5b7cfa,#9b6bff)',
+  'linear-gradient(135deg,#ffb347,#cc7a08)',
+  'linear-gradient(135deg,#cc4308,#ff6200)',
+  'linear-gradient(135deg,#2bd4a8,#1f8a5b)',
+];
+
+function getCourseFallbackGradient(courseId: string) {
+  const hash = Array.from(courseId).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return COURSE_FALLBACK_GRADIENTS[hash % COURSE_FALLBACK_GRADIENTS.length]!;
 }
 
 function DetailEmpty() {

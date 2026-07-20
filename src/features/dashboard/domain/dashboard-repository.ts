@@ -1,9 +1,17 @@
 // src/features/dashboard/domain/dashboard-repository.ts
 
-import type { CurrentUser, StatCard, RoadmapItem, ChatMessage } from './dashboard.types';
+import type {
+  ActionRewardResult,
+  ChatMessage,
+  CurrentUser,
+  RoadmapItem,
+  SectionWatchProgressInput,
+  SectionWatchProgressResult,
+  StatCard,
+} from './dashboard.types';
 import type { PodiumPlace, LbRow } from './dashboard.types';
-import type { Achievement, SettingItem } from './dashboard.types';
 import type { Course } from './courses.data';
+import type { IProfileRepository } from './profile-repository';
 
 /**
  * Repository for the currently logged‑in user.
@@ -39,18 +47,17 @@ export interface ILeaderboardRepository {
  */
 export interface ICoursesRepository {
   getCourses(): Promise<Course[]>;
+  updateSectionProgress(
+    sectionId: string,
+    body: { status: string; progress?: number },
+  ): Promise<ActionRewardResult>;
+  reportSectionWatchProgress(
+    sectionId: string,
+    body: SectionWatchProgressInput,
+  ): Promise<SectionWatchProgressResult>;
 }
 
-/**
- * Profile data (excluding current user).
- */
-export interface IProfileRepository {
-  getProfileData(): Promise<{
-    profileStats: { value: string; label: string }[];
-    achievements: Achievement[];
-    settings: SettingItem[];
-  }>;
-}
+export type { IProfileRepository };
 
 /**
  * User detail for the leaderboard modal.

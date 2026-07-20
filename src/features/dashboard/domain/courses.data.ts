@@ -1,10 +1,19 @@
 export type PartStatus = 'done' | 'partial' | 'none';
 
 export interface CoursePart {
+  id: string;
+  courseId?: string;
+  previousSectionId?: string | null;
+  nextSectionId?: string | null;
   title: string;
   duration: string;
+  durationSeconds?: number;
+  xp?: number;
   status: PartStatus;
   progress?: number;
+  watchedSeconds?: number;
+  completedAt?: string | null;
+  xpGrantedAt?: string | null;
   steps?: { id: string; text: string; isCompleted: boolean }[];
   views?: number;
 }
@@ -13,40 +22,41 @@ export interface Course {
   id: string;
   title: string;
   category: string;
-  gradient: string;
+  imageUrl?: string | null;
   duration: string;
   views: string;
   xp: number;
   parts: CoursePart[];
 }
 
-export const COURSES: Course[] = [
+const RAW_COURSES: Course[] = [
   {
     id: 'c1',
     title: '۵ قدم تا سلامتی',
     category: 'سلامت',
-    gradient: 'linear-gradient(135deg,#1f8a5b,#2bd4a8)',
+    imageUrl: null,
     duration: '۴۵:۲۰',
     views: '۲،۳۴۰',
     xp: 250,
     parts: [
-      { title: 'قدم اول: ذهن‌آگاهی', duration: '۸:۳۰', status: 'done' },
-      { title: 'قدم دوم: تغذیه سالم', duration: '۱۰:۱۵', status: 'partial', progress: 40 },
-      { title: 'قدم سوم: ورزش روزانه', duration: '۹:۴۵', status: 'none' },
-      { title: 'قدم چهارم: خواب کافی', duration: '۷:۲۰', status: 'none' },
-      { title: 'قدم پنجم: مدیریت استرس', duration: '۹:۵۰', status: 'none' },
+      { id: 'c1-s1', title: 'قدم اول: ذهن‌آگاهی', duration: '۸:۳۰', status: 'done' },
+      { id: 'c1-s2', title: 'قدم دوم: تغذیه سالم', duration: '۱۰:۱۵', status: 'partial', progress: 40 },
+      { id: 'c1-s3', title: 'قدم سوم: ورزش روزانه', duration: '۹:۴۵', status: 'none' },
+      { id: 'c1-s4', title: 'قدم چهارم: خواب کافی', duration: '۷:۲۰', status: 'none' },
+      { id: 'c1-s5', title: 'قدم پنجم: مدیریت استرس', duration: '۹:۵۰', status: 'none' },
     ],
   },
   {
     id: 'c2',
     title: 'مدیریت ذهن در بازار',
     category: 'معامله‌گری',
-    gradient: 'linear-gradient(135deg,#ff6200,#f3ba63)',
+    imageUrl: null,
     duration: '۱:۱۲:۰۰',
     views: '۴،۸۲۰',
     xp: 400,
     parts: [
       {
+        id: 'c2-s1',
         title: 'روانشناسی ترس و طمع',
         duration: '۱۴:۲۰',
         status: 'done',
@@ -56,71 +66,98 @@ export const COURSES: Course[] = [
           { id: 's3', text: 'تمرین تنفس و مدیریت هیجان', isCompleted: false },
         ],
       },
-      { title: 'اثر لنگر ذهنی', duration: '۱۲:۴۵', status: 'partial', progress: 65 },
-      { title: 'تله‌های تصمیم‌گیری', duration: '۱۱:۳۰', status: 'none' },
-      { title: 'ساخت قوانین شخصی', duration: '۱۳:۲۵', status: 'none' },
+      { id: 'c2-s2', title: 'اثر لنگر ذهنی', duration: '۱۲:۴۵', status: 'partial', progress: 65 },
+      { id: 'c2-s3', title: 'تله‌های تصمیم‌گیری', duration: '۱۱:۳۰', status: 'none' },
+      { id: 'c2-s4', title: 'ساخت قوانین شخصی', duration: '۱۳:۲۵', status: 'none' },
     ],
   },
   {
     id: 'c3',
     title: 'عادت‌سازی اتمی',
     category: 'رشد فردی',
-    gradient: 'linear-gradient(135deg,#5b7cfa,#9b6bff)',
+    imageUrl: null,
     duration: '۳۸:۱۰',
     views: '۶،۱۰۰',
     xp: 300,
     parts: [
-      { title: 'چرخه عادت', duration: '۸:۰۰', status: 'done' },
-      { title: 'قانون دو دقیقه', duration: '۶:۳۰', status: 'done' },
-      { title: 'محیط‌سازی برای موفقیت', duration: '۷:۴۰', status: 'none' },
-      { title: 'هویت‌محوری', duration: '۸:۰۰', status: 'none' },
-      { title: 'سیستم‌سازی روزانه', duration: '۸:۰۰', status: 'none' },
+      { id: 'c3-s1', title: 'چرخه عادت', duration: '۸:۰۰', status: 'done' },
+      { id: 'c3-s2', title: 'قانون دو دقیقه', duration: '۶:۳۰', status: 'done' },
+      { id: 'c3-s3', title: 'محیط‌سازی برای موفقیت', duration: '۷:۴۰', status: 'none' },
+      { id: 'c3-s4', title: 'هویت‌محوری', duration: '۸:۰۰', status: 'none' },
+      { id: 'c3-s5', title: 'سیستم‌سازی روزانه', duration: '۸:۰۰', status: 'none' },
     ],
   },
   {
     id: 'c4',
     title: 'هوش مالی پایه',
     category: 'سواد مالی',
-    gradient: 'linear-gradient(135deg,#ffb347,#cc7a08)',
+    imageUrl: null,
     duration: '۵۵:۴۵',
     views: '۳،۲۷۰',
     xp: 350,
     parts: [
-      { title: 'درآمد فعال و غیرفعال', duration: '۱۲:۰۰', status: 'none' },
-      { title: 'قانون ۵۰-۳۰-۲۰', duration: '۱۰:۳۰', status: 'none' },
-      { title: 'صندوق اضطراری', duration: '۱۱:۱۵', status: 'none' },
-      { title: 'مقدمه سرمایه‌گذاری', duration: '۱۱:۰۰', status: 'none' },
-      { title: 'اشتباهات رایج مالی', duration: '۱۰:۰۰', status: 'none' },
+      { id: 'c4-s1', title: 'درآمد فعال و غیرفعال', duration: '۱۲:۰۰', status: 'none' },
+      { id: 'c4-s2', title: 'قانون ۵۰-۳۰-۲۰', duration: '۱۰:۳۰', status: 'none' },
+      { id: 'c4-s3', title: 'صندوق اضطراری', duration: '۱۱:۱۵', status: 'none' },
+      { id: 'c4-s4', title: 'مقدمه سرمایه‌گذاری', duration: '۱۱:۰۰', status: 'none' },
+      { id: 'c4-s5', title: 'اشتباهات رایج مالی', duration: '۱۰:۰۰', status: 'none' },
     ],
   },
   {
     id: 'c5',
     title: 'مبانی ذهنیت رشد',
     category: 'رشد فردی',
-    gradient: 'linear-gradient(135deg,#cc4308,#ff6200)',
+    imageUrl: null,
     duration: '۵۰:۰۰',
     views: '۸،۴۰۰',
     xp: 450,
     parts: [
-      { title: 'ذهنیت ثابت در برابر ذهنیت رشد', duration: '۱۲:۰۰', status: 'done' },
-      { title: 'توانایی مغز برای تغییر', duration: '۱۰:۳۰', status: 'partial', progress: 55 },
-      { title: 'ابزارهای بازسازی ذهن', duration: '۱۱:۰۰', status: 'none' },
-      { title: 'عادت‌سازی آگاهانه', duration: '۹:۴۵', status: 'none' },
+      { id: 'c5-s1', title: 'ذهنیت ثابت در برابر ذهنیت رشد', duration: '۱۲:۰۰', status: 'done' },
+      { id: 'c5-s2', title: 'توانایی مغز برای تغییر', duration: '۱۰:۳۰', status: 'partial', progress: 55 },
+      { id: 'c5-s3', title: 'ابزارهای بازسازی ذهن', duration: '۱۱:۰۰', status: 'none' },
+      { id: 'c5-s4', title: 'عادت‌سازی آگاهانه', duration: '۹:۴۵', status: 'none' },
     ],
   },
   {
     id: 'c6',
     title: 'نوشتن موثر',
     category: 'مهارت',
-    gradient: 'linear-gradient(135deg,#2bd4a8,#1f8a5b)',
+    imageUrl: null,
     duration: '۴۲:۰۰',
     views: '۱،۹۸۰',
     xp: 280,
     parts: [
-      { title: 'استراتژی محتوا', duration: '۱۰:۰۰', status: 'none' },
-      { title: 'ساختار پست جذاب', duration: '۸:۰۰', status: 'none' },
-      { title: 'نگارش تخصصی', duration: '۹:۳۰', status: 'none' },
-      { title: 'ویرایش و بهینه‌سازی', duration: '۷:۰۰', status: 'none' },
+      { id: 'c6-s1', title: 'استراتژی محتوا', duration: '۱۰:۰۰', status: 'none' },
+      { id: 'c6-s2', title: 'ساختار پست جذاب', duration: '۸:۰۰', status: 'none' },
+      { id: 'c6-s3', title: 'نگارش تخصصی', duration: '۹:۳۰', status: 'none' },
+      { id: 'c6-s4', title: 'ویرایش و بهینه‌سازی', duration: '۷:۰۰', status: 'none' },
     ],
   },
 ];
+
+export function withCourseSectionNavigation(course: Course): Course {
+  return {
+    ...course,
+    parts: course.parts.map((part, index, parts) => ({
+      ...part,
+      courseId: part.courseId ?? course.id,
+      xp: part.xp ?? Math.round(course.xp / Math.max(1, parts.length)),
+      durationSeconds: part.durationSeconds ?? parseDurationToSeconds(part.duration),
+      previousSectionId: part.previousSectionId ?? parts[index - 1]?.id ?? null,
+      nextSectionId: part.nextSectionId ?? parts[index + 1]?.id ?? null,
+    })),
+  };
+}
+
+export const COURSES: Course[] = RAW_COURSES.map(withCourseSectionNavigation);
+
+function parseDurationToSeconds(duration: string) {
+  const normalized = duration.replace(/[۰-۹]/g, (digit) =>
+    String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)),
+  );
+  const parts = normalized.split(':').map((part) => Number(part.trim()));
+  if (parts.some((part) => Number.isNaN(part))) return undefined;
+  if (parts.length === 2) return parts[0]! * 60 + parts[1]!;
+  if (parts.length === 3) return parts[0]! * 3600 + parts[1]! * 60 + parts[2]!;
+  return undefined;
+}

@@ -1,10 +1,62 @@
 // http-courses-repository.ts
-import { getCourses } from '@/core/api/courses.api';
+import {
+  getCourses,
+  reportSectionWatchProgress,
+  updateSectionProgress,
+} from '@/core/api/courses.api';
 import type { ICoursesRepository } from '../../domain/dashboard-repository';
+import type { Course, CoursePart } from '../../domain/courses.data';
+import { withCourseSectionNavigation } from '../../domain/courses.data';
+import type {
+  ActionRewardResult,
+  SectionWatchProgressInput,
+  SectionWatchProgressResult,
+} from '../../domain/dashboard.types';
+
+type CoursePartDto = CoursePart & {
+  previousId?: string | null;
+  prevSectionId?: string | null;
+  nextId?: string | null;
+};
+
+type CourseDto = Omit<Course, 'imageUrl' | 'parts'> & {
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  coverUrl?: string | null;
+  image?: string | null;
+  parts: CoursePartDto[];
+};
 
 export class HttpCoursesRepository implements ICoursesRepository {
-  async getCourses() {
+  async getCourses(): Promise<Course[]> {
     const res = await getCourses();
-    return res.data.data;
+    const courses = (res.data.data ?? res.data) as CourseDto[];
+    return courses.map((course) =>
+      withCourseSectionNavigation({
+        ...course,
+        imageUrl: course.imageUrl ?? course.thumbnailUrl ?? course.coverUrl ?? course.image ?? null,
+        parts: course.parts.map((part) => ({
+          ...part,
+          previousSectionId: part.previousSectionId ?? part.prevSectionId ?? part.previousId ?? null,
+          nextSectionId: part.nextSectionId ?? part.nextId ?? null,
+        })),
+      }),
+    );
+  }
+
+  async updateSectionProgress(
+    sectionId: string,
+    body: { status: string; progress?: number },
+  ): Promise<ActionRewardResult> {
+    const res = await updateSectionProgress(sectionId, body);
+    return (res.data.data ?? res.data ?? {}) as ActionRewardResult;
+  }
+
+  async reportSectionWatchProgress(
+    sectionId: string,
+    body: SectionWatchProgressInput,
+  ): Promise<SectionWatchProgressResult> {
+    const res = await reportSectionWatchProgress(sectionId, body);
+    return (res.data.data ?? res.data) as SectionWatchProgressResult;
   }
 }

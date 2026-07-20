@@ -1,11 +1,28 @@
 import type { ISessionRepository, SessionDetail } from '../../domain/session-repository';
-import { httpClient } from '@/core/api/http-client';
+import { getCourseSection } from '@/core/api/courses.api';
+
+type SessionDetailDto = Omit<SessionDetail, 'part'> & {
+  part: SessionDetail['part'] & {
+    previousId?: string | null;
+    prevSectionId?: string | null;
+    nextId?: string | null;
+  };
+};
 
 export class HttpSessionRepository implements ISessionRepository {
-  async getSessionDetail(courseId: string, partTitle: string): Promise<SessionDetail> {
-    // TODO: replace with real endpoint when available
-    // const res = await httpClient.get(`/api/v1/courses/${courseId}/parts/${encodeURIComponent(partTitle)}/detail`);
-    // return res.data;
-    throw new Error('HTTP session detail endpoint not implemented yet');
+  async getSessionDetail(courseId: string, sectionId: string): Promise<SessionDetail> {
+    const res = await getCourseSection(courseId, sectionId);
+    const data = (res.data.data ?? res.data) as SessionDetailDto;
+
+    return {
+      ...data,
+      part: {
+        ...data.part,
+        courseId,
+        previousSectionId:
+          data.part.previousSectionId ?? data.part.prevSectionId ?? data.part.previousId ?? null,
+        nextSectionId: data.part.nextSectionId ?? data.part.nextId ?? null,
+      },
+    };
   }
 }

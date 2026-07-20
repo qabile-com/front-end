@@ -1,4 +1,5 @@
 export interface Comment {
+  id: string;
   name: string;
   text: string;
   time: string;
@@ -14,8 +15,9 @@ export interface PaginatedComments {
 export interface ICommentsRepository {
   getComments(
     courseId: string,
-    partTitle: string,
+    sectionId: string,
     limit?: number,
     offset?: number,
   ): Promise<PaginatedComments>;
+  addComment(courseId: string, sectionId: string, text: string): Promise<Comment>;
 }

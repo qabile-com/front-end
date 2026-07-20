@@ -5,3 +5,6 @@ export const getRoadmap = (params?: { limit?: number; offset?: number; q?: strin
   httpClient.get('/api/v1/roadmap', { params });
 
 export const getRoadmapStep = (num: number) => httpClient.get(`/api/v1/roadmap/steps/${num}`);
+
+export const completeRoadmapStep = (num: number) =>
+  httpClient.post(`/api/v1/roadmap/steps/${num}/complete`);

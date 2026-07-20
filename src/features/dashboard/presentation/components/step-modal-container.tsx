@@ -8,10 +8,17 @@ interface Props {
   stepId: number | null;
   onClose: () => void;
   onComplete: () => void;
+  isCompleting?: boolean;
   repository: IRoadmapStepRepository;
 }
 
-export function StepModalContainer({ stepId, onClose, onComplete, repository }: Props) {
+export function StepModalContainer({
+  stepId,
+  onClose,
+  onComplete,
+  isCompleting = false,
+  repository,
+}: Props) {
   if (stepId === null) return null;
 
   return (
@@ -20,6 +27,7 @@ export function StepModalContainer({ stepId, onClose, onComplete, repository }: 
       stepId={stepId}
       onClose={onClose}
       onComplete={onComplete}
+      isCompleting={isCompleting}
       repository={repository}
     />
   );
@@ -29,11 +37,13 @@ function StepLoader({
   stepId,
   onClose,
   onComplete,
+  isCompleting,
   repository,
 }: {
   stepId: number;
   onClose: () => void;
   onComplete: () => void;
+  isCompleting: boolean;
   repository: IRoadmapStepRepository;
 }) {
   const { detail, loading, error } = useRoadmapStepDetail(repository, stepId);
@@ -54,5 +64,13 @@ function StepLoader({
     );
   }
 
-  return <StepModal isOpen onClose={onClose} onComplete={onComplete} detail={detail} />;
+  return (
+    <StepModal
+      isOpen
+      onClose={onClose}
+      onComplete={onComplete}
+      isCompleting={isCompleting}
+      detail={detail}
+    />
+  );
 }

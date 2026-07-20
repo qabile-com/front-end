@@ -6,12 +6,12 @@ import type { ISessionRepository } from '../domain/session-repository';
 export function useSessionDetail(
   repo: ISessionRepository,
   courseId: string | null,
-  partTitle: string | null,
+  sectionId: string | null,
 ) {
   return useQuery({
-    queryKey: ['session-detail', courseId, partTitle],
-    queryFn: () => repo.getSessionDetail(courseId!, partTitle!),
-    enabled: !!courseId && !!partTitle,
+    queryKey: ['dashboard', 'session', courseId, sectionId],
+    queryFn: () => repo.getSessionDetail(courseId!, sectionId!),
+    enabled: !!courseId && !!sectionId,
     staleTime: 5 * 60 * 1000,
   });
 }

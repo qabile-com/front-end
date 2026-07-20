@@ -2,6 +2,7 @@
 
 import type { IRoadmapStepRepository } from '../../domain/roadmap-repository';
 import type { RoadmapStepDetail } from '../../domain/roadmap.types';
+import type { ActionRewardResult } from '../../domain/dashboard.types';
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -74,5 +75,37 @@ export class MockRoadmapStepRepository implements IRoadmapStepRepository {
     const detail = stepDetails[stepId];
     if (!detail) throw new Error(`Step ${stepId} not found`);
     return detail;
+  }
+
+  async completeStep(stepId: number): Promise<ActionRewardResult> {
+    await delay(250);
+    return {
+      streak: {
+        increased: true,
+        previous: 23,
+        current: 24,
+        freezesRemaining: 2,
+      },
+      achievements:
+        stepId === 2
+          ? [
+              {
+                icon: 'flame',
+                label: 'آتش‌افروز',
+                unlocked: true,
+                slug: 'atash-afrooz',
+                count: 1,
+                isShareable: true,
+                conditions: [
+                  {
+                    id: 'first-exercise',
+                    label: 'انجام اولین تمرین',
+                    passed: true,
+                  },
+                ],
+              },
+            ]
+          : [],
+    };
   }
 }
