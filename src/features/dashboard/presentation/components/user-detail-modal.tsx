@@ -3,12 +3,12 @@
 
 import { Icon } from '@/shared/ui';
 import { useUserDetail } from '../../application/use-user-detail';
-import type { IUserDetailRepository } from '../../domain/dashboard-repository';
+import type { IUserProfileRepository } from '../../domain/user-profile-repository';
 import { toPersianDigits } from '@/core/lib/persian';
 
 interface UserDetailModalProps {
   userId: string;
-  repo: IUserDetailRepository;
+  repo: IUserProfileRepository;
   onClose: () => void;
 }
 

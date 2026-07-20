@@ -1,43 +1,20 @@
 // src/features/dashboard/application/use-user-detail.ts
 'use client';
 
-import { useState, useEffect } from 'react';
-import type { IUserDetailRepository } from '../domain/dashboard-repository';
+import { useQuery } from '@tanstack/react-query';
+import type { IUserProfileRepository } from '../domain/user-profile-repository';
 
-export function useUserDetail(repo: IUserDetailRepository, userId: string | null) {
-  const [detail, setDetail] = useState<Awaited<
-    ReturnType<IUserDetailRepository['getUserDetail']>
-  > | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function useUserDetail(repo: IUserProfileRepository, userId: string | null) {
+  const query = useQuery({
+    queryKey: ['dashboard', 'profile', userId],
+    queryFn: () => repo.getUserProfile(userId!),
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    if (!userId) {
-      setDetail(null);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-    let cancelled = false;
-    setLoading(true);
-    (async () => {
-      try {
-        const d = await repo.getUserDetail(userId);
-        if (!cancelled) {
-          setDetail(d);
-          setLoading(false);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : 'خطا');
-          setLoading(false);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [repo, userId]);
-
-  return { detail, loading, error };
+  return {
+    detail: query.data ?? null,
+    loading: query.isLoading,
+    error: query.error instanceof Error ? query.error.message : null,
+  };
 }

@@ -16,7 +16,11 @@ import { Panel } from '../components/panel';
 import { AdamAvatar, PhoenixIcon } from './dashboard-sidebar';
 
 import { StepModalContainer } from '../components/step-modal-container';
+import { StreakSuccessModal } from '../components/streak-success-modal';
+import { AchievementEarnedModal } from '../components/achievement-earned-modal';
 import { roadmapStepRepo } from '../../infrastructure/repository-factory';
+import { useCompleteRoadmapStep } from '../../application/use-complete-roadmap-step';
+import type { Achievement } from '../../domain/dashboard.types';
 
 const STAT_TONES: Record<string, string> = {
   fire: 'text-ember [background:rgba(255,98,0,.15)]',
@@ -44,14 +48,20 @@ export function HomeTab({
 }: HomeTabProps) {
   const [roadmap, setRoadmap] = useState<RoadmapItem[]>(initialRoadmap);
   const [selectedStepId, setSelectedStepId] = useState<number | null>(null);
+  const [streakReward, setStreakReward] = useState<number | null>(null);
+  const [earnedAchievement, setEarnedAchievement] = useState<Achievement | null>(null);
+  const completeStep = useCompleteRoadmapStep(roadmapStepRepo);
 
-  const handleCompleteStep = (stepNum: number) => {
+  const handleCompleteStep = async (stepNum: number) => {
+    const reward = await completeStep.mutateAsync(stepNum);
     setRoadmap((prev) =>
       prev.map((item) =>
         item.num === stepNum ? { ...item, status: 'done' as RoadmapStatus } : item,
       ),
     );
     setSelectedStepId(null);
+    if (reward.streak?.increased) setStreakReward(reward.streak.current);
+    if (reward.achievements?.[0]) setEarnedAchievement(reward.achievements[0]);
   };
 
   return (
@@ -87,10 +97,21 @@ export function HomeTab({
         <StepModalContainer
           stepId={selectedStepId}
           onClose={() => setSelectedStepId(null)}
-          onComplete={() => handleCompleteStep(selectedStepId!)}
+          onComplete={() => void handleCompleteStep(selectedStepId!)}
+          isCompleting={completeStep.isPending}
           repository={roadmapStepRepo}
         />
       )}
+
+      <StreakSuccessModal
+        isOpen={streakReward !== null}
+        streak={streakReward ?? 0}
+        onClose={() => setStreakReward(null)}
+      />
+      <AchievementEarnedModal
+        achievement={earnedAchievement}
+        onClose={() => setEarnedAchievement(null)}
+      />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 export type IconKey = string;
 
+export const DEFAULT_AVATAR_GRADIENT = 'linear-gradient(135deg,#ff8a3d,#cc4308)';
+
 export interface CurrentUser {
   name: string;
   initial: string;
@@ -7,8 +9,9 @@ export interface CurrentUser {
   level: number;
   xp: number;
   xpMax: number;
+  streak?: number;
   avatar: string;
-  achievments?: Achievement[];
+  achievements?: Achievement[];
 }
 
 export interface NavItem {
@@ -56,6 +59,60 @@ export interface Achievement {
   icon: IconKey;
   label: string;
   unlocked: boolean;
+  slug?: string;
+  count?: number;
+  conditions?: AchievementCondition[];
+  isShareable?: boolean;
+}
+
+export interface AchievementCondition {
+  id: string;
+  label: string;
+  current?: number;
+  target?: number;
+  passed: boolean;
+}
+
+export interface StreakReward {
+  increased: boolean;
+  previous: number;
+  current: number;
+  freezeUsed?: boolean;
+  freezesRemaining?: number;
+  reset?: boolean;
+}
+
+export interface ActionRewardResult {
+  streak?: StreakReward | null;
+  achievements?: Achievement[];
+}
+
+export type SectionWatchEvent = 'timeupdate' | 'pause' | 'close' | 'ended' | 'threshold';
+
+export interface WatchRange {
+  start: number;
+  end: number;
+}
+
+export interface SectionWatchProgressInput {
+  courseId: string;
+  currentTime: number;
+  duration: number;
+  maxWatchedTime: number;
+  watchedRanges: WatchRange[];
+  event: SectionWatchEvent;
+}
+
+export interface SectionWatchProgressResult {
+  section: {
+    id: string;
+    status: 'none' | 'partial' | 'done';
+    progress: number;
+    watchedSeconds: number;
+    completedAt?: string | null;
+    xpGrantedAt?: string | null;
+  };
+  reward?: (ActionRewardResult & { xpGranted?: number }) | null;
 }
 
 export interface SettingItem {

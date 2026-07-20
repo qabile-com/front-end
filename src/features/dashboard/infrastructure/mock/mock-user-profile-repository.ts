@@ -1,7 +1,12 @@
 // src/features/dashboard/infrastructure/mock-user-profile-repository.ts
 
 import type { IUserProfileRepository, UserProfileData } from '../../domain/user-profile-repository';
-import { LEADERBOARD, USER as CURRENT_USER } from '../../domain/dashboard.data';
+import {
+  ACHIEVEMENTS,
+  LEADERBOARD,
+  PROFILE_STATS,
+  USER as CURRENT_USER,
+} from '../../domain/dashboard.data';
 import { POSTS } from '../../domain/social.data';
 
 // Utility: derive a Persian title from a streak number
@@ -22,6 +27,7 @@ export class MockUserProfileRepository implements IUserProfileRepository {
     let title = 'ققنوس طلایی';
     let level = 24;
     let xp = 6800;
+    let xpMax = 10000;
     let streak = 31;
     const peersFollowed = 120;
     const peersFollowing = 85;
@@ -33,22 +39,31 @@ export class MockUserProfileRepository implements IUserProfileRepository {
       title = CURRENT_USER.title;
       level = CURRENT_USER.level;
       xp = CURRENT_USER.xp;
+      xpMax = CURRENT_USER.xpMax;
     } else {
       const row = LEADERBOARD.find((r) => r.name === userId);
       if (row) {
         name = row.name;
         avatar = row.avatar;
-        level = parseInt(row.streak) / 3 + 1 || 1; // mock
-        title = getTitleFromStreak(streak);
+        const streakNumber = parseInt(row.streak, 10) || 0;
+        level = Math.floor(streakNumber / 3) + 1 || 1;
+        title = getTitleFromStreak(streakNumber);
         xp = parseInt(row.points.replace(/\D/g, ''), 10) || 0;
-        streak = parseInt(row.streak, 10) || 0;
+        streak = streakNumber;
       }
     }
 
-    // Filter some posts as user's posts
     const userPosts = POSTS.filter(
       (p) => p.authorId === (userId === CURRENT_USER.name ? 'arash' : 'other'),
-    ).slice(0, 3);
+    )
+      .slice(0, 3)
+      .map((post) => ({
+        id: post.id,
+        text: post.text,
+        likes: post.likes,
+        comments: post.comments,
+        time: post.time,
+      }));
 
     return {
       id: userId,
@@ -56,7 +71,15 @@ export class MockUserProfileRepository implements IUserProfileRepository {
       avatar,
       title,
       level,
+      phone: null,
+      email: null,
+      role: 'user',
+      xp,
+      xpMax,
+      streak,
       stats: { xp, streak, peersFollowed, peersFollowing },
+      profileStats: PROFILE_STATS,
+      achievements: ACHIEVEMENTS,
       posts: userPosts,
     };
   }

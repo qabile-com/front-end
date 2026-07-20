@@ -6,18 +6,16 @@ import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
 import { Panel } from '../components/panel';
 import type { PodiumPlace, LbRow } from '../../domain/dashboard.types';
-import { IUserDetailRepository } from '../../domain/dashboard-repository';
 import { useMemo, useState } from 'react';
-import { MockUserProfileRepository } from '../../infrastructure/mock/mock-user-profile-repository';
+import type { IUserProfileRepository } from '../../domain/user-profile-repository';
 
 import { UserProfileModalContainer } from '../components/user-profile-modal-container';
 import { SeasonCountdownCard } from '../components/season-countdown-card';
 
-const userProfileRepo = new MockUserProfileRepository();
 interface LeaderboardTabProps {
   podium: PodiumPlace[];
   leaderboard: LbRow[];
-  userDetailRepo: IUserDetailRepository;
+  userProfileRepo: IUserProfileRepository;
   seasonTargetDate: Date;
   seasonPointsNeeded: number;
   seasonName: string;
@@ -31,12 +29,13 @@ interface DayLeft {
 export function LeaderboardTab({
   podium,
   leaderboard,
-  userDetailRepo,
+  userProfileRepo,
   seasonTargetDate,
   seasonPointsNeeded,
   seasonName,
 }: LeaderboardTabProps) {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [nowMs] = useState(() => Date.now());
 
   const openUser = (userId: string) => setSelectedUserId(userId);
 
@@ -47,8 +46,7 @@ export function LeaderboardTab({
   }, [podium]);
 
   function calculateDayLeft(target: Date): DayLeft {
-    const now = Date.now();
-    const diff = Math.max(0, target.getTime() - now);
+    const diff = Math.max(0, target.getTime() - nowMs);
     return {
       total: diff,
       days: Math.floor(diff / (1000 * 60 * 60 * 24)),

@@ -1,6 +1,7 @@
 // src/features/dashboard/domain/user-profile-repository.ts
 
-import type { Post, PostComment } from '../domain/social.data';
+import type { Achievement } from './dashboard.types';
+import type { PostComment } from './social.data';
 
 export interface UserProfileData {
   id: string;
@@ -24,6 +25,7 @@ export interface UserProfileData {
     value: string;
     label: string;
   }[];
+  achievements?: Achievement[];
   posts: {
     id: string;
     text: string;

@@ -1,41 +1,21 @@
 // src/features/dashboard/application/use-leaderboard.ts
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import type { ILeaderboardRepository } from '../domain/dashboard-repository';
-import type { PodiumPlace, LbRow } from '../domain/dashboard.types';
 
 export function useLeaderboard(repo: ILeaderboardRepository) {
-  const [data, setData] = useState<{
-    podium: PodiumPlace[];
-    leaderboard: LbRow[];
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const fetched = useRef(false);
+  const query = useQuery({
+    queryKey: ['dashboard', 'leaderboard'],
+    queryFn: () => repo.getLeaderboardData(),
+    staleTime: 60_000,
+    retry: 1,
+  });
 
-  useEffect(() => {
-    if (fetched.current) return;
-    fetched.current = true;
-    let cancelled = false;
-    (async () => {
-      try {
-        const d = await repo.getLeaderboardData();
-        if (!cancelled) {
-          setData(d);
-          setLoading(false);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : 'خطا');
-          setLoading(false);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [repo]);
-
-  return { data, loading, error };
+  return {
+    data: query.data ?? null,
+    loading: query.isPending,
+    error: query.error instanceof Error ? query.error.message : null,
+    refetch: query.refetch,
+  };
 }

@@ -1,5 +1,10 @@
 // http-social-repository.ts
-import { getForumFeed, createForumPost, addForumComment } from '@/core/api/forum.api';
+import {
+  addForumComment,
+  createForumPost,
+  getForumFeed,
+  type ForumPostDto,
+} from '@/core/api/forum.api';
 import type { ISocialRepository } from '../../domain/social-repository';
 import type { Post, ActiveUser, PostComment } from '../../domain/social.data';
 
@@ -26,14 +31,14 @@ export class HttpSocialRepository implements ISocialRepository {
     const comments = res.data.comments;
     const newComment = comments[comments.length - 1];
     return {
-      name: newComment.name,
-      text: newComment.text,
-      time: newComment.createdAt,
+      name: newComment?.name ?? '',
+      text: newComment?.text ?? text,
+      time: newComment?.createdAt ?? '',
     };
   }
 }
 
-function apiPostToDomain(api: any): Post {
+function apiPostToDomain(api: ForumPostDto): Post {
   return {
     id: api.id,
     author: api.author,
@@ -47,7 +52,7 @@ function apiPostToDomain(api: any): Post {
     achievement: api.achievement,
     hasImage: api.hasImage,
     likes: api.likes,
-    comments: (api.comments || []).map((c: any) => ({
+    comments: (api.comments || []).map((c) => ({
       name: c.name,
       text: c.text,
       time: c.createdAt,

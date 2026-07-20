@@ -2,6 +2,7 @@
 
 import type { IUserRepository } from '../../domain/dashboard-repository';
 import { getDashboardBundle } from '@/core/api/dashboard.api';
+import { DEFAULT_AVATAR_GRADIENT } from '../../domain/dashboard.types';
 
 export class HttpUserRepository implements IUserRepository {
   async getCurrentUser() {
@@ -14,7 +15,8 @@ export class HttpUserRepository implements IUserRepository {
       level: user.level,
       xp: user.xp,
       xpMax: user.xpMax,
-      avatar: user.avatar,
+      streak: user.streak,
+      avatar: user.avatar ?? DEFAULT_AVATAR_GRADIENT,
     };
   }
 }

@@ -1,7 +1,4 @@
 import { httpClient } from './http-client';
-import type { AxiosResponse } from 'axios';
-
-// Re-define the full dashboard bundle type that matches the API response
 export interface DashboardBundle {
   user: {
     id: string;
@@ -14,7 +11,7 @@ export interface DashboardBundle {
     xp: number;
     xpMax: number;
     streak: number;
-    avatar: string;
+    avatar?: string | null;
   };
   home: {
     stats: { icon: string; tone: string; value: string; label: string }[];
@@ -22,12 +19,11 @@ export interface DashboardBundle {
     aiSeed: { from: string; text: string };
     aiQuickReplies: { label: string; send: string }[];
   };
-  leaderboard: any; // matches existing type
-  forum: any;
-  courses: any[];
-  profile: any;
-  season: any;
+  leaderboard: unknown;
+  forum: unknown;
+  courses: unknown[];
+  profile: unknown;
+  season: unknown;
 }
 
-export const getDashboardBundle = () =>
-  httpClient.get<any, AxiosResponse<DashboardBundle>>('/api/v1/dashboard');
+export const getDashboardBundle = () => httpClient.get<DashboardBundle>('/api/v1/dashboard');

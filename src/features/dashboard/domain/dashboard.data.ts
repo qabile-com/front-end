@@ -1,3 +1,4 @@
+import { DEFAULT_AVATAR_GRADIENT } from './dashboard.types';
 import type {
   Achievement,
   ChatMessage,
@@ -17,7 +18,8 @@ export const USER: CurrentUser = {
   level: 24,
   xp: 6800,
   xpMax: 10000,
-  avatar: 'linear-gradient(135deg,#ff8a3d,#cc4308)',
+  streak: 23,
+  avatar: DEFAULT_AVATAR_GRADIENT,
 };
 
 export const NAV: NavItem[] = [
@@ -112,28 +114,82 @@ export const LEADERBOARD: LbRow[] = [
 ];
 
 export const ACHIEVEMENTS: Achievement[] = [
-  { icon: 'flame', label: 'آتش‌افروز', unlocked: true },
-  { icon: 'medal', label: '۳۰ روز', unlocked: true },
-  { icon: 'bolt', label: 'سریع‌یاب', unlocked: true },
-  { icon: 'star', label: 'ستاره', unlocked: true },
-  { icon: 'trophy', label: 'قهرمان', unlocked: false },
-  { icon: 'bell', label: 'یادآور', unlocked: true },
-  { icon: 'users', label: 'قبیله‌دار', unlocked: true },
-  { icon: 'medal', label: 'مسیرنشین', unlocked: false },
+  {
+    icon: 'users',
+    label: 'وارث آتش',
+    unlocked: true,
+    slug: 'vares-ghabile',
+    count: 1,
+  },
+  {
+    icon: 'trophy',
+    label: 'قهرمان',
+    unlocked: true,
+    slug: 'gahreman',
+    count: 2,
+  },
+  {
+    icon: 'bell',
+    label: 'سفیر قبیله',
+    unlocked: true,
+    slug: 'safir-ghabile',
+    count: 1,
+  },
+  {
+    icon: 'medal',
+    label: 'تیزبال',
+    unlocked: true,
+    slug: 'tizbaal',
+    count: 1,
+  },
+  {
+    icon: 'bolt',
+    label: 'فرزند قبیله',
+    unlocked: true,
+    slug: 'farzand-ghabile',
+    count: 1,
+  },
+  {
+    icon: 'star',
+    label: 'ستاره',
+    unlocked: true,
+    slug: 'setare',
+    count: 1,
+  },
+  {
+    icon: 'flame',
+    label: 'آتش‌افروز',
+    unlocked: false,
+    slug: 'atash-afrooz',
+  },
+  {
+    icon: 'medal',
+    label: 'قلب قبیله',
+    unlocked: true,
+    slug: 'ghalb-ghabile',
+    count: 2,
+  },
+  {
+    icon: 'medal',
+    label: 'صدای قبیله',
+    unlocked: true,
+    slug: 'seda-qabile',
+    count: 1,
+  },
 ];
 
 export const SETTINGS: SettingItem[] = [
   { icon: 'user-f', label: 'ویرایش پروفایل' },
-  { icon: 'bell', label: 'اعلان‌ها' },
+  // { icon: 'bell', label: 'اعلان‌ها' },
   { icon: 'settings', label: 'تنظیمات' },
-  { icon: 'lock', label: 'حریم خصوصی' },
+  // { icon: 'lock', label: 'حریم خصوصی' },
 ];
 
 export const PROFILE_STATS = [
-  { value: '۳۱', label: 'روز زنجیره' },
-  { value: '۱۲', label: 'دوره کامل' },
-  { value: '۴۸', label: 'دستاورد' },
-  { value: 'رتبه ۵', label: 'لیگ فصلی' },
+  { value: '۴۸۴۸۴۸', label: 'امتیاز' },
+  { value: '۴۸', label: 'روز زنجیره' },
+  { value: '۱۲', label: 'هم پرواز شده' },
+  { value: '۳۱', label: 'هم پرواز' },
 ];
 
 export const AI_SEED: ChatMessage = {

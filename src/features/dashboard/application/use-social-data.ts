@@ -1,79 +1,95 @@
 // src/features/dashboard/application/use-social-data.ts
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ISocialRepository } from '../domain/social-repository';
-import type { Post, ActiveUser } from '../domain/social.data';
+import type { ActiveUser, Post } from '../domain/social.data';
+
+type SocialQueryData = {
+  posts: Post[];
+  tags: string[];
+  activeUsers: ActiveUser[];
+};
 
 export function useSocialData(repo: ISocialRepository) {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [tags, setTags] = useState<string[]>([]);
-  const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const fetched = useRef(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (fetched.current) return;
-    fetched.current = true;
-    let cancelled = false;
+  const query = useQuery({
+    queryKey: ['dashboard', 'social'],
+    queryFn: async (): Promise<SocialQueryData> => {
+      const [posts, tags, activeUsers] = await Promise.all([
+        repo.getFeed(),
+        repo.getTrendingTags(),
+        repo.getActiveUsers(),
+      ]);
 
-    const load = async () => {
-      try {
-        const [feed, trendingTags, users] = await Promise.all([
-          repo.getFeed(),
-          repo.getTrendingTags(),
-          repo.getActiveUsers(),
-        ]);
-        if (!cancelled) {
-          setPosts(feed);
-          setTags(trendingTags);
-          setActiveUsers(users);
-          setLoading(false);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : 'خطا در دریافت اطلاعات');
-          setLoading(false);
-        }
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [repo]);
-
-  const publishPost = useCallback(
-    async (
-      text: string,
-      location?: string,
-      emoji?: string,
-      imageFile?: File | null,
-      gifUrl?: string,
-    ) => {
-      try {
-        const newPost = await repo.createPost(text, location, emoji, imageFile, gifUrl);
-        setPosts((prev) => [newPost, ...prev]);
-      } catch (e) {
-        // optionally handle error
-      }
+      return { posts, tags, activeUsers };
     },
-    [repo],
-  );
-  const addComment = useCallback(
-    async (postId: string, text: string) => {
-      try {
-        const newComment = await repo.addComment(postId, text);
-        setPosts((prev) =>
-          prev.map((p) => (p.id === postId ? { ...p, comments: [...p.comments, newComment] } : p)),
-        );
-      } catch (e) {
-        // optionally handle error
-      }
-    },
-    [repo],
-  );
+    staleTime: 60_000,
+    retry: 1,
+  });
 
-  return { posts, tags, activeUsers, loading, error, publishPost, addComment };
+  const publishPostMutation = useMutation({
+    mutationFn: ({
+      text,
+      location,
+      emoji,
+      imageFile,
+      gifUrl,
+    }: {
+      text: string;
+      location?: string;
+      emoji?: string;
+      imageFile?: File | null;
+      gifUrl?: string;
+    }) => repo.createPost(text, location, emoji, imageFile, gifUrl),
+    onSuccess: (newPost) => {
+      queryClient.setQueryData<SocialQueryData>(['dashboard', 'social'], (current) =>
+        current ? { ...current, posts: [newPost, ...current.posts] } : current,
+      );
+    },
+  });
+
+  const addCommentMutation = useMutation({
+    mutationFn: ({ postId, text }: { postId: string; text: string }) =>
+      repo.addComment(postId, text),
+    onSuccess: (newComment, variables) => {
+      queryClient.setQueryData<SocialQueryData>(['dashboard', 'social'], (current) =>
+        current
+          ? {
+              ...current,
+              posts: current.posts.map((post) =>
+                post.id === variables.postId
+                  ? { ...post, comments: [...post.comments, newComment] }
+                  : post,
+              ),
+            }
+          : current,
+      );
+    },
+  });
+
+  const publishPost = (
+    text: string,
+    location?: string,
+    emoji?: string,
+    imageFile?: File | null,
+    gifUrl?: string,
+  ) => {
+    publishPostMutation.mutate({ text, location, emoji, imageFile, gifUrl });
+  };
+
+  const addComment = (postId: string, text: string) => {
+    addCommentMutation.mutate({ postId, text });
+  };
+
+  return {
+    posts: query.data?.posts ?? [],
+    tags: query.data?.tags ?? [],
+    activeUsers: query.data?.activeUsers ?? [],
+    loading: query.isPending,
+    error: query.error instanceof Error ? query.error.message : null,
+    publishPost,
+    addComment,
+  };
 }
