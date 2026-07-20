@@ -23,9 +23,9 @@ export const USER: CurrentUser = {
 };
 
 export const NAV: NavItem[] = [
-  { id: 'home', label: 'خانه', icon: 'home-m' },
-  { id: 'lb', label: 'پرچم داران', icon: 'leaderboard' },
-  { id: 'social', label: 'انجمن', icon: 'community' },
+  // { id: 'home', label: 'خانه', icon: 'home-m' },
+  // { id: 'lb', label: 'پرچم داران', icon: 'leaderboard' },
+  // { id: 'social', label: 'انجمن', icon: 'community' },
   { id: 'courses', label: 'تالار دانش', icon: 'social' },
   { id: 'profile', label: 'پروفایل', icon: 'profile' },
 ];
