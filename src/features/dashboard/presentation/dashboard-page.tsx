@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Icon } from '@/shared/ui';
+import { Icon, OptionalImage } from '@/shared/ui';
+import { toPersianDigits } from '@/core/lib/persian';
 import { TAB_TITLES, NAV } from '@/features/dashboard/domain/dashboard.data';
 import type { CurrentUser, DashboardTab } from '@/features/dashboard/domain/dashboard.types';
 import { DashboardSidebar } from './sections/dashboard-sidebar';
@@ -12,15 +13,6 @@ import { LeaderboardTab } from './sections/leaderboard-tab';
 import { ProfileTab } from './sections/profile-tab';
 import { SocialTab } from './sections/social-tab';
 import { CoursesTab } from './sections/courses-tab';
-import {
-  MockCoursesRepository,
-  MockHomeRepository,
-  MockLeaderboardRepository,
-  MockProfileRepository,
-  MockUserDetailRepository,
-  MockUserRepository,
-} from '../infrastructure/mock/mock-dashboard-repository';
-
 import { useUser } from '../application/use-user';
 import { useHomeData } from '../application/use-home-data';
 import { useLeaderboard } from '../application/use-leaderboard';
@@ -31,9 +23,7 @@ import { Course } from '../domain/courses.data';
 import { useSocialData } from '../application/use-social-data';
 import { ActiveUser, Post } from '../domain/social.data';
 
-import { MockSeasonRepository } from '../infrastructure/mock/mock-season-repository';
 import { useSeason } from '../application/use-season';
-const seasonRepo = new MockSeasonRepository();
 import {
   userRepo,
   homeRepo,
@@ -42,23 +32,21 @@ import {
   profileRepo,
   socialRepo,
   userProfileRepo,
+  seasonRepo,
 } from '../infrastructure/repository-factory';
 import { IUserProfileRepository } from '../domain/user-profile-repository';
-// Repositories (singletons)
-// const userRepo = new MockUserRepository();
-// const homeRepo = new MockHomeRepository();
-// const leaderboardRepo = new MockLeaderboardRepository();
-// const coursesRepo = new MockCoursesRepository();
-// const profileRepo = new MockProfileRepository();
-// const userDetailRepo = new MockUserDetailRepository();
-// const socialRepo = new MockSocialRepository();
-// const seasonRepo = new MockSeasonRepository();
+import type { IProfileRepository } from '../domain/profile-repository';
 
 export function DashboardPage() {
   const [tab, setTab] = useState<DashboardTab>('home');
   const [loadedTabs, setLoadedTabs] = useState<Set<DashboardTab>>(new Set(['home']));
 
-  const { user, loading: userLoading, error: userError } = useUser(userRepo);
+  const {
+    user,
+    loading: userLoading,
+    error: userError,
+    refetch: refetchUser,
+  } = useUser(userRepo);
   const {
     posts,
     tags,
@@ -88,13 +76,8 @@ export function DashboardPage() {
     });
   };
 
-  if (userLoading || userError) {
-    return (
-      <div className="dashboard-scope flex min-h-screen items-center justify-center">
-        <div className="text-ink-3 text-lg">در حال بارگذاری داشبورد…</div>
-      </div>
-    );
-  }
+  if (userLoading) return <DashboardLoader />;
+  if (userError) return <DashboardError error={userError} onRetry={() => void refetchUser()} />;
 
   if (!user) return null;
 
@@ -109,7 +92,7 @@ export function DashboardPage() {
           <div className="flex items-center gap-3">
             <span className="text-ember border-hair inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.75 text-[13px] font-extrabold [background:var(--glass-2)]">
               <Icon name="flame" size={16} />
-              ۳۱ روز
+              {toPersianDigits(user.streak ?? 0)} روز
             </span>
             <button
               type="button"
@@ -121,7 +104,7 @@ export function DashboardPage() {
           </div>
         </header>
 
-        <MobileHeader title={title} />
+        <MobileHeader title={title} level={user.level} streak={user.streak} />
 
         <div className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
           {tab === 'home' && loadedTabs.has('home') && (
@@ -138,7 +121,7 @@ export function DashboardPage() {
               error={lb.error || seasonError}
               data={lb.data}
               seasonData={seasonData}
-              userDetailRepo={userProfileRepo}
+              userProfileRepo={userProfileRepo}
             />
           )}
           {tab === 'social' && loadedTabs.has('social') && (
@@ -164,7 +147,7 @@ export function DashboardPage() {
               loading={profile.loading}
               error={profile.error}
               data={profile.data}
-              user={user}
+              profileRepo={profileRepo}
             />
           )}
         </div>
@@ -207,13 +190,13 @@ function LeaderboardTabWrapper({
   error,
   data,
   seasonData,
-  userDetailRepo,
+  userProfileRepo,
 }: {
   loading: boolean;
   error: string | null;
   data: ReturnType<typeof useLeaderboard>['data'];
   seasonData: ReturnType<typeof useSeason>['data'];
-  userDetailRepo: IUserProfileRepository;
+  userProfileRepo: IUserProfileRepository;
 }) {
   if (loading) return <TabLoader />;
   if (error) return <TabError error={error} />;
@@ -224,7 +207,7 @@ function LeaderboardTabWrapper({
     <LeaderboardTab
       podium={data.podium}
       leaderboard={data.leaderboard}
-      userDetailRepo={userDetailRepo}
+      userProfileRepo={userProfileRepo}
       seasonTargetDate={targetDate}
       seasonPointsNeeded={seasonData.pointsNeeded}
       seasonName={seasonData.seasonName}
@@ -250,24 +233,17 @@ function ProfileTabWrapper({
   loading,
   error,
   data,
-  user,
+  profileRepo,
 }: {
   loading: boolean;
   error: string | null;
   data: ReturnType<typeof useProfile>['data'];
-  user: CurrentUser;
+  profileRepo: IProfileRepository;
 }) {
   if (loading) return <TabLoader />;
   if (error) return <TabError error={error} />;
   if (!data) return null;
-  return (
-    <ProfileTab
-      user={user}
-      profileStats={data.profileStats}
-      achievements={data.achievements}
-      settings={data.settings}
-    />
-  );
+  return <ProfileTab profile={data} profileRepo={profileRepo} />;
 }
 
 function SocialTabWrapper({
@@ -309,7 +285,7 @@ function SocialTabWrapper({
 function TabLoader() {
   return (
     <div className="flex h-64 items-center justify-center">
-      <div className="text-ink-3 text-lg">در حال بارگذاری...</div>
+      <PhoenixLoader compact text="در حال بارگذاری..." />
     </div>
   );
 }
@@ -318,6 +294,62 @@ function TabError({ error }: { error: string }) {
   return (
     <div className="flex h-64 items-center justify-center">
       <div className="text-danger text-lg">{error}</div>
+    </div>
+  );
+}
+
+function DashboardLoader() {
+  return (
+    <div className="dashboard-scope flex min-h-screen items-center justify-center overflow-hidden [background:radial-gradient(45%_35%_at_50%_38%,rgba(255,98,0,.14),transparent_65%),radial-gradient(35%_25%_at_50%_58%,rgba(243,186,99,.08),transparent_70%),var(--color-bg)]">
+      <PhoenixLoader text="در حال آماده‌سازی داشبورد…" />
+    </div>
+  );
+}
+
+function DashboardError({ error, onRetry }: { error: string; onRetry: () => void }) {
+  return (
+    <div className="dashboard-scope flex min-h-screen items-center justify-center px-4 [background:var(--color-bg)]">
+      <div className="border-hair relative w-full max-w-sm overflow-hidden rounded-3xl border p-6 text-center [background:linear-gradient(180deg,rgba(255,98,0,.08),rgba(10,5,3,.94))]">
+        <PhoenixLoader compact text="داشبورد آماده نشد" />
+        <p className="text-ink-3 mt-4 text-sm leading-7">{error}</p>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="from-ember to-gold shadow-glow mt-5 inline-flex h-11 items-center justify-center rounded-2xl bg-gradient-to-l px-6 text-sm font-black text-black transition-transform hover:-translate-y-0.5"
+        >
+          تلاش دوباره
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PhoenixLoader({
+  text,
+  compact = false,
+}: {
+  text: string;
+  compact?: boolean;
+}) {
+  const sizeClass = compact ? 'size-18' : 'size-24';
+
+  return (
+    <div className="relative flex flex-col items-center gap-4 text-center">
+      <div className={`relative ${sizeClass}`}>
+        <span className="border-ember/30 absolute inset-0 animate-ping rounded-full border" />
+        <span className="from-ember/25 via-gold/15 absolute inset-1 animate-pulse rounded-full bg-gradient-to-br to-transparent blur-md" />
+        <span className="border-hair absolute inset-0 rounded-full border [background:radial-gradient(circle_at_50%_35%,rgba(255,185,94,.22),rgba(255,98,0,.08)_45%,rgba(0,0,0,.7)_75%)]" />
+        <OptionalImage
+          src="/assets/phoenix_badge.webp"
+          alt=""
+          className="absolute inset-2 size-[calc(100%-1rem)] object-contain drop-shadow-[0_0_18px_rgba(255,98,0,.45)]"
+          aria-hidden="true"
+        />
+      </div>
+      <div>
+        <p className="text-ink text-base font-black">{text}</p>
+        <p className="text-ink-4 mt-1 text-xs">ققنوس قبیله در حال روشن کردن مسیر است</p>
+      </div>
     </div>
   );
 }

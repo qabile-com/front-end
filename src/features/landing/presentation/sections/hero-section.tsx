@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Button, Container, Icon, OptionalImage } from '@/shared/ui';
+import { Button, Container, Icon, OptionalImage, type IconName } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
 
 const TRUST_AVATARS = [
@@ -150,7 +150,7 @@ export function HeroSection({ totalMembers = 52000, rating = 4.9, chips }: HeroS
                 className={`chip-float border-hair absolute z-[3] flex items-center gap-2.25 rounded-[13px] border px-3.25 py-2.25 shadow-[0_10px_28px_-10px_rgba(0,0,0,.7)] backdrop-blur-lg [background:rgba(15,9,5,.72)] ${chip.cls}`}
               >
                 <span className="text-gold grid size-8 place-items-center rounded-[9px] [background:var(--glass-2)]">
-                  <Icon name={chip.icon as any} size={16} />
+                  <Icon name={chip.icon as IconName} size={16} />
                 </span>
                 <span className="leading-tight">
                   <b className="block text-sm font-extrabold">{chip.value}</b>

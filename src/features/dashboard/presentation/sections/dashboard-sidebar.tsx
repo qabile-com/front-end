@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Icon, OptionalImage, type IconName } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import type { CurrentUser, NavItem, DashboardTab } from '../../domain/dashboard.types';
 import { toPersianDigits } from '@/core/lib/persian';
+import { clearAuthSession } from '@/core/auth/token';
 
 interface SidebarProps {
   active: DashboardTab;
@@ -14,7 +16,13 @@ interface SidebarProps {
 }
 
 export function DashboardSidebar({ active, onChange, user, nav }: SidebarProps) {
+  const router = useRouter();
   const xpPct = Math.round((user.xp / user.xpMax) * 100);
+
+  const handleLogout = () => {
+    clearAuthSession();
+    router.push('/');
+  };
 
   return (
     <aside className="border-hair fixed inset-y-0 inset-s-0 z-50 hidden w-65 shrink-0 flex-col border-e px-4.5 py-7 [backdrop-filter:blur(24px)] [background:rgba(8,5,2,.92)] lg:flex">
@@ -92,15 +100,16 @@ export function DashboardSidebar({ active, onChange, user, nav }: SidebarProps) 
         })}
       </nav>
 
-      <Link
-        href="/"
+      <button
+        type="button"
+        onClick={handleLogout}
         className="text-ink-3 hover:text-danger mb-2 flex items-center gap-3 rounded-[14px] border border-transparent px-3.5 py-3 text-[14.5px] font-semibold transition-colors hover:border-[rgba(255,90,90,.18)] hover:[background:rgba(255,90,90,.08)]"
       >
         <span className="grid size-9 place-items-center rounded-[11px] [background:var(--glass-2)]">
           <Icon name="logout" size={20} />
         </span>
         خروج از حساب
-      </Link>
+      </button>
 
       <Link
         href="#"
