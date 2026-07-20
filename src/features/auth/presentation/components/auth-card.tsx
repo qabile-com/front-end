@@ -5,8 +5,8 @@ import { Icon } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import {
   isCompleteOtp,
+  isValidEmail,
   isNonEmpty,
-  isValidIranPhone,
   isValidLoginId,
 } from '@/features/auth/domain/validation';
 import { AuthButton } from './auth-button';
@@ -73,7 +73,7 @@ function LoginView({
 }: {
   onGoSignup: () => void;
   requestOtp: (identifier: string) => Promise<boolean>;
-  verifyOtp: (identifier: string, code: string, name?: string) => Promise<void>;
+  verifyOtp: (identifier: string, code: string, name?: string, lastName?: string) => Promise<void>;
   loading: boolean;
 }) {
   const [tab, setTab] = useState<LoginTab>('pass');
@@ -112,7 +112,7 @@ function PasswordForm({ onGoSignup }: { onGoSignup: () => void }) {
   const submit = () => {
     const next: typeof errors = {};
     if (!isValidLoginId(id))
-      next.id = isNonEmpty(id) ? 'فرمت وارد شده معتبر نیست' : 'این فیلد اجباری است';
+      next.id = isNonEmpty(id) ? 'ایمیل معتبر نیست' : 'این فیلد اجباری است';
     if (!isNonEmpty(pw)) next.pw = 'رمز عبور را وارد کنید';
     setErrors(next);
     if (Object.keys(next).length) return;
@@ -127,15 +127,17 @@ function PasswordForm({ onGoSignup }: { onGoSignup: () => void }) {
   return (
     <>
       <Field
-        label="شماره موبایل یا ایمیل"
-        placeholder="09xxxxxxxxx یا name@email.com"
+        label="ایمیل"
+        type="email"
+        inputMode="email"
+        placeholder="name@email.com"
         value={id}
         onChange={(e) => {
           setId(e.target.value);
           setErrors((p) => ({ ...p, id: undefined }));
         }}
         error={errors.id}
-        autoComplete="username"
+        autoComplete="email"
       />
       <Field
         label="رمز عبور"
@@ -193,11 +195,11 @@ function OtpLoginForm({
   loading,
 }: {
   onGoSignup: () => void;
-  requestOtp: (phone: string) => Promise<boolean>;
-  verifyOtp: (phone: string, code: string) => Promise<void>;
+  requestOtp: (email: string) => Promise<boolean>;
+  verifyOtp: (email: string, code: string) => Promise<void>;
   loading: boolean;
 }) {
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const { cooldown, start } = useCooldown();
@@ -205,12 +207,12 @@ function OtpLoginForm({
   const [sending, setSending] = useState(false);
 
   const handleSendOtp = async () => {
-    if (!isValidIranPhone(phone)) {
-      setError('شماره موبایل معتبر نیست');
+    if (!isValidEmail(email)) {
+      setError('ایمیل معتبر نیست');
       return;
     }
     setSending(true);
-    const ok = await requestOtp(phone);
+    const ok = await requestOtp(email);
     setSending(false);
     if (ok) {
       setSent(true);
@@ -219,7 +221,7 @@ function OtpLoginForm({
   };
 
   const handleVerify = () => {
-    verifyOtp(phone, code);
+    verifyOtp(email, code);
   };
 
   if (!sent) {
@@ -228,17 +230,17 @@ function OtpLoginForm({
         <div className="mb-4 flex items-end gap-2.5">
           <div className="flex-1">
             <Field
-              label="شماره موبایل"
-              type="tel"
-              inputMode="numeric"
-              placeholder="09xxxxxxxxx"
-              value={phone}
+              label="ایمیل"
+              type="email"
+              inputMode="email"
+              placeholder="name@email.com"
+              value={email}
               onChange={(e) => {
-                setPhone(e.target.value);
+                setEmail(e.target.value);
                 setError(undefined);
               }}
               error={error}
-              autoComplete="tel"
+              autoComplete="email"
             />
           </div>
           <button
@@ -265,7 +267,7 @@ function OtpLoginForm({
       <p className="text-ink-2 mb-3.5 text-center text-[13px] leading-[1.65]">
         کد تایید به{' '}
         <b className="text-gold" dir="ltr">
-          {phone}
+          {email}
         </b>
         <br />
         ارسال شد
@@ -277,7 +279,7 @@ function OtpLoginForm({
       </AuthButton>
       <BottomLink>
         <a onClick={() => setSent(false)} className="text-gold cursor-pointer font-bold">
-          ← تغییر شماره
+          ← تغییر ایمیل
         </a>
       </BottomLink>
     </>
@@ -291,18 +293,20 @@ function SignupView({
 }: {
   onGoLogin: () => void;
   requestOtp: (identifier: string) => Promise<boolean>;
-  verifyOtp: (identifier: string, code: string, name?: string) => Promise<void>;
+  verifyOtp: (identifier: string, code: string, name?: string, lastName?: string) => Promise<void>;
   loading: boolean;
 }) {
   const [step, setStep] = useState<1 | 2>(1);
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [lastName, setLastName] = useState('');
 
   if (step === 2) {
     return (
       <SignupStep2
-        phone={phone}
+        email={email}
         name={name}
+        lastName={lastName}
         onBack={() => setStep(1)}
         verifyOtp={verifyOtp}
         loading={loading}
@@ -312,9 +316,10 @@ function SignupView({
   return (
     <SignupStep1
       onGoLogin={onGoLogin}
-      onNext={(p, n) => {
-        setPhone(p);
+      onNext={(p, n, ln) => {
+        setEmail(p);
         setName(n);
+        setLastName(ln);
         setStep(2);
       }}
       requestOtp={requestOtp}
@@ -326,28 +331,30 @@ function SignupStep1({
   onGoLogin,
   requestOtp,
 }: {
-  onNext: (phone: string, name: string) => void;
+  onNext: (email: string, name: string, lastName: string) => void;
   onGoLogin: () => void;
-  requestOtp: (phone: string) => Promise<boolean>;
+  requestOtp: (email: string) => Promise<boolean>;
 }) {
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
   const [ref, setRef] = useState('');
-  const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; lastName?: string; email?: string }>({});
   const [sending, setSending] = useState(false);
 
   const submit = async () => {
     const next: typeof errors = {};
-    if (!isNonEmpty(name)) next.name = 'نام و نام خانوادگی را وارد کنید';
-    if (!isValidIranPhone(phone)) next.phone = 'شماره موبایل معتبر نیست';
+    if (!isNonEmpty(name)) next.name = 'نام را وارد کنید';
+    if (!isNonEmpty(lastName)) next.lastName = 'نام خانوادگی را وارد کنید';
+    if (!isValidEmail(email)) next.email = 'ایمیل معتبر نیست';
     setErrors(next);
     if (Object.keys(next).length) return;
 
     setSending(true);
-    const ok = await requestOtp(phone);
+    const ok = await requestOtp(email);
     setSending(false);
     if (ok) {
-      onNext(phone, name);
+      onNext(email, name, lastName);
     }
   };
 
@@ -356,28 +363,39 @@ function SignupStep1({
       <CardHeader title="عضویت در قبیله" sub="سفرت را همین‌جا شروع کن" />
       <div className="h-5" />
       <Field
-        label="نام و نام خانوادگی"
-        placeholder="مثال: آرش کریمی"
+        label="نام"
+        placeholder="مثال: آرش"
         value={name}
         onChange={(e) => {
           setName(e.target.value);
           setErrors((p) => ({ ...p, name: undefined }));
         }}
         error={errors.name}
-        autoComplete="name"
+        autoComplete="given-name"
       />
       <Field
-        label="شماره موبایل"
-        type="tel"
-        inputMode="numeric"
-        placeholder="09xxxxxxxxx"
-        value={phone}
+        label="نام خانوادگی"
+        placeholder="مثال: کریمی"
+        value={lastName}
         onChange={(e) => {
-          setPhone(e.target.value);
-          setErrors((p) => ({ ...p, phone: undefined }));
+          setLastName(e.target.value);
+          setErrors((p) => ({ ...p, lastName: undefined }));
         }}
-        error={errors.phone}
-        autoComplete="tel"
+        error={errors.lastName}
+        autoComplete="family-name"
+      />
+      <Field
+        label="ایمیل"
+        type="email"
+        inputMode="email"
+        placeholder="name@email.com"
+        value={email}
+        onChange={(e) => {
+          setEmail(e.target.value);
+          setErrors((p) => ({ ...p, email: undefined }));
+        }}
+        error={errors.email}
+        autoComplete="email"
       />
       <Field
         label={
@@ -411,23 +429,25 @@ function SignupStep1({
 // Signup step 2 – verify OTP
 // -----------------------------------------------
 function SignupStep2({
-  phone,
+  email,
   name,
+  lastName,
   onBack,
   verifyOtp,
   loading,
 }: {
-  phone: string;
+  email: string;
   name: string;
+  lastName: string;
   onBack: () => void;
-  verifyOtp: (identifier: string, code: string, name?: string) => Promise<void>;
+  verifyOtp: (identifier: string, code: string, name?: string, lastName?: string) => Promise<void>;
   loading: boolean;
 }) {
   const [code, setCode] = useState('');
   const { cooldown, start } = useCooldown(RESEND_SECONDS);
 
   const handleVerify = () => {
-    verifyOtp(phone, code, name);
+    verifyOtp(email, code, name, lastName);
   };
 
   return (
@@ -439,13 +459,13 @@ function SignupStep2({
         <Icon name="arrow-left" size={15} /> بازگشت
       </button>
       <CardHeader
-        title="تایید شماره موبایل"
+        title="تایید ایمیل"
         sub={
           <>
             کد ۶ رقمی ارسال شده به
             <br />
             <b className="text-gold" dir="ltr">
-              {phone}
+              {email}
             </b>
           </>
         }

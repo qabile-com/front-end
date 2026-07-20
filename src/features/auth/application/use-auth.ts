@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { IAuthRepository } from '../domain/auth-repository';
 import { showError } from '@/shared/lib/toast';
-import { setAccessToken } from '@/core/auth/token';
+import { saveAuthSession } from '@/core/auth/token';
 
 export function useAuth(repo: IAuthRepository) {
   const router = useRouter();
@@ -18,9 +18,9 @@ export function useAuth(repo: IAuthRepository) {
         await repo.requestOtp(identifier);
         setLoading(false);
         return true;
-      } catch (e: any) {
+      } catch (e: unknown) {
         setLoading(false);
-        showError(e.message || 'خطا در ارسال کد');
+        showError(getErrorMessage(e, 'خطا در ارسال کد'));
         return false;
       }
     },
@@ -28,22 +28,27 @@ export function useAuth(repo: IAuthRepository) {
   );
 
   const verifyOtp = useCallback(
-    async (identifier: string, code: string, name?: string) => {
+    async (identifier: string, code: string, name?: string, lastName?: string) => {
       setLoading(true);
       try {
-        const user = await repo.verifyOtp(identifier, code, name);
+        const session = await repo.verifyOtp(identifier, code, name, lastName);
+        saveAuthSession(session);
         setSuccess({
-          title: `خوش آمدی ${user.name}! 🔥`,
+          title: `خوش آمدی ${session.user.name}! 🔥`,
           msg: 'ورود موفقیت‌آمیز بود. در حال ورود به قبیله...',
         });
         setTimeout(() => router.push('/dashboard'), 1200);
-      } catch (e: any) {
+      } catch (e: unknown) {
         setLoading(false);
-        showError(e.message || 'کد تایید اشتباه است');
+        showError(getErrorMessage(e, 'کد تایید اشتباه است'));
       }
     },
     [repo, router],
   );
 
   return { loading, success, requestOtp, verifyOtp, clearSuccess: () => setSuccess(null) };
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
 }

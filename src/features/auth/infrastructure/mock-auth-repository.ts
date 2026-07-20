@@ -1,4 +1,4 @@
-import type { IAuthRepository, AuthUser } from '../domain/auth-repository';
+import type { AuthSession, AuthUser, IAuthRepository } from '../domain/auth-repository';
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -8,15 +8,26 @@ export class MockAuthRepository implements IAuthRepository {
     console.log(`[Mock] OTP sent to ${identifier}`);
   }
 
-  async verifyOtp(identifier: string, code: string, name?: string): Promise<AuthUser> {
+  async verifyOtp(
+    identifier: string,
+    code: string,
+    name?: string,
+    lastName?: string,
+  ): Promise<AuthSession> {
     await delay(1000);
     if (code !== '123456') throw new Error('کد تایید اشتباه است');
+    const fullName = [name, lastName].filter(Boolean).join(' ').trim();
     return {
-      id: 'mock-user-id',
-      name: name || 'کاربر مهمان',
-      phone: identifier,
-      email: null,
-      role: 'user',
+      accessToken: 'mock-access-token',
+      tokenType: 'Bearer',
+      expiresInSeconds: 60 * 60 * 24 * 7,
+      user: {
+        id: 'mock-user-id',
+        name: fullName || name || 'کاربر مهمان',
+        phone: null,
+        email: identifier,
+        role: 'user',
+      },
     };
   }
 
@@ -25,8 +36,8 @@ export class MockAuthRepository implements IAuthRepository {
     return {
       id: 'mock-user-id',
       name: 'کاربر مهمان',
-      phone: '09123456789',
-      email: null,
+      phone: null,
+      email: 'guest@qabile.local',
       role: 'user',
     };
   }

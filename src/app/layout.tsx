@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
-// @ts-ignore
-import '@fontsource-variable/vazirmatn';
+import '@fontsource-variable/vazirmatn/index.css';
 import './globals.css';
-import { DevAuthInitializer } from '@/core/auth/dev-auth-initializer';
 import { QueryProvider } from '@/providers/query-provider';
+import { AuthProvider } from '@/providers/auth-provider';
 
 export const metadata: Metadata = {
   title: 'قبیله ققنوس | اکوسیستم رشد و یادگیری گیمیفای‌شده',
@@ -19,10 +18,9 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl" className="h-full antialiased">
       <body className="flex min-h-full flex-col">
-        <QueryProvider>
-          <DevAuthInitializer />
-          {children}
-        </QueryProvider>
+        <AuthProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );

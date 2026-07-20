@@ -1,5 +1,4 @@
 import { httpClient } from './http-client';
-import type { AxiosResponse } from 'axios';
 
 export interface OtpRequestResponse {
   success: boolean;
@@ -15,22 +14,23 @@ export interface OtpVerifyResponse {
   user: {
     id: string;
     name: string;
-    phone: string;
-    email: string | null;
+    phone?: string | null;
+    email: string;
     role: string;
   };
 }
 
-export const requestOtp = (identifier: string) =>
-  httpClient.post<any, AxiosResponse<OtpRequestResponse>>('/api/v1/auth/otp/request', {
-    identifier,
+export const requestOtp = (email: string) =>
+  httpClient.post<OtpRequestResponse>('/api/v1/auth/otp/request', {
+    email,
   });
 
-export const verifyOtp = (identifier: string, code: string, name?: string) =>
-  httpClient.post<any, AxiosResponse<OtpVerifyResponse>>('/api/v1/auth/otp/verify', {
-    identifier,
+export const verifyOtp = (email: string, code: string, name?: string, lastName?: string) =>
+  httpClient.post<OtpVerifyResponse>('/api/v1/auth/otp/verify', {
+    email,
     code,
     name,
+    lastName,
   });
 
-export const getMe = () => httpClient.get<any, AxiosResponse<OtpVerifyResponse>>('/api/v1/auth/me');
+export const getMe = () => httpClient.get<OtpVerifyResponse>('/api/v1/auth/me');
