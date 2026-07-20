@@ -38,15 +38,10 @@ import { IUserProfileRepository } from '../domain/user-profile-repository';
 import type { IProfileRepository } from '../domain/profile-repository';
 
 export function DashboardPage() {
-  const [tab, setTab] = useState<DashboardTab>('home');
-  const [loadedTabs, setLoadedTabs] = useState<Set<DashboardTab>>(new Set(['home']));
+  const [tab, setTab] = useState<DashboardTab>('courses');
+  const [loadedTabs, setLoadedTabs] = useState<Set<DashboardTab>>(new Set(['courses']));
 
-  const {
-    user,
-    loading: userLoading,
-    error: userError,
-    refetch: refetchUser,
-  } = useUser(userRepo);
+  const { user, loading: userLoading, error: userError, refetch: refetchUser } = useUser(userRepo);
   const {
     posts,
     tags,
@@ -324,13 +319,7 @@ function DashboardError({ error, onRetry }: { error: string; onRetry: () => void
   );
 }
 
-function PhoenixLoader({
-  text,
-  compact = false,
-}: {
-  text: string;
-  compact?: boolean;
-}) {
+function PhoenixLoader({ text, compact = false }: { text: string; compact?: boolean }) {
   const sizeClass = compact ? 'size-18' : 'size-24';
 
   return (
