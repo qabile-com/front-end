@@ -16,12 +16,12 @@ interface CommentsResponse {
 }
 
 export const getSessionComments = (courseId: string, sectionId: string, limit = 5, offset = 0) =>
-  httpClient.get<CommentsResponse>(`/api/v1/courses/${courseId}/sections/${sectionId}/comments`, {
+  httpClient.get<CommentsResponse>(`/api/v1/courses/${courseId}/episodes/${sectionId}/comments`, {
     params: { limit, offset },
   });
 
 export const addSessionComment = (courseId: string, sectionId: string, text: string) =>
   httpClient.post<{ data: CommentsResponse['data'][number] }>(
-    `/api/v1/courses/${courseId}/sections/${sectionId}/comments`,
+    `/api/v1/courses/${courseId}/episodes/${sectionId}/comments`,
     { text },
   );
