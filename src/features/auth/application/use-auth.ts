@@ -32,6 +32,7 @@ export function useAuth(repo: IAuthRepository) {
       setLoading(true);
       try {
         const session = await repo.verifyOtp(identifier, code, name, lastName);
+        console.log(session);
         saveAuthSession(session);
 
         // Store signup reward for the dashboard

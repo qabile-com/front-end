@@ -16,6 +16,10 @@ export interface AuthSession {
 }
 
 export interface VerifyOtpResult {
+  accessToken: string;
+  tokenType?: string;
+  expiresAt?: number;
+  refreshToken?: string;
   user: AuthUser;
   isNewUser: boolean;
   signupReward?: {

@@ -19,6 +19,10 @@ export class HttpAuthRepository implements IAuthRepository {
   ): Promise<VerifyOtpResult> {
     const response = await authApi.verifyOtp(identifier, code, name, lastName);
     return {
+      accessToken: response.data.accessToken,
+      tokenType: response.data.tokenType,
+      expiresAt: response.data.expiresAt,
+      refreshToken: response.data.refreshToken,
       user: response.data.user,
       isNewUser: response.data.isNewUser,
       signupReward: response.data.signupReward,

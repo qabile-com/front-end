@@ -9,8 +9,9 @@ export interface OtpRequestResponse {
 
 export interface OtpVerifyResponse {
   accessToken: string;
-  tokenType: string;
-  expiresInSeconds: number;
+  tokenType?: string;
+  expiresAt?: number;
+  refreshToken?: string;
   user: {
     id: string;
     name: string;
