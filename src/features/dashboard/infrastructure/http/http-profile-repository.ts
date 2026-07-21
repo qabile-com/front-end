@@ -56,6 +56,7 @@ export class HttpProfileRepository implements IProfileRepository {
     return {
       id: p.id,
       name: p.name,
+      lastName: p.lastName,
       username: p.username,
       initial: p.initial ?? p.name[0] ?? '?',
       avatar: p.avatar ?? DEFAULT_AVATAR_GRADIENT,
@@ -154,6 +155,7 @@ export class HttpProfileRepository implements IProfileRepository {
     return {
       id: p.id,
       name: p.name,
+      lastName: p.lastName,
       username: p.username,
       initial: p.initial ?? p.name[0] ?? '?',
       avatar: p.avatar ?? DEFAULT_AVATAR_GRADIENT,

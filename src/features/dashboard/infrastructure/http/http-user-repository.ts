@@ -10,6 +10,7 @@ export class HttpUserRepository implements IUserRepository {
     const user = res.data.user;
     return {
       name: user.name,
+      last_name: user.lastName,
       initial: user.name[0] ?? '?', // guarantee a string
       title: user.title,
       level: user.level,

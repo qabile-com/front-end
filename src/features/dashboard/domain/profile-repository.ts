@@ -15,6 +15,7 @@ export interface VerificationResult {
 export interface MyProfile {
   id: string;
   name: string;
+  lastName: string;
   username?: string | null;
   initial: string;
   avatar: string;
@@ -43,6 +44,7 @@ export interface MyProfile {
 
 export interface UpdateProfileInput {
   name?: string;
+  lastName?: string;
   username?: string | null;
   email?: string | null;
 }
@@ -53,7 +55,10 @@ export interface IProfileRepository {
   updateProfileAvatar(file: File): Promise<MyProfile>;
   requestEmailVerification(email: string): Promise<void>;
   deleteMyAccount(): Promise<void>;
-  updateSecuritySetting(field: ProfileSettingField, value: boolean): Promise<ProfileSecuritySettings>;
+  updateSecuritySetting(
+    field: ProfileSettingField,
+    value: boolean,
+  ): Promise<ProfileSecuritySettings>;
   requestPhoneChangeCode(currentPhone: string): Promise<void>;
   verifyPhoneChangeCode(currentPhone: string, code: string): Promise<VerificationResult>;
   confirmPhoneChange(newPhone: string, verificationToken: string): Promise<MyProfile>;

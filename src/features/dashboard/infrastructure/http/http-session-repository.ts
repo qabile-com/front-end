@@ -13,15 +13,17 @@ export class HttpSessionRepository implements ISessionRepository {
   async getSessionDetail(courseId: string, sectionId: string): Promise<SessionDetail> {
     const res = await getCourseSection(courseId, sectionId);
     const data = (res.data.data ?? res.data) as SessionDetailDto;
-
     return {
       ...data,
       part: {
-        ...data.part,
+        ...data.episode,
         courseId,
         previousSectionId:
-          data.part.previousSectionId ?? data.part.prevSectionId ?? data.part.previousId ?? null,
-        nextSectionId: data.part.nextSectionId ?? data.part.nextId ?? null,
+          data.episode.previousSectionId ??
+          data.episode.prevSectionId ??
+          data.episode.previousId ??
+          null,
+        nextSectionId: data.episode.nextSectionId ?? data.episode.nextId ?? null,
       },
     };
   }

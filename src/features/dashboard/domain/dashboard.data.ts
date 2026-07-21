@@ -12,7 +12,8 @@ import type {
 } from './dashboard.types';
 
 export const USER: CurrentUser = {
-  name: 'آرش کریمی',
+  name: 'آرش',
+  lastName: 'آرش کریمی',
   initial: 'آ',
   title: 'ققنوس طلایی',
   level: 24,

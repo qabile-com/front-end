@@ -4,9 +4,13 @@ export interface CoursePart {
   id: string;
   courseId?: string;
   previousSectionId?: string | null;
+  previousEpisodeId?: string | null;
   nextSectionId?: string | null;
+  nextEpisodeId?: string | null;
+  videoUrl?: string | null;
+  coverUrl?: string | null;
+  duration?: string;
   title: string;
-  duration: string;
   durationSeconds?: number;
   xp?: number;
   status: PartStatus;
@@ -26,7 +30,7 @@ export interface Course {
   duration: string;
   views: string;
   xp: number;
-  parts: CoursePart[];
+  episodes: CoursePart[];
 }
 
 const RAW_COURSES: Course[] = [
@@ -38,9 +42,15 @@ const RAW_COURSES: Course[] = [
     duration: '۴۵:۲۰',
     views: '۲،۳۴۰',
     xp: 250,
-    parts: [
+    episodes: [
       { id: 'c1-s1', title: 'قدم اول: ذهن‌آگاهی', duration: '۸:۳۰', status: 'done' },
-      { id: 'c1-s2', title: 'قدم دوم: تغذیه سالم', duration: '۱۰:۱۵', status: 'partial', progress: 40 },
+      {
+        id: 'c1-s2',
+        title: 'قدم دوم: تغذیه سالم',
+        duration: '۱۰:۱۵',
+        status: 'partial',
+        progress: 40,
+      },
       { id: 'c1-s3', title: 'قدم سوم: ورزش روزانه', duration: '۹:۴۵', status: 'none' },
       { id: 'c1-s4', title: 'قدم چهارم: خواب کافی', duration: '۷:۲۰', status: 'none' },
       { id: 'c1-s5', title: 'قدم پنجم: مدیریت استرس', duration: '۹:۵۰', status: 'none' },
@@ -54,7 +64,7 @@ const RAW_COURSES: Course[] = [
     duration: '۱:۱۲:۰۰',
     views: '۴،۸۲۰',
     xp: 400,
-    parts: [
+    episodes: [
       {
         id: 'c2-s1',
         title: 'روانشناسی ترس و طمع',
@@ -79,7 +89,7 @@ const RAW_COURSES: Course[] = [
     duration: '۳۸:۱۰',
     views: '۶،۱۰۰',
     xp: 300,
-    parts: [
+    episodes: [
       { id: 'c3-s1', title: 'چرخه عادت', duration: '۸:۰۰', status: 'done' },
       { id: 'c3-s2', title: 'قانون دو دقیقه', duration: '۶:۳۰', status: 'done' },
       { id: 'c3-s3', title: 'محیط‌سازی برای موفقیت', duration: '۷:۴۰', status: 'none' },
@@ -95,7 +105,7 @@ const RAW_COURSES: Course[] = [
     duration: '۵۵:۴۵',
     views: '۳،۲۷۰',
     xp: 350,
-    parts: [
+    episodes: [
       { id: 'c4-s1', title: 'درآمد فعال و غیرفعال', duration: '۱۲:۰۰', status: 'none' },
       { id: 'c4-s2', title: 'قانون ۵۰-۳۰-۲۰', duration: '۱۰:۳۰', status: 'none' },
       { id: 'c4-s3', title: 'صندوق اضطراری', duration: '۱۱:۱۵', status: 'none' },
@@ -111,9 +121,15 @@ const RAW_COURSES: Course[] = [
     duration: '۵۰:۰۰',
     views: '۸،۴۰۰',
     xp: 450,
-    parts: [
+    episodes: [
       { id: 'c5-s1', title: 'ذهنیت ثابت در برابر ذهنیت رشد', duration: '۱۲:۰۰', status: 'done' },
-      { id: 'c5-s2', title: 'توانایی مغز برای تغییر', duration: '۱۰:۳۰', status: 'partial', progress: 55 },
+      {
+        id: 'c5-s2',
+        title: 'توانایی مغز برای تغییر',
+        duration: '۱۰:۳۰',
+        status: 'partial',
+        progress: 55,
+      },
       { id: 'c5-s3', title: 'ابزارهای بازسازی ذهن', duration: '۱۱:۰۰', status: 'none' },
       { id: 'c5-s4', title: 'عادت‌سازی آگاهانه', duration: '۹:۴۵', status: 'none' },
     ],
@@ -126,7 +142,7 @@ const RAW_COURSES: Course[] = [
     duration: '۴۲:۰۰',
     views: '۱،۹۸۰',
     xp: 280,
-    parts: [
+    episodes: [
       { id: 'c6-s1', title: 'استراتژی محتوا', duration: '۱۰:۰۰', status: 'none' },
       { id: 'c6-s2', title: 'ساختار پست جذاب', duration: '۸:۰۰', status: 'none' },
       { id: 'c6-s3', title: 'نگارش تخصصی', duration: '۹:۳۰', status: 'none' },
@@ -138,7 +154,7 @@ const RAW_COURSES: Course[] = [
 export function withCourseSectionNavigation(course: Course): Course {
   return {
     ...course,
-    parts: course.parts.map((part, index, parts) => ({
+    episodes: course.episodes.map((part, index, parts) => ({
       ...part,
       courseId: part.courseId ?? course.id,
       xp: part.xp ?? Math.round(course.xp / Math.max(1, parts.length)),
@@ -152,9 +168,7 @@ export function withCourseSectionNavigation(course: Course): Course {
 export const COURSES: Course[] = RAW_COURSES.map(withCourseSectionNavigation);
 
 function parseDurationToSeconds(duration: string) {
-  const normalized = duration.replace(/[۰-۹]/g, (digit) =>
-    String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)),
-  );
+  const normalized = duration.replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)));
   const parts = normalized.split(':').map((part) => Number(part.trim()));
   if (parts.some((part) => Number.isNaN(part))) return undefined;
   if (parts.length === 2) return parts[0]! * 60 + parts[1]!;

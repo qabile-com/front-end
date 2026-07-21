@@ -35,9 +35,10 @@ export class HttpCoursesRepository implements ICoursesRepository {
       withCourseSectionNavigation({
         ...course,
         imageUrl: course.imageUrl ?? course.thumbnailUrl ?? course.coverUrl ?? course.image ?? null,
-        parts: course.parts.map((part) => ({
+        episodes: course.episodes.map((part) => ({
           ...part,
-          previousSectionId: part.previousSectionId ?? part.prevSectionId ?? part.previousId ?? null,
+          previousSectionId:
+            part.previousSectionId ?? part.prevSectionId ?? part.previousId ?? null,
           nextSectionId: part.nextSectionId ?? part.nextId ?? null,
         })),
       }),

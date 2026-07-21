@@ -159,6 +159,7 @@ export class MockProfileRepository implements IProfileRepository {
     this.cache = {
       id: 'current-user',
       name: USER.name,
+      lastName: USER.lastName,
       username: 'Sample',
       initial: USER.initial,
       avatar: USER.avatar,
@@ -195,9 +196,11 @@ export class MockProfileRepository implements IProfileRepository {
     this.cache = {
       ...profile,
       name: input.name?.trim() || profile.name,
+      lastName: input.lastName?.trim() || profile.lastName,
       username: input.username ?? profile.username,
       email: input.email ?? profile.email,
-      isEmailVerified: input.email && input.email !== profile.email ? false : profile.isEmailVerified,
+      isEmailVerified:
+        input.email && input.email !== profile.email ? false : profile.isEmailVerified,
     };
     return this.cache;
   }
