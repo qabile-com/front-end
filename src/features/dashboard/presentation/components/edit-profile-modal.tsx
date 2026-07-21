@@ -11,6 +11,8 @@ import {
   useUpdateProfileAvatar,
 } from '../../application/use-edit-profile';
 import { useScrollLock } from '../../application/use-scroll-lock';
+import { removeAccessToken } from '@/core/auth/token';
+import { useRouter } from 'next/navigation';
 
 interface EditProfileModalProps {
   profile: MyProfile;
@@ -20,7 +22,7 @@ interface EditProfileModalProps {
 
 export function EditProfileModal({ profile, repo, onClose }: EditProfileModalProps) {
   useScrollLock(true);
-
+  const router = useRouter();
   const [name, setName] = useState(profile.name);
   const [lastName, setLastName] = useState(profile.lastName);
   const [username, setUsername] = useState(profile.username ?? '');
@@ -67,6 +69,8 @@ export function EditProfileModal({ profile, repo, onClose }: EditProfileModalPro
     try {
       await deleteAccount.mutateAsync();
       showSuccess('درخواست حذف حساب ثبت شد');
+      removeAccessToken();
+      router.replace('/');
       onClose();
     } catch {
       showError('حذف حساب انجام نشد');
