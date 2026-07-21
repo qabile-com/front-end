@@ -14,7 +14,7 @@ export function MobileHeader({ title, level, streak }: MobileHeaderProps) {
   return (
     <header className="border-hair sticky top-0 z-40 flex items-center gap-2.5 border-b px-4 py-3 [backdrop-filter:blur(14px)] [background:rgba(5,3,2,.9)] lg:hidden">
       <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-[11px] shadow-[0_0_14px_-4px_var(--glow)] [background:var(--fire-grad)]">
-        <PhoenixIcon className="size-5" />
+        <PhoenixIcon className="size-9" />
       </span>
       <h1 className="flex-1 text-base font-black">{title}</h1>
 

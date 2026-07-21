@@ -48,7 +48,7 @@ export function ProfileTab({ profile, profileRepo }: ProfileTabProps) {
                     <b className="text-gradient-fire block text-[23px] leading-none font-black sm:text-xl">
                       {s.value}
                     </b>
-                    <small className="text-ink-4 mt-3 block text-[13px] sm:mt-0 sm:text-ink-3 sm:text-[12px]">
+                    <small className="text-ink-4 sm:text-ink-3 mt-3 block text-[13px] sm:mt-0 sm:text-[12px]">
                       {s.label}
                     </small>
                   </div>
@@ -59,7 +59,7 @@ export function ProfileTab({ profile, profileRepo }: ProfileTabProps) {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <Panel
+          {/* <Panel
             title="نقشه راه رشد فردی"
             action={<span className="text-gold text-[13px] font-bold">۸ از ۱۲</span>}
           >
@@ -82,7 +82,7 @@ export function ProfileTab({ profile, profileRepo }: ProfileTabProps) {
               ۸ مرحله از مسیر رشد فردی‌ات را کامل کرده‌ای. برای آزادسازی مرحله‌ی بعد، تمرین تمرکز
               عمیق را تمام کن.
             </p>
-          </Panel>
+          </Panel> */}
 
           <Panel title="تنظیمات">
             <div className="grid grid-cols-2 gap-3">
@@ -109,7 +109,7 @@ export function ProfileTab({ profile, profileRepo }: ProfileTabProps) {
 
         <Panel
           title="دستاوردها"
-          action={<a className="text-gold cursor-pointer text-[13px] font-bold">مشاهده همه</a>}
+          // action={<a className="text-gold cursor-pointer text-[13px] font-bold">مشاهده همه</a>}
         >
           <div className="grid grid-cols-3 gap-x-5 gap-y-7 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
             {sortedAchievements.map((achievement) => (
@@ -245,19 +245,19 @@ function AchievementModal({
             {getAchievementDescription(achievement)}
           </p>
 
-          <div className="mt-6 flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[13px] sm:justify-between">
+          <div className="mt-6 flex w-full flex-wrap items-center gap-x-4 gap-y-2 text-[13px] sm:justify-between">
             <span className="text-ink-3 font-bold">شرایط دریافت:</span>
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
               {conditions.map((condition) => (
                 <span
                   key={condition.id}
                   className={cn(
-                    'inline-flex items-center gap-2 font-bold leading-7',
+                    'inline-flex items-center gap-2 leading-7 font-bold',
                     condition.passed ? 'text-gold' : 'text-ink-4 grayscale',
                   )}
                 >
+                  <Icon name="check-inner-empty" size={24} className="shrink-0" />
                   <span>{condition.label}</span>
-                  <Icon name="check" size={24} className="shrink-0" />
                 </span>
               ))}
             </div>

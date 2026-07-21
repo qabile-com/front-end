@@ -9,6 +9,8 @@ import { useScrollLock } from '../../application/use-scroll-lock';
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
 import type { PaginatedComments } from '../../domain/comments-repository';
 import type { SectionWatchProgressInput, SectionWatchEvent } from '../../domain/dashboard.types';
+import { toPersianDigits } from '@/core/lib/persian';
+import { formatDuration } from '@/core/lib/format-duration';
 
 interface Props {
   isOpen: boolean;
@@ -20,6 +22,7 @@ interface Props {
   onWatchProgress: (body: SectionWatchProgressInput) => void;
   onAddComment: (text: string) => void;
   isAddingComment?: boolean;
+  userName?: string;
 }
 
 export function CourseSessionModal({
@@ -30,6 +33,7 @@ export function CourseSessionModal({
   onWatchProgress,
   commentsQuery,
   videoUrl,
+  userName,
   onAddComment,
   isAddingComment = false,
 }: Props) {
@@ -44,7 +48,9 @@ export function CourseSessionModal({
   const [watchProgressBySession, setWatchProgressBySession] = useState<Record<string, number>>({});
   const [commentText, setCommentText] = useState('');
 
-  // Stabilize the callback ref so effects don't depend on it
+  const [showVideo, setShowVideo] = useState(false);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     reportProgressRef.current = onWatchProgress;
   }, [onWatchProgress]);
@@ -194,32 +200,64 @@ export function CourseSessionModal({
         {/* Scrollable body */}
         <div className="min-h-0 flex-1 overflow-y-auto">
           {/* Video player */}
-          <div className="relative h-[220px] w-full bg-black sm:h-[260px] md:h-[320px]">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+          <div
+            className="relative h-[220px] w-full bg-black sm:h-[260px] md:h-[320px]"
+            ref={videoContainerRef}
+          >
             {videoUrl ? (
-              <video
-                ref={videoRef}
-                src={videoUrl}
-                controls
-                className="h-full w-full object-cover"
-                onLoadedMetadata={() => {
-                  lastTimeRef.current = videoRef.current?.currentTime ?? 0;
-                }}
-                onTimeUpdate={rememberWatchedTime}
-                onPause={() => reportWatchProgress('pause', true)}
-                onEnded={() => reportWatchProgress('ended', true)}
-                onSeeking={() => {
-                  lastTimeRef.current = videoRef.current?.currentTime ?? 0;
-                }}
-                onSeeked={() => {
-                  lastTimeRef.current = videoRef.current?.currentTime ?? 0;
-                }}
-              />
+              !showVideo ? (
+                // Cover + play button
+                <>
+                  {session.coverUrl ? (
+                    <img
+                      src={session.coverUrl}
+                      alt={session.title}
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <button
+                    className="bg-ember hover:bg-ember-deep absolute inset-0 z-10 m-auto flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-110"
+                    onClick={() => setShowVideo(true)}
+                    aria-label="پخش ویدیو"
+                  >
+                    <Icon name="play" size={22} className="text-white" />
+                  </button>
+                </>
+              ) : (
+                // Actual video
+                <video
+                  ref={videoRef}
+                  src={videoUrl}
+                  controls
+                  autoPlay
+                  className="h-full w-full object-cover"
+                  onLoadedMetadata={() => {
+                    lastTimeRef.current = videoRef.current?.currentTime ?? 0;
+                  }}
+                  onTimeUpdate={rememberWatchedTime}
+                  onPause={() => reportWatchProgress('pause', true)}
+                  onEnded={() => reportWatchProgress('ended', true)}
+                  onSeeking={() => {
+                    lastTimeRef.current = videoRef.current?.currentTime ?? 0;
+                  }}
+                  onSeeked={() => {
+                    lastTimeRef.current = videoRef.current?.currentTime ?? 0;
+                  }}
+                />
+              )
             ) : (
-              <button className="bg-ember hover:bg-ember-deep absolute inset-0 z-10 m-auto flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-colors">
-                <Icon name="play" size={22} className="text-white" />
-              </button>
+              <div className="text-ink-3 absolute inset-0 flex items-center justify-center">
+                <Icon name="play" size={40} className="opacity-30" />
+              </div>
             )}
+
+            {/* Duration badge */}
+            <span className="absolute right-4 bottom-4 z-20 rounded-full bg-black/60 px-3 py-1 text-xs text-white/80">
+              {formatDurationFa(session.durationSeconds!)}
+            </span>
           </div>
 
           {/* Info bar */}
@@ -243,7 +281,7 @@ export function CourseSessionModal({
               <button
                 type="button"
                 onClick={onNextSession}
-                disabled={!session.nextSectionId}
+                disabled={!session.nextEpisodeId}
                 className="bg-ember hover:bg-ember-deep flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-45"
               >
                 ویدیو بعدی
@@ -289,7 +327,7 @@ export function CourseSessionModal({
           )}
           <div className="text-ink-3 flex items-center gap-6 p-6 text-sm">
             <span className="flex items-center gap-2">
-              <Icon name="clock" size={16} /> {session.duration}
+              <Icon name="clock" size={16} /> {formatDurationFa(session.durationSeconds!)}
             </span>
             <span className="flex items-center gap-2">
               <Icon name="eye" size={16} /> {session.views ?? 'بدون'} بازدید
@@ -299,7 +337,7 @@ export function CourseSessionModal({
           <div className="p-6 pb-20">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-ink-2 text-sm font-bold">
-                نظرات کاربران ({commentsQuery.data?.pages[0]?.totalItems ?? 0})
+                نظرات کاربران ({allComments[0]?.comments.length ?? 0})
               </h3>
             </div>
             <div className="space-y-4">
@@ -307,20 +345,24 @@ export function CourseSessionModal({
                 <p className="text-ink-3 text-sm">در حال بارگذاری نظرات...</p>
               )}
               {commentsQuery.isError && <p className="text-danger text-sm">خطا در دریافت نظرات</p>}
-              {allComments.map((c) => (
-                <div key={c.id} className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-white">
-                    {c.name[0]}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-ink text-sm font-bold">{c.name}</span>
-                      <span className="text-ink-4 text-xs">{c.time}</span>
+              {allComments[0]?.comments.length === 0 ? (
+                <p className="text-ink-3 text-center text-sm">هنوز هیچ نظری ثبت نشده است.</p>
+              ) : (
+                allComments[0]?.comments.map((c) => (
+                  <div key={c.id} className="flex items-start gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-white">
+                      {c.name[0]}
                     </div>
-                    <p className="text-ink-3 mt-1 text-sm">{c.text}</p>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-ink text-sm font-bold">{c.name}</span>
+                        <span className="text-ink-4 text-xs">{c.time}</span>
+                      </div>
+                      <p className="text-ink-3 mt-1 text-sm">{c.text}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
             {commentsQuery.hasNextPage && (
               <button
@@ -337,7 +379,7 @@ export function CourseSessionModal({
         {/* Fixed comment input footer */}
         <div className="border-hair flex shrink-0 items-center gap-3 border-t bg-[var(--color-panel)] p-4">
           <div className="bg-ember flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white">
-            آ
+            {userName?.[0] ?? 'ک'}
           </div>
           <Input
             placeholder="نظرت رو بنویس..."
@@ -379,4 +421,8 @@ function addWatchedRange(start: number, end: number, ranges: { start: number; en
 
 function calculateWatchedSeconds(ranges: { start: number; end: number }[]) {
   return ranges.reduce((sum, range) => sum + Math.max(0, range.end - range.start), 0);
+}
+
+export function formatDurationFa(totalSeconds: number | string): string {
+  return toPersianDigits(formatDuration(totalSeconds));
 }

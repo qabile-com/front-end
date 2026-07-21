@@ -16,11 +16,7 @@ import {
   useVerifyPasswordChangeCode,
 } from '../../application/use-profile-settings';
 
-type SettingsScreen =
-  | 'settings'
-  | 'password-email'
-  | 'password-code'
-  | 'password-new';
+type SettingsScreen = 'settings' | 'password-email' | 'password-code' | 'password-new';
 
 interface ProfileSettingsPanelProps {
   profile: MyProfile;
@@ -171,7 +167,7 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
             onChange={setPasswordEmail}
             icon="mail"
             inputMode="email"
-            disabled={isBusy || Boolean(profile.email)}
+            disabled={isBusy}
             action="ادامه"
             onSubmit={handleRequestPasswordCode}
           />
@@ -256,7 +252,7 @@ function SettingsMain({
     <div className="mx-auto w-full max-w-[620px]">
       <h3 className="mb-4 text-right text-[15px] font-black">امنیت و حریم خصوصی</h3>
       <div className="rounded-[16px] border border-[rgba(255,98,0,.16)] bg-[rgba(255,98,0,.035)] p-2 sm:p-3">
-        <div className="grid gap-2">
+        {/* <div className="grid gap-2">
           {SETTING_ROWS.map((setting) => (
             <SettingToggleRow
               key={setting.field}
@@ -266,15 +262,11 @@ function SettingsMain({
               onChange={(checked) => onToggle(setting.field, checked)}
             />
           ))}
-        </div>
+        </div> */}
 
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <ActionRow title="تغییر رمز عبور" icon="lock" onClick={onPassword} />
-          <InfoRow
-            title="ایمیل حساب"
-            value={profile.email ?? 'ایمیلی ثبت نشده است'}
-            icon="mail"
-          />
+          <InfoRow title="ایمیل حساب" value={profile.email ?? 'ایمیلی ثبت نشده است'} icon="mail" />
         </div>
       </div>
     </div>

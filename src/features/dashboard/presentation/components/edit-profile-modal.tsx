@@ -22,6 +22,7 @@ export function EditProfileModal({ profile, repo, onClose }: EditProfileModalPro
   useScrollLock(true);
 
   const [name, setName] = useState(profile.name);
+  const [lastName, setLastName] = useState(profile.lastName);
   const [username, setUsername] = useState(profile.username ?? '');
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -111,7 +112,7 @@ export function EditProfileModal({ profile, repo, onClose }: EditProfileModalPro
               className="hidden"
               onChange={(event) => void handleAvatarChange(event.target.files?.[0])}
             />
-            <Button
+            {/* <Button
               type="button"
               variant="primary"
               size="sm"
@@ -121,7 +122,7 @@ export function EditProfileModal({ profile, repo, onClose }: EditProfileModalPro
             >
               <Icon name="paperclip" size={15} />
               تغییر عکس
-            </Button>
+            </Button> */}
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -131,7 +132,15 @@ export function EditProfileModal({ profile, repo, onClose }: EditProfileModalPro
                 value={name}
                 onChange={setName}
                 icon="user"
-                placeholder="آرش کریمی"
+                placeholder="آرش"
+                disabled={isBusy}
+              />
+              <EditField
+                label="نام خانوادگی"
+                value={lastName}
+                onChange={setLastName}
+                icon="user"
+                placeholder="کریمی"
                 disabled={isBusy}
               />
               <EditField
@@ -169,7 +178,7 @@ export function EditProfileModal({ profile, repo, onClose }: EditProfileModalPro
               onClick={handleDeleteAccount}
               className="mx-auto flex h-9 w-full max-w-[294px] items-center justify-center gap-2 rounded-[7px] border border-red-600 bg-black text-[12px] font-black text-red-500 transition-colors hover:bg-red-600/10 disabled:opacity-50"
             >
-              <Icon name="logout" size={15} />
+              <Icon name="flame" size={15} />
               حذف حساب کاربری
             </button>
           </EditSection>

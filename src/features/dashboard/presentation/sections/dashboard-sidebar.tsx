@@ -111,7 +111,7 @@ export function DashboardSidebar({ active, onChange, user, nav }: SidebarProps) 
         خروج از حساب
       </button>
 
-      <Link
+      {/* <Link
         href="#"
         className="flex items-center gap-2.5 rounded-[20px] border border-[rgba(255,100,30,.22)] p-3.5 [background:linear-gradient(135deg,rgba(204,67,8,.15),rgba(255,98,0,.07))]"
       >
@@ -124,7 +124,7 @@ export function DashboardSidebar({ active, onChange, user, nav }: SidebarProps) 
           <b className="my-1 block text-[13.5px] font-extrabold">از آدم بپرس</b>
           <span className="text-ink-2 text-[12px]">همیشه آنلاین</span>
         </span>
-      </Link>
+      </Link> */}
     </aside>
   );
 }

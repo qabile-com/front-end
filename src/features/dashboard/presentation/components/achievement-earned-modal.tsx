@@ -32,7 +32,7 @@ export function AchievementEarnedModal({ achievement, onClose }: AchievementEarn
   return (
     <div className="fixed inset-0 z-[1110] flex items-center justify-center bg-black/72 p-4 backdrop-blur-sm">
       <div className="border-hair w-full max-w-[426px] overflow-hidden rounded-[10px] border bg-[#050302] px-5 py-6 text-center shadow-[0_28px_90px_-40px_var(--glow)] sm:px-8">
-        <div className="mx-auto relative size-[190px] overflow-hidden rounded-[8px] border border-[rgba(255,98,0,.72)] bg-black">
+        <div className="relative mx-auto size-[190px] overflow-hidden rounded-[8px] border border-[rgba(255,98,0,.72)] bg-black">
           <OptionalImage
             src={getAchievementImage(achievement)}
             alt={achievement.label}

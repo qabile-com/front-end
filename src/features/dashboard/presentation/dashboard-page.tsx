@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Icon, OptionalImage } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
 import { TAB_TITLES, NAV } from '@/features/dashboard/domain/dashboard.data';
@@ -36,29 +36,41 @@ import {
 } from '../infrastructure/repository-factory';
 import { IUserProfileRepository } from '../domain/user-profile-repository';
 import type { IProfileRepository } from '../domain/profile-repository';
+import { useRouter } from 'next/navigation';
+import { useAuthGuard } from '@/features/auth/application/use-auth-guard';
+import { removeAccessToken } from '@/core/auth/token';
 
 export function DashboardPage() {
+  const router = useRouter();
+  useAuthGuard();
   const [tab, setTab] = useState<DashboardTab>('courses');
   const [loadedTabs, setLoadedTabs] = useState<Set<DashboardTab>>(new Set(['courses']));
 
   const { user, loading: userLoading, error: userError, refetch: refetchUser } = useUser(userRepo);
-  const {
-    posts,
-    tags,
-    activeUsers,
-    loading: socialLoading,
-    error: socialError,
-    publishPost,
-    addComment,
-  } = useSocialData(socialRepo);
-  const { data: seasonData, loading: seasonLoading, error: seasonError } = useSeason(seasonRepo);
+  // const {
+  //   posts,
+  //   tags,
+  //   activeUsers,
+  //   loading: socialLoading,
+  //   error: socialError,
+  //   publishPost,
+  //   addComment,
+  // } = useSocialData(socialRepo);
+  // const { data: seasonData, loading: seasonLoading, error: seasonError } = useSeason(seasonRepo);
 
-  const home = useHomeData(homeRepo);
-  const lb = useLeaderboard(leaderboardRepo);
+  // const home = useHomeData(homeRepo);
+  // const lb = useLeaderboard(leaderboardRepo);
   const courses = useCourses(coursesRepo);
   const profile = useProfile(profileRepo);
 
   const title = TAB_TITLES[tab] ?? '';
+
+  useEffect(() => {
+    if (userError) {
+      removeAccessToken();
+      router.replace('/auth');
+    }
+  }, [userError, router]);
 
   // Mark tab as loaded on change
   const handleTabChange = (newTab: DashboardTab) => {
@@ -102,15 +114,15 @@ export function DashboardPage() {
         <MobileHeader title={title} level={user.level} streak={user.streak} />
 
         <div className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
-          {tab === 'home' && loadedTabs.has('home') && (
+          {/* {tab === 'home' && loadedTabs.has('home') && (
             <HomeTabWrapper
               user={user}
               loading={home.loading}
               error={home.error}
               data={home.data}
             />
-          )}
-          {tab === 'lb' && loadedTabs.has('lb') && (
+          )} */}
+          {/* {tab === 'lb' && loadedTabs.has('lb') && (
             <LeaderboardTabWrapper
               loading={lb.loading || seasonLoading}
               error={lb.error || seasonError}
@@ -118,8 +130,8 @@ export function DashboardPage() {
               seasonData={seasonData}
               userProfileRepo={userProfileRepo}
             />
-          )}
-          {tab === 'social' && loadedTabs.has('social') && (
+          )} */}
+          {/* {tab === 'social' && loadedTabs.has('social') && (
             <SocialTabWrapper
               loading={socialLoading}
               error={socialError}
@@ -129,12 +141,13 @@ export function DashboardPage() {
               onPublish={publishPost}
               onAddComment={addComment}
             />
-          )}
+          )} */}
           {tab === 'courses' && loadedTabs.has('courses') && (
             <CoursesTabWrapper
               loading={courses.loading}
               error={courses.error}
               courses={courses.courses}
+              userName={user.name}
             />
           )}
           {tab === 'profile' && loadedTabs.has('profile') && (
@@ -214,15 +227,17 @@ function CoursesTabWrapper({
   loading,
   error,
   courses,
+  userName,
 }: {
   loading: boolean;
   error: string | null;
   courses: Course[] | null;
+  userName?: string;
 }) {
   if (loading) return <TabLoader />;
   if (error) return <TabError error={error} />;
   if (!courses) return null;
-  return <CoursesTab courses={courses} />;
+  return <CoursesTab courses={courses} userName={userName} />;
 }
 function ProfileTabWrapper({
   loading,

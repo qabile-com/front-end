@@ -20,12 +20,14 @@ import type {
   SectionWatchProgressInput,
   SectionWatchProgressResult,
 } from '../../domain/dashboard.types';
+import { formatDuration } from '@/core/lib/format-duration';
 
 interface CoursesTabProps {
   courses: Course[];
+  userName?: string;
 }
 
-export function CoursesTab({ courses }: CoursesTabProps) {
+export function CoursesTab({ courses, userName }: CoursesTabProps) {
   const [selected, setSelected] = useState<Course | null>(null);
   const [selectedPart, setSelectedPart] = useState<CoursePart | null>(null);
   const [earnedXp, setEarnedXp] = useState<number | null>(null);
@@ -38,6 +40,8 @@ export function CoursesTab({ courses }: CoursesTabProps) {
     selected?.id ?? null,
     selectedPart?.id ?? null,
   );
+  console.log(sessionDetail);
+  console.log(selectedPart);
   const commentsQuery = useSessionComments(
     commentsRepo,
     selected?.id ?? null,
@@ -64,7 +68,6 @@ export function CoursesTab({ courses }: CoursesTabProps) {
     if (result.reward?.streak?.increased) setStreakReward(result.reward.streak.current);
     if (result.reward?.achievements?.[0]) setEarnedAchievement(result.reward.achievements[0]);
   }, []);
-
   const handleAddComment = (text: string) => {
     if (!selected || !selectedPart) return;
     addComment.mutate({ courseId: selected.id, sectionId: selectedPart.id, text });
@@ -90,12 +93,12 @@ export function CoursesTab({ courses }: CoursesTabProps) {
   const handleNextSession = () => {
     const nextSectionId = sessionDetail?.part.nextSectionId ?? selectedPart?.nextSectionId;
     if (!selected || !nextSectionId) return;
-    const nextPart = selected.parts.find((part) => part.id === nextSectionId);
+    const nextPart = selected.episodes.find((part) => part.id === nextSectionId);
     setSelectedPart(
       nextPart ?? {
         id: nextSectionId,
         title: '',
-        duration: '',
+        durationSeconds: 0,
         status: 'none',
       },
     );
@@ -111,8 +114,9 @@ export function CoursesTab({ courses }: CoursesTabProps) {
       <div className="grid items-start gap-6 min-[1200px]:grid-cols-[1fr_380px]">
         <div className="grid grid-cols-1 gap-5 min-[1500px]:grid-cols-3 sm:grid-cols-2">
           {courses.map((course) => {
-            const done = course.parts.filter((p) => p.status === 'done').length;
-            const pct = Math.round((done / course.parts.length) * 100);
+            console.log(course);
+            const done = course.episodes.filter((p) => p.status === 'done').length;
+            const pct = Math.round((done / course.episodes.length) * 100);
             const isSel = selected?.id === course.id;
             return (
               <button
@@ -141,8 +145,8 @@ export function CoursesTab({ courses }: CoursesTabProps) {
                     </>
                   )}
                   <Icon name="play" size={34} className="text-white/90" />
-                  <span className="absolute end-2.5 top-2.5 rounded-md bg-black/30 px-2 py-0.5 text-[11px] font-bold text-white">
-                    {course.duration}
+                  <span className="absolute end-2.5 bottom-2.5 rounded-md bg-black/30 px-2 py-0.5 text-[11px] font-bold text-white">
+                    {formatDurationFa(course.duration)}
                   </span>
                 </div>
 
@@ -152,8 +156,8 @@ export function CoursesTab({ courses }: CoursesTabProps) {
                   <div className="mt-auto">
                     <div className="text-ink-3 mt-2 flex items-center justify-between gap-3 text-[12px]">
                       <span className="flex items-center gap-1">
-                        <Icon name="eye" size={12} />
                         {course.views}
+                        <Icon name="eye" size={12} />
                       </span>
                       <span className="text-gold flex items-center gap-1">
                         <PhoenixIcon className="size-3.5 rounded-full" />
@@ -189,12 +193,13 @@ export function CoursesTab({ courses }: CoursesTabProps) {
           onClose={() => {
             setSelectedPart(null);
           }}
-          session={sessionDetail.part}
-          videoUrl={sessionDetail.videoUrl}
+          session={selectedPart}
+          videoUrl={selectedPart?.videoUrl}
           commentsQuery={commentsQuery}
           onNextSession={handleNextSession}
           onWatchProgress={handleWatchProgress}
           onAddComment={handleAddComment}
+          userName={userName}
           isAddingComment={addComment.isPending}
         />
       )}
@@ -249,7 +254,7 @@ function CourseDetail({
   course: Course;
   onPartClick: (part: CoursePart) => void;
 }) {
-  const done = course.parts.filter((p) => p.status === 'done').length;
+  const done = course.episodes.filter((p) => p.status === 'done').length;
   return (
     <div className="flex max-h-[calc(100vh-120px)] flex-col">
       <div className="border-hair border-b p-5">
@@ -264,14 +269,22 @@ function CourseDetail({
               </b>
             </div>
             <small className="text-ink-3 mt-1 block text-[12px]">
-              {toPersianDigits(done)} از {toPersianDigits(course.parts.length)} بخش تکمیل شده
+              {toPersianDigits(done)} از {toPersianDigits(course.episodes.length)} بخش تکمیل شده
             </small>
           </div>
         </div>
       </div>
       <div className="flex flex-col gap-2 overflow-y-auto p-4">
-        {course.parts.map((part, i) => (
-          <PartRow key={i} part={part} index={i} onClick={() => onPartClick(part)} />
+        {course.episodes.map((part, i) => (
+          <PartRow
+            key={i}
+            part={part}
+            index={i}
+            onClick={() => {
+              console.log(part);
+              onPartClick(part);
+            }}
+          />
         ))}
       </div>
     </div>
@@ -326,7 +339,7 @@ function PartRow({
           <b className="block truncate text-[13.5px] font-bold">{part.title}</b>
           <div className="text-ink-3 mt-1 flex items-center gap-1 text-[11.5px]">
             <Icon name="clock" size={12} />
-            {part.duration}
+            {formatDurationFa(part.durationSeconds!)}
             <span
               className={cn(
                 'mr-1 shrink-0 rounded-xl px-2 py-0.5 text-[11px] font-bold',
@@ -341,4 +354,8 @@ function PartRow({
       <Icon name="arrow-left" size={18} className="text-ink-3 shrink-0" />
     </button>
   );
+}
+
+export function formatDurationFa(totalSeconds: number | string): string {
+  return toPersianDigits(formatDuration(totalSeconds));
 }
