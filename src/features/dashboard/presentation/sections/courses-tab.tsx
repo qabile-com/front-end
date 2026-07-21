@@ -124,7 +124,7 @@ export function CoursesTab({ courses, userName }: CoursesTabProps) {
                 type="button"
                 onClick={() => setSelected(course)}
                 className={cn(
-                  'flex h-full flex-col overflow-hidden rounded-[18px] border text-start transition-[transform,border-color] duration-300 [background:var(--glass)] hover:-translate-y-1',
+                  'flex h-full min-w-0 flex-col overflow-hidden rounded-[18px] border text-start transition-[transform,border-color] duration-300 [background:var(--glass)] hover:-translate-y-1',
                   'border-hair hover:border-hair-2',
                   isSel && 'border-[rgba(255,98,0,.4)] shadow-[0_12px_36px_-16px_var(--glow)]',
                 )}
