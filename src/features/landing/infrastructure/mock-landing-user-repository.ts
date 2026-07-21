@@ -12,7 +12,7 @@ export class MockLandingUserRepository implements ILandingUserRepository {
     return {
       user: USER,
       chips: [
-        { icon: 'bolt', value: '۲٬۴۸۰', label: 'امتیاز امروز' },
+        { icon: 'bolt', value: '۲٬۴۸۰', label: 'آتش امروز' },
         { icon: 'flame', value: '۳۱ روز', label: 'زنجیره‌ی پیوسته' },
         { icon: 'medal', value: 'سطح ۲۴', label: 'ققنوس طلایی' },
       ],

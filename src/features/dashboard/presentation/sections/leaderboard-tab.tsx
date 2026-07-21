@@ -112,7 +112,7 @@ export function LeaderboardTab({
                 <tr className="text-ink-3 text-[12px] uppercase">
                   <th className="w-16 px-5 py-3 text-center font-bold">#</th>
                   <th className="px-2 py-3 text-start font-bold">کاربر</th>
-                  <th className="px-2 py-3 text-start font-bold">امتیاز</th>
+                  <th className="px-2 py-3 text-start font-bold">آتش</th>
                   <th className="px-5 py-3 text-start font-bold">سطح</th>
                 </tr>
               </thead>

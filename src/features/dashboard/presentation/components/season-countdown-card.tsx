@@ -58,7 +58,7 @@ export function SeasonCountdownCard({
             <span className="text-ember text-4xl font-extrabold">
               {toPersianDigits(pointsNeeded)}
             </span>
-            <span className="text-ember text-xl">امتیاز</span>
+            <span className="text-ember text-xl">آتش</span>
           </div>
           <span>نیاز داری</span>
         </div>

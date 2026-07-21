@@ -61,8 +61,8 @@ export function PillarsSection({ pillarFeatures }: PillarsSectionProps) {
                   </span>
                   <b className="text-xs">منتور ققنوس</b>
                 </span>
-                بیا با یک زنجیره‌ی ۷ روزه شروع کنیم؛ هر روز فقط ۲۰ دقیقه. من یادآوری‌ها و امتیازهایت
-                را مدیریت می‌کنم. 🔥
+                بیا با یک زنجیره‌ی ۷ روزه شروع کنیم؛ هر روز فقط ۲۰ دقیقه. من یادآوری‌ها و آتشهایت را
+                مدیریت می‌کنم. 🔥
               </div>
               <div className="border-hair inline-flex gap-1 self-start rounded-[15px] rounded-es-[4px] border px-4 py-3 [background:var(--glass-2)]">
                 <i className="typing-dot bg-gold size-1.5 rounded-full" />
@@ -75,7 +75,7 @@ export function PillarsSection({ pillarFeatures }: PillarsSectionProps) {
 
         <Reveal as="div" delay={2} className="md:col-span-3">
           <BentoCell icon="bolt" title="گیمیفیکیشن">
-            امتیاز، نشان، سطح و زنجیره؛ هر تلاش پاداش می‌گیرد و یادگیری به یک بازی اعتیادآور تبدیل
+            آتش، نشان، سطح و زنجیره؛ هر تلاش پاداش می‌گیرد و یادگیری به یک بازی اعتیادآور تبدیل
             می‌شود.
           </BentoCell>
         </Reveal>

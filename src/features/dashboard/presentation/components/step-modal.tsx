@@ -63,7 +63,7 @@ export function StepModal({
             <span className="text-gold text-[14px] font-bold">
               +{toPersianDigits(detail.xpReward)}
             </span>
-            <span className="text-gold text-[12px]">امتیاز</span>
+            <span className="text-gold text-[12px]">آتش</span>
             <span className="bg-gold inline-block size-1.5 rounded-full shadow-[0_0_8px_var(--color-gold)]" />
           </div>
         </div>
@@ -130,7 +130,7 @@ export function StepModal({
           <div className="text-ink-3 text-[13px]">
             با تکمیل این مرحله{' '}
             <span className="text-gold font-extrabold">
-              +{toPersianDigits(detail.xpReward)} امتیاز
+              +{toPersianDigits(detail.xpReward)} آتش
             </span>{' '}
             دریافت می‌کنی
           </div>

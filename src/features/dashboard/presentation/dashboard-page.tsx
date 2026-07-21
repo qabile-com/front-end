@@ -191,7 +191,7 @@ export function DashboardPage() {
       {signupXp !== null && (
         <XpEarnedModal
           xp={signupXp}
-          description="امتیاز خوش‌آمدگویی به حسابت اضافه شد."
+          description="آتش خوش‌آمدگویی به حسابت اضافه شد."
           onClose={() => setSignupXp(null)}
         />
       )}

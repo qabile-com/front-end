@@ -50,7 +50,7 @@ export function RoadmapDetailView({ isOpen, onClose, user, roadmap }: Props) {
         <div className="border-hair grid grid-cols-4 gap-2 border-t border-b px-4 py-2 text-center">
           <div>
             <div className="text-gold text-lg font-bold">{toPersianDigits(user.xp)}</div>
-            <div className="text-ink-3 mt-1 text-[10px]">امتیاز</div>
+            <div className="text-ink-3 mt-1 text-[10px]">آتش</div>
           </div>
           <div>
             <div className="text-ember text-lg font-bold">۳۱</div>

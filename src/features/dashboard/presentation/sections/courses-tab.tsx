@@ -211,7 +211,7 @@ export function CoursesTab({ courses, userName }: CoursesTabProps) {
       />
       <XpEarnedModal
         xp={earnedXp}
-        description="امتیاز این جلسه به حساب قبیله‌ات اضافه شد."
+        description="آتش این جلسه به حساب قبیله‌ات اضافه شد."
         onClose={() => setEarnedXp(null)}
       />
       <AchievementEarnedModal
@@ -265,7 +265,7 @@ function CourseDetail({
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <b className="text-gold text-[14px] font-extrabold">
-                +{toPersianDigits(course.xp)} امتیاز
+                +{toPersianDigits(course.xp)} آتش
               </b>
             </div>
             <small className="text-ink-3 mt-1 block text-[12px]">

@@ -187,7 +187,7 @@ export const SETTINGS: SettingItem[] = [
 ];
 
 export const PROFILE_STATS = [
-  { value: '۴۸۴۸۴۸', label: 'امتیاز' },
+  { value: '۴۸۴۸۴۸', label: 'آتش' },
   { value: '۴۸', label: 'روز زنجیره' },
   { value: '۱۲', label: 'هم پرواز شده' },
   { value: '۳۱', label: 'هم پرواز' },

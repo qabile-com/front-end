@@ -308,7 +308,7 @@ const ACHIEVEMENT_RULES: Record<
   },
   gahreman: {
     description: 'بزرگ‌ترین نبرد، نبرد با خودت بود... و تو پیروز شدی.',
-    condition: 'دریافت هر ۱۰۰۰ امتیاز XP',
+    condition: 'دریافت هر ۱۰۰۰ آتش XP',
   },
   'safir-ghabile': {
     description: 'امروز فقط عضوی از قبیله نیستی؛ بخشی از آینده‌ی آن هستی.',

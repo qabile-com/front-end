@@ -75,7 +75,7 @@ export function UserProfileModal({ isOpen, onClose, user }: Props) {
                 </div>
                 <div>
                   <div className="text-ink text-lg font-bold">{toPersianDigits(user.stats.xp)}</div>
-                  <div className="text-ink-3 mt-1 text-xs">امتیاز</div>
+                  <div className="text-ink-3 mt-1 text-xs">آتش</div>
                 </div>
               </div>
               {/* Action Buttons */}

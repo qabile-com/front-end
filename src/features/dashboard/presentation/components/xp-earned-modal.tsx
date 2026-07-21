@@ -37,7 +37,7 @@ export function XpEarnedModal({ xp, title = 'عالی بود! ', onClose }: XpEa
             className="mt-2 text-[20px] leading-tight font-bold tracking-tight text-white md:text-[24px]"
           >
             {title}
-            {toPersianDigits(xp)} امتیاز دریافتی کردی
+            {toPersianDigits(xp)} آتش دریافتی کردی
           </h3>
 
           {/* Continue Button */}

@@ -113,7 +113,7 @@ export function HomeTab({
       />
       <XpEarnedModal
         xp={earnedXp}
-        description="امتیاز این قدم از نقشه راه به حساب قبیله‌ات اضافه شد."
+        description="آتش این قدم از نقشه راه به حساب قبیله‌ات اضافه شد."
         onClose={() => setEarnedXp(null)}
       />
       <AchievementEarnedModal
