@@ -124,13 +124,13 @@ export function CoursesTab({ courses, userName }: CoursesTabProps) {
                 type="button"
                 onClick={() => setSelected(course)}
                 className={cn(
-                  'flex h-full min-w-0 flex-col overflow-hidden rounded-[18px] border text-start transition-[transform,border-color] duration-300 [background:var(--glass)] hover:-translate-y-1',
+                  'flex h-full w-full min-w-0 flex-col overflow-hidden rounded-[18px] border text-start transition-[transform,border-color] duration-300 [background:var(--glass)] hover:-translate-y-1',
                   'border-hair hover:border-hair-2',
                   isSel && 'border-[rgba(255,98,0,.4)] shadow-[0_12px_36px_-16px_var(--glow)]',
                 )}
               >
                 <div
-                  className="relative h-40 shrink-0 overflow-hidden sm:h-48 md:h-52"
+                  className="relative aspect-video w-full max-w-full shrink-0 overflow-hidden"
                   style={{ background: getCourseFallbackGradient(course.id) }}
                 >
                   {course.imageUrl && (
