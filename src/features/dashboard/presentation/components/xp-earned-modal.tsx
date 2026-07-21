@@ -1,21 +1,15 @@
 'use client';
 
-import { Button, Icon } from '@/shared/ui';
+import { Button } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
 
 interface XpEarnedModalProps {
   xp: number | null;
   title?: string;
-  description?: string;
   onClose: () => void;
 }
 
-export function XpEarnedModal({
-  xp,
-  title = 'امتیاز گرفتی',
-  description = 'ققنوس قبیله، رشدت را ثبت کرد.',
-  onClose,
-}: XpEarnedModalProps) {
+export function XpEarnedModal({ xp, title = 'عالی بود! ', onClose }: XpEarnedModalProps) {
   if (!xp) return null;
 
   return (
@@ -24,38 +18,43 @@ export function XpEarnedModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="xp-earned-title"
-        className="border-hair relative w-full max-w-[430px] overflow-hidden rounded-[16px] border bg-[#050302] px-5 py-7 text-center shadow-[0_34px_110px_-42px_var(--glow)] sm:px-8"
+        className="border-hair relative w-full max-w-[430px] overflow-hidden rounded-[24px] border bg-[#050302] px-6 py-8 text-center shadow-[0_34px_110px_-42px_var(--glow)] sm:px-8"
       >
+        {/* Background Glow Effect */}
         <span className="pointer-events-none absolute inset-x-8 -top-24 h-48 rounded-full blur-3xl [background:radial-gradient(circle,rgba(255,98,0,.35),transparent_70%)]" />
-        <div className="relative">
-          <div className="mx-auto grid size-20 place-items-center rounded-[24px] border border-[rgba(255,98,0,.36)] text-[#1a0a00] shadow-[0_18px_48px_-24px_var(--glow)] [background:var(--fire-grad)]">
-            <Icon name="flame" size={34} />
-          </div>
 
-          <p className="text-ink-3 mt-5 text-[12px] font-bold">پاداش جدید</p>
-          <h3 id="xp-earned-title" className="mt-2 text-[22px] font-black">
+        <div className="relative flex flex-col items-center">
+          {/* Image Section - User to replace src with their asset path */}
+          <img
+            src="/assets/xp-phoenix.webp"
+            alt="Phoenix"
+            className="mb-4 h-auto w-48 object-contain drop-shadow-[0_0_15px_rgba(255,100,0,0.5)]"
+          />
+
+          {/* Title / XP Text */}
+          <h3
+            id="xp-earned-title"
+            className="mt-2 text-[20px] leading-tight font-bold tracking-tight text-white md:text-[24px]"
+          >
             {title}
+            {toPersianDigits(xp)} امتیاز دریافتی کردی
           </h3>
 
-          <div className="mx-auto mt-5 w-fit rounded-[18px] border border-[rgba(243,186,99,.28)] bg-[rgba(243,186,99,.08)] px-7 py-4">
-            <span className="text-gradient-fire block text-[42px] leading-none font-black">
-              +{toPersianDigits(xp)}
-            </span>
-            <span className="text-gold mt-1 block text-[13px] font-black">XP</span>
-          </div>
-
-          <p className="text-ink-2 mt-5 text-[13px] leading-7">{description}</p>
-
+          {/* Continue Button */}
           <Button
             type="button"
-            variant="primary"
             size="md"
             block
             onClick={onClose}
-            className="mt-6 h-11 rounded-[8px] text-[13px]"
+            className="mt-6 h-[48px] w-full rounded-full bg-gradient-to-b from-[#FFCE7A] to-[#FF7000] text-[16px] font-bold text-[#3A1500] shadow-[0_8px_32px_-8px_rgba(255,100,0,0.6)] transition-all hover:scale-[1.02] hover:shadow-[0_8px_40px_-6px_rgba(255,100,0,0.8)]"
           >
             ادامه
           </Button>
+
+          {/* Bottom Caption */}
+          <p className="text-ink-3 mt-5 text-[13px] font-medium opacity-60">
+            مسیر رشد ادامه دارد؛ متوقف نشو
+          </p>
         </div>
       </div>
     </div>

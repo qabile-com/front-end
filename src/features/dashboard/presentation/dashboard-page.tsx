@@ -4,7 +4,11 @@ import { useEffect, useState } from 'react';
 import { Icon, OptionalImage } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
 import { TAB_TITLES, NAV } from '@/features/dashboard/domain/dashboard.data';
-import type { CurrentUser, DashboardTab } from '@/features/dashboard/domain/dashboard.types';
+import type {
+  Achievement,
+  CurrentUser,
+  DashboardTab,
+} from '@/features/dashboard/domain/dashboard.types';
 import { DashboardSidebar } from './sections/dashboard-sidebar';
 import { MobileNav } from './sections/mobile-nav';
 import { MobileHeader } from './sections/mobile-header';
@@ -39,14 +43,35 @@ import type { IProfileRepository } from '../domain/profile-repository';
 import { useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/features/auth/application/use-auth-guard';
 import { removeAccessToken } from '@/core/auth/token';
+import { AchievementEarnedModal } from './components/achievement-earned-modal';
+import { XpEarnedModal } from './components/xp-earned-modal';
 
 export function DashboardPage() {
   const router = useRouter();
   useAuthGuard();
   const [tab, setTab] = useState<DashboardTab>('courses');
+  const [signupXp, setSignupXp] = useState<number | null>(null);
+  const [signupAchievements, setSignupAchievements] = useState<Achievement[] | null>(null);
   const [loadedTabs, setLoadedTabs] = useState<Set<DashboardTab>>(new Set(['courses']));
 
   const { user, loading: userLoading, error: userError, refetch: refetchUser } = useUser(userRepo);
+  useEffect(() => {
+    if (user) {
+      const rewardStr = sessionStorage.getItem('signupReward');
+      if (rewardStr) {
+        const reward = JSON.parse(rewardStr);
+        setSignupXp(reward.xpGranted || reward.xp);
+        sessionStorage.removeItem('signupReward');
+      }
+
+      const achievementsStr = sessionStorage.getItem('signupAchievements');
+      if (achievementsStr) {
+        const achievements = JSON.parse(achievementsStr);
+        setSignupAchievements(achievements);
+        sessionStorage.removeItem('signupAchievements');
+      }
+    }
+  }, [user]);
   // const {
   //   posts,
   //   tags,
@@ -163,6 +188,22 @@ export function DashboardPage() {
 
       {/* mobile bottom nav */}
       <MobileNav active={tab} onChange={handleTabChange} />
+      {signupXp !== null && (
+        <XpEarnedModal
+          xp={signupXp}
+          description="امتیاز خوش‌آمدگویی به حسابت اضافه شد."
+          onClose={() => setSignupXp(null)}
+        />
+      )}
+
+      {signupAchievements && signupAchievements.length > 0 && (
+        <AchievementEarnedModal
+          achievement={signupAchievements[0]}
+          onClose={() =>
+            setSignupAchievements((prev) => (prev && prev.length > 1 ? prev.slice(1) : null))
+          }
+        />
+      )}
     </div>
   );
 }

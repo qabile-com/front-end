@@ -108,12 +108,12 @@ export function HeroSection({ totalMembers = 52000, rating = 4.9, chips }: HeroS
                   <Icon name="flame" />
                 </Button>
               </Link>
-              <Link href="/dashboard" className="max-sm:flex-1">
+              {/* <Link href="/dashboard" className="max-sm:flex-1">
                 <Button variant="ghost" size="lg" block>
                   <Icon name="play" />
                   تماشای دمو
                 </Button>
-              </Link>
+              </Link> */}
             </div>
 
             <div className="mt-9 flex items-center gap-4">
