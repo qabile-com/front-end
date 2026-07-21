@@ -201,12 +201,12 @@ export function CourseSessionModal({
         <div className="min-h-0 flex-1 overflow-y-auto">
           {/* Video player */}
           <div
-            className="relative h-[220px] w-full bg-black sm:h-[260px] md:h-[320px]"
+            className="relative aspect-video max-h-[70vh] w-full bg-black"
             ref={videoContainerRef}
           >
             {videoUrl ? (
               !showVideo ? (
-                // Cover + play button
+                // Cover image with play button
                 <>
                   {session.coverUrl ? (
                     <img
@@ -233,7 +233,7 @@ export function CourseSessionModal({
                   src={videoUrl}
                   controls
                   autoPlay
-                  className="h-full w-full object-cover"
+                  className="absolute inset-0 h-full w-full object-cover"
                   onLoadedMetadata={() => {
                     lastTimeRef.current = videoRef.current?.currentTime ?? 0;
                   }}
