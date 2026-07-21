@@ -1,4 +1,9 @@
-import type { AuthSession, AuthUser, IAuthRepository } from '../domain/auth-repository';
+import type {
+  AuthSession,
+  AuthUser,
+  IAuthRepository,
+  VerifyOtpResult,
+} from '../domain/auth-repository';
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -8,26 +13,25 @@ export class MockAuthRepository implements IAuthRepository {
     console.log(`[Mock] OTP sent to ${identifier}`);
   }
 
-  async verifyOtp(
-    identifier: string,
-    code: string,
-    name?: string,
-    lastName?: string,
-  ): Promise<AuthSession> {
+  async verifyOtp(identifier: string, code: string, name?: string): Promise<VerifyOtpResult> {
     await delay(1000);
     if (code !== '123456') throw new Error('کد تایید اشتباه است');
-    const fullName = [name, lastName].filter(Boolean).join(' ').trim();
+    const isNewUser = !name; // mock: no name = new user
     return {
-      accessToken: 'mock-access-token',
-      tokenType: 'Bearer',
-      expiresInSeconds: 60 * 60 * 24 * 7,
       user: {
         id: 'mock-user-id',
-        name: fullName || name || 'کاربر مهمان',
-        phone: null,
-        email: identifier,
+        name: name || 'کاربر جدید',
+        phone: identifier,
+        email: null,
         role: 'user',
       },
+      isNewUser,
+      signupReward: isNewUser
+        ? { xpGranted: 50, ruleCode: 'signup', ruleTitle: 'Signup reward' }
+        : undefined,
+      unlockedAchievements: isNewUser
+        ? [{ id: 'ach1', label: 'آتش‌افروز', slug: 'atash-afrooz' }]
+        : [],
     };
   }
 

@@ -1,4 +1,9 @@
-import type { IAuthRepository, AuthSession, AuthUser } from '../domain/auth-repository';
+import type {
+  IAuthRepository,
+  AuthSession,
+  AuthUser,
+  VerifyOtpResult,
+} from '../domain/auth-repository';
 import * as authApi from '@/core/api/auth.api';
 
 export class HttpAuthRepository implements IAuthRepository {
@@ -11,13 +16,13 @@ export class HttpAuthRepository implements IAuthRepository {
     code: string,
     name?: string,
     lastName?: string,
-  ): Promise<AuthSession> {
+  ): Promise<VerifyOtpResult> {
     const response = await authApi.verifyOtp(identifier, code, name, lastName);
     return {
-      accessToken: response.data.accessToken,
-      tokenType: response.data.tokenType,
-      expiresInSeconds: response.data.expiresInSeconds,
       user: response.data.user,
+      isNewUser: response.data.isNewUser,
+      signupReward: response.data.signupReward,
+      unlockedAchievements: response.data.unlockedAchievements,
     };
   }
 

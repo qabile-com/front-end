@@ -33,6 +33,18 @@ export function useAuth(repo: IAuthRepository) {
       try {
         const session = await repo.verifyOtp(identifier, code, name, lastName);
         saveAuthSession(session);
+
+        // Store signup reward for the dashboard
+        if (session.isNewUser && session.signupReward) {
+          sessionStorage.setItem('signupReward', JSON.stringify(session.signupReward));
+        }
+        if (session.unlockedAchievements?.length) {
+          sessionStorage.setItem(
+            'signupAchievements',
+            JSON.stringify(session.unlockedAchievements),
+          );
+        }
+
         setSuccess({
           title: `خوش آمدی ${session.user.name}! 🔥`,
           msg: 'ورود موفقیت‌آمیز بود. در حال ورود به قبیله...',
