@@ -61,7 +61,7 @@ export function AuthPage() {
           </div>
         </aside>
 
-        <div className="relative flex min-h-screen flex-1 flex-col items-center justify-center px-5 py-10 max-lg:justify-start max-lg:px-5 max-lg:pt-7 max-lg:pb-10">
+        <div className="relative flex min-h-screen flex-1 flex-col items-center justify-center px-5 py-10 max-lg:px-5 max-lg:pb-10">
           <AuthCard repository={authRepo} />
 
           <Link

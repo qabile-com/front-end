@@ -130,7 +130,7 @@ export function CoursesTab({ courses, userName }: CoursesTabProps) {
                 )}
               >
                 <div
-                  className="relative aspect-video shrink-0 overflow-hidden"
+                  className="relative h-40 shrink-0 overflow-hidden sm:h-48 md:h-52"
                   style={{ background: getCourseFallbackGradient(course.id) }}
                 >
                   {course.imageUrl && (
