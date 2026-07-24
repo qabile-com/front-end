@@ -76,12 +76,12 @@ export class MockCoursesRepository implements ICoursesRepository {
       await delay(250);
       this.cache = COURSES.map((course) => ({
         ...course,
-        parts: course.parts.map((part) => applyMockWatchState({ ...part })),
+        episodes: course.episodes.map((part) => applyMockWatchState({ ...part })),
       }));
     }
     this.cache = this.cache.map((course) => ({
       ...course,
-      parts: course.parts.map((part) => applyMockWatchState(part)),
+      episodes: course.episodes.map((part) => applyMockWatchState(part)),
     }));
     return this.cache;
   }
@@ -91,7 +91,7 @@ export class MockCoursesRepository implements ICoursesRepository {
     body: { status: string; progress?: number },
   ): Promise<ActionRewardResult> {
     const courses = await this.getCourses();
-    const part = courses.flatMap((course) => course.parts).find((item) => item.id === sectionId);
+    const part = courses.flatMap((course) => course.episodes).find((item) => item.id === sectionId);
     if (!part) throw new Error('Section not found');
     part.status = body.status === 'done' ? 'done' : body.status === 'partial' ? 'partial' : 'none';
     part.progress = body.progress;
@@ -135,7 +135,7 @@ export class MockCoursesRepository implements ICoursesRepository {
     if (this.cache) {
       this.cache = this.cache.map((course) => ({
         ...course,
-        parts: course.parts.map((part) =>
+        episodes: course.episodes.map((part) =>
           part.id === sectionId ? { ...part, ...result.section } : part,
         ),
       }));

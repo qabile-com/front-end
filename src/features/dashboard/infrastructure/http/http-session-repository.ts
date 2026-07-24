@@ -16,14 +16,14 @@ export class HttpSessionRepository implements ISessionRepository {
     return {
       ...data,
       part: {
-        ...data.episode,
+        ...data.part,
         courseId,
         previousSectionId:
-          data.episode.previousSectionId ??
-          data.episode.prevSectionId ??
-          data.episode.previousId ??
+          data.part.previousSectionId ??
+          data.part.prevSectionId ??
+          data.part.previousId ??
           null,
-        nextSectionId: data.episode.nextSectionId ?? data.episode.nextId ?? null,
+        nextSectionId: data.part.nextSectionId ?? data.part.nextId ?? null,
       },
     };
   }

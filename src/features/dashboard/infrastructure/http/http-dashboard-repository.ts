@@ -11,12 +11,15 @@ export class HttpUserRepository implements IUserRepository {
     return {
       name: user.name,
       lastName: user.lastName,
+      role: user.role,
       initial: user.name[0] ?? '?', // guarantee a string
       title: user.title,
       level: user.level,
       xp: user.xp,
       xpMax: user.xpMax,
+      streak: user.streak,
       avatar: user.avatar ?? DEFAULT_AVATAR_GRADIENT,
+      achievements: user.achievements,
     };
   }
 }

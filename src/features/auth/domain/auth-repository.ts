@@ -16,7 +16,7 @@ export interface AuthSession {
 }
 
 export interface VerifyOtpResult {
-  accessToken: string;
+  accessToken?: string;
   tokenType?: string;
   expiresAt?: number;
   refreshToken?: string;

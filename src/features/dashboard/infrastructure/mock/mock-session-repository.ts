@@ -8,7 +8,7 @@ export class MockSessionRepository implements ISessionRepository {
   async getSessionDetail(courseId: string, sectionId: string): Promise<SessionDetail> {
     await delay(400);
     const course = COURSES.find((c) => c.id === courseId);
-    const part = course?.parts.find((p) => p.id === sectionId);
+    const part = course?.episodes.find((p) => p.id === sectionId);
     if (!course || !part) throw new Error('Session not found');
 
     const comments = [

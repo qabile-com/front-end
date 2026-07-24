@@ -85,7 +85,7 @@ function LoginView({
         tabs={[
           { id: 'pass', label: 'رمز عبور' },
           { id: 'otp', label: 'کد یکبار مصرف' },
-        ]}
+        ] as const}
         active={tab}
         onChange={setTab}
       />

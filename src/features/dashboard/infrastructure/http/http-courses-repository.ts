@@ -19,12 +19,12 @@ type CoursePartDto = CoursePart & {
   nextId?: string | null;
 };
 
-type CourseDto = Omit<Course, 'imageUrl' | 'parts'> & {
+type CourseDto = Omit<Course, 'imageUrl' | 'episodes'> & {
   imageUrl?: string | null;
   thumbnailUrl?: string | null;
   coverUrl?: string | null;
   image?: string | null;
-  parts: CoursePartDto[];
+  episodes: CoursePartDto[];
 };
 
 export class HttpCoursesRepository implements ICoursesRepository {
