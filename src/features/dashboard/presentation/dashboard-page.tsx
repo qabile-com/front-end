@@ -178,7 +178,6 @@ export function DashboardPage() {
               loading={courses.loading}
               error={courses.error}
               courses={courses.courses}
-              userName={user.name}
             />
           )}
           {tab === 'profile' && loadedTabs.has('profile') && (
@@ -274,17 +273,15 @@ function CoursesTabWrapper({
   loading,
   error,
   courses,
-  userName,
 }: {
   loading: boolean;
   error: string | null;
   courses: Course[] | null;
-  userName?: string;
 }) {
   if (loading) return <TabLoader />;
   if (error) return <TabError error={error} />;
   if (!courses) return null;
-  return <CoursesTab courses={courses} userName={userName} />;
+  return <CoursesTab courses={courses} />;
 }
 function ProfileTabWrapper({
   loading,
