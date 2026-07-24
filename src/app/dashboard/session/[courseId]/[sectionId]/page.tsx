@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { SessionContent } from '@/features/dashboard/presentation/components/session-content';
 import { useSessionDetail } from '@/features/dashboard/application/use-session-detail';
 import { useSessionComments } from '@/features/dashboard/application/use-session-comments';
@@ -9,7 +9,7 @@ import { useAddSessionComment } from '@/features/dashboard/application/use-sessi
 import { useReportSectionWatchProgress } from '@/features/dashboard/application/use-courses';
 import { useCourses } from '@/features/dashboard/application/use-courses';
 import { sessionRepo, commentsRepo, coursesRepo } from '@/features/dashboard/infrastructure/repository-factory';
-import type { Course, CoursePart } from '@/features/dashboard/domain/courses.data';
+import type { Course } from '@/features/dashboard/domain/courses.data';
 import { toPersianDigits } from '@/core/lib/persian';
 import { Icon } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
@@ -18,16 +18,11 @@ import type { SectionWatchProgressInput } from '@/features/dashboard/domain/dash
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
 import type { PaginatedComments } from '@/features/dashboard/domain/comments-repository';
 
-interface SessionPageProps {
-  params: {
-    courseId: string;
-    sectionId: string;
-  };
-}
-
-export default function SessionPage({ params }: SessionPageProps) {
+export default function SessionPage() {
   const router = useRouter();
-  const { courseId, sectionId } = params;
+  const params = useParams();
+  const courseId = params.courseId as string;
+  const sectionId = params.sectionId as string;
 
   const { data: courses, loading: coursesLoading } = useCourses(coursesRepo);
   const course = courses?.find((c) => c.id === courseId) ?? null;
@@ -59,7 +54,15 @@ export default function SessionPage({ params }: SessionPageProps) {
     const next = course.episodes[currentIndex + 1];
     if (!next) return;
     router.push(`/dashboard/session/${courseId}/${next.id}`);
-  }, [course, router, courseId, sectionId]);
+  }, [course, router, courseId, sectionId, session]);
+
+  if (coursesLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center text-ink-3">
+        در حال بارگذاری...
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -90,15 +93,11 @@ export default function SessionPage({ params }: SessionPageProps) {
         </div>
 
         <div className="border-hair sticky top-22 hidden h-fit overflow-hidden rounded-[20px] border [background:var(--glass)] lg:block">
-          {course ? (
-            <CourseDetail
-              course={course}
-              currentSectionId={sectionId}
-              onNavigate={(id) => router.push(`/dashboard/session/${courseId}/${id}`)}
-            />
-          ) : (
-            <DetailEmpty />
-          )}
+          <CourseDetail
+            course={course}
+            currentSectionId={sectionId}
+            onNavigate={(id) => router.push(`/dashboard/session/${courseId}/${id}`)}
+          />
         </div>
       </div>
     </div>
