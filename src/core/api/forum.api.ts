@@ -22,14 +22,20 @@ export interface ForumPostDto {
     icon: string;
   };
   hasImage?: boolean;
+  attachment?: {
+    id: string;
+    kind: string;
+    url: string;
+  };
   likes: number;
+  likedByMe: boolean;
   comments?: ForumCommentDto[];
   location?: string;
   emoji?: string;
   image?: string;
   tags?: string[];
+  isPinned: boolean;
 }
-
 export interface ActiveUserDto {
   id: string;
   name: string;
@@ -58,3 +64,20 @@ export const createForumPost = (body: {
 
 export const addForumComment = (postId: string, body: { text: string }) =>
   httpClient.post<{ comments: ForumCommentDto[] }>(`/api/v1/forum/posts/${postId}/comments`, body);
+
+// Like / unlike
+export const likePost = (postId: string) =>
+  httpClient.post<ForumPostDto>(`/api/v1/forum/posts/${postId}/like`);
+
+export const unlikePost = (postId: string) =>
+  httpClient.delete<ForumPostDto>(`/api/v1/forum/posts/${postId}/like`);
+
+// Admin endpoints
+export const adminPinPost = (postId: string, isPinned: boolean) =>
+  httpClient.patch<ForumPostDto>(`/api/v1/admin/forum/posts/${postId}`, { isPinned });
+
+export const adminDeletePost = (postId: string) =>
+  httpClient.delete<{ success: boolean }>(`/api/v1/admin/forum/posts/${postId}`);
+
+export const adminDeleteComment = (commentId: string) =>
+  httpClient.delete<{ success: boolean }>(`/api/v1/admin/forum/comments/${commentId}`);

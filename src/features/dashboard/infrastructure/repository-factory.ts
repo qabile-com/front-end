@@ -24,6 +24,10 @@ import { MockSessionRepository } from './mock/mock-session-repository';
 import { HttpSessionRepository } from './http/http-session-repository';
 import { MockCommentsRepository } from './mock/mock-comments-repository';
 import { HttpCommentsRepository } from './http/http-comments-repository';
+import { MockFollowRepository } from './mock/mock-follow-repository';
+import { HttpFollowRepository } from './http/http-follow-repository';
+import { MockAdminRepository } from './mock/mock-admin-repository';
+import { HttpAdminRepository } from './http/http-admin-repository';
 // import all HTTP repositories
 
 const isMock = process.env.NEXT_PUBLIC_USE_MOCK === 'true';
@@ -46,3 +50,5 @@ export const userProfileRepo = isMock
   : new HttpUserProfileRepository();
 export const sessionRepo = isMock ? new MockSessionRepository() : new HttpSessionRepository();
 export const commentsRepo = isMock ? new MockCommentsRepository() : new HttpCommentsRepository();
+export const followRepo = isMock ? new MockFollowRepository() : new HttpFollowRepository();
+export const adminRepo = isMock ? new MockAdminRepository() : new HttpAdminRepository();

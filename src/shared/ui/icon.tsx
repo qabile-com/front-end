@@ -76,6 +76,20 @@ const ICONS = {
   plus: stroke(<path d="M12 5v14M5 12h14" />, { width: 2.2, caps: false }),
   play: filled(<path d="M7 5v14l12-7-12-7Z" />),
   arrow: stroke(<path d="M14 5l-7 7 7 7M19 12H7" />, { width: 2 }),
+  'star-line': stroke(
+    <path d="M12 2l2.6 5.6L20 9.2l-4 4 1 5.8L12 16l-5 3 1-5.8-4-4 5.4-.6L12 2Z" />,
+    { width: 1.8 },
+  ),
+  trash: stroke(
+    <>
+      <path d="M4 7h16" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+      <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12" />
+      <path d="M9 7V4h6v3" />
+    </>,
+    { width: 1.8 },
+  ),
   medal: stroke(
     <>
       <path d="M9.333 3.5 14 10.5M14 10.5l4.667-7M14 10.5a5.833 5.833 0 1 1 0 11.667A5.833 5.833 0 0 1 14 10.5Z" />

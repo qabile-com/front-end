@@ -11,6 +11,7 @@ export class HttpUserRepository implements IUserRepository {
     return {
       name: user.name,
       last_name: user.lastName,
+      role: user.role,
       initial: user.name[0] ?? '?', // guarantee a string
       title: user.title,
       level: user.level,
@@ -18,6 +19,7 @@ export class HttpUserRepository implements IUserRepository {
       xpMax: user.xpMax,
       streak: user.streak,
       avatar: user.avatar ?? DEFAULT_AVATAR_GRADIENT,
+      achievements: user.achievements,
     };
   }
 }

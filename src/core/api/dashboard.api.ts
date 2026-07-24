@@ -1,11 +1,12 @@
+import { Achievement } from '@/features/dashboard/domain/dashboard.types';
 import { httpClient } from './http-client';
 export interface DashboardBundle {
   user: {
     id: string;
     name: string;
     lastName: string;
-    phone: string;
-    email: string | null;
+    phone?: string;
+    email?: string | null;
     role: string;
     title: string;
     level: number;
@@ -13,6 +14,7 @@ export interface DashboardBundle {
     xpMax: number;
     streak: number;
     avatar?: string | null;
+    achievements?: Achievement[];
   };
   home: {
     stats: { icon: string; tone: string; value: string; label: string }[];

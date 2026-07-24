@@ -281,7 +281,6 @@ function CourseDetail({
             part={part}
             index={i}
             onClick={() => {
-              console.log(part);
               onPartClick(part);
             }}
           />
