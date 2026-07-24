@@ -6,10 +6,11 @@ import { toPersianDigits } from '@/core/lib/persian';
 interface XpEarnedModalProps {
   xp: number | null;
   title?: string;
+  description?: string;
   onClose: () => void;
 }
 
-export function XpEarnedModal({ xp, title = 'عالی بود! ', onClose }: XpEarnedModalProps) {
+export function XpEarnedModal({ xp, title = 'عالی بود! ', description, onClose }: XpEarnedModalProps) {
   if (!xp) return null;
 
   return (
@@ -52,9 +53,11 @@ export function XpEarnedModal({ xp, title = 'عالی بود! ', onClose }: XpEa
           </Button>
 
           {/* Bottom Caption */}
-          <p className="text-ink-3 mt-5 text-[13px] font-medium opacity-60">
-            مسیر رشد ادامه دارد؛ متوقف نشو
-          </p>
+          {description && (
+            <p className="text-ink-3 mt-5 text-[13px] font-medium opacity-60">
+              {description}
+            </p>
+          )}
         </div>
       </div>
     </div>
