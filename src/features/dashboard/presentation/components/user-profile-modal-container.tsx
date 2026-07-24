@@ -1,8 +1,9 @@
-// src/features/dashboard/presentation/components/user-profile-modal-container.tsx
-
 import { useUserProfile } from '../../application/use-user-profile';
+import { useFollowToggle } from '../../application/use-follow-toggle';
 import type { IUserProfileRepository } from '../../domain/user-profile-repository';
+import type { IFollowRepository } from '../../domain/follow-repository';
 import { UserProfileModal } from './user-profile-modal';
+import { followRepo } from '../../infrastructure/repository-factory';
 
 interface Props {
   userId: string | null;
@@ -13,20 +14,30 @@ interface Props {
 export function UserProfileModalContainer({ userId, onClose, repository }: Props) {
   if (!userId) return null;
 
-  // key ensures a fresh hook state every time userId changes
-  return <ProfileLoader key={userId} userId={userId} onClose={onClose} repository={repository} />;
+  return (
+    <ProfileLoader
+      key={userId}
+      userId={userId}
+      onClose={onClose}
+      repository={repository}
+      followRepo={followRepo}
+    />
+  );
 }
 
 function ProfileLoader({
   userId,
   onClose,
   repository,
+  followRepo,
 }: {
   userId: string;
   onClose: () => void;
   repository: IUserProfileRepository;
+  followRepo: IFollowRepository;
 }) {
-  const { data, loading, error } = useUserProfile(repository, userId);
+  const { data: profile, loading, error } = useUserProfile(repository, userId);
+  const { isFollowed, toggle, isToggling } = useFollowToggle(followRepo, userId);
 
   if (loading) {
     return (
@@ -36,7 +47,7 @@ function ProfileLoader({
     );
   }
 
-  if (error || !data) {
+  if (error || !profile) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
         <div className="text-danger">{error ?? 'خطا در دریافت اطلاعات'}</div>
@@ -44,5 +55,14 @@ function ProfileLoader({
     );
   }
 
-  return <UserProfileModal isOpen onClose={onClose} user={data} />;
+  return (
+    <UserProfileModal
+      isOpen
+      onClose={onClose}
+      user={profile}
+      isFollowed={isFollowed}
+      onToggleFollow={toggle}
+      isToggling={isToggling}
+    />
+  );
 }

@@ -3,14 +3,17 @@ import {
   addForumComment,
   createForumPost,
   getForumFeed,
+  likePost,
+  unlikePost,
   type ForumPostDto,
 } from '@/core/api/forum.api';
 import type { ISocialRepository } from '../../domain/social-repository';
 import type { Post, ActiveUser, PostComment } from '../../domain/social.data';
 
 export class HttpSocialRepository implements ISocialRepository {
-  async getFeed(): Promise<Post[]> {
-    const res = await getForumFeed();
+  async getFeed(limit = 10, offset = 0): Promise<Post[]> {
+    const res = await getForumFeed({ limit, offset });
+
     return res.data.data.map(apiPostToDomain);
   }
   async getTrendingTags(): Promise<string[]> {
@@ -36,6 +39,15 @@ export class HttpSocialRepository implements ISocialRepository {
       time: newComment?.createdAt ?? '',
     };
   }
+
+  async likePost(postId: string): Promise<Post> {
+    const res = await likePost(postId);
+    return apiPostToDomain(res.data);
+  }
+  async unlikePost(postId: string): Promise<Post> {
+    const res = await unlikePost(postId);
+    return apiPostToDomain(res.data);
+  }
 }
 
 function apiPostToDomain(api: ForumPostDto): Post {
@@ -51,7 +63,15 @@ function apiPostToDomain(api: ForumPostDto): Post {
     text: api.text,
     achievement: api.achievement,
     hasImage: api.hasImage,
+    attachment: api.attachment
+      ? {
+          id: api.attachment.id,
+          kind: api.attachment.kind,
+          url: api.attachment.url,
+        }
+      : undefined,
     likes: api.likes,
+    likedByMe: api.likedByMe,
     comments: (api.comments || []).map((c) => ({
       name: c.name,
       text: c.text,
@@ -61,5 +81,6 @@ function apiPostToDomain(api: ForumPostDto): Post {
     emoji: api.emoji,
     image: api.image,
     tags: api.tags,
+    isPinned: api.isPinned,
   };
 }

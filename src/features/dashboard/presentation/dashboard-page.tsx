@@ -37,6 +37,7 @@ import {
   socialRepo,
   userProfileRepo,
   seasonRepo,
+  adminRepo,
 } from '../infrastructure/repository-factory';
 import { IUserProfileRepository } from '../domain/user-profile-repository';
 import type { IProfileRepository } from '../domain/profile-repository';
@@ -45,6 +46,8 @@ import { useAuthGuard } from '@/features/auth/application/use-auth-guard';
 import { removeAccessToken } from '@/core/auth/token';
 import { AchievementEarnedModal } from './components/achievement-earned-modal';
 import { XpEarnedModal } from './components/xp-earned-modal';
+import { useInfiniteFeed } from '../application/use-infinite-feed';
+import { IAdminRepository } from '../domain/admin-repository';
 
 export function DashboardPage() {
   const router = useRouter();
@@ -55,6 +58,7 @@ export function DashboardPage() {
   const [loadedTabs, setLoadedTabs] = useState<Set<DashboardTab>>(new Set(['courses']));
 
   const { user, loading: userLoading, error: userError, refetch: refetchUser } = useUser(userRepo);
+  const userRole = user?.role;
   useEffect(() => {
     if (user) {
       const rewardStr = sessionStorage.getItem('signupReward');
@@ -72,15 +76,15 @@ export function DashboardPage() {
       }
     }
   }, [user]);
-  // const {
-  //   posts,
-  //   tags,
-  //   activeUsers,
-  //   loading: socialLoading,
-  //   error: socialError,
-  //   publishPost,
-  //   addComment,
-  // } = useSocialData(socialRepo);
+  const feedQuery = useInfiniteFeed(socialRepo);
+  const {
+    tags,
+    activeUsers,
+    loading: socialLoading,
+    error: socialError,
+    publishPost,
+    addComment,
+  } = useSocialData(socialRepo);
   // const { data: seasonData, loading: seasonLoading, error: seasonError } = useSeason(seasonRepo);
 
   // const home = useHomeData(homeRepo);
@@ -156,17 +160,19 @@ export function DashboardPage() {
               userProfileRepo={userProfileRepo}
             />
           )} */}
-          {/* {tab === 'social' && loadedTabs.has('social') && (
+          {tab === 'social' && loadedTabs.has('social') && (
             <SocialTabWrapper
-              loading={socialLoading}
+              loading={socialLoading} // tags/users loading
               error={socialError}
-              posts={posts}
+              feedQuery={feedQuery}
               tags={tags}
               activeUsers={activeUsers}
               onPublish={publishPost}
               onAddComment={addComment}
+              currentUserRole={userRole}
+              adminRepo={adminRepo}
             />
-          )} */}
+          )}
           {tab === 'courses' && loadedTabs.has('courses') && (
             <CoursesTabWrapper
               loading={courses.loading}
@@ -302,14 +308,18 @@ function SocialTabWrapper({
   error,
   posts,
   tags,
+  feedQuery,
   activeUsers,
   onPublish,
   onAddComment,
+  currentUserRole,
+  adminRepo,
 }: {
   loading: boolean;
   error: string | null;
-  posts: Post[];
+  posts?: Post[];
   tags: string[];
+  feedQuery: ReturnType<typeof useInfiniteFeed>;
   activeUsers: ActiveUser[];
   onPublish: (
     text: string,
@@ -319,16 +329,20 @@ function SocialTabWrapper({
     gifUrl?: string,
   ) => void;
   onAddComment: (postId: string, text: string) => void;
+  currentUserRole?: string;
+  adminRepo?: IAdminRepository;
 }) {
   if (loading) return <TabLoader />;
   if (error) return <TabError error={error} />;
   return (
     <SocialTab
-      posts={posts}
+      feedQuery={feedQuery}
       tags={tags}
       activeUsers={activeUsers}
       onPublish={onPublish}
       onAddComment={onAddComment}
+      currentUserRole={currentUserRole}
+      adminRepo={adminRepo}
     />
   );
 }

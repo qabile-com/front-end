@@ -12,9 +12,19 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   user: UserProfileData;
+  isFollowed?: boolean;
+  onToggleFollow?: () => void;
+  isToggling?: boolean;
 }
 
-export function UserProfileModal({ isOpen, onClose, user }: Props) {
+export function UserProfileModal({
+  isOpen,
+  onClose,
+  user,
+  isFollowed,
+  isToggling,
+  onToggleFollow,
+}: Props) {
   useScrollLock(isOpen);
 
   const [isFollowing, setIsFollowing] = useState(false);
@@ -88,6 +98,15 @@ export function UserProfileModal({ isOpen, onClose, user }: Props) {
                 >
                   {isFollowing ? 'هم پرواز هستید' : 'هم پرواز شدن'}
                 </Button>
+                {/* <Button
+                  variant={isFollowed ? 'ghost' : 'primary'}
+                  size="sm"
+                  disabled={isToggling}
+                  onClick={onToggleFollow}
+                  className={isFollowed ? 'border-gold text-gold border' : ''}
+                >
+                  {isToggling ? '...' : isFollowed ? 'لغو دنبال کردن' : 'دنبال کردن'}
+                </Button> */}
                 <Button variant="ghost" size="sm" className="border-danger text-danger border">
                   بلاک
                 </Button>

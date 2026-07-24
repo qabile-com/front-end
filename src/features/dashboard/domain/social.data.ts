@@ -24,12 +24,19 @@ export interface Post {
   text: string;
   achievement?: AchievementCard;
   hasImage?: boolean;
+  attachment?: {
+    id: string;
+    kind: string;
+    url: string;
+  };
   likes: number;
+  likedByMe: boolean;
   comments: PostComment[];
   location?: string;
   emoji?: string;
   image?: string;
   tags?: string[];
+  isPinned: boolean;
 }
 
 export interface ActiveUser {
@@ -58,6 +65,8 @@ export const POSTS: Post[] = [
       { name: 'آرش کریمی', text: 'ممنون آدم 🙏', time: '۲ ساعت پیش' },
       { name: 'سارا محمدی', text: 'عالیه! منتظر محتوا هستیم', time: '۱ ساعت پیش' },
     ],
+    likedByMe: false,
+    isPinned: false,
   },
   {
     id: 'p2',
@@ -70,6 +79,8 @@ export const POSTS: Post[] = [
     achievement: { title: 'دستاورد: ۳۰ روز پیوسته', sub: 'نشان آتشین دریافت شد', icon: 'flame' },
     likes: 48,
     comments: [{ name: 'سارا محمدی', text: 'مبارک باشه! 🎉', time: '۴ ساعت پیش' }],
+    likedByMe: true,
+    isPinned: false,
   },
   {
     id: 'p3',
@@ -86,6 +97,8 @@ export const POSTS: Post[] = [
       { name: 'نیلوفر رضایی', text: 'دقیقاً همین رو نیاز داشتم بشنوم 🙏', time: 'دیروز' },
       { name: 'مهدی عباسی', text: 'عالی بود آدم جان', time: 'دیروز' },
     ],
+    likedByMe: false,
+    isPinned: false,
   },
   {
     id: 'p4',
@@ -98,6 +111,8 @@ export const POSTS: Post[] = [
     hasImage: true,
     likes: 31,
     comments: [],
+    likedByMe: false,
+    isPinned: false,
   },
 ];
 

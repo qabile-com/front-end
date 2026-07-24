@@ -10,6 +10,7 @@ export interface CurrentUser {
   level: number;
   xp: number;
   xpMax: number;
+  role: 'user' | 'admin' | 'super_admin';
   streak?: number;
   avatar: string;
   achievements?: Achievement[];

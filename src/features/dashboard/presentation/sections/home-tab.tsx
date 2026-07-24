@@ -73,11 +73,11 @@ export function HomeTab({
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="border-hair hover:border-hair-2 flex items-center gap-3.5 rounded-[20px] border px-5 py-[22px] transition-[transform,border-color] duration-300 [background:var(--glass)] hover:-translate-y-[3px]"
+            className="border-hair hover:border-hair-2 flex items-center gap-3.5 rounded-[20px] border px-5 py-5.5 transition-[transform,border-color] duration-300 [background:var(--glass)] hover:-translate-y-0.75"
           >
             <span
               className={cn(
-                'grid size-[46px] place-items-center rounded-[14px]',
+                'grid size-11.5 place-items-center rounded-[14px]',
                 STAT_TONES[stat.tone],
               )}
             >

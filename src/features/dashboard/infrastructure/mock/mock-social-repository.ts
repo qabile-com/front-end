@@ -10,9 +10,9 @@ export class MockSocialRepository implements ISocialRepository {
   // In-memory posts (starts with static data, new posts get prepended)
   private posts: Post[] = [...POSTS];
 
-  async getFeed(): Promise<Post[]> {
+  async getFeed(limit = 10, offset = 0): Promise<Post[]> {
     await delay(400);
-    return this.posts;
+    return this.posts.slice(offset, offset + limit);
   }
 
   async getTrendingTags(): Promise<string[]> {
@@ -23,6 +23,21 @@ export class MockSocialRepository implements ISocialRepository {
   async getActiveUsers(): Promise<ActiveUser[]> {
     await delay(200);
     return [...ACTIVE_USERS];
+  }
+
+  async likePost(postId: string): Promise<Post> {
+    const post = this.posts.find((p) => p.id === postId);
+    if (!post) throw new Error('Post not found');
+    post.likedByMe = true;
+    post.likes += 1;
+    return { ...post };
+  }
+  async unlikePost(postId: string): Promise<Post> {
+    const post = this.posts.find((p) => p.id === postId);
+    if (!post) throw new Error('Post not found');
+    post.likedByMe = false;
+    post.likes -= 1;
+    return { ...post };
   }
 
   async createPost(
@@ -52,6 +67,8 @@ export class MockSocialRepository implements ISocialRepository {
       time: 'همین الان',
       text: postText,
       likes: 0,
+      likedByMe: false,
+      isPinned: false,
       comments: [],
       image: imageUrl,
       hasImage: !!imageUrl,

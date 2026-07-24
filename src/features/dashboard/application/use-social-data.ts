@@ -4,6 +4,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ISocialRepository } from '../domain/social-repository';
 import type { ActiveUser, Post } from '../domain/social.data';
+import { useInfiniteFeed } from './use-infinite-feed';
 
 type SocialQueryData = {
   posts: Post[];
@@ -13,6 +14,11 @@ type SocialQueryData = {
 
 export function useSocialData(repo: ISocialRepository) {
   const queryClient = useQueryClient();
+  const feedQuery = useInfiniteFeed(repo);
+  const tagsQuery = useQuery({
+    queryKey: ['trending-tags'],
+    queryFn: () => repo.getTrendingTags(),
+  });
 
   const query = useQuery({
     queryKey: ['dashboard', 'social'],
@@ -44,6 +50,7 @@ export function useSocialData(repo: ISocialRepository) {
       gifUrl?: string;
     }) => repo.createPost(text, location, emoji, imageFile, gifUrl),
     onSuccess: (newPost) => {
+      queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       queryClient.setQueryData<SocialQueryData>(['dashboard', 'social'], (current) =>
         current ? { ...current, posts: [newPost, ...current.posts] } : current,
       );
@@ -54,6 +61,7 @@ export function useSocialData(repo: ISocialRepository) {
     mutationFn: ({ postId, text }: { postId: string; text: string }) =>
       repo.addComment(postId, text),
     onSuccess: (newComment, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       queryClient.setQueryData<SocialQueryData>(['dashboard', 'social'], (current) =>
         current
           ? {
