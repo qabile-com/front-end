@@ -2,9 +2,11 @@ import type { ISessionRepository, SessionDetail } from '../../domain/session-rep
 import { getCourseSection } from '@/core/api/courses.api';
 
 type SessionDetailDto = Omit<SessionDetail, 'part'> & {
-  part: SessionDetail['part'] & {
+  episode: SessionDetail['part'] & {
     previousId?: string | null;
     prevSectionId?: string | null;
+    previousEpisodeId?: string | null;
+    nextEpisodeId?: string | null;
     nextId?: string | null;
   };
 };
@@ -16,14 +18,19 @@ export class HttpSessionRepository implements ISessionRepository {
     return {
       ...data,
       part: {
-        ...data.part,
+        ...data.episode,
         courseId,
         previousSectionId:
-          data.part.previousSectionId ??
-          data.part.prevSectionId ??
-          data.part.previousId ??
+          data.episode.previousSectionId ??
+          data.episode.prevSectionId ??
+          data.episode.previousId ??
+          data.episode.previousEpisodeId ??
           null,
-        nextSectionId: data.part.nextSectionId ?? data.part.nextId ?? null,
+        nextSectionId:
+          data.episode.nextSectionId ??
+          data.episode.nextId ??
+          data.episode.nextEpisodeId ??
+          null,
       },
     };
   }
