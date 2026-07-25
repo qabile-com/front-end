@@ -293,12 +293,12 @@ export function SessionContent({
             allComments.map((c) => (
               <div key={c.id} className="flex items-start gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-white">
-                  {c.name[0]}
+                  {(c.name?.[0] ?? '?')}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <span className="text-ink text-sm font-bold">{c.name}</span>
-                    <span className="text-ink-4 text-xs">{c.time}</span>
+                    <span className="text-ink-4 text-xs">{c.time ?? c.createdAt ?? ''}</span>
                   </div>
                   <p className="text-ink-3 mt-1 text-sm">{c.text}</p>
                 </div>

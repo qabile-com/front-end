@@ -9,11 +9,11 @@ export class HttpCommentsRepository implements ICommentsRepository {
     offset = 0,
   ): Promise<PaginatedComments> {
     const res = await getSessionComments(courseId, sectionId, limit, offset);
-    const data = res.data;
+    const payload = res.data.data;
     return {
-      comments: data.data,
-      totalItems: data.meta.totalItems,
-      totalPages: data.meta.totalPages,
+      comments: payload.comments,
+      totalItems: payload.totalItems,
+      totalPages: Math.max(1, Math.ceil(payload.totalItems / limit)),
       currentPage: Math.floor(offset / limit) + 1,
     };
   }

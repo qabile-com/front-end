@@ -2,16 +2,24 @@ import { httpClient } from './http-client';
 
 interface CommentsResponse {
   data: {
-    id: string;
-    name: string;
-    text: string;
-    time: string;
-  }[];
+    comments: Array<{
+      id: string;
+      name: string;
+      text: string;
+      time: string;
+      authorId?: string;
+      avatar?: string | null;
+      moderationStatus?: string;
+      createdAt?: string;
+    }>;
+    nextCursor?: string;
+    totalItems: number;
+  };
   meta: {
+    total: number;
     limit: number;
     offset: number;
-    totalItems: number;
-    totalPages: number;
+    hasMore: boolean;
   };
 }
 
@@ -21,7 +29,7 @@ export const getSessionComments = (courseId: string, sectionId: string, limit = 
   });
 
 export const addSessionComment = (courseId: string, sectionId: string, text: string) =>
-  httpClient.post<{ data: CommentsResponse['data'][number] }>(
+  httpClient.post<{ data: CommentsResponse['data']['comments'][number] }>(
     `/api/v1/courses/${courseId}/episodes/${sectionId}/comments`,
     { text },
   );

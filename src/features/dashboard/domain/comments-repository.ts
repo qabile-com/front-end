@@ -2,7 +2,11 @@ export interface Comment {
   id: string;
   name: string;
   text: string;
-  time: string;
+  time?: string;
+  authorId?: string;
+  avatar?: string | null;
+  moderationStatus?: string;
+  createdAt?: string;
 }
 
 export interface PaginatedComments {

@@ -9,7 +9,7 @@ import { useAddSessionComment } from '@/features/dashboard/application/use-sessi
 import { useReportSectionWatchProgress } from '@/features/dashboard/application/use-courses';
 import { useCourses } from '@/features/dashboard/application/use-courses';
 import { sessionRepo, commentsRepo, coursesRepo } from '@/features/dashboard/infrastructure/repository-factory';
-import type { Course } from '@/features/dashboard/domain/courses.data';
+import type { Course, CoursePart } from '@/features/dashboard/domain/courses.data';
 import { toPersianDigits } from '@/core/lib/persian';
 import { Icon } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
