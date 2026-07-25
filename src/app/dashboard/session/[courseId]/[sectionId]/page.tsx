@@ -27,7 +27,12 @@ export default function SessionPage() {
   const { data: courses, loading: coursesLoading } = useCourses(coursesRepo);
   const course = courses?.find((c) => c.id === courseId) ?? null;
 
-  const { data: sessionDetail, isLoading } = useSessionDetail(sessionRepo, courseId, sectionId);
+  const {
+    data: sessionDetail,
+    isLoading: sessionLoading,
+    isFetching: sessionFetching,
+    error: sessionError,
+  } = useSessionDetail(sessionRepo, courseId, sectionId);
   const session = sessionDetail?.part ?? null;
 
   const commentsQuery = useSessionComments(commentsRepo, courseId, sectionId);
@@ -56,18 +61,43 @@ export default function SessionPage() {
     router.push(`/dashboard/session/${courseId}/${next.id}`);
   }, [course, router, courseId, sectionId, session]);
 
+  const initializing = coursesLoading || sessionFetching;
+
   if (coursesLoading) {
     return (
-      <div className="flex h-64 items-center justify-center text-ink-3">
-        در حال بارگذاری...
+      <div className="flex h-full min-h-64 items-center justify-center text-ink-3">
+        در حال بارگذاری کورس‌ها...
       </div>
     );
   }
 
   if (!course) {
     return (
-      <div className="flex h-64 items-center justify-center text-ink-3">
+      <div className="flex h-full min-h-64 items-center justify-center text-ink-3">
         کورس یافت نشد
+      </div>
+    );
+  }
+
+  if (sessionLoading) {
+    return (
+      <div className="flex h-full min-h-64 items-center justify-center text-ink-3">
+        در حال بارگذاری جلسه...
+      </div>
+    );
+  }
+
+  if (sessionError || !session) {
+    return (
+      <div className="flex h-full min-h-64 flex-col items-center justify-center gap-3 text-ink-3">
+        <p>جلسه مورد نظر پیدا نشد.</p>
+        <button
+          type="button"
+          onClick={() => router.push('/dashboard')}
+          className="text-gold hover:text-ember text-sm font-bold"
+        >
+          بازگشت به داشبورد
+        </button>
       </div>
     );
   }
