@@ -20,6 +20,7 @@ export interface NavItem {
   id: DashboardTab;
   label: string;
   icon: IconKey;
+  href: string;
 }
 
 export type DashboardTab = 'home' | 'lb' | 'social' | 'courses' | 'profile';

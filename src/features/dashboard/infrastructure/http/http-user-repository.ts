@@ -2,16 +2,16 @@
 
 import type { IUserRepository } from '../../domain/dashboard-repository';
 import { getDashboardBundle } from '@/core/api/dashboard.api';
-import { DEFAULT_AVATAR_GRADIENT } from '../../domain/dashboard.types';
+import { DEFAULT_AVATAR_GRADIENT, type CurrentUser } from '../../domain/dashboard.types';
 
 export class HttpUserRepository implements IUserRepository {
-  async getCurrentUser() {
+  async getCurrentUser(): Promise<CurrentUser> {
     const res = await getDashboardBundle();
     const user = res.data.user;
     return {
       name: user.name,
       lastName: user.lastName,
-      role: user.role,
+      role: normalizeRole(user.role),
       initial: user.name[0] ?? '?', // guarantee a string
       title: user.title,
       level: user.level,
@@ -22,4 +22,9 @@ export class HttpUserRepository implements IUserRepository {
       achievements: user.achievements,
     };
   }
+}
+
+function normalizeRole(role: string | undefined): CurrentUser['role'] {
+  if (role === 'admin' || role === 'super_admin') return role;
+  return 'user';
 }

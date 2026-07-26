@@ -1,32 +1,30 @@
 'use client';
 
+import Link from 'next/link';
 import { Icon, type IconName } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import type { DashboardTab } from '@/features/dashboard/domain/dashboard.types';
 
 interface MobileNavProps {
-  active: DashboardTab;
-  onChange: (tab: DashboardTab) => void;
+  activeHref: string;
 }
 
-const ITEMS: { id: DashboardTab; label: string; icon: IconName }[] = [
-  // { id: 'home', label: 'خانه', icon: 'home-m' },
-  // { id: 'lb', label: 'پرچم داران', icon: 'leaderboard' },
-  // { id: 'social', label: 'انجمن', icon: 'community' },
-  { id: 'courses', label: 'تالار دانش', icon: 'social' },
-  { id: 'profile', label: 'پروفایل', icon: 'profile' },
+const ITEMS: { id: DashboardTab; label: string; icon: IconName; href: string }[] = [
+  { id: 'home', label: 'خانه', icon: 'home-m', href: '/home' },
+  { id: 'social', label: 'انجمن', icon: 'community', href: '/social' },
+  { id: 'courses', label: 'تالار دانش', icon: 'social', href: '/courses' },
+  { id: 'profile', label: 'پروفایل', icon: 'profile', href: '/profile' },
 ];
 
-export function MobileNav({ active, onChange }: MobileNavProps) {
+export function MobileNav({ activeHref }: MobileNavProps) {
   return (
     <nav className="border-hair fixed inset-x-0 bottom-0 z-50 flex h-19 items-start border-t pt-2.5 [backdrop-filter:blur(22px)] [background:rgba(8,5,2,.94)] lg:hidden">
       {ITEMS.map((item) => {
-        const isActive = item.id === active;
+        const isActive = activeHref === item.href;
         return (
-          <button
+          <Link
             key={item.id}
-            type="button"
-            onClick={() => onChange(item.id)}
+            href={item.href}
             className={cn(
               'flex flex-1 flex-col items-center gap-1.25 text-[10.5px] font-bold transition-colors',
               isActive ? 'text-gold' : 'text-ink-3',
@@ -41,7 +39,7 @@ export function MobileNav({ active, onChange }: MobileNavProps) {
               )}
             />
             {item.label}
-          </button>
+          </Link>
         );
       })}
     </nav>

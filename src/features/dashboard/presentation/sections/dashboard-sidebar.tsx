@@ -1,28 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Icon, OptionalImage, type IconName } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
-import type { CurrentUser, NavItem, DashboardTab } from '../../domain/dashboard.types';
+import type { CurrentUser, NavItem } from '../../domain/dashboard.types';
 import { toPersianDigits } from '@/core/lib/persian';
-import { clearAuthSession } from '@/core/auth/token';
+import { useLogout } from '@/features/auth/application/use-auth-guard';
 
 interface SidebarProps {
-  active: DashboardTab;
-  onChange: (tab: DashboardTab) => void;
+  activeHref: string;
   user: CurrentUser;
   nav: NavItem[];
 }
 
-export function DashboardSidebar({ active, onChange, user, nav }: SidebarProps) {
-  const router = useRouter();
+export function DashboardSidebar({ activeHref, user, nav }: SidebarProps) {
+  const logout = useLogout();
   const xpPct = Math.round((user.xp / user.xpMax) * 100);
-
-  const handleLogout = () => {
-    clearAuthSession();
-    router.push('/');
-  };
 
   return (
     <aside className="border-hair fixed inset-y-0 inset-s-0 z-50 hidden w-65 shrink-0 flex-col border-e px-4.5 py-7 [backdrop-filter:blur(24px)] [background:rgba(8,5,2,.92)] lg:flex">
@@ -73,12 +66,11 @@ export function DashboardSidebar({ active, onChange, user, nav }: SidebarProps) 
 
       <nav className="flex flex-1 flex-col gap-1">
         {nav.map((item) => {
-          const isActive = item.id === active;
+          const isActive = item.href === activeHref;
           return (
-            <button
+            <Link
               key={item.id}
-              type="button"
-              onClick={() => onChange(item.id)}
+              href={item.href}
               className={cn(
                 'flex items-center gap-3 rounded-[14px] px-3.5 py-3 text-[14.5px] font-semibold transition-colors',
                 isActive
@@ -95,14 +87,14 @@ export function DashboardSidebar({ active, onChange, user, nav }: SidebarProps) 
                 <Icon name={item.icon as IconName} size={20} />
               </span>
               {item.label}
-            </button>
+            </Link>
           );
         })}
       </nav>
 
       <button
         type="button"
-        onClick={handleLogout}
+        onClick={logout}
         className="text-ink-3 hover:text-danger mb-2 flex items-center gap-3 rounded-[14px] border border-transparent px-3.5 py-3 text-[14.5px] font-semibold transition-colors hover:border-[rgba(255,90,90,.18)] hover:[background:rgba(255,90,90,.08)]"
       >
         <span className="grid size-9 place-items-center rounded-[11px] [background:var(--glass-2)]">
@@ -149,9 +141,27 @@ export function AdamAvatar({ className }: { className?: string }) {
       <Icon name="ai" size={20} className="text-[#1a0a00]" />
       <OptionalImage
         src="/assets/adam-ai.png"
-        alt="آدم"
+        alt="Adam"
         className="object-cover mix-blend-lighten"
       />
     </span>
   );
 }
+
+// export function AdamAvatar({ className }: { className?: string }) {
+//   return (
+//     <span
+//       className={cn(
+//         'relative grid shrink-0 place-items-center overflow-hidden rounded-full [background:var(--fire-grad)]',
+//         className,
+//       )}
+//     >
+//       <Icon name="ai" size={20} className="text-[#1a0a00]" />
+//       <OptionalImage
+//         src="/assets/adam-ai.png"
+//         alt="آدم"
+//         className="object-cover mix-blend-lighten"
+//       />
+//     </span>
+//   );
+// }

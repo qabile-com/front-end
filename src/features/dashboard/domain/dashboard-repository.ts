@@ -10,8 +10,8 @@ import type {
   StatCard,
 } from './dashboard.types';
 import type { PodiumPlace, LbRow } from './dashboard.types';
-import type { Course } from './courses.data';
-import type { IProfileRepository } from './profile-repository';
+import type { Course } from '@/features/courses/domain/courses.data';
+import type { IProfileRepository } from '@/features/profile/domain/profile-repository';
 
 /**
  * Repository for the currently logged‑in user.

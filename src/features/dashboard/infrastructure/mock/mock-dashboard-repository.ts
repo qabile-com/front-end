@@ -21,8 +21,11 @@ import {
   SETTINGS,
   PROFILE_STATS,
 } from '../../domain/dashboard.data';
-import { Course, COURSES } from '../../domain/courses.data';
-import { IUserProfileRepository, UserProfileData } from '../../domain/user-profile-repository';
+import { Course, COURSES } from '@/features/courses/domain/courses.data';
+import {
+  IUserProfileRepository,
+  UserProfileData,
+} from '@/features/leaderboard/domain/user-profile-repository';
 import type {
   IProfileRepository,
   MyProfile,
@@ -30,9 +33,12 @@ import type {
   ProfileSettingField,
   UpdateProfileInput,
   VerificationResult,
-} from '../../domain/profile-repository';
-import { POSTS } from '../../domain/social.data';
-import { applyMockWatchState, recordMockWatchProgress } from './mock-course-watch-store';
+} from '@/features/profile/domain/profile-repository';
+import { POSTS } from '@/features/social/domain/social.data';
+import {
+  applyMockWatchState,
+  recordMockWatchProgress,
+} from '@/features/courses/infrastructure/mock/mock-course-watch-store';
 
 // ---------- User Repository ----------
 export class MockUserRepository implements IUserRepository {
