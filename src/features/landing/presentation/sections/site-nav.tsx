@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import Link from 'next/link';
 import { Button, Container, Icon } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
@@ -16,6 +16,17 @@ const NAV_LINKS = [
 
 export function SiteNav() {
   const [scrolled, setScrolled] = useState(false);
+
+  const handleSectionClick = (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
+    const sectionId = href.replace('#', '');
+    const section = document.getElementById(sectionId);
+
+    if (!section) return;
+
+    event.preventDefault();
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.history.pushState(null, '', href);
+  };
 
   useEffect(() => {
     let ticking = false;
@@ -49,6 +60,7 @@ export function SiteNav() {
             <a
               key={link.href}
               href={link.href}
+              onClick={handleSectionClick(link.href)}
               className="text-ink-2 hover:text-ink group relative text-sm font-medium transition-colors"
             >
               {link.label}
