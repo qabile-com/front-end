@@ -1,21 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Icon } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
-import {
-  isCompleteOtp,
-  isValidEmail,
-  isNonEmpty,
-  isValidLoginId,
-} from '@/features/auth/domain/validation';
+import { isCompleteOtp, isNonEmpty, isValidEmail } from '@/features/auth/domain/validation';
+import type { IAuthRepository } from '../../domain/auth-repository';
+import { useAuth } from '../../application/use-auth';
 import { AuthButton } from './auth-button';
 import { AuthTabs } from './auth-tabs';
 import { Field } from './field';
 import { OtpInput } from './otp-input';
-import { IAuthRepository } from '../../domain/auth-repository';
-import { useAuth } from '../../application/use-auth';
-type View = 'login' | 'signup';
+
+type View = 'login' | 'signup' | 'forgot';
 type LoginTab = 'pass' | 'otp';
 
 const RESEND_SECONDS = 120;
@@ -26,37 +22,49 @@ interface AuthCardProps {
 
 export function AuthCard({ repository }: AuthCardProps) {
   const [view, setView] = useState<View>('login');
-  const { loading, success, requestOtp, verifyOtp, clearSuccess } = useAuth(repository);
+  const auth = useAuth(repository);
 
   return (
     <div className="border-hair relative w-full max-w-[420px] overflow-hidden rounded-[28px] border p-9 px-8 shadow-[0_32px_80px_-28px_rgba(0,0,0,.7),0_0_0_1px_rgba(255,255,255,.03)_inset] [backdrop-filter:blur(var(--glass-blur))_saturate(140%)] [background:var(--glass)]">
       <span className="pointer-events-none absolute inset-0 rounded-[inherit] [mask-composite:exclude] [padding:1px] [-webkit-mask-composite:xor] [background:linear-gradient(155deg,rgba(255,190,130,.16),transparent_34%)] [mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)]" />
 
-      {success && <SuccessOverlay title={success.title} msg={success.msg} />}
+      {auth.success && <SuccessOverlay title={auth.success.title} msg={auth.success.msg} />}
 
-      {view === 'login' ? (
+      {view === 'login' && (
         <LoginView
           onGoSignup={() => setView('signup')}
-          requestOtp={requestOtp}
-          verifyOtp={verifyOtp}
-          loading={loading}
+          onForgot={() => setView('forgot')}
+          loading={auth.loading}
+          loginWithPassword={auth.loginWithPassword}
+          requestOtp={auth.requestOtp}
+          verifyOtp={auth.verifyOtp}
         />
-      ) : (
+      )}
+      {view === 'signup' && (
         <SignupView
           onGoLogin={() => setView('login')}
-          requestOtp={requestOtp}
-          verifyOtp={verifyOtp}
-          loading={loading}
+          loading={auth.loading}
+          requestOtp={auth.requestOtp}
+          verifyOtp={auth.verifyOtp}
+        />
+      )}
+      {view === 'forgot' && (
+        <ForgotPasswordView
+          loading={auth.loading}
+          onBack={() => setView('login')}
+          requestForgotPassword={auth.requestForgotPassword}
+          verifyForgotPassword={auth.verifyForgotPassword}
+          resetPassword={auth.resetPassword}
         />
       )}
     </div>
   );
 }
 
-function CardHeader({ title, sub }: { title: string; sub: React.ReactNode }) {
+function CardHeader({ title, sub }: { title: string; sub: ReactNode }) {
   return (
     <>
-      <div className="mx-auto mb-[18px] grid size-12 place-items-center rounded-[15px] text-[#fff] shadow-[0_0_22px_-4px_var(--glow),inset_0_1px_0_rgba(255,255,255,.42)] [background:var(--fire-grad)]">
+      <div className="mx-auto mb-[18px] grid size-12 place-items-center rounded-[15px] text-white shadow-[0_0_22px_-4px_var(--glow),inset_0_1px_0_rgba(255,255,255,.42)] [background:var(--fire-grad)]">
         <Icon name="flame" size={26} />
       </div>
       <h1 className="text-center text-[22px] font-black tracking-[-0.01em]">{title}</h1>
@@ -67,13 +75,17 @@ function CardHeader({ title, sub }: { title: string; sub: React.ReactNode }) {
 
 function LoginView({
   onGoSignup,
+  onForgot,
+  loginWithPassword,
   requestOtp,
   verifyOtp,
   loading,
 }: {
   onGoSignup: () => void;
-  requestOtp: (identifier: string) => Promise<boolean>;
-  verifyOtp: (identifier: string, code: string, name?: string, lastName?: string) => Promise<void>;
+  onForgot: () => void;
+  loginWithPassword: (email: string, password: string) => Promise<boolean>;
+  requestOtp: (email: string) => Promise<boolean>;
+  verifyOtp: (email: string, code: string) => Promise<boolean>;
   loading: boolean;
 }) {
   const [tab, setTab] = useState<LoginTab>('pass');
@@ -81,80 +93,110 @@ function LoginView({
   return (
     <>
       <CardHeader title="خوش آمدی" sub="وارد حساب خود شو" />
-      <AuthTabs
+      <AuthTabs<LoginTab>
         tabs={[
           { id: 'pass', label: 'رمز عبور' },
           { id: 'otp', label: 'کد یکبار مصرف' },
-        ] as const}
+        ]}
         active={tab}
         onChange={setTab}
       />
       {tab === 'pass' ? (
-        <PasswordForm onGoSignup={onGoSignup} />
+        <PasswordForm
+          loading={loading}
+          onGoSignup={onGoSignup}
+          onForgot={onForgot}
+          onSubmit={loginWithPassword}
+        />
       ) : (
         <OtpLoginForm
+          loading={loading}
           onGoSignup={onGoSignup}
           requestOtp={requestOtp}
           verifyOtp={verifyOtp}
-          loading={loading}
         />
       )}
     </>
   );
 }
-function PasswordForm({ onGoSignup }: { onGoSignup: () => void }) {
-  const [id, setId] = useState('');
-  const [pw, setPw] = useState('');
-  const [showPw, setShowPw] = useState(false);
-  const [errors, setErrors] = useState<{ id?: string; pw?: string }>({});
-  const [loading, setLoading] = useState(false);
 
-  const submit = () => {
-    const next: typeof errors = {};
-    if (!isValidLoginId(id))
-      next.id = isNonEmpty(id) ? 'ایمیل معتبر نیست' : 'این فیلد اجباری است';
-    if (!isNonEmpty(pw)) next.pw = 'رمز عبور را وارد کنید';
-    setErrors(next);
-    if (Object.keys(next).length) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      // Password login not implemented – show a message or keep as placeholder
-    }, 1400);
+function AuthForm({
+  children,
+  onSubmit,
+  className,
+}: {
+  children: ReactNode;
+  onSubmit: () => void;
+  className?: string;
+}) {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onSubmit();
   };
 
   return (
-    <>
+    <form noValidate onSubmit={handleSubmit} className={className}>
+      {children}
+    </form>
+  );
+}
+
+function PasswordForm({
+  onGoSignup,
+  onForgot,
+  onSubmit,
+  loading,
+}: {
+  onGoSignup: () => void;
+  onForgot: () => void;
+  onSubmit: (email: string, password: string) => Promise<boolean>;
+  loading: boolean;
+}) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  const submit = () => {
+    const next: typeof errors = {};
+    if (!isValidEmail(email)) next.email = isNonEmpty(email) ? 'ایمیل معتبر نیست' : 'ایمیل را وارد کنید';
+    if (!isNonEmpty(password)) next.password = 'رمز عبور را وارد کنید';
+    setErrors(next);
+    if (Object.keys(next).length) return;
+    void onSubmit(email, password);
+  };
+
+  return (
+    <AuthForm onSubmit={submit}>
       <Field
         label="ایمیل"
         type="email"
         inputMode="email"
         placeholder="name@email.com"
-        value={id}
+        value={email}
         onChange={(e) => {
-          setId(e.target.value);
-          setErrors((p) => ({ ...p, id: undefined }));
+          setEmail(e.target.value);
+          setErrors((prev) => ({ ...prev, email: undefined }));
         }}
-        error={errors.id}
+        error={errors.email}
         autoComplete="email"
       />
       <Field
         label="رمز عبور"
         type={showPw ? 'text' : 'password'}
         placeholder="حداقل ۸ کاراکتر"
-        value={pw}
+        value={password}
         hasToggle
         onChange={(e) => {
-          setPw(e.target.value);
-          setErrors((p) => ({ ...p, pw: undefined }));
+          setPassword(e.target.value);
+          setErrors((prev) => ({ ...prev, password: undefined }));
         }}
-        error={errors.pw}
+        error={errors.password}
         autoComplete="current-password"
         adornment={
           <button
             type="button"
-            onClick={() => setShowPw((s) => !s)}
+            onClick={() => setShowPw((value) => !value)}
             aria-label="نمایش رمز"
             className="text-ink-3 hover:text-gold absolute inset-y-0 start-3.5 my-auto flex h-fit items-center transition-colors"
           >
@@ -167,27 +209,32 @@ function PasswordForm({ onGoSignup }: { onGoSignup: () => void }) {
           <input type="checkbox" className="accent-ember size-[18px] rounded-[5px]" />
           مرا به خاطر بسپار
         </label>
-        <a className="text-ink-3 hover:text-gold ms-auto cursor-pointer transition-colors">
+        <button
+          type="button"
+          onClick={onForgot}
+          className="text-ink-3 hover:text-gold ms-auto cursor-pointer transition-colors"
+        >
           فراموشی رمز
-        </a>
+        </button>
       </div>
-      <AuthButton loading={loading} onClick={submit}>
+      <AuthButton type="submit" loading={loading}>
         ورود به قبیله
       </AuthButton>
       <Divider />
-      <AuthButton variant="alt" className="text-[#FDEEE299]">
+      <AuthButton type="button" variant="alt" className="text-[#FDEEE299]">
         <Icon name="mail" color="#FDEEE299" />
         ادامه با ایمیل
       </AuthButton>
       <BottomLink>
         حساب ندارید؟{' '}
-        <a onClick={onGoSignup} className="text-gold cursor-pointer font-bold hover:opacity-75">
+        <button type="button" onClick={onGoSignup} className="text-gold cursor-pointer font-bold hover:opacity-75">
           ثبت نام کنید
-        </a>
+        </button>
       </BottomLink>
-    </>
+    </AuthForm>
   );
 }
+
 function OtpLoginForm({
   onGoSignup,
   requestOtp,
@@ -196,7 +243,7 @@ function OtpLoginForm({
 }: {
   onGoSignup: () => void;
   requestOtp: (email: string) => Promise<boolean>;
-  verifyOtp: (email: string, code: string) => Promise<void>;
+  verifyOtp: (email: string, code: string) => Promise<boolean>;
   loading: boolean;
 }) {
   const [email, setEmail] = useState('');
@@ -204,29 +251,29 @@ function OtpLoginForm({
   const [error, setError] = useState<string | undefined>();
   const { cooldown, start } = useCooldown();
   const [code, setCode] = useState('');
-  const [sending, setSending] = useState(false);
 
   const handleSendOtp = async () => {
     if (!isValidEmail(email)) {
       setError('ایمیل معتبر نیست');
       return;
     }
-    setSending(true);
     const ok = await requestOtp(email);
-    setSending(false);
     if (ok) {
       setSent(true);
       start(RESEND_SECONDS);
     }
   };
 
-  const handleVerify = () => {
-    verifyOtp(email, code);
-  };
+  const submitCode = useOtpSubmit({
+    code,
+    enabled: sent,
+    loading,
+    onSubmit: (nextCode) => verifyOtp(email, nextCode),
+  });
 
   if (!sent) {
     return (
-      <>
+      <AuthForm onSubmit={() => void handleSendOtp()}>
         <div className="mb-4 flex items-end gap-2.5">
           <div className="flex-1">
             <Field
@@ -244,47 +291,42 @@ function OtpLoginForm({
             />
           </div>
           <button
-            type="button"
-            onClick={handleSendOtp}
-            disabled={sending}
+            type="submit"
+            disabled={loading}
             className="mb-4 h-[53px] shrink-0 rounded-[11px] px-4 text-[13.5px] font-extrabold whitespace-nowrap text-[#1a0a00] shadow-[0_6px_20px_-8px_var(--glow)] transition-transform [background:var(--fire-grad)] enabled:hover:-translate-y-0.5 disabled:opacity-50"
           >
-            {sending ? '...' : 'دریافت کد'}
+            {loading ? '...' : 'دریافت کد'}
           </button>
         </div>
         <BottomLink className="mt-2">
           حساب ندارید؟{' '}
-          <a onClick={onGoSignup} className="text-gold cursor-pointer font-bold hover:opacity-75">
+          <button type="button" onClick={onGoSignup} className="text-gold cursor-pointer font-bold hover:opacity-75">
             ثبت نام کنید
-          </a>
+          </button>
         </BottomLink>
-      </>
+      </AuthForm>
     );
   }
 
   return (
-    <>
+    <AuthForm onSubmit={submitCode}>
       <p className="text-ink-2 mb-3.5 text-center text-[13px] leading-[1.65]">
-        کد تایید به{' '}
-        <b className="text-gold" dir="ltr">
-          {email}
-        </b>
-        <br />
-        ارسال شد
+        کد تایید به <b className="text-gold" dir="ltr">{email}</b> ارسال شد
       </p>
       <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} />
-      <ResendRow cooldown={cooldown} onResend={() => start(RESEND_SECONDS)} />
-      <AuthButton loading={loading} disabled={!isCompleteOtp(code)} onClick={handleVerify}>
+      <ResendRow cooldown={cooldown} onResend={() => void requestOtp(email).then((ok) => ok && start(RESEND_SECONDS))} />
+      <AuthButton type="submit" loading={loading} disabled={!isCompleteOtp(code)}>
         تایید و ورود
       </AuthButton>
       <BottomLink>
-        <a onClick={() => setSent(false)} className="text-gold cursor-pointer font-bold">
+        <button type="button" onClick={() => setSent(false)} className="text-gold cursor-pointer font-bold">
           ← تغییر ایمیل
-        </a>
+        </button>
       </BottomLink>
-    </>
+    </AuthForm>
   );
 }
+
 function SignupView({
   onGoLogin,
   requestOtp,
@@ -292,8 +334,8 @@ function SignupView({
   loading,
 }: {
   onGoLogin: () => void;
-  requestOtp: (identifier: string) => Promise<boolean>;
-  verifyOtp: (identifier: string, code: string, name?: string, lastName?: string) => Promise<void>;
+  requestOtp: (email: string) => Promise<boolean>;
+  verifyOtp: (email: string, code: string, name?: string, lastName?: string) => Promise<boolean>;
   loading: boolean;
 }) {
   const [step, setStep] = useState<1 | 2>(1);
@@ -313,34 +355,38 @@ function SignupView({
       />
     );
   }
+
   return (
     <SignupStep1
       onGoLogin={onGoLogin}
-      onNext={(p, n, ln) => {
-        setEmail(p);
-        setName(n);
-        setLastName(ln);
+      onNext={(nextEmail, nextName, nextLastName) => {
+        setEmail(nextEmail);
+        setName(nextName);
+        setLastName(nextLastName);
         setStep(2);
       }}
       requestOtp={requestOtp}
+      loading={loading}
     />
   );
 }
+
 function SignupStep1({
   onNext,
   onGoLogin,
   requestOtp,
+  loading,
 }: {
   onNext: (email: string, name: string, lastName: string) => void;
   onGoLogin: () => void;
   requestOtp: (email: string) => Promise<boolean>;
+  loading: boolean;
 }) {
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [ref, setRef] = useState('');
   const [errors, setErrors] = useState<{ name?: string; lastName?: string; email?: string }>({});
-  const [sending, setSending] = useState(false);
 
   const submit = async () => {
     const next: typeof errors = {};
@@ -349,54 +395,17 @@ function SignupStep1({
     if (!isValidEmail(email)) next.email = 'ایمیل معتبر نیست';
     setErrors(next);
     if (Object.keys(next).length) return;
-
-    setSending(true);
     const ok = await requestOtp(email);
-    setSending(false);
-    if (ok) {
-      onNext(email, name, lastName);
-    }
+    if (ok) onNext(email, name, lastName);
   };
 
   return (
-    <>
+    <AuthForm onSubmit={() => void submit()}>
       <CardHeader title="عضویت در قبیله" sub="سفرت را همین‌جا شروع کن" />
       <div className="h-5" />
-      <Field
-        label="نام"
-        placeholder="مثال: آرش"
-        value={name}
-        onChange={(e) => {
-          setName(e.target.value);
-          setErrors((p) => ({ ...p, name: undefined }));
-        }}
-        error={errors.name}
-        autoComplete="given-name"
-      />
-      <Field
-        label="نام خانوادگی"
-        placeholder="مثال: کریمی"
-        value={lastName}
-        onChange={(e) => {
-          setLastName(e.target.value);
-          setErrors((p) => ({ ...p, lastName: undefined }));
-        }}
-        error={errors.lastName}
-        autoComplete="family-name"
-      />
-      <Field
-        label="ایمیل"
-        type="email"
-        inputMode="email"
-        placeholder="name@email.com"
-        value={email}
-        onChange={(e) => {
-          setEmail(e.target.value);
-          setErrors((p) => ({ ...p, email: undefined }));
-        }}
-        error={errors.email}
-        autoComplete="email"
-      />
+      <Field label="نام" placeholder="مثال: آرش" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} autoComplete="given-name" />
+      <Field label="نام خانوادگی" placeholder="مثال: کریمی" value={lastName} onChange={(e) => setLastName(e.target.value)} error={errors.lastName} autoComplete="family-name" />
+      <Field label="ایمیل" type="email" inputMode="email" placeholder="name@email.com" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} autoComplete="email" />
       <Field
         label={
           <span className="flex items-center">
@@ -411,23 +420,20 @@ function SignupStep1({
         onChange={(e) => setRef(e.target.value)}
         autoComplete="off"
       />
-      <AuthButton loading={sending} onClick={submit}>
+      <AuthButton type="submit" loading={loading}>
         دریافت کد تایید
         <Icon name="flame" size={16} />
       </AuthButton>
       <BottomLink>
         حساب دارید؟{' '}
-        <a onClick={onGoLogin} className="text-gold cursor-pointer font-bold hover:opacity-75">
+        <button type="button" onClick={onGoLogin} className="text-gold cursor-pointer font-bold hover:opacity-75">
           وارد شوید
-        </a>
+        </button>
       </BottomLink>
-    </>
+    </AuthForm>
   );
 }
 
-// -----------------------------------------------
-// Signup step 2 – verify OTP
-// -----------------------------------------------
 function SignupStep2({
   email,
   name,
@@ -440,49 +446,182 @@ function SignupStep2({
   name: string;
   lastName: string;
   onBack: () => void;
-  verifyOtp: (identifier: string, code: string, name?: string, lastName?: string) => Promise<void>;
+  verifyOtp: (email: string, code: string, name?: string, lastName?: string) => Promise<boolean>;
   loading: boolean;
 }) {
   const [code, setCode] = useState('');
   const { cooldown, start } = useCooldown(RESEND_SECONDS);
-
-  const handleVerify = () => {
-    verifyOtp(email, code, name, lastName);
-  };
+  const submitCode = useOtpSubmit({
+    code,
+    loading,
+    onSubmit: (nextCode) => verifyOtp(email, nextCode, name, lastName),
+  });
 
   return (
-    <>
-      <button
-        onClick={onBack}
-        className="text-ink-3 hover:text-gold mb-5 flex items-center gap-[7px] text-[13px] transition-colors"
-      >
-        <Icon name="arrow-left" size={15} /> بازگشت
-      </button>
-      <CardHeader
-        title="تایید ایمیل"
-        sub={
-          <>
-            کد ۶ رقمی ارسال شده به
-            <br />
-            <b className="text-gold" dir="ltr">
-              {email}
-            </b>
-          </>
-        }
-      />
+    <AuthForm onSubmit={submitCode}>
+      <BackButton onClick={onBack} />
+      <CardHeader title="تایید ایمیل" sub={<><span>کد ۶ رقمی ارسال شده به</span><br /><b className="text-gold" dir="ltr">{email}</b></>} />
       <div className="h-5" />
       <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} />
       <ResendRow cooldown={cooldown} onResend={() => start(RESEND_SECONDS)} />
-      <AuthButton loading={loading} disabled={!isCompleteOtp(code)} onClick={handleVerify}>
+      <AuthButton type="submit" loading={loading} disabled={!isCompleteOtp(code)}>
         ساخت حساب و ورود
       </AuthButton>
+    </AuthForm>
+  );
+}
+
+function ForgotPasswordView({
+  loading,
+  onBack,
+  requestForgotPassword,
+  verifyForgotPassword,
+  resetPassword,
+}: {
+  loading: boolean;
+  onBack: () => void;
+  requestForgotPassword: (email: string) => Promise<boolean>;
+  verifyForgotPassword: (email: string, code: string) => Promise<{ verificationToken: string } | null>;
+  resetPassword: (
+    verificationToken: string,
+    password: string,
+    passwordConfirmation: string,
+  ) => Promise<boolean>;
+}) {
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [verificationToken, setVerificationToken] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [error, setError] = useState<string | undefined>();
+  const { cooldown, start } = useCooldown();
+
+  const submitEmail = async () => {
+    if (!isValidEmail(email)) {
+      setError('ایمیل معتبر نیست');
+      return;
+    }
+    const ok = await requestForgotPassword(email);
+    if (ok) {
+      setStep(2);
+      start(RESEND_SECONDS);
+    }
+  };
+
+  const submitPassword = async () => {
+    if (password.length < 8) {
+      setError('رمز عبور باید حداقل ۸ کاراکتر باشد');
+      return;
+    }
+    if (password !== passwordConfirmation) {
+      setError('تکرار رمز عبور درست نیست');
+      return;
+    }
+    const ok = await resetPassword(verificationToken, password, passwordConfirmation);
+    if (ok) onBack();
+  };
+
+  const submitForgotCode = useOtpSubmit({
+    code,
+    enabled: step === 2,
+    loading,
+    onSubmit: async (nextCode) => {
+      const result = await verifyForgotPassword(email, nextCode);
+      if (result) {
+        setVerificationToken(result.verificationToken);
+        setStep(3);
+      }
+      return Boolean(result);
+    },
+  });
+
+  return (
+    <>
+      <BackButton onClick={step === 1 ? onBack : () => setStep((current) => (current === 3 ? 2 : 1))} />
+      <CardHeader title="بازیابی رمز عبور" sub="ایمیل حسابت را وارد کن تا کد بازیابی دریافت کنی" />
+      <div className="h-5" />
+
+      {step === 1 && (
+        <AuthForm onSubmit={() => void submitEmail()}>
+          <Field
+            label="ایمیل"
+            type="email"
+            inputMode="email"
+            placeholder="name@email.com"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setError(undefined);
+            }}
+            error={error}
+            autoComplete="email"
+          />
+          <AuthButton type="submit" loading={loading}>
+            دریافت کد بازیابی
+          </AuthButton>
+        </AuthForm>
+      )}
+
+      {step === 2 && (
+        <AuthForm onSubmit={submitForgotCode}>
+          <p className="text-ink-2 mb-3.5 text-center text-[13px] leading-[1.65]">
+            کد بازیابی به <b className="text-gold" dir="ltr">{email}</b> ارسال شد
+          </p>
+          <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} />
+          <ResendRow cooldown={cooldown} onResend={() => void requestForgotPassword(email).then((ok) => ok && start(RESEND_SECONDS))} />
+          <AuthButton type="submit" loading={loading} disabled={!isCompleteOtp(code)}>
+            ادامه
+          </AuthButton>
+        </AuthForm>
+      )}
+
+      {step === 3 && (
+        <AuthForm onSubmit={() => void submitPassword()}>
+          <Field
+            label="رمز عبور جدید"
+            type="password"
+            placeholder="StrongPass123!"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setError(undefined);
+            }}
+            error={error}
+            autoComplete="new-password"
+          />
+          <Field
+            label="تکرار رمز عبور"
+            type="password"
+            placeholder="StrongPass123!"
+            value={passwordConfirmation}
+            onChange={(e) => {
+              setPasswordConfirmation(e.target.value);
+              setError(undefined);
+            }}
+            autoComplete="new-password"
+          />
+          <AuthButton type="submit" loading={loading}>
+            تغییر رمز عبور
+          </AuthButton>
+        </AuthForm>
+      )}
     </>
   );
 }
 
-// -----------------------------------------------
-// Shared helpers
-// -----------------------------------------------
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="text-ink-3 hover:text-gold mb-5 flex items-center gap-[7px] text-[13px] transition-colors"
+    >
+      <Icon name="arrow-left" size={15} /> بازگشت
+    </button>
+  );
+}
+
 function Divider() {
   return (
     <div className="text-ink-3 my-[18px] flex items-center gap-3.5 text-[13px] before:h-px before:flex-1 before:[background:var(--color-hair)] after:h-px after:flex-1 after:[background:var(--color-hair)]">
@@ -491,7 +630,7 @@ function Divider() {
   );
 }
 
-function BottomLink({ children, className }: { children: React.ReactNode; className?: string }) {
+function BottomLink({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className={cn('text-ink-3 mt-5 text-center text-[13.5px]', className)}>{children}</div>
   );
@@ -502,14 +641,13 @@ function ResendRow({ cooldown, onResend }: { cooldown: number; onResend: () => v
     <div className="text-ink-3 mb-[18px] text-center text-[13px]">
       {cooldown > 0 ? (
         <>
-          ارسال مجدد تا{' '}
-          <span className="text-ember font-extrabold tabular-nums">{toFa(cooldown)}</span> ثانیه
-          دیگر
+          ارسال مجدد تا <span className="text-ember font-extrabold tabular-nums">{toFa(cooldown)}</span>{' '}
+          ثانیه دیگر
         </>
       ) : (
-        <a onClick={onResend} className="text-gold cursor-pointer font-bold">
+        <button type="button" onClick={onResend} className="text-gold cursor-pointer font-bold">
           ارسال مجدد کد
-        </a>
+        </button>
       )}
     </div>
   );
@@ -534,7 +672,7 @@ function useCooldown(initial = 0) {
   useEffect(() => {
     if (!running) return;
     const timer = setInterval(() => {
-      setCooldown((c) => (c <= 1 ? 0 : c - 1));
+      setCooldown((value) => (value <= 1 ? 0 : value - 1));
     }, 1000);
     return () => clearInterval(timer);
   }, [running]);
@@ -542,5 +680,46 @@ function useCooldown(initial = 0) {
   return { cooldown, start: (secs: number) => setCooldown(secs) };
 }
 
+function useLatestRef<T>(value: T) {
+  const ref = useRef(value);
+
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+
+  return ref;
+}
+
+function useOtpSubmit({
+  code,
+  enabled = true,
+  loading,
+  onSubmit,
+}: {
+  code: string;
+  enabled?: boolean;
+  loading: boolean;
+  onSubmit: (code: string) => Promise<boolean>;
+}) {
+  const submittedCode = useRef('');
+  const onSubmitRef = useLatestRef(onSubmit);
+
+  const submit = useCallback(() => {
+    if (!enabled || loading || !isCompleteOtp(code)) return;
+    if (submittedCode.current === code) return;
+
+    submittedCode.current = code;
+    void onSubmitRef.current(code).then((ok) => {
+      if (!ok) submittedCode.current = '';
+    });
+  }, [code, enabled, loading, onSubmitRef]);
+
+  useEffect(() => {
+    submit();
+  }, [submit]);
+
+  return submit;
+}
+
 const FA = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-const toFa = (n: number) => String(n).replace(/\d/g, (d) => FA[+d]!);
+const toFa = (value: number) => String(value).replace(/\d/g, (digit) => FA[+digit]!);

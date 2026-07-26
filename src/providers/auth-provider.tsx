@@ -28,8 +28,10 @@ interface AuthContextType {
   login: (session: {
     accessToken: string;
     user: StoredAuthUser;
+    refreshToken?: string | null;
     tokenType?: string;
     expiresInSeconds?: number;
+    expiresAt?: number | string | null;
   }) => void;
   logout: () => void;
   refreshFromStorage: () => void;

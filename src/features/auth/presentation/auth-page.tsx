@@ -1,15 +1,23 @@
-// src/features/auth/presentation/auth-page.tsx
+'use client';
 
 import Link from 'next/link';
-import { EmberCanvas, GradText, Icon, PhoenixArt } from '@/shared/ui';
-import { AuthCard } from './components/auth-card';
-import { authRepo } from '../infrastructure/repository-factory';
+import {
+  EmberCanvas,
+  GradText,
+  Icon,
+  MotionItem,
+  MotionList,
+  MotionPage,
+  PhoenixArt,
+  Skeleton,
+} from '@/shared/ui';
+import { toPersianDigits } from '@/core/lib/persian';
 import { useLandingPublicData } from '@/features/landing/application/use-landing-public-data';
 import { landingPublicRepo } from '@/features/landing/infrastructure/repository-factory';
-import { toPersianDigits } from '@/core/lib/persian';
+import { authRepo } from '../infrastructure/repository-factory';
+import { AuthCard } from './components/auth-card';
 
 export function AuthPage() {
-  // Fetch public landing stats (totalMembers, rating)
   const { stats } = useLandingPublicData(landingPublicRepo);
   const totalMembers = stats.data?.totalMembers ?? 52000;
   const rating = stats.data?.rating ?? 4.9;
@@ -25,7 +33,7 @@ export function AuthPage() {
       />
       <EmberCanvas />
 
-      <div className="relative z-1 flex min-h-screen">
+      <MotionPage className="relative z-1 flex min-h-screen">
         <aside className="relative hidden flex-col overflow-hidden px-12 py-11 lg:flex lg:basis-[46%]">
           <PhoenixArt className="pointer-events-none absolute inset-0 size-full scale-125 object-contain object-[center_40%] opacity-[0.18] blur-[28px]" />
           <div
@@ -41,28 +49,37 @@ export function AuthPage() {
                 ققنوس از آتش نمی‌ترسد؛ &nbsp;<GradText>از سکون می‌ترسد.</GradText>
               </h2>
               <p className="text-ink-2 mt-3.5 max-w-125 text-[16px] leading-[1.85]">
-                ققنوس از دل آتش متولد می‌شود؛ تو هم با هر قدم، به نسخه‌ای بهتر از خودت نزدیک‌تر
-                می‌شوی.
+                ققنوس از دل آتش متولد می‌شود؛ تو هم با هر قدم، به نسخه‌ای بهتر از خودت
+                نزدیک‌تر می‌شوی.
               </p>
             </div>
 
-            <div className="border-hair flex max-w-125 flex-wrap justify-between gap-5 border-t pt-8">
-              {[
-                { b: `${toPersianDigits(totalMembers)}+`, s: 'عضو فعال' },
-                { b: `${rating} ★`, s: 'رضایت کاربران' },
-                { b: 'رایگان', s: 'شروع بدون هزینه' },
-              ].map((t) => (
-                <div key={t.s} className="flex flex-col gap-0.75">
-                  <b className="text-gradient-fire text-[18px] font-black">{t.b}</b>
-                  <small className="text-ink-3 text-[12px]">{t.s}</small>
-                </div>
-              ))}
-            </div>
+            <MotionList className="border-hair flex max-w-125 flex-wrap justify-between gap-5 border-t pt-8">
+              {stats.isLoading
+                ? Array.from({ length: 3 }).map((_, index) => (
+                    <MotionItem key={index} className="flex min-w-22 flex-col gap-2">
+                      <Skeleton className="h-5 w-18" />
+                      <Skeleton className="h-3 w-24" />
+                    </MotionItem>
+                  ))
+                : [
+                    { b: `${toPersianDigits(totalMembers)}+`, s: 'عضو فعال' },
+                    { b: `${rating} ★`, s: 'رضایت کاربران' },
+                    { b: 'رایگان', s: 'شروع بدون هزینه' },
+                  ].map((t) => (
+                    <MotionItem key={t.s} className="flex flex-col gap-0.75">
+                      <b className="text-gradient-fire text-[18px] font-black">{t.b}</b>
+                      <small className="text-ink-3 text-[12px]">{t.s}</small>
+                    </MotionItem>
+                  ))}
+            </MotionList>
           </div>
         </aside>
 
         <div className="relative flex min-h-screen flex-1 flex-col items-center justify-center px-5 py-10 max-lg:px-5 max-lg:pb-10">
-          <AuthCard repository={authRepo} />
+          <MotionItem>
+            <AuthCard repository={authRepo} />
+          </MotionItem>
 
           <Link
             href="/"
@@ -72,7 +89,7 @@ export function AuthPage() {
             بازگشت به صفحه اصلی
           </Link>
         </div>
-      </div>
+      </MotionPage>
     </>
   );
 }
