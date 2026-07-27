@@ -25,6 +25,7 @@ import { Course, COURSES } from '@/features/courses/domain/courses.data';
 import {
   IUserProfileRepository,
   UserProfileData,
+  UserProfilePost,
 } from '@/features/leaderboard/domain/user-profile-repository';
 import type {
   IProfileRepository,
@@ -310,17 +311,7 @@ export class MockUserDetailRepository implements IUserProfileRepository {
       }
     }
 
-    const userPosts = POSTS.filter(
-      (p) => p.authorId === (userId === CURRENT_USER.name ? 'arash' : 'other'),
-    )
-      .slice(0, 3)
-      .map((p) => ({
-        id: p.id,
-        text: p.text,
-        likes: p.likes,
-        comments: p.comments,
-        time: p.time,
-      }));
+    const userPosts = await this.getUserPosts(userId, 3, 0);
 
     return {
       id: userId,
@@ -344,6 +335,23 @@ export class MockUserDetailRepository implements IUserProfileRepository {
       achievements: [],
       posts: userPosts,
     };
+  }
+
+  async getUserPosts(userId: string, limit = 6, offset = 0): Promise<UserProfilePost[]> {
+    await delay(120);
+    const authorId = userId === CURRENT_USER.name ? 'arash' : userId;
+
+    return POSTS.filter((post) => post.authorId === authorId)
+      .slice(offset, offset + limit)
+      .map((post) => ({
+        id: post.id,
+        text: post.text,
+        likes: post.likes,
+        comments: post.comments,
+        time: post.time,
+        image: post.image,
+        hasImage: post.hasImage,
+      }));
   }
 }
 

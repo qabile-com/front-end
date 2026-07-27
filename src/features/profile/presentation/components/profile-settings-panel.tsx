@@ -11,7 +11,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
-import { Icon, type IconName } from '@/shared/ui';
+import { BaseModal, Icon, type IconName } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type {
@@ -161,8 +161,14 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
   }, [passwordCode, screen, isBusy, handleVerifyPasswordCode]);
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/72 p-3 backdrop-blur-sm sm:p-5">
-      <div className="border-hair w-full max-w-[720px] overflow-hidden rounded-[10px] border bg-[#080402] p-3 shadow-[0_34px_100px_-42px_var(--glow)] sm:p-7">
+    <BaseModal
+      isOpen
+      onClose={onClose}
+      title="تنظیمات"
+      zIndexClassName="z-[1000]"
+      className="p-3 sm:p-5"
+      panelClassName="border-hair w-full max-w-[720px] overflow-hidden rounded-[10px] border bg-[#080402] p-3 shadow-[0_34px_100px_-42px_var(--glow)] sm:p-7"
+    >
         <PanelHeader
           onBack={closeOrBack}
           onSave={onClose}
@@ -214,8 +220,7 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
             onSubmit={handleConfirmPassword}
           />
         )}
-      </div>
-    </div>
+    </BaseModal>
   );
 }
 

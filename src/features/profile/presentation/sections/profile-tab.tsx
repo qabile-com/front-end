@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Icon, type IconName, OptionalImage } from '@/shared/ui';
+import { BaseModal, Button, Icon, type IconName, OptionalImage } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
 import { showError, showSuccess } from '@/shared/lib/toast';
@@ -22,8 +22,8 @@ export function ProfileTab({ profile, profileRepo }: ProfileTabProps) {
 
   return (
     <>
-      <div className="flex flex-col gap-6">
-        <div className="relative overflow-hidden rounded-[26px] border border-[rgba(255,130,50,.18)] px-6 py-7 [background:linear-gradient(135deg,rgba(255,98,0,.15),rgba(243,186,99,.07))] sm:px-8 sm:py-9">
+      <div className="flex min-w-0 max-w-full flex-col gap-6 overflow-x-clip">
+        <div className="relative min-w-0 max-w-full overflow-hidden rounded-[26px] border border-[rgba(255,130,50,.18)] px-6 py-7 [background:linear-gradient(135deg,rgba(255,98,0,.15),rgba(243,186,99,.07))] sm:px-8 sm:py-9">
           <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:flex-wrap sm:gap-7 sm:text-start">
             <span
               className="relative grid size-28 shrink-0 place-items-center rounded-full text-[46px] font-black text-[#1a0a00] [background:var(--fire-grad)] sm:size-24 sm:text-[34px]"
@@ -39,7 +39,7 @@ export function ProfileTab({ profile, profileRepo }: ProfileTabProps) {
               <p className="text-gold mt-2 text-[15px] font-extrabold sm:mt-0 sm:font-normal">
                 {profile.title} · سطح {toPersianDigits(profile.level)}
               </p>
-              <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-4 sm:flex sm:flex-wrap">
+              <div className="mt-5 grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3 sm:mt-4 sm:flex sm:flex-wrap">
                 {profile.profileStats.map((s) => (
                   <div
                     key={s.label}
@@ -58,7 +58,7 @@ export function ProfileTab({ profile, profileRepo }: ProfileTabProps) {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid min-w-0 gap-6 lg:grid-cols-2">
           {/* <Panel
             title="نقشه راه رشد فردی"
             action={<span className="text-gold text-[13px] font-bold">۸ از ۱۲</span>}
@@ -85,7 +85,7 @@ export function ProfileTab({ profile, profileRepo }: ProfileTabProps) {
           </Panel> */}
 
           <Panel title="تنظیمات">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3">
               {profile.settings.map((s) => (
                 <button
                   key={s.label}
@@ -94,12 +94,14 @@ export function ProfileTab({ profile, profileRepo }: ProfileTabProps) {
                     if (s.label === 'تنظیمات') setIsSettingsOpen(true);
                     if (s.label === 'ویرایش پروفایل') setIsEditProfileOpen(true);
                   }}
-                  className="border-hair hover:border-hair-2 flex items-center gap-3 rounded-[14px] border px-3.5 py-3 text-start transition-[transform,border-color] [background:var(--glass-2)] hover:-translate-x-[3px]"
+                  className="border-hair hover:border-hair-2 flex min-w-0 items-center gap-2 rounded-[14px] border px-3 py-3 text-start transition-[transform,border-color] [background:var(--glass-2)] hover:-translate-x-[3px] sm:gap-3 sm:px-3.5"
                 >
                   <span className="text-gold grid size-9 shrink-0 place-items-center rounded-[10px] [background:var(--glass)]">
                     <Icon name={s.icon as IconName} size={18} />
                   </span>
-                  <b className="flex-1 text-[13.5px] font-bold">{s.label}</b>
+                  <b className="min-w-0 flex-1 truncate text-[13px] font-bold sm:text-[13.5px]">
+                    {s.label}
+                  </b>
                   <Icon name="arrow-left" size={16} className="text-ink-3" />
                 </button>
               ))}
@@ -111,7 +113,7 @@ export function ProfileTab({ profile, profileRepo }: ProfileTabProps) {
           title="دستاوردها"
           // action={<a className="text-gold cursor-pointer text-[13px] font-bold">مشاهده همه</a>}
         >
-          <div className="grid grid-cols-3 gap-x-5 gap-y-7 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
+          <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-x-4 gap-y-7 sm:grid-cols-4 sm:gap-x-5 lg:grid-cols-6 xl:grid-cols-7">
             {sortedAchievements.map((achievement) => (
               <button
                 key={achievement.label}
@@ -205,8 +207,13 @@ function AchievementModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/72 p-4 backdrop-blur-sm">
-      <div className="border-hair relative w-full max-w-[426px] overflow-hidden rounded-[10px] border bg-[#050302] px-4 py-5 shadow-[0_28px_90px_-40px_var(--glow)] sm:px-8 sm:py-7">
+    <BaseModal
+      isOpen
+      onClose={onClose}
+      title={achievement.label}
+      zIndexClassName="z-[1000]"
+      panelClassName="border-hair relative w-full max-w-[426px] overflow-hidden rounded-[10px] border bg-[#050302] px-4 py-5 shadow-[0_28px_90px_-40px_var(--glow)] sm:px-8 sm:py-7"
+    >
         <button
           type="button"
           onClick={onClose}
@@ -278,8 +285,7 @@ function AchievementModal({
 
           <p className="text-ink-3 mt-5 text-[10.5px]">قبیله به تو افتخار می‌کند، ادامه بده.</p>
         </div>
-      </div>
-    </div>
+    </BaseModal>
   );
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Icon, OptionalImage } from '@/shared/ui';
+import { BaseModal, Button, Icon, OptionalImage } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type { Achievement } from '@/features/dashboard/domain/dashboard.types';
@@ -30,8 +30,13 @@ export function AchievementEarnedModal({ achievement, onClose }: AchievementEarn
   };
 
   return (
-    <div className="fixed inset-0 z-[1110] flex items-center justify-center bg-black/72 p-4 backdrop-blur-sm">
-      <div className="border-hair w-full max-w-[426px] overflow-hidden rounded-[10px] border bg-[#050302] px-5 py-6 text-center shadow-[0_28px_90px_-40px_var(--glow)] sm:px-8">
+    <BaseModal
+      isOpen={!!achievement}
+      onClose={onClose}
+      title={achievement.label}
+      zIndexClassName="z-[1110]"
+      panelClassName="border-hair w-full max-w-[426px] overflow-hidden rounded-[10px] border bg-[#050302] px-5 py-6 text-center shadow-[0_28px_90px_-40px_var(--glow)] sm:px-8"
+    >
         <div className="relative mx-auto size-[190px] overflow-hidden rounded-[8px] border border-[rgba(255,98,0,.72)] bg-black">
           <OptionalImage
             src={getAchievementImage(achievement)}
@@ -78,8 +83,7 @@ export function AchievementEarnedModal({ achievement, onClose }: AchievementEarn
         >
           ادامه
         </button>
-      </div>
-    </div>
+    </BaseModal>
   );
 }
 

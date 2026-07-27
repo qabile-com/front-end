@@ -1,6 +1,6 @@
 'use client';
 
-import { OptionalImage } from '@/shared/ui';
+import { BaseModal, OptionalImage } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
 
 interface StreakSuccessModalProps {
@@ -10,11 +10,14 @@ interface StreakSuccessModalProps {
 }
 
 export function StreakSuccessModal({ isOpen, streak, onClose }: StreakSuccessModalProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/72 p-4 backdrop-blur-sm">
-      <div className="border-hair relative w-full max-w-[530px] overflow-visible rounded-[16px] border bg-[#030201] px-4 pb-8 pt-[260px] text-center shadow-[0_36px_120px_-48px_var(--glow)] sm:px-8">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="افزایش زنجیره"
+      zIndexClassName="z-[1100]"
+      panelClassName="border-hair relative w-full max-w-[530px] overflow-visible rounded-[16px] border bg-[#030201] px-4 pb-8 pt-[260px] text-center shadow-[0_36px_120px_-48px_var(--glow)] sm:px-8"
+    >
         <div className="pointer-events-none absolute inset-x-0 -top-8 mx-auto h-[330px] max-w-[390px]">
           <OptionalImage
             src="/assets/strick-phoenix.png"
@@ -42,7 +45,6 @@ export function StreakSuccessModal({ isOpen, streak, onClose }: StreakSuccessMod
             قبیله به استمرار تو افتخار می‌کند، ادامه بده.
           </p>
         </div>
-      </div>
-    </div>
+    </BaseModal>
   );
 }

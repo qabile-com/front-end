@@ -100,6 +100,7 @@ export interface WatchRange {
 
 export interface SectionWatchProgressInput {
   courseId: string;
+  mediaType?: 'video' | 'audio';
   currentTime: number;
   duration: number;
   maxWatchedTime: number;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Button, Icon, OptionalImage } from '@/shared/ui';
+import { BaseModal, Button, Icon, OptionalImage } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type { IProfileRepository, MyProfile } from '../../domain/profile-repository';
@@ -10,7 +10,6 @@ import {
   useUpdateMyProfile,
   useUpdateProfileAvatar,
 } from '../../application/use-edit-profile';
-import { useScrollLock } from '@/shared/hooks/use-scroll-lock';
 import { removeAccessToken } from '@/core/auth/token';
 import { useRouter } from 'next/navigation';
 
@@ -21,7 +20,6 @@ interface EditProfileModalProps {
 }
 
 export function EditProfileModal({ profile, repo, onClose }: EditProfileModalProps) {
-  useScrollLock(true);
   const router = useRouter();
   const [name, setName] = useState(profile.name);
   const [lastName, setLastName] = useState(profile.lastName);
@@ -78,8 +76,14 @@ export function EditProfileModal({ profile, repo, onClose }: EditProfileModalPro
   };
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center overflow-hidden bg-black/72 p-3 backdrop-blur-sm sm:p-5">
-      <div className="border-hair flex max-h-[calc(100dvh-1.5rem)] w-full max-w-[606px] flex-col overflow-hidden rounded-[10px] border bg-[#080402] shadow-[0_34px_100px_-42px_var(--glow)] sm:max-h-[calc(100dvh-2.5rem)]">
+    <BaseModal
+      isOpen
+      onClose={onClose}
+      title="ویرایش پروفایل"
+      zIndexClassName="z-[1000]"
+      className="overflow-hidden p-3 sm:p-5"
+      panelClassName="border-hair flex max-h-[calc(100dvh-1.5rem)] w-full max-w-[606px] flex-col overflow-hidden rounded-[10px] border bg-[#080402] shadow-[0_34px_100px_-42px_var(--glow)] sm:max-h-[calc(100dvh-2.5rem)]"
+    >
         <div className="flex shrink-0 items-center justify-between gap-3 px-5 pt-5 pb-4 sm:px-7 sm:pt-7">
           <button
             type="button"
@@ -187,8 +191,7 @@ export function EditProfileModal({ profile, repo, onClose }: EditProfileModalPro
             </button>
           </EditSection>
         </div>
-      </div>
-    </div>
+    </BaseModal>
   );
 }
 

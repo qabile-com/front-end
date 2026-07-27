@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/shared/ui';
+import { BaseModal, Button } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
 
 interface XpEarnedModalProps {
@@ -14,12 +14,15 @@ export function XpEarnedModal({ xp, title = 'عالی بود! ', description, on
   if (!xp) return null;
 
   return (
-    <div className="fixed inset-0 z-[1120] flex items-center justify-center bg-black/72 p-4 backdrop-blur-sm">
+    <BaseModal
+      isOpen={!!xp}
+      onClose={onClose}
+      title={title}
+      zIndexClassName="z-[1120]"
+      panelClassName="border-hair relative w-full max-w-[430px] overflow-hidden rounded-[24px] border bg-[#050302] px-6 py-8 text-center shadow-[0_34px_110px_-42px_var(--glow)] sm:px-8"
+    >
       <div
-        role="dialog"
-        aria-modal="true"
         aria-labelledby="xp-earned-title"
-        className="border-hair relative w-full max-w-[430px] overflow-hidden rounded-[24px] border bg-[#050302] px-6 py-8 text-center shadow-[0_34px_110px_-42px_var(--glow)] sm:px-8"
       >
         {/* Background Glow Effect */}
         <span className="pointer-events-none absolute inset-x-8 -top-24 h-48 rounded-full blur-3xl [background:radial-gradient(circle,rgba(255,98,0,.35),transparent_70%)]" />
@@ -60,6 +63,6 @@ export function XpEarnedModal({ xp, title = 'عالی بود! ', description, on
           )}
         </div>
       </div>
-    </div>
+    </BaseModal>
   );
 }
