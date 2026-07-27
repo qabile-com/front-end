@@ -2,9 +2,13 @@
 import {
   addForumComment,
   createForumPost,
+  getForumActiveUsers,
   getForumFeed,
+  getForumPost,
+  getForumTrendingTags,
   likePost,
   unlikePost,
+  type ActiveUserDto,
   type ForumPostDto,
 } from '@/core/api/forum.api';
 import type { ISocialRepository } from '../../domain/social-repository';
@@ -16,16 +20,23 @@ export class HttpSocialRepository implements ISocialRepository {
 
     return res.data.data.map(apiPostToDomain);
   }
+  async getPost(postId: string): Promise<Post> {
+    const res = await getForumPost(postId);
+    const data = res.data as ForumPostDto | { data: ForumPostDto };
+    return apiPostToDomain('data' in data ? data.data : data);
+  }
   async getTrendingTags(): Promise<string[]> {
-    const res = await getForumFeed();
-    return res.data.trendingTags;
+    const res = await getForumTrendingTags();
+    const data = res.data as string[] | { data: string[] };
+    return Array.isArray(data) ? data : data.data;
   }
   async getActiveUsers(): Promise<ActiveUser[]> {
-    const res = await getForumFeed();
-    return res.data.activeUsers;
+    const res = await getForumActiveUsers({ limit: 8 });
+    const data = res.data as ActiveUserDto[] | { data: ActiveUserDto[] };
+    return (Array.isArray(data) ? data : data.data).map(apiActiveUserToDomain);
   }
-  async createPost(text: string, location?: string, emoji?: string): Promise<Post> {
-    const res = await createForumPost({ text, location, emoji });
+  async createPost(text: string, imageFile?: File | null): Promise<Post> {
+    const res = await createForumPost({ text, image: imageFile });
     return apiPostToDomain(res.data);
   }
   async addComment(postId: string, text: string): Promise<PostComment> {
@@ -82,5 +93,19 @@ function apiPostToDomain(api: ForumPostDto): Post {
     image: api.image,
     tags: api.tags,
     isPinned: api.isPinned,
+    canFollowAuthor: api.canFollowAuthor,
+    isAuthorFollowedByMe: api.isAuthorFollowedByMe,
+  };
+}
+
+function apiActiveUserToDomain(api: ActiveUserDto): ActiveUser {
+  return {
+    id: api.id,
+    name: api.name,
+    role: api.role,
+    avatar: api.avatar,
+    isAdam: api.isAdam,
+    canFollow: api.canFollow,
+    isFollowedByMe: api.isFollowedByMe,
   };
 }

@@ -3,34 +3,20 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ISocialRepository } from '../domain/social-repository';
-import type { ActiveUser, Post } from '../domain/social.data';
-import { useInfiniteFeed } from './use-infinite-feed';
-
-type SocialQueryData = {
-  posts: Post[];
-  tags: string[];
-  activeUsers: ActiveUser[];
-};
 
 export function useSocialData(repo: ISocialRepository) {
   const queryClient = useQueryClient();
-  const feedQuery = useInfiniteFeed(repo);
+
   const tagsQuery = useQuery({
-    queryKey: ['trending-tags'],
+    queryKey: ['social', 'trending-tags'],
     queryFn: () => repo.getTrendingTags(),
+    staleTime: 5 * 60_000,
+    retry: 1,
   });
 
-  const query = useQuery({
-    queryKey: ['dashboard', 'social'],
-    queryFn: async (): Promise<SocialQueryData> => {
-      const [posts, tags, activeUsers] = await Promise.all([
-        repo.getFeed(),
-        repo.getTrendingTags(),
-        repo.getActiveUsers(),
-      ]);
-
-      return { posts, tags, activeUsers };
-    },
+  const activeUsersQuery = useQuery({
+    queryKey: ['social', 'active-users'],
+    queryFn: () => repo.getActiveUsers(),
     staleTime: 60_000,
     retry: 1,
   });
@@ -38,53 +24,27 @@ export function useSocialData(repo: ISocialRepository) {
   const publishPostMutation = useMutation({
     mutationFn: ({
       text,
-      location,
-      emoji,
       imageFile,
-      gifUrl,
     }: {
       text: string;
-      location?: string;
-      emoji?: string;
       imageFile?: File | null;
-      gifUrl?: string;
-    }) => repo.createPost(text, location, emoji, imageFile, gifUrl),
-    onSuccess: (newPost) => {
+    }) => repo.createPost(text, imageFile),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
-      queryClient.setQueryData<SocialQueryData>(['dashboard', 'social'], (current) =>
-        current ? { ...current, posts: [newPost, ...current.posts] } : current,
-      );
     },
   });
 
   const addCommentMutation = useMutation({
     mutationFn: ({ postId, text }: { postId: string; text: string }) =>
       repo.addComment(postId, text),
-    onSuccess: (newComment, variables) => {
+    onSuccess: (_newComment, variables) => {
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
-      queryClient.setQueryData<SocialQueryData>(['dashboard', 'social'], (current) =>
-        current
-          ? {
-              ...current,
-              posts: current.posts.map((post) =>
-                post.id === variables.postId
-                  ? { ...post, comments: [...post.comments, newComment] }
-                  : post,
-              ),
-            }
-          : current,
-      );
+      queryClient.invalidateQueries({ queryKey: ['social-post', variables.postId] });
     },
   });
 
-  const publishPost = (
-    text: string,
-    location?: string,
-    emoji?: string,
-    imageFile?: File | null,
-    gifUrl?: string,
-  ) => {
-    publishPostMutation.mutate({ text, location, emoji, imageFile, gifUrl });
+  const publishPost = (text: string, imageFile?: File | null) => {
+    publishPostMutation.mutate({ text, imageFile });
   };
 
   const addComment = (postId: string, text: string) => {
@@ -92,12 +52,20 @@ export function useSocialData(repo: ISocialRepository) {
   };
 
   return {
-    posts: query.data?.posts ?? [],
-    tags: query.data?.tags ?? [],
-    activeUsers: query.data?.activeUsers ?? [],
-    loading: query.isPending,
-    error: query.error instanceof Error ? query.error.message : null,
+    tags: tagsQuery.data ?? [],
+    activeUsers: activeUsersQuery.data ?? [],
+    tagsLoading: tagsQuery.isPending,
+    activeUsersLoading: activeUsersQuery.isPending,
+    loading: tagsQuery.isPending || activeUsersQuery.isPending,
+    error:
+      tagsQuery.error instanceof Error
+        ? tagsQuery.error.message
+        : activeUsersQuery.error instanceof Error
+          ? activeUsersQuery.error.message
+          : null,
     publishPost,
     addComment,
+    refetchTags: tagsQuery.refetch,
+    refetchActiveUsers: activeUsersQuery.refetch,
   };
 }

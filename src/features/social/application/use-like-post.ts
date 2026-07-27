@@ -24,6 +24,9 @@ export function useLikePost(repo: ISocialRepository) {
           ),
         };
       });
+      queryClient.setQueryData<Post>(['social-post', postId], (post) =>
+        post ? { ...post, likedByMe: true, likes: post.likes + 1 } : post,
+      );
       return { previousData };
     },
     onError: (err, variables, context) => {
@@ -47,6 +50,9 @@ export function useLikePost(repo: ISocialRepository) {
           ),
         };
       });
+      queryClient.setQueryData<Post>(['social-post', postId], (post) =>
+        post ? { ...post, likedByMe: false, likes: Math.max(0, post.likes - 1) } : post,
+      );
       return { previousData };
     },
     onError: (err, variables, context) => {

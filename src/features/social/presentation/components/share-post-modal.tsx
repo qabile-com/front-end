@@ -1,7 +1,6 @@
 'use client';
 
-import { GlassCard, Icon, Button } from '@/shared/ui';
-import { useScrollLock } from '@/shared/hooks/use-scroll-lock';
+import { BaseModal, GlassCard, Icon, Button } from '@/shared/ui';
 
 interface Props {
   isOpen: boolean;
@@ -9,12 +8,13 @@ interface Props {
 }
 
 export function SharePostModal({ isOpen, onClose }: Props) {
-  useScrollLock(isOpen);
-
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="اشتراک‌گذاری"
+      panelClassName="w-full max-w-sm"
+    >
       <GlassCard className="border-hair w-full max-w-sm p-6 text-center [background:var(--color-panel)]">
         <button onClick={onClose} className="text-ink-3 hover:text-ink absolute end-4 top-4">
           <Icon name="plus" size={20} className="rotate-45" />
@@ -25,6 +25,6 @@ export function SharePostModal({ isOpen, onClose }: Props) {
           باشه
         </Button>
       </GlassCard>
-    </div>
+    </BaseModal>
   );
 }

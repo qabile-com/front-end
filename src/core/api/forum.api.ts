@@ -35,6 +35,8 @@ export interface ForumPostDto {
   image?: string;
   tags?: string[];
   isPinned: boolean;
+  canFollowAuthor?: boolean;
+  isAuthorFollowedByMe?: boolean;
 }
 export interface ActiveUserDto {
   id: string;
@@ -43,6 +45,7 @@ export interface ActiveUserDto {
   avatar: string;
   isAdam?: boolean;
   canFollow?: boolean;
+  isFollowedByMe?: boolean;
 }
 
 export interface ForumFeedResponse {
@@ -55,12 +58,34 @@ export interface ForumFeedResponse {
 export const getForumFeed = (params?: { limit?: number; offset?: number; q?: string }) =>
   httpClient.get<ForumFeedResponse>('/api/v1/forum/feed', { params });
 
+export const getForumPost = (postId: string) =>
+  httpClient.get<ForumPostDto>(`/api/v1/forum/posts/${postId}`);
+
+export const getForumTrendingTags = () =>
+  httpClient.get<{ data: string[] }>('/api/v1/forum/trending-tags');
+
+export const getForumActiveUsers = (params?: { limit?: number }) =>
+  httpClient.get<{ data: ActiveUserDto[] }>('/api/v1/forum/active-users', { params });
+
 export const createForumPost = (body: {
   text: string;
-  location?: string;
-  emoji?: string;
+  image?: File | null;
   tags?: string[];
-}) => httpClient.post<ForumPostDto>('/api/v1/forum/posts', body);
+}) => {
+  if (body.image) {
+    const formData = new FormData();
+    formData.append('text', body.text);
+    formData.append('image', body.image);
+    body.tags?.forEach((tag) => formData.append('tags[]', tag));
+
+    return httpClient.post<ForumPostDto>('/api/v1/forum/posts', formData);
+  }
+
+  return httpClient.post<ForumPostDto>('/api/v1/forum/posts', {
+    text: body.text,
+    tags: body.tags,
+  });
+};
 
 export const addForumComment = (postId: string, body: { text: string }) =>
   httpClient.post<{ comments: ForumCommentDto[] }>(`/api/v1/forum/posts/${postId}/comments`, body);

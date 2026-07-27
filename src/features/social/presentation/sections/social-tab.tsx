@@ -1,14 +1,16 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ErrorState, Icon, InlineSkeleton, SocialSkeleton, type IconName } from '@/shared/ui';
+import { useRouter } from 'next/navigation';
+import { BaseModal, ErrorState, Icon, InlineSkeleton, SocialSkeleton, type IconName } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
+import { formatRelativeTime } from '@/core/lib/format-relative-time';
+import { getAvatarInitial } from '@/core/lib/avatar';
 import { toPersianDigits } from '@/core/lib/persian';
 import type { Post, ActiveUser } from '../../domain/social.data';
 import { Panel } from '@/shared/ui';
 import { AdamAvatar } from '@/features/dashboard/presentation/sections/dashboard-sidebar';
 import { CreatePost } from './create-post';
-import { SocialPostDetailModal } from '../components/social-post-detail-modal';
 import { SharePostModal } from '../components/share-post-modal';
 import { UserProfileModalContainer } from '@/features/leaderboard/presentation/components/user-profile-modal-container';
 import { adminRepo, socialRepo } from '@/features/social/infrastructure/repository-factory';
@@ -20,6 +22,8 @@ import {
 } from '@tanstack/react-query';
 import { IAdminRepository } from '../../domain/admin-repository';
 import { useLikePost } from '../../application/use-like-post';
+import { useToggleUserFollow } from '../../application/use-toggle-user-follow';
+import { followRepo } from '@/features/leaderboard/infrastructure/repository-factory';
 
 type Feed = 'for-you' | 'following';
 
@@ -27,14 +31,7 @@ interface SocialTabProps {
   feedQuery: UseInfiniteQueryResult<InfiniteData<Post[]>>;
   tags: string[];
   activeUsers: ActiveUser[];
-  onPublish: (
-    text: string,
-    location?: string,
-    emoji?: string,
-    imageFile?: File | null,
-    gifUrl?: string,
-  ) => void;
-  onAddComment: (postId: string, text: string) => void;
+  onPublish: (text: string, imageFile?: File | null) => void;
   currentUserRole?: string;
   adminRepo?: IAdminRepository;
 }
@@ -44,16 +41,17 @@ export function SocialTab({
   tags,
   activeUsers,
   onPublish,
-  onAddComment,
   currentUserRole,
 }: SocialTabProps) {
+  const router = useRouter();
+  const followToggle = useToggleUserFollow(followRepo);
   const [feed, setFeed] = useState<Feed>('for-you');
   const [query, setQuery] = useState('');
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [sharePostId, setSharePostId] = useState<string | null>(null);
   const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
 
-  const allPosts = feedQuery.data?.pages.flat() ?? [];
+  const allPosts = useMemo(() => feedQuery.data?.pages.flat() ?? [], [feedQuery.data]);
   // Client‑side filtering (replace with server‑side later)
   const visible = useMemo(() => {
     let list = allPosts;
@@ -81,7 +79,7 @@ export function SocialTab({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="جستجوی پست، کاربر یا #هشتگ"
-            className="text-ink border-hair placeholder:text-ink-3 focus:border-hair-2 h-12 w-full rounded-xl border ps-4 pe-11 text-[14px] outline-none [background:var(--glass-2)]"
+            className="text-ink border-hair placeholder:text-ink-3 focus:border-hair-2 h-12 w-full rounded-xl border ps-11 pe-4 text-[14px] outline-none [background:var(--glass-2)]"
           />
         </div>
 
@@ -106,13 +104,6 @@ export function SocialTab({
             </button>
           ))}
         </div>
-
-        {/* Post composer */}
-        <CreatePost
-          onPublish={(text, location?, emoji?, imageFile?, gifUrl?) =>
-            onPublish(text, location, emoji, imageFile, gifUrl)
-          }
-        />
 
         {/* Loading & error states */}
         {feedQuery.isLoading && <SocialSkeleton />}
@@ -141,9 +132,14 @@ export function SocialTab({
           <PostCard
             key={post.id}
             post={post}
-            onClick={() => setSelectedPost(post)}
+            onClick={() => router.push(`/social/${post.id}`)}
             onShare={() => handleShare(post.id)}
             onAuthorClick={(authorId) => setSelectedProfileUserId(authorId)}
+            onToggleAuthorFollow={(authorId, isFollowedByMe) =>
+              followToggle.mutate({ userId: authorId, isFollowedByMe })
+            }
+            isTogglingAuthorFollow={followToggle.isPending}
+            togglingAuthorId={followToggle.variables?.userId}
             currentUserRole={currentUserRole}
             adminRepo={adminRepo}
           />
@@ -185,19 +181,43 @@ export function SocialTab({
           <h4 className="mb-3 text-[14px] font-extrabold text-[#FDEEE299]">اعضای فعال</h4>
           <div className="flex flex-col gap-3">
             {activeUsers.map((u) => (
-              <div key={u.name} className="flex items-center gap-2.5">
+              <div key={u.id} className="flex items-center gap-2.5">
                 {u.isAdam ? (
                   <AdamAvatar className="size-9" />
                 ) : (
-                  <span className="size-9 shrink-0 rounded-full" style={{ background: u.avatar }} />
+                  <span
+                    className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-white"
+                    style={{ background: u.avatar }}
+                  >
+                    {getAvatarInitial(u.name)}
+                  </span>
                 )}
                 <span className="min-w-0 flex-1 leading-tight">
                   <b className="block truncate text-[13px] font-bold">{u.name}</b>
                   <small className="text-ink-3 text-[11px]">{u.role}</small>
                 </span>
                 {u.canFollow && (
-                  <button className="text-gold rounded-full border border-[gradient(--gold-grad)] px-2.5 py-1 text-[11px] font-extrabold">
-                    هم پرواز شدن
+                  <button
+                    type="button"
+                    disabled={followToggle.isPending && followToggle.variables?.userId === u.id}
+                    onClick={() =>
+                      followToggle.mutate({
+                        userId: u.id,
+                        isFollowedByMe: Boolean(u.isFollowedByMe),
+                      })
+                    }
+                    className={cn(
+                      'rounded-full border px-2.5 py-1 text-[11px] font-extrabold transition-colors disabled:opacity-60',
+                      u.isFollowedByMe
+                        ? 'border-[rgba(243,186,99,.28)] text-ink-2 bg-white/5'
+                        : 'text-gold border-[rgba(243,186,99,.32)] hover:border-[rgba(243,186,99,.5)]',
+                    )}
+                  >
+                    {followToggle.isPending && followToggle.variables?.userId === u.id
+                      ? '...'
+                      : u.isFollowedByMe
+                        ? 'هم‌پرواز'
+                        : 'هم پرواز شدن'}
                   </button>
                 )}
               </div>
@@ -207,15 +227,41 @@ export function SocialTab({
       </div>
 
       {/* Post Detail Modal */}
-      {selectedPost && (
-        <SocialPostDetailModal
-          isOpen={!!selectedPost}
-          onClose={() => setSelectedPost(null)}
-          post={selectedPost}
-          onAddComment={onAddComment}
-          onShare={() => handleShare(selectedPost.id)}
-        />
-      )}
+      <button
+        type="button"
+        onClick={() => setIsCreatePostOpen(true)}
+        aria-label="ایجاد پست جدید"
+        className="fixed bottom-24 left-4 z-40 inline-flex min-h-14 min-w-14 items-center justify-center gap-2 rounded-full border border-[rgba(255,130,50,.36)] px-4 text-[#1a0a00] shadow-[0_18px_48px_-18px_var(--glow)] transition-[transform,opacity,box-shadow] duration-250 [background:var(--fire-grad)] hover:-translate-y-0.5 hover:shadow-[0_24px_56px_-18px_var(--glow)] active:scale-95 lg:bottom-8 lg:left-8 lg:min-w-40"
+      >
+        <Icon name="plus" size={22} />
+        <span className="hidden text-sm font-black lg:inline">ایجاد پست</span>
+      </button>
+
+      <BaseModal
+        isOpen={isCreatePostOpen}
+        onClose={() => setIsCreatePostOpen(false)}
+        title="ایجاد پست جدید"
+        zIndexClassName="z-[1000]"
+        panelClassName="w-full max-w-xl"
+      >
+        <div className="border-hair overflow-hidden rounded-[24px] border bg-[var(--color-panel)] shadow-[0_34px_110px_-48px_var(--glow)]">
+          <div className="border-hair flex items-center justify-between border-b px-5 py-4">
+            <h3 className="text-base font-black">ایجاد پست جدید</h3>
+            <button
+              type="button"
+              onClick={() => setIsCreatePostOpen(false)}
+              aria-label="بستن"
+              className="text-ink-3 hover:text-ink grid size-9 place-items-center rounded-full transition-colors hover:bg-white/5"
+            >
+              <Icon name="plus" size={20} className="rotate-45" />
+            </button>
+          </div>
+          <CreatePost
+            onPublish={(text, imageFile?) => onPublish(text, imageFile)}
+            onPublished={() => setIsCreatePostOpen(false)}
+          />
+        </div>
+      </BaseModal>
 
       {/* User Profile Modal */}
       {selectedProfileUserId && (
@@ -238,6 +284,9 @@ function PostCard({
   onClick,
   onShare,
   onAuthorClick,
+  onToggleAuthorFollow,
+  isTogglingAuthorFollow,
+  togglingAuthorId,
   currentUserRole,
   adminRepo,
 }: {
@@ -245,6 +294,9 @@ function PostCard({
   onClick: () => void;
   onShare: () => void;
   onAuthorClick: (authorId: string) => void;
+  onToggleAuthorFollow: (authorId: string, isFollowedByMe: boolean) => void;
+  isTogglingAuthorFollow: boolean;
+  togglingAuthorId?: string;
   currentUserRole?: string;
   adminRepo?: IAdminRepository;
 }) {
@@ -292,6 +344,9 @@ function PostCard({
   };
 
   const isAdmin = currentUserRole === 'admin' || currentUserRole === 'super_admin';
+  const canFollowAuthor = Boolean(post.canFollowAuthor);
+  const isFollowingAuthor = Boolean(post.isAuthorFollowedByMe);
+  const isCurrentAuthorToggling = isTogglingAuthorFollow && togglingAuthorId === post.authorId;
 
   return (
     <article
@@ -324,7 +379,12 @@ function PostCard({
                 onAuthorClick(post.authorId);
               }}
             >
-              <span className="size-11 shrink-0 rounded-full" style={{ background: post.avatar }} />
+              <span
+                className="grid size-11 shrink-0 place-items-center rounded-full text-sm font-black text-white"
+                style={{ background: post.avatar }}
+              >
+                {getAvatarInitial(post.author)}
+              </span>
             </div>
           )}
           <div
@@ -358,6 +418,24 @@ function PostCard({
               </button>
             </div>
           )}
+          {canFollowAuthor && (
+            <button
+              type="button"
+              disabled={isCurrentAuthorToggling}
+              onClick={(event) => {
+                event.stopPropagation();
+                onToggleAuthorFollow(post.authorId, isFollowingAuthor);
+              }}
+              className={cn(
+                'ms-auto shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-extrabold transition-colors disabled:opacity-60',
+                isFollowingAuthor
+                  ? 'border-[rgba(243,186,99,.28)] bg-white/5 text-ink-2'
+                  : 'text-gold border-[rgba(243,186,99,.32)] hover:border-[rgba(243,186,99,.5)]',
+              )}
+            >
+              {isCurrentAuthorToggling ? '...' : isFollowingAuthor ? 'هم‌پرواز' : 'هم پرواز شدن'}
+            </button>
+          )}
         </div>
         <p className="mt-3.5 text-[14.5px] leading-[1.8] whitespace-pre-line">{post.text}</p>
         {post.achievement && (
@@ -385,8 +463,8 @@ function PostCard({
         {/* ... post text, achievement, image ... unchanged */}
 
         {/* Like, comment, share */}
-        <div className="text-ink-3 mt-4 flex items-center justify-between gap-5 text-[13px]">
-          <div className="flex gap-10">
+        <div className="text-ink-3 mt-4 flex flex-col gap-3 text-[13px] sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+          <div className="flex flex-wrap gap-x-8 gap-y-3 sm:gap-10">
             <button
               type="button"
               onClick={handleLike}
@@ -415,7 +493,7 @@ function PostCard({
               اشتراک‌گذاری
             </button>
           </div>
-          {post.time}
+          <time className="text-ink-4 block text-xs sm:text-[13px]">{formatRelativeTime(post.time)}</time>
         </div>
       </div>
     </article>

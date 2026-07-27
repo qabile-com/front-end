@@ -37,14 +37,18 @@ export interface Post {
   image?: string;
   tags?: string[];
   isPinned: boolean;
+  canFollowAuthor?: boolean;
+  isAuthorFollowedByMe?: boolean;
 }
 
 export interface ActiveUser {
+  id: string;
   name: string;
   role: string;
   avatar: string;
   isAdam?: boolean;
   canFollow?: boolean;
+  isFollowedByMe?: boolean;
 }
 
 const FIRE_3 = 'linear-gradient(135deg,#cc4308,#ff6200,#f3ba63)';
@@ -67,6 +71,8 @@ export const POSTS: Post[] = [
     ],
     likedByMe: false,
     isPinned: false,
+    canFollowAuthor: false,
+    isAuthorFollowedByMe: false,
   },
   {
     id: 'p2',
@@ -81,6 +87,8 @@ export const POSTS: Post[] = [
     comments: [{ name: 'سارا محمدی', text: 'مبارک باشه! 🎉', time: '۴ ساعت پیش' }],
     likedByMe: true,
     isPinned: false,
+    canFollowAuthor: false,
+    isAuthorFollowedByMe: false,
   },
   {
     id: 'p3',
@@ -99,6 +107,8 @@ export const POSTS: Post[] = [
     ],
     likedByMe: false,
     isPinned: false,
+    canFollowAuthor: false,
+    isAuthorFollowedByMe: false,
   },
   {
     id: 'p4',
@@ -113,6 +123,8 @@ export const POSTS: Post[] = [
     comments: [],
     likedByMe: false,
     isPinned: false,
+    canFollowAuthor: true,
+    isAuthorFollowedByMe: false,
   },
 ];
 
@@ -126,12 +138,14 @@ export const TRENDING_TAGS = [
 ];
 
 export const ACTIVE_USERS: ActiveUser[] = [
-  { name: 'آدم', role: 'مؤسس', avatar: FIRE_3, isAdam: true },
-  { name: 'آرش کریمی', role: 'ققنوس طلایی', avatar: 'linear-gradient(135deg,#ff8a3d,#cc4308)' },
+  { id: 'adam', name: 'آدم', role: 'مؤسس', avatar: FIRE_3, isAdam: true, canFollow: false, isFollowedByMe: false },
+  { id: 'arash', name: 'آرش کریمی', role: 'ققنوس طلایی', avatar: 'linear-gradient(135deg,#ff8a3d,#cc4308)', canFollow: false, isFollowedByMe: false },
   {
+    id: 'sara',
     name: 'سارا محمدی',
     role: 'ققنوس نقره‌ای',
     avatar: 'linear-gradient(135deg,#5b7cfa,#9b6bff)',
     canFollow: true,
+    isFollowedByMe: false,
   },
 ];

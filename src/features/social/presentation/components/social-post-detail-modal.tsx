@@ -2,10 +2,11 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { getAvatarInitial } from '@/core/lib/avatar';
+import { formatRelativeTime } from '@/core/lib/format-relative-time';
 import { toPersianDigits } from '@/core/lib/persian';
-import { Button, Icon, Input } from '@/shared/ui';
+import { BaseModal, Button, Icon, Input } from '@/shared/ui';
 import type { Post } from '../../domain/social.data';
-import { useScrollLock } from '@/shared/hooks/use-scroll-lock';
 
 interface Props {
   isOpen: boolean;
@@ -20,16 +21,12 @@ export function SocialPostDetailModal({ isOpen, onClose, post, onAddComment, onS
   const [liked, setLiked] = useState(false);
   const commentsEndRef = useRef<HTMLDivElement>(null);
 
-  useScrollLock(isOpen);
-
   // Auto-scroll to bottom when comments change
   useEffect(() => {
     if (commentsEndRef.current) {
       commentsEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [post.comments.length]);
-
-  if (!isOpen) return null;
 
   const handleSubmitComment = () => {
     if (commentText.trim() && onAddComment) {
@@ -39,8 +36,12 @@ export function SocialPostDetailModal({ isOpen, onClose, post, onAddComment, onS
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="border-hair flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border bg-[var(--color-panel)] shadow-2xl">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="پست"
+      panelClassName="border-hair flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border bg-[var(--color-panel)] shadow-2xl"
+    >
         {/* Header */}
         <div className="border-hair flex shrink-0 items-center justify-between border-b p-4">
           <button onClick={onClose} className="text-ink-2 hover:text-ink">
@@ -58,7 +59,7 @@ export function SocialPostDetailModal({ isOpen, onClose, post, onAddComment, onS
                 className="flex h-10 w-10 items-center justify-center rounded-full font-bold text-white"
                 style={{ background: post.avatar }}
               >
-                {post.author.slice(0, 1)}
+                {getAvatarInitial(post.author)}
               </div>
               <div className="flex-1 text-right">
                 <div className="text-ink text-sm font-bold">{post.author}</div>
@@ -107,7 +108,7 @@ export function SocialPostDetailModal({ isOpen, onClose, post, onAddComment, onS
                   اشتراک‌گذاری
                 </button>
               </div>
-              <div className="text-ink-4 text-xs">{post.time}</div>
+              <div className="text-ink-4 text-xs">{formatRelativeTime(post.time)}</div>
             </div>
           </div>
 
@@ -117,12 +118,12 @@ export function SocialPostDetailModal({ isOpen, onClose, post, onAddComment, onS
               {post.comments.map((comment, idx) => (
                 <div key={idx} className="flex items-start gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-white">
-                    {comment.name.slice(0, 1)}
+                    {getAvatarInitial(comment.name)}
                   </div>
                   <div className="flex-1 text-right">
                     <div className="flex items-center justify-between">
                       <span className="text-ink text-sm font-bold">{comment.name}</span>
-                      <span className="text-ink-4 text-xs">{comment.time}</span>
+                      <span className="text-ink-4 text-xs">{formatRelativeTime(comment.time)}</span>
                     </div>
                     <p className="text-ink-2 mt-1 text-sm">{comment.text}</p>
                   </div>
@@ -135,7 +136,7 @@ export function SocialPostDetailModal({ isOpen, onClose, post, onAddComment, onS
 
         <div className="border-hair flex shrink-0 items-center gap-3 border-t p-4">
           <div className="bg-ember flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
-            آ
+            {getAvatarInitial('شما')}
           </div>
           <Input
             placeholder="نظرت رو بنویس..."
@@ -154,7 +155,6 @@ export function SocialPostDetailModal({ isOpen, onClose, post, onAddComment, onS
             ارسال
           </Button>
         </div>
-      </div>
-    </div>
+    </BaseModal>
   );
 }
