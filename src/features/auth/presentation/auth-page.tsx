@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   EmberCanvas,
   GradText,
@@ -14,13 +16,35 @@ import {
 import { toPersianDigits } from '@/core/lib/persian';
 import { useLandingPublicData } from '@/features/landing/application/use-landing-public-data';
 import { landingPublicRepo } from '@/features/landing/infrastructure/repository-factory';
+import { resolveAuthEntryTarget } from '@/core/auth/resolve-auth-entry';
 import { authRepo } from '../infrastructure/repository-factory';
 import { AuthCard } from './components/auth-card';
 
 export function AuthPage() {
+  const router = useRouter();
+  const [authCheckPending, setAuthCheckPending] = useState(true);
   const { stats } = useLandingPublicData(landingPublicRepo);
   const totalMembers = stats.data?.totalMembers ?? 52000;
   const rating = stats.data?.rating ?? 4.9;
+
+  useEffect(() => {
+    let cancelled = false;
+    void resolveAuthEntryTarget().then((target) => {
+      if (cancelled) return;
+      if (target === '/home') {
+        router.replace('/home');
+        return;
+      }
+      setAuthCheckPending(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  if (authCheckPending) {
+    return <AuthGateLoader />;
+  }
 
   return (
     <>
@@ -77,7 +101,7 @@ export function AuthPage() {
         </aside>
 
         <div className="relative flex min-h-screen flex-1 flex-col items-center justify-center px-5 py-10 max-lg:px-5 max-lg:pb-10">
-          <MotionItem>
+          <MotionItem className="w-full max-w-[420px]">
             <AuthCard repository={authRepo} />
           </MotionItem>
 
@@ -91,5 +115,31 @@ export function AuthPage() {
         </div>
       </MotionPage>
     </>
+  );
+}
+
+function AuthGateLoader() {
+  return (
+    <main className="relative grid min-h-dvh place-items-center overflow-hidden px-5 [background:var(--color-bg)]">
+      <div
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          background:
+            'radial-gradient(52% 44% at 50% -2%,rgba(255,98,0,.14),transparent 58%),radial-gradient(60% 50% at 50% 110%,rgba(204,67,8,.1),transparent 58%)',
+        }}
+      />
+      <EmberCanvas />
+      <div className="relative z-1 flex flex-col items-center gap-5 text-center">
+        <div className="relative size-28">
+          <span className="border-ember/30 absolute inset-0 animate-ping rounded-full border" />
+          <span className="from-ember/25 via-gold/15 absolute inset-1 animate-pulse rounded-full bg-linear-to-br to-transparent blur-md" />
+          <PhoenixArt className="absolute inset-0 size-full object-contain drop-shadow-[0_0_24px_rgba(255,98,0,.45)]" />
+        </div>
+        <div>
+          <p className="text-ink text-base font-black">در حال بررسی ورود...</p>
+          <p className="text-ink-4 mt-1 text-xs">اگر قبلاً وارد شده باشی، مستقیم به خانه می‌روی.</p>
+        </div>
+      </div>
+    </main>
   );
 }

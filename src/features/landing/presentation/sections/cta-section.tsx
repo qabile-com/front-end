@@ -1,5 +1,5 @@
-import Link from 'next/link';
-import { Button, Container, Icon, PhoenixArt } from '@/shared/ui';
+import { Button, Container, Icon } from '@/shared/ui';
+import { AuthEntryLink } from '../components/auth-entry-link';
 
 export function CtaSection() {
   return (
@@ -14,12 +14,12 @@ export function CtaSection() {
           تصمیمِ امروز است.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3.5">
-          <Link href="/auth" className="w-full sm:w-auto">
+          <AuthEntryLink className="w-full sm:w-auto">
             <Button variant="primary" size="lg" block>
               عضویت رایگان در قبیله
               <Icon name="flame" />
             </Button>
-          </Link>
+          </AuthEntryLink>
           <Button variant="ghost" size="lg" className="w-full sm:w-auto">
             گفت‌وگو با تیم
           </Button>

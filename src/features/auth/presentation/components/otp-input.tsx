@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, type ChangeEvent, type ClipboardEvent, type KeyboardEvent } from 'react';
+import { useEffect, useRef, type ChangeEvent, type ClipboardEvent, type KeyboardEvent } from 'react';
 import { cn } from '@/core/lib/cn';
 import { OTP_LENGTH } from '@/features/auth/domain/validation';
 
@@ -9,11 +9,17 @@ interface OtpInputProps {
   onChange: (code: string) => void;
   error?: boolean;
   ok?: boolean;
+  autoFocus?: boolean;
 }
 
-export function OtpInput({ value, onChange, error, ok }: OtpInputProps) {
+export function OtpInput({ value, onChange, error, ok, autoFocus = false }: OtpInputProps) {
   const refs = useRef<Array<HTMLInputElement | null>>([]);
   const digits = Array.from({ length: OTP_LENGTH }, (_, i) => value[i] ?? '');
+
+  useEffect(() => {
+    if (!autoFocus) return;
+    refs.current[0]?.focus();
+  }, [autoFocus]);
 
   const setDigit = (idx: number, digit: string) => {
     const next = digits.slice();

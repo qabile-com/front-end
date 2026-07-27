@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import Link from 'next/link';
 import { Button, Container, Icon, OptionalImage, type IconName } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
+import { AuthEntryLink } from '../components/auth-entry-link';
 
 const TRUST_AVATARS = [
   'linear-gradient(135deg,#ff8a3d,#cc4308)',
@@ -102,12 +102,12 @@ export function HeroSection({ totalMembers = 52000, rating = 4.9, chips }: HeroS
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3.5">
-              <Link href="/auth" className="max-sm:flex-1">
+              <AuthEntryLink className="max-sm:flex-1">
                 <Button variant="primary" size="lg" block>
                   شروع رایگان سفر
                   <Icon name="flame" />
                 </Button>
-              </Link>
+              </AuthEntryLink>
               {/* <Link href="/dashboard" className="max-sm:flex-1">
                 <Button variant="ghost" size="lg" block>
                   <Icon name="play" />

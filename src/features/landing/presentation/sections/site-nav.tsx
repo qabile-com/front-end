@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState, type MouseEvent } from 'react';
-import Link from 'next/link';
 import { Button, Container, Icon } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { BrandMark } from '../components/brand-mark';
+import { AuthEntryLink } from '../components/auth-entry-link';
 
 const NAV_LINKS = [
   { label: 'امکانات', href: '#pillars' },
@@ -70,16 +70,16 @@ export function SiteNav() {
         </nav>
 
         <div className="flex items-center gap-2.5">
-          <Link href="/auth" className="hidden sm:block">
+          <AuthEntryLink className="hidden cursor-pointer sm:block">
             <Button variant="ghost" className="rounded-md px-[22px] py-[11px]">
               ورود
             </Button>
-          </Link>
-          <Link href="/auth">
+          </AuthEntryLink>
+          <AuthEntryLink className="cursor-pointer">
             <Button variant="primary" className="rounded-md px-6 py-[11px]">
               شروع رایگان
             </Button>
-          </Link>
+          </AuthEntryLink>
           <button
             type="button"
             aria-label="منو"

@@ -180,6 +180,7 @@ function PasswordForm({
         }}
         error={errors.email}
         autoComplete="email"
+        autoFocus
       />
       <Field
         label="رمز عبور"
@@ -288,6 +289,7 @@ function OtpLoginForm({
               }}
               error={error}
               autoComplete="email"
+              autoFocus
             />
           </div>
           <button
@@ -313,7 +315,7 @@ function OtpLoginForm({
       <p className="text-ink-2 mb-3.5 text-center text-[13px] leading-[1.65]">
         کد تایید به <b className="text-gold" dir="ltr">{email}</b> ارسال شد
       </p>
-      <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} />
+      <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} autoFocus />
       <ResendRow cooldown={cooldown} onResend={() => void requestOtp(email).then((ok) => ok && start(RESEND_SECONDS))} />
       <AuthButton type="submit" loading={loading} disabled={!isCompleteOtp(code)}>
         تایید و ورود
@@ -403,7 +405,7 @@ function SignupStep1({
     <AuthForm onSubmit={() => void submit()}>
       <CardHeader title="عضویت در قبیله" sub="سفرت را همین‌جا شروع کن" />
       <div className="h-5" />
-      <Field label="نام" placeholder="مثال: آرش" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} autoComplete="given-name" />
+      <Field label="نام" placeholder="مثال: آرش" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} autoComplete="given-name" autoFocus />
       <Field label="نام خانوادگی" placeholder="مثال: کریمی" value={lastName} onChange={(e) => setLastName(e.target.value)} error={errors.lastName} autoComplete="family-name" />
       <Field label="ایمیل" type="email" inputMode="email" placeholder="name@email.com" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} autoComplete="email" />
       <Field
@@ -462,7 +464,7 @@ function SignupStep2({
       <BackButton onClick={onBack} />
       <CardHeader title="تایید ایمیل" sub={<><span>کد ۶ رقمی ارسال شده به</span><br /><b className="text-gold" dir="ltr">{email}</b></>} />
       <div className="h-5" />
-      <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} />
+      <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} autoFocus />
       <ResendRow cooldown={cooldown} onResend={() => start(RESEND_SECONDS)} />
       <AuthButton type="submit" loading={loading} disabled={!isCompleteOtp(code)}>
         ساخت حساب و ورود
@@ -556,6 +558,7 @@ function ForgotPasswordView({
             }}
             error={error}
             autoComplete="email"
+            autoFocus
           />
           <AuthButton type="submit" loading={loading}>
             دریافت کد بازیابی
@@ -568,7 +571,7 @@ function ForgotPasswordView({
           <p className="text-ink-2 mb-3.5 text-center text-[13px] leading-[1.65]">
             کد بازیابی به <b className="text-gold" dir="ltr">{email}</b> ارسال شد
           </p>
-          <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} />
+          <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} autoFocus />
           <ResendRow cooldown={cooldown} onResend={() => void requestForgotPassword(email).then((ok) => ok && start(RESEND_SECONDS))} />
           <AuthButton type="submit" loading={loading} disabled={!isCompleteOtp(code)}>
             ادامه
@@ -589,6 +592,7 @@ function ForgotPasswordView({
             }}
             error={error}
             autoComplete="new-password"
+            autoFocus
           />
           <Field
             label="تکرار رمز عبور"
