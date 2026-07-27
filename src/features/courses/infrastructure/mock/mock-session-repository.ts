@@ -18,7 +18,12 @@ export class MockSessionRepository implements ISessionRepository {
 
     return {
       part: applyMockWatchState(part),
-      videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+      videoUrl:
+        part.mediaType === 'audio'
+          ? undefined
+          : (part.videoUrl ?? 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'),
+      audioUrl: part.audioUrl ?? undefined,
+      mediaUrl: part.mediaUrl ?? undefined,
       comments,
     };
   }

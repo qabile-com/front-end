@@ -5,15 +5,16 @@ import {
   updateSectionProgress,
 } from '@/core/api/courses.api';
 import type { ICoursesRepository } from '@/features/dashboard/domain/dashboard-repository';
-import type { Course, CoursePart } from '../../domain/courses.data';
+import type { Course } from '../../domain/courses.data';
 import { withCourseSectionNavigation } from '../../domain/courses.data';
+import { normalizeCoursePartDto, type CoursePartMediaDto } from '../normalize-course-part-dto';
 import type {
   ActionRewardResult,
   SectionWatchProgressInput,
   SectionWatchProgressResult,
 } from '@/features/dashboard/domain/dashboard.types';
 
-type CoursePartDto = CoursePart & {
+type CoursePartDto = CoursePartMediaDto & {
   previousId?: string | null;
   prevSectionId?: string | null;
   nextId?: string | null;
@@ -36,7 +37,7 @@ export class HttpCoursesRepository implements ICoursesRepository {
         ...course,
         imageUrl: course.imageUrl ?? course.thumbnailUrl ?? course.coverUrl ?? course.image ?? null,
         episodes: course.episodes.map((part) => ({
-          ...part,
+          ...normalizeCoursePartDto(part),
           previousSectionId:
             part.previousSectionId ?? part.prevSectionId ?? part.previousId ?? null,
           nextSectionId: part.nextSectionId ?? part.nextId ?? null,

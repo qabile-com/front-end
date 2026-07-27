@@ -4,6 +4,8 @@ import type { Comment } from './comments-repository';
 export interface SessionDetail {
   part: CoursePart;
   videoUrl?: string;
+  audioUrl?: string;
+  mediaUrl?: string;
   comments: Comment[];
 }
 

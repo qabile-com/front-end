@@ -1,8 +1,9 @@
 import type { ISessionRepository, SessionDetail } from '../../domain/session-repository';
 import { getCourseSection } from '@/core/api/courses.api';
+import { normalizeCoursePartDto, type CoursePartMediaDto } from '../normalize-course-part-dto';
 
 type SessionDetailDto = Omit<SessionDetail, 'part'> & {
-  episode: SessionDetail['part'] & {
+  episode: CoursePartMediaDto & {
     previousId?: string | null;
     prevSectionId?: string | null;
     previousEpisodeId?: string | null;
@@ -18,7 +19,7 @@ export class HttpSessionRepository implements ISessionRepository {
     return {
       ...data,
       part: {
-        ...data.episode,
+        ...normalizeCoursePartDto(data.episode),
         courseId,
         previousSectionId:
           data.episode.previousSectionId ??

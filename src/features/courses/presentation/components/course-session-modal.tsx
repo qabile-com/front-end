@@ -1,8 +1,6 @@
-// src/features/dashboard/presentation/components/course-session-modal.tsx
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useScrollLock } from '@/shared/hooks/use-scroll-lock';
+import { BaseModal } from '@/shared/ui';
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
 import type { SectionWatchProgressInput } from '@/features/dashboard/domain/dashboard.types';
 import type { PaginatedComments } from '../../domain/comments-repository';
@@ -14,6 +12,7 @@ interface Props {
   onClose: () => void;
   session: CoursePart;
   videoUrl?: string;
+  audioUrl?: string;
   commentsQuery: UseInfiniteQueryResult<InfiniteData<PaginatedComments>>;
   onNextSession: () => void;
   onWatchProgress: (body: SectionWatchProgressInput) => void;
@@ -30,24 +29,28 @@ export function CourseSessionModal({
   onWatchProgress,
   commentsQuery,
   videoUrl,
+  audioUrl,
   userName,
   onAddComment,
   isAddingComment = false,
 }: Props) {
-  useScrollLock(!!isOpen);
-
-  if (!isOpen) return null;
-
   const handleClose = () => {
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="md:border-hair flex max-h-full w-full max-w-4xl flex-col overflow-hidden bg-[var(--color-panel)] md:max-h-[90vh] md:rounded-2xl md:border">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={session.title}
+      zIndexClassName="z-999"
+      className="bg-black/80 p-0 md:p-4"
+      panelClassName="md:border-hair flex max-h-full w-full max-w-4xl flex-col overflow-hidden bg-[var(--color-panel)] md:max-h-[90dvh] md:rounded-2xl md:border"
+    >
         <SessionContent
           session={session}
           videoUrl={videoUrl}
+          audioUrl={audioUrl}
           commentsQuery={commentsQuery}
           onNextSession={onNextSession}
           onWatchProgress={onWatchProgress}
@@ -56,8 +59,7 @@ export function CourseSessionModal({
           isAddingComment={isAddingComment}
           onBack={handleClose}
         />
-      </div>
-    </div>
+    </BaseModal>
   );
 }
 

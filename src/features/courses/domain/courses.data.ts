@@ -1,4 +1,5 @@
 export type PartStatus = 'done' | 'partial' | 'none';
+export type CoursePartMediaType = 'video' | 'audio';
 
 export interface CoursePart {
   id: string;
@@ -7,7 +8,10 @@ export interface CoursePart {
   previousEpisodeId?: string | null;
   nextSectionId?: string | null;
   nextEpisodeId?: string | null;
+  mediaType?: CoursePartMediaType;
+  mediaUrl?: string | null;
   videoUrl?: string | null;
+  audioUrl?: string | null;
   coverUrl?: string | null;
   duration?: string;
   title: string;
@@ -143,7 +147,14 @@ const RAW_COURSES: Course[] = [
     views: '۱،۹۸۰',
     xp: 280,
     episodes: [
-      { id: 'c6-s1', title: 'استراتژی محتوا', duration: '۱۰:۰۰', status: 'none' },
+      {
+        id: 'c6-s1',
+        title: 'استراتژی محتوا',
+        duration: '۱۰:۰۰',
+        status: 'none',
+        mediaType: 'audio',
+        audioUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3',
+      },
       { id: 'c6-s2', title: 'ساختار پست جذاب', duration: '۸:۰۰', status: 'none' },
       { id: 'c6-s3', title: 'نگارش تخصصی', duration: '۹:۳۰', status: 'none' },
       { id: 'c6-s4', title: 'ویرایش و بهینه‌سازی', duration: '۷:۰۰', status: 'none' },
@@ -154,14 +165,21 @@ const RAW_COURSES: Course[] = [
 export function withCourseSectionNavigation(course: Course): Course {
   return {
     ...course,
-    episodes: course.episodes.map((part, index, parts) => ({
-      ...part,
-      courseId: part.courseId ?? course.id,
-      xp: part.xp ?? Math.round(course.xp / Math.max(1, parts.length)),
-      durationSeconds: part.durationSeconds ?? parseDurationToSeconds(part.duration),
-      previousSectionId: part.previousSectionId ?? parts[index - 1]?.id ?? null,
-      nextSectionId: part.nextSectionId ?? parts[index + 1]?.id ?? null,
-    })),
+    episodes: course.episodes.map((part, index, parts) => {
+      const mediaType = normalizeCoursePartMediaType(part);
+
+      return {
+        ...part,
+        courseId: part.courseId ?? course.id,
+        xp: part.xp ?? Math.round(course.xp / Math.max(1, parts.length)),
+        durationSeconds: part.durationSeconds ?? parseDurationToSeconds(part.duration),
+        previousSectionId: part.previousSectionId ?? parts[index - 1]?.id ?? null,
+        nextSectionId: part.nextSectionId ?? parts[index + 1]?.id ?? null,
+        mediaType,
+        videoUrl: part.videoUrl ?? (mediaType === 'video' ? part.mediaUrl : null),
+        audioUrl: part.audioUrl ?? (mediaType === 'audio' ? part.mediaUrl : null),
+      };
+    }),
   };
 }
 
@@ -174,4 +192,9 @@ function parseDurationToSeconds(duration: string) {
   if (parts.length === 2) return parts[0]! * 60 + parts[1]!;
   if (parts.length === 3) return parts[0]! * 3600 + parts[1]! * 60 + parts[2]!;
   return undefined;
+}
+
+function normalizeCoursePartMediaType(part: CoursePart): CoursePartMediaType {
+  if (part.mediaType === 'audio' || part.audioUrl) return 'audio';
+  return 'video';
 }

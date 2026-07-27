@@ -1,20 +1,37 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { cn } from '@/core/lib/cn';
-import { Button, Icon, InlineSkeleton, Input, Skeleton } from '@/shared/ui';
-import type { CoursePart } from '../../domain/courses.data';
+import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
-import type { PaginatedComments } from '../../domain/comments-repository';
-import type { SectionWatchProgressInput, SectionWatchEvent } from '@/features/dashboard/domain/dashboard.types';
-import { toPersianDigits } from '@/core/lib/persian';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { cn } from '@/core/lib/cn';
 import { formatDuration } from '@/core/lib/format-duration';
+import { toPersianDigits } from '@/core/lib/persian';
+import { showError, showSuccess } from '@/shared/lib/toast';
+import {
+  Button,
+  Icon,
+  InlineSkeleton,
+  Input,
+  OptionalImage,
+  Skeleton,
+  type IconName,
+} from '@/shared/ui';
+import type {
+  SectionWatchEvent,
+  SectionWatchProgressInput,
+} from '@/features/dashboard/domain/dashboard.types';
+import type { Comment, PaginatedComments } from '../../domain/comments-repository';
+import type { Course, CoursePart } from '../../domain/courses.data';
 
 interface SessionContentProps {
   session: CoursePart;
+  course?: Course;
+  currentSectionId?: string;
   videoUrl?: string;
+  audioUrl?: string;
   commentsQuery: UseInfiniteQueryResult<InfiniteData<PaginatedComments>>;
   onNextSession: () => void;
+  onNavigateSection?: (sectionId: string) => void;
   onWatchProgress: (body: SectionWatchProgressInput) => void;
   onAddComment: (text: string) => void;
   onBack: () => void;
@@ -22,9 +39,20 @@ interface SessionContentProps {
   userName?: string;
 }
 
+type SessionTab = 'sections' | 'about' | 'comments';
+
+const SESSION_TABS: Array<{ id: SessionTab; label: string }> = [
+  { id: 'sections', label: 'فصل‌ها' },
+  { id: 'about', label: 'درباره دوره' },
+  { id: 'comments', label: 'نظرات' },
+];
+
 export function SessionContent({
   session,
+  course,
+  currentSectionId,
   onNextSession,
+  onNavigateSection,
   onWatchProgress,
   commentsQuery,
   videoUrl,
@@ -33,6 +61,7 @@ export function SessionContent({
   onBack,
   isAddingComment = false,
 }: SessionContentProps) {
+  const shouldReduceMotion = useReducedMotion();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const watchedRangesRef = useRef<{ start: number; end: number }[]>([]);
   const lastTimeRef = useRef(0);
@@ -43,6 +72,19 @@ export function SessionContent({
   const [watchProgressBySession, setWatchProgressBySession] = useState<Record<string, number>>({});
   const [commentText, setCommentText] = useState('');
   const [showVideo, setShowVideo] = useState(false);
+  const [activeTab, setActiveTab] = useState<SessionTab>('about');
+  const displayCourse: Course = course ?? {
+    id: session.courseId ?? 'current-course',
+    title: 'دوره آموزشی',
+    category: 'آموزش',
+    views: typeof session.views === 'number' ? `${toPersianDigits(session.views)} نفر` : '—',
+    imageUrl: session.coverUrl,
+    duration: formatDurationFa(session.durationSeconds ?? session.duration ?? 0),
+    xp: session.xp ?? 0,
+    episodes: [session],
+  };
+  const selectedSectionId = currentSectionId ?? session.id;
+  const handleNavigateSection = onNavigateSection ?? (() => undefined);
 
   useEffect(() => {
     reportProgressRef.current = onWatchProgress;
@@ -57,7 +99,7 @@ export function SessionContent({
       if (!duration) return null;
 
       return {
-        courseId: session.courseId ?? '',
+        courseId: session.courseId ?? displayCourse.id,
         currentTime: Math.floor(video?.currentTime ?? maxWatchedTimeRef.current),
         duration,
         maxWatchedTime: Math.floor(maxWatchedTimeRef.current),
@@ -68,7 +110,7 @@ export function SessionContent({
         event,
       };
     },
-    [session.courseId, session.durationSeconds],
+    [displayCourse.id, session.courseId, session.durationSeconds],
   );
 
   const reportWatchProgress = useCallback(
@@ -110,9 +152,12 @@ export function SessionContent({
 
     const watchedSeconds = calculateWatchedSeconds(watchedRangesRef.current);
     const progress = Math.min(100, Math.floor((watchedSeconds / video.duration) * 100));
-    setWatchProgressBySession((previous) => {
-      if (previous[session.id] === progress) return previous;
-      return { ...previous, [session.id]: Math.max(previous[session.id] ?? 0, progress) };
+    setWatchProgressBySession((previousProgress) => {
+      if (previousProgress[session.id] === progress) return previousProgress;
+      return {
+        ...previousProgress,
+        [session.id]: Math.max(previousProgress[session.id] ?? 0, progress),
+      };
     });
 
     if (progress >= 80 && !thresholdReportedRef.current) {
@@ -135,207 +180,687 @@ export function SessionContent({
   useEffect(() => {
     return () => {
       const payload = buildWatchPayload('close');
-      if (payload) {
-        reportProgressRef.current(payload);
-      }
+      if (payload) reportProgressRef.current(payload);
     };
   }, [buildWatchPayload]);
 
   const handleSubmitComment = useCallback(() => {
-    if (commentText.trim()) {
-      onAddComment(commentText.trim());
-      setCommentText('');
-    }
+    if (!commentText.trim()) return;
+    onAddComment(commentText.trim());
+    setCommentText('');
   }, [commentText, onAddComment]);
 
   const handleClose = useCallback(() => {
     const payload = buildWatchPayload('close');
-    if (payload) {
-      reportProgressRef.current(payload);
-    }
+    if (payload) reportProgressRef.current(payload);
     onBack();
   }, [buildWatchPayload, onBack]);
 
+  const handleShare = useCallback(async () => {
+    const url = window.location.href;
+    const title = session.title;
+    const text = `جلسه «${session.title}» از دوره «${displayCourse.title}»`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text, url });
+        return;
+      }
+
+      await navigator.clipboard.writeText(url);
+      showSuccess('لینک جلسه کپی شد');
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      showError('اشتراک‌گذاری انجام نشد');
+    }
+  }, [displayCourse.title, session.title]);
+
   const allComments = commentsQuery.data?.pages.flatMap((page) => page.comments) ?? [];
+  const currentIndex = Math.max(
+    0,
+    displayCourse.episodes.findIndex((part) => part.id === selectedSectionId),
+  );
+  const courseDurationSeconds = displayCourse.episodes.reduce(
+    (sum, part) => sum + (part.durationSeconds ?? 0),
+    0,
+  );
+  const hasNext = Boolean(session.nextSectionId || session.nextEpisodeId);
+  const sessionXp =
+    session.xp ?? Math.round((displayCourse.xp ?? 0) / Math.max(1, displayCourse.episodes.length));
 
   return (
-    <div className="flex min-h-full flex-col">
-      {/* Video player */}
-      <div className="relative aspect-video max-h-[70vh] w-full bg-black">
-        {videoUrl ? (
-          !showVideo ? (
-            <>
-              {session.coverUrl ? (
-                <img
-                  src={session.coverUrl}
-                  alt={session.title}
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <button
-                className="bg-ember hover:bg-ember-deep absolute inset-0 z-10 m-auto flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-110"
-                onClick={() => setShowVideo(true)}
-                aria-label="پخش ویدیو"
-              >
-                <Icon name="play" size={22} className="text-white" />
-              </button>
-            </>
-          ) : (
-            <video
-              ref={videoRef}
-              src={videoUrl}
-              controls
-              autoPlay
-              className="absolute inset-0 h-full w-full object-cover"
-              onLoadedMetadata={() => {
-                lastTimeRef.current = videoRef.current?.currentTime ?? 0;
-              }}
-              onTimeUpdate={rememberWatchedTime}
-              onPause={() => reportWatchProgress('pause', true)}
-              onEnded={() => reportWatchProgress('ended', true)}
-              onSeeking={() => {
-                lastTimeRef.current = videoRef.current?.currentTime ?? 0;
-              }}
-              onSeeked={() => {
-                lastTimeRef.current = videoRef.current?.currentTime ?? 0;
-              }}
-            />
-          )
-        ) : (
-          <div className="text-ink-3 absolute inset-0 flex items-center justify-center">
-            <Icon name="play" size={40} className="opacity-30" />
-          </div>
-        )}
+    <motion.div
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+      animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+      className="mx-auto flex min-h-full w-full min-w-0 max-w-[920px] flex-col overflow-x-clip pb-28 md:pb-0"
+    >
+      <section className="min-w-0 max-w-full overflow-hidden rounded-[28px] border border-[var(--session-border)] bg-[var(--session-surface)] shadow-[0_30px_90px_-50px_var(--glow)] lg:rounded-[32px]">
+        <div className="relative aspect-video min-h-[190px] overflow-hidden bg-black sm:min-h-0">
+          <VideoOrCover
+            session={session}
+            videoUrl={videoUrl}
+            showVideo={showVideo}
+            setShowVideo={setShowVideo}
+            videoRef={videoRef}
+            rememberWatchedTime={rememberWatchedTime}
+            reportWatchProgress={reportWatchProgress}
+            syncLastTime={() => {
+              lastTimeRef.current = videoRef.current?.currentTime ?? 0;
+            }}
+          />
 
-        <span className="absolute right-4 bottom-4 z-20 rounded-full bg-black/60 px-3 py-1 text-xs text-white/80">
-          {formatDuration(session.durationSeconds!)}
-        </span>
-      </div>
+          {!showVideo && (
+            <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between p-4 sm:p-6">
+              <IconButton label="بازگشت" onClick={handleClose} icon="arrow-right" />
+              <IconButton label="اشتراک‌گذاری" onClick={() => void handleShare()} icon="share" />
+            </div>
+          )}
 
-      {/* Info bar */}
-      <div className="border-hair flex items-center justify-between border-b px-4 py-3 md:px-6">
-        <div className="text-ink-3 flex items-center gap-2 text-sm">
-          <button
-            onClick={handleClose}
-            className="text-gold hover:text-ember flex items-center gap-2 transition-colors"
-          >
-            <Icon name="arrow-right" size={20} className="transition-transform group-hover:-translate-x-1" />
-            بازگشت
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onNextSession}
-            disabled={!session.nextEpisodeId}
-            className="bg-ember hover:bg-ember-deep flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-45"
-          >
-            ویدیو بعدی
-            <Icon name="arrow-left" size={16} />
-          </button>
-        </div>
-      </div>
-      <h2 className="p-3 pr-4 text-lg font-bold md:p-4 md:pr-6">{session.title}</h2>
-
-      {/* Exercise Steps */}
-      {session.steps && session.steps.length > 0 && (
-        <div className="space-y-3 px-4 pb-0 md:px-6">
-          <h3 className="text-ink-2 mb-2 font-bold">مراحل تمرین:</h3>
-          {session.steps.map((step) => (
-            <label
-              key={step.id}
-              className="group flex cursor-pointer items-start gap-3 rounded-lg bg-[var(--glass-2)] p-3 transition-colors hover:bg-[var(--glass-3)]"
+          {!showVideo && (
+            <button
+              type="button"
+              className="focus:ring-gold absolute inset-0 z-20 m-auto grid size-17 place-items-center rounded-full border border-[rgba(243,186,99,.45)] text-black shadow-[0_18px_42px_-16px_var(--glow)] transition-transform duration-250 [background:var(--session-primary)] hover:scale-105 focus:ring-2 focus:outline-none active:scale-95"
+              onClick={() => setShowVideo(true)}
+              aria-label="پخش ویدیو"
             >
-              <div
+              <Icon name="play" size={24} />
+            </button>
+          )}
+        </div>
+
+        <motion.div
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+          animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, delay: 0.06 }}
+          className="border-t border-[var(--session-border)] bg-[linear-gradient(180deg,rgba(255,98,0,.08),rgba(0,0,0,.16))] p-5 sm:p-7 lg:p-8"
+        >
+          {showVideo && (
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <IconTextButton label="بازگشت" onClick={handleClose} icon="arrow-right" />
+              <IconTextButton label="اشتراک‌گذاری" onClick={() => void handleShare()} icon="share" />
+            </div>
+          )}
+          <div className="flex min-w-0 flex-col gap-5">
+            <div className="min-w-0">
+              <h1 className="text-ink max-w-2xl text-[25px] leading-[1.35] font-black sm:text-3xl">
+                {session.title}
+              </h1>
+              <p className="text-ink-2 mt-3 max-w-2xl text-[13.5px] leading-7 sm:text-sm">
+                این جلسه بخشی از مسیر «{displayCourse.title}» است. ویدیو را کامل ببین، نکات مهم را
+                مرور کن و با ادامه دادن مسیر، پیشرفتت را ثبت کن.
+              </p>
+            </div>
+            <div className="hidden md:flex md:justify-start">
+              <ContinueButton hasNext={hasNext} onNextSession={onNextSession} variant="desktop" />
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] border-y border-[var(--session-border)] bg-black/35 sm:grid-cols-4">
+          <SessionStat
+            label="زمان دوره"
+            value={formatDurationFa(session.durationSeconds ?? 0)}
+            icon="clock"
+          />
+          <SessionStat
+            label={`بخش ${toPersianDigits(currentIndex + 1)} از ${toPersianDigits(displayCourse.episodes.length)}`}
+            value={session.status === 'done' ? 'تکمیل شده' : 'سطح متوسط'}
+            icon="book"
+          />
+          <SessionStat label="آتش" value={`+${toPersianDigits(sessionXp)} آتش`} icon="flame" />
+          <SessionStat
+            label="دانشجویان دوره"
+            value={
+              typeof session.views === 'number'
+                ? `${toPersianDigits(session.views)} نفر`
+                : displayCourse.views
+            }
+            icon="users"
+          />
+        </div>
+
+        <SessionProgressCard progress={watchProgress} status={session.status} />
+
+        <div className="px-4 pt-4 sm:px-6">
+          <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] border-b border-[var(--session-border)] min-[1440px]:grid-cols-2">
+            {SESSION_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-colors',
-                  step.isCompleted
-                    ? 'border-ember bg-ember text-white'
-                    : 'border-hair group-hover:border-ink-4 text-transparent',
+                  'relative min-h-12 px-2 text-sm font-black transition-colors',
+                  tab.id === 'sections' && 'min-[1440px]:hidden',
+                  activeTab === tab.id ? 'text-gold' : 'text-ink-3 hover:text-ink-2',
                 )}
               >
-                {step.isCompleted && <Icon name="check" size={16} />}
-              </div>
-              <span className="text-ink-2 text-right text-sm leading-relaxed">{step.text}</span>
-            </label>
+                {tab.label}
+                {activeTab === tab.id && (
+                  <span className="bg-gold absolute inset-x-3 bottom-0 h-[2px] rounded-full shadow-[0_0_18px_var(--glow)]" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-6">
+          <AnimatePresence mode="wait">
+            {activeTab === 'sections' && (
+              <AnimatedPanel key="sections">
+                <div className="min-[1440px]:hidden">
+                  <SectionsPanel
+                    course={displayCourse}
+                    currentSectionId={selectedSectionId}
+                    onNavigateSection={handleNavigateSection}
+                  />
+                </div>
+                <div className="hidden min-[1440px]:block">
+                  <AboutPanel
+                    course={displayCourse}
+                    session={session}
+                    courseDurationSeconds={courseDurationSeconds}
+                  />
+                </div>
+              </AnimatedPanel>
+            )}
+            {activeTab === 'about' && (
+              <AnimatedPanel key="about">
+                <AboutPanel
+                  course={displayCourse}
+                  session={session}
+                  courseDurationSeconds={courseDurationSeconds}
+                />
+              </AnimatedPanel>
+            )}
+            {activeTab === 'comments' && (
+              <AnimatedPanel key="comments">
+                <CommentsPanel
+                  allComments={allComments}
+                  commentsQuery={commentsQuery}
+                  commentText={commentText}
+                  setCommentText={setCommentText}
+                  handleSubmitComment={handleSubmitComment}
+                  isAddingComment={isAddingComment}
+                  userName={userName}
+                />
+              </AnimatedPanel>
+            )}
+          </AnimatePresence>
+        </div>
+      </section>
+
+      <div className="fixed inset-x-0 bottom-0 z-80 border-t border-[var(--session-border)] bg-[#070302]/95 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] backdrop-blur-xl md:hidden">
+        <div className="mx-auto flex max-w-[920px] min-w-0 items-center gap-3">
+          <ContinueButton hasNext={hasNext} onNextSession={onNextSession} />
+          <button
+            type="button"
+            className="text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)]"
+            aria-label="ذخیره جلسه"
+          >
+            <Icon name="book" size={22} />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function VideoOrCover({
+  session,
+  videoUrl,
+  showVideo,
+  setShowVideo,
+  videoRef,
+  rememberWatchedTime,
+  reportWatchProgress,
+  syncLastTime,
+}: {
+  session: CoursePart;
+  videoUrl?: string;
+  showVideo: boolean;
+  setShowVideo: (value: boolean) => void;
+  videoRef: RefObject<HTMLVideoElement | null>;
+  rememberWatchedTime: () => void;
+  reportWatchProgress: (event: SectionWatchEvent, force?: boolean) => void;
+  syncLastTime: () => void;
+}) {
+  if (videoUrl && showVideo) {
+    return (
+      <video
+        ref={videoRef}
+        src={videoUrl}
+        controls
+        autoPlay
+        className="absolute inset-0 h-full w-full bg-black object-contain"
+        onLoadedMetadata={syncLastTime}
+        onTimeUpdate={rememberWatchedTime}
+        onPause={() => reportWatchProgress('pause', true)}
+        onEnded={() => reportWatchProgress('ended', true)}
+        onSeeking={syncLastTime}
+        onSeeked={syncLastTime}
+      />
+    );
+  }
+
+  return (
+    <>
+      {session.coverUrl ? (
+        <img
+          src={session.coverUrl}
+          alt={session.title}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,98,0,.42),transparent_38%),linear-gradient(135deg,#210904,#070302_58%,#000)]" />
+      )}
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.18)_0%,rgba(0,0,0,.42)_44%,rgba(0,0,0,.94)_100%)]" />
+      <div className="absolute inset-x-0 top-0 h-32 bg-[radial-gradient(ellipse_at_top,rgba(255,98,0,.35),transparent_65%)]" />
+      {!videoUrl && (
+        <button
+          type="button"
+          onClick={() => setShowVideo(false)}
+          className="text-gold absolute inset-0 m-auto grid size-16 place-items-center rounded-full border border-[rgba(243,186,99,.35)] bg-black/55"
+          aria-label="ویدیویی برای این جلسه ثبت نشده است"
+        >
+          <Icon name="play" size={24} />
+        </button>
+      )}
+    </>
+  );
+}
+
+function AnimatedPanel({ children }: { children: ReactNode }) {
+  const shouldReduceMotion = useReducedMotion();
+
+  return (
+    <motion.div
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
+      animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+      exit={shouldReduceMotion ? undefined : { opacity: 0, y: -8 }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function IconButton({
+  label,
+  icon,
+  onClick,
+}: {
+  label: string;
+  icon: 'arrow-right' | 'share';
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className="text-ink hover:text-gold grid size-11 place-items-center rounded-full border border-white/10 bg-black/35 backdrop-blur-md transition-colors hover:border-[var(--session-border-strong)]"
+    >
+      <Icon name={icon} size={20} />
+    </button>
+  );
+}
+
+function IconTextButton({
+  label,
+  icon,
+  onClick,
+}: {
+  label: string;
+  icon: 'arrow-right' | 'share';
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="text-ink-2 hover:text-gold flex min-h-11 items-center gap-2 rounded-[12px] border border-[var(--session-border)] bg-[var(--session-surface-2)] px-3 text-sm font-black transition-colors hover:border-[var(--session-border-strong)]"
+    >
+      <Icon name={icon} size={17} />
+      {label}
+    </button>
+  );
+}
+
+function ContinueButton({
+  hasNext,
+  onNextSession,
+  variant = 'mobile',
+}: {
+  hasNext: boolean;
+  onNextSession: () => void;
+  variant?: 'mobile' | 'desktop';
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onNextSession}
+      disabled={!hasNext}
+      className={cn(
+        'flex min-h-13 items-center justify-center gap-3 rounded-[14px] px-5 text-[15px] font-black text-black shadow-[0_18px_42px_-18px_var(--glow)] transition-transform duration-250 [background:var(--session-primary)] hover:-translate-y-0.5 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-45',
+        variant === 'desktop' ? 'min-w-56' : 'flex-1',
+      )}
+    >
+      ادامه آموزش
+      <Icon name="arrow-left" size={18} />
+    </button>
+  );
+}
+
+function SessionProgressCard({
+  progress,
+  status,
+}: {
+  progress: number;
+  status: CoursePart['status'];
+}) {
+  const normalizedProgress = Math.min(100, Math.max(0, progress));
+
+  return (
+    <div className="border-b border-[var(--session-border)] bg-black/24 px-4 py-4 sm:px-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-ink text-sm font-black">پیشرفت جلسه</p>
+          <p className="text-ink-3 mt-1 text-xs">
+            {status === 'done' ? 'این جلسه کامل شده است.' : 'با دیدن حداقل ۸۰٪ جلسه، پیشرفتت ثبت می‌شود.'}
+          </p>
+        </div>
+        <span className="text-gold text-lg font-black tabular-nums">
+          {toPersianDigits(normalizedProgress)}٪
+        </span>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/55">
+        <motion.span
+          initial={{ width: 0 }}
+          animate={{ width: `${normalizedProgress}%` }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          className="block h-full rounded-full shadow-[0_0_18px_var(--glow)] [background:var(--session-primary)]"
+        />
+      </div>
+    </div>
+  );
+}
+
+function SessionStat({ label, value, icon }: { label: string; value: string; icon: IconName }) {
+  return (
+    <div className="min-w-0 border-s border-[var(--session-border)] px-2 py-4 text-center first:border-s-0 sm:px-4">
+      <div className="text-ink flex min-w-0 items-center justify-center gap-1.5 text-[13px] font-black sm:text-lg">
+        {icon === 'flame' ? (
+          <span className="relative size-5 shrink-0">
+            <OptionalImage src="/assets/phoenix_badge.webp" alt="" className="object-contain" />
+          </span>
+        ) : (
+          <Icon name={icon} size={18} className="text-ember" />
+        )}
+        <span className="min-w-0 truncate">{value}</span>
+      </div>
+      <p className="text-ink-3 mt-1 truncate text-[11px] font-bold sm:text-xs">{label}</p>
+    </div>
+  );
+}
+
+function SectionsPanel({
+  course,
+  currentSectionId,
+  onNavigateSection,
+}: {
+  course: Course;
+  currentSectionId: string;
+  onNavigateSection: (sectionId: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      {course.episodes.map((part, index) => (
+        <SectionRow
+          key={part.id}
+          part={part}
+          index={index}
+          isActive={part.id === currentSectionId}
+          onClick={() => part.id !== currentSectionId && onNavigateSection(part.id)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function SectionRow({
+  part,
+  index,
+  isActive,
+  onClick,
+}: {
+  part: CoursePart;
+  index: number;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  const isDone = part.status === 'done';
+  const isLocked = false;
+  const duration = formatDurationFa(part.durationSeconds ?? 0);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={isLocked}
+      className={cn(
+        'flex min-h-15 w-full items-center gap-3 rounded-[14px] border px-3 py-3 text-right transition-[border-color,background,transform] disabled:cursor-not-allowed',
+        isActive
+          ? 'text-gold border-[var(--session-border-strong)] bg-[var(--session-active)] shadow-[0_14px_34px_-26px_var(--glow)]'
+          : 'text-ink-2 border-[var(--session-border)] bg-[var(--session-surface-2)] hover:border-[var(--session-border-strong)] hover:bg-[var(--session-surface-3)]',
+        isLocked && 'opacity-55',
+      )}
+    >
+      <span
+        className={cn(
+          'grid size-8 shrink-0 place-items-center rounded-full border text-xs font-black',
+          isDone
+            ? 'border-success bg-success/15 text-success'
+            : isActive
+              ? 'border-gold text-gold bg-black/25'
+              : 'text-ink-3 border-[var(--session-border)]',
+        )}
+      >
+        {isDone ? (
+          <Icon name="check" size={15} />
+        ) : isLocked ? (
+          <Icon name="lock" size={14} />
+        ) : (
+          toPersianDigits(index + 1)
+        )}
+      </span>
+      <div className="min-w-0 flex-1">
+        <b className="block truncate text-[13px] font-black sm:text-sm">{part.title}</b>
+        <span className="text-ink-3 mt-1 flex items-center gap-1 text-[12px]">
+          <Icon name="clock" size={13} />
+          {duration}
+        </span>
+      </div>
+      <span className="text-gold text-sm font-black">{duration}</span>
+      <Icon
+        name={isActive ? 'play' : 'arrow-left'}
+        size={16}
+        className={cn('shrink-0', isActive ? 'text-ember' : 'text-gold')}
+      />
+    </button>
+  );
+}
+
+function AboutPanel({
+  course,
+  session,
+  courseDurationSeconds,
+}: {
+  course: Course;
+  session: CoursePart;
+  courseDurationSeconds: number;
+}) {
+  return (
+    <div className="text-ink-2 space-y-4 text-sm leading-8">
+      <div className="rounded-[18px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-4">
+        <h2 className="text-ink text-base font-black">{course.title}</h2>
+        <p className="mt-2">
+          در این بخش روی موضوع «{session.title}» تمرکز می‌کنی. هدف این جلسه این است که با دیدن و
+          تمرین کردن، مسیر دوره را مرحله‌به‌مرحله جلو ببری.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3">
+        <MiniInfo label="کل دوره" value={formatDurationFa(courseDurationSeconds)} />
+        <MiniInfo label="آتش کل دوره" value={`+${toPersianDigits(course.xp)} آتش`} />
+      </div>
+
+      {session.steps && session.steps.length > 0 && (
+        <div className="space-y-3 rounded-[18px] border border-[var(--session-border)] bg-black/20 p-4">
+          <h3 className="text-ink font-black">تمرین‌های این جلسه</h3>
+          {session.steps.map((step) => (
+            <div key={step.id} className="flex items-start gap-3">
+              <span
+                className={cn(
+                  'mt-1 grid size-6 shrink-0 place-items-center rounded-md border',
+                  step.isCompleted
+                    ? 'border-success bg-success/15 text-success'
+                    : 'text-ink-4 border-[var(--session-border)]',
+                )}
+              >
+                {step.isCompleted && <Icon name="check" size={14} />}
+              </span>
+              <p>{step.text}</p>
+            </div>
           ))}
         </div>
       )}
-      <div className="text-ink-3 flex items-center gap-6 px-4 py-4 text-sm md:px-6">
-        <span className="flex items-center gap-2">
-          <Icon name="clock" size={16} />
-          {formatDuration(session.durationSeconds!)}
-        </span>
-        <span className="flex items-center gap-2">
-          <Icon name="eye" size={16} />
-          {session.views ?? 'بدون'} بازدید
-        </span>
+    </div>
+  );
+}
+
+function MiniInfo({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-4 text-center">
+      <b className="text-gold block truncate text-base font-black sm:text-lg">{value}</b>
+      <span className="text-ink-3 mt-1 block text-xs font-bold">{label}</span>
+    </div>
+  );
+}
+
+function CommentsPanel({
+  allComments,
+  commentsQuery,
+  commentText,
+  setCommentText,
+  handleSubmitComment,
+  isAddingComment,
+  userName,
+}: {
+  allComments: Comment[];
+  commentsQuery: UseInfiniteQueryResult<InfiniteData<PaginatedComments>>;
+  commentText: string;
+  setCommentText: (value: string) => void;
+  handleSubmitComment: () => void;
+  isAddingComment: boolean;
+  userName?: string;
+}) {
+  const commentsEndRef = useRef<HTMLDivElement | null>(null);
+  const shouldScrollAfterSubmitRef = useRef(false);
+
+  useEffect(() => {
+    if (!shouldScrollAfterSubmitRef.current || isAddingComment) return;
+
+    const scrollId = window.setTimeout(() => {
+      commentsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      shouldScrollAfterSubmitRef.current = false;
+    }, 80);
+
+    return () => window.clearTimeout(scrollId);
+  }, [allComments.length, isAddingComment]);
+
+  const submitAndFollowComment = () => {
+    shouldScrollAfterSubmitRef.current = true;
+    handleSubmitComment();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-ink-2 text-sm font-black">
+          نظرات کاربران ({toPersianDigits(allComments.length)})
+        </h3>
       </div>
 
-      {/* Comments Section */}
-      <div className="flex-1 px-4 pb-20 md:px-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-ink-2 text-sm font-bold">
-            نظرات کاربران ({allComments.length})
-          </h3>
-        </div>
-        <div className="space-y-4">
-          {commentsQuery.isLoading && <CommentsSkeleton />}
-          {commentsQuery.isError && <p className="text-danger text-sm">خطا در دریافت نظرات</p>}
-          {allComments.length === 0 ? (
-            <p className="text-ink-3 text-center text-sm">هنوز هیچ نظری ثبت نشده است.</p>
-          ) : (
-            allComments.map((c) => (
-              <div key={c.id} className="flex items-start gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-white">
-                  {(c.name?.[0] ?? '?')}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-ink text-sm font-bold">{c.name}</span>
-                    <span className="text-ink-4 text-xs">{c.time ?? c.createdAt ?? ''}</span>
-                  </div>
-                  <p className="text-ink-3 mt-1 text-sm">{c.text}</p>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-        {commentsQuery.hasNextPage && (
-          <button
-            onClick={() => commentsQuery.fetchNextPage()}
-            className="text-gold hover:text-ember mt-4 w-full text-center text-sm font-bold transition-colors"
-            disabled={commentsQuery.isFetchingNextPage}
-          >
-            {commentsQuery.isFetchingNextPage ? <InlineSkeleton className="mx-auto h-4 w-24" /> : 'نمایش بیشتر'}
-          </button>
+      <div className="space-y-4">
+        {commentsQuery.isLoading && <CommentsSkeleton />}
+        {commentsQuery.isError && <p className="text-danger text-sm">خطا در دریافت نظرات</p>}
+        {!commentsQuery.isLoading && allComments.length === 0 ? (
+          <p className="text-ink-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-5 text-center text-sm">
+            هنوز نظری برای این جلسه ثبت نشده است.
+          </p>
+        ) : (
+          allComments.map((comment) => <CommentItem key={comment.id} comment={comment} />)
         )}
+        <div ref={commentsEndRef} aria-hidden />
       </div>
 
-      {/* Fixed comment input footer */}
-      <div className="border-hair flex shrink-0 items-center gap-3 border-t bg-[var(--color-panel)] p-3 md:p-4">
-        <div className="bg-ember flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white">
-          {userName?.[0] ?? 'ک'}
+      {commentsQuery.hasNextPage && (
+        <button
+          type="button"
+          onClick={() => commentsQuery.fetchNextPage()}
+          className="text-gold hover:text-ember w-full text-center text-sm font-black transition-colors"
+          disabled={commentsQuery.isFetchingNextPage}
+        >
+          {commentsQuery.isFetchingNextPage ? (
+            <InlineSkeleton className="mx-auto h-4 w-24" />
+          ) : (
+            'نمایش بیشتر'
+          )}
+        </button>
+      )}
+
+      <div className="flex min-w-0 items-center gap-2 rounded-[18px] border border-[var(--session-border)] bg-black/25 p-2.5 sm:gap-3 sm:p-3">
+        <div className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] shadow-[0_8px_22px_-14px_var(--glow)] [background:var(--session-primary)]">
+          {userName?.[0] ?? 'ق'}
         </div>
         <Input
           placeholder="نظرت رو بنویس..."
           value={commentText}
-          onChange={(e) => setCommentText(e.target.value)}
-          className="flex-1"
-          onKeyDown={(e) => e.key === 'Enter' && handleSubmitComment()}
+          onChange={(event) => setCommentText(event.target.value)}
+          className="min-w-0 flex-1"
+          onKeyDown={(event) => event.key === 'Enter' && submitAndFollowComment()}
         />
         <Button
-          variant="secondary"
-          size="md"
-          onClick={handleSubmitComment}
+          type="button"
+          variant="primary"
+          size="sm"
+          onClick={submitAndFollowComment}
           disabled={!commentText.trim() || isAddingComment}
-          className="text-ember bg-ember rounded-sm"
+          className="min-h-11 shrink-0 px-3 sm:px-4"
         >
-          {isAddingComment ? 'ارسال...' : 'ارسال'}
+          {isAddingComment ? 'در حال انتشار...' : 'انتشار'}
+          <Icon name="send" size={15} />
         </Button>
+      </div>
+    </div>
+  );
+}
+
+function CommentItem({ comment }: { comment: Comment }) {
+  return (
+    <div className="flex items-start gap-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-3">
+      <div className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] [background:var(--session-primary)]">
+        {comment.name?.[0] ?? '?'}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-ink truncate text-sm font-black">{comment.name}</span>
+          <span className="text-ink-4 shrink-0 text-xs">
+            {comment.time ?? comment.createdAt ?? ''}
+          </span>
+        </div>
+        <p className="text-ink-3 mt-1 text-sm leading-7">{comment.text}</p>
       </div>
     </div>
   );

@@ -22,7 +22,7 @@ export function CoursesTab({ courses }: CoursesTabProps) {
         <p className="text-ink-2 text-sm">آموزش‌های ویدیویی تخصصی قبیله ققنوس</p>
       </div>
 
-      <MotionList className="grid grid-cols-1 gap-5 sm:grid-cols-2 min-[1500px]:grid-cols-3">
+      <MotionList className="grid grid-cols-1 gap-5 min-[1500px]:grid-cols-3 sm:grid-cols-2">
         {courses.map((course) => {
           const done = course.episodes.filter((p) => p.status === 'done').length;
           const pct = Math.round((done / course.episodes.length) * 100);
@@ -37,7 +37,7 @@ export function CoursesTab({ courses }: CoursesTabProps) {
                   className={cn(
                     'flex h-full w-full min-w-0 flex-col overflow-hidden rounded-[18px] border text-start transition-[transform,border-color,box-shadow] duration-300 [background:var(--glass)] hover:-translate-y-1 hover:shadow-[0_18px_42px_-30px_var(--glow)]',
                     'border-hair hover:border-hair-2',
-                )}
+                  )}
                 >
                   <div
                     className="relative aspect-video w-full max-w-full shrink-0 overflow-hidden"
@@ -70,8 +70,14 @@ export function CoursesTab({ courses }: CoursesTabProps) {
                           <Icon name="eye" size={12} />
                         </span>
                         <span className="text-gold flex items-center gap-1">
-                          <div className="size-3.5 rounded-full [background:var(--fire-grad)]" />
-                          {toPersianDigits(course.xp)}+
+                          <span className="relative size-5 shrink-0">
+                            <OptionalImage
+                              src="/assets/phoenix_badge.webp"
+                              alt=""
+                              className="object-contain"
+                            />
+                          </span>
+                          +{toPersianDigits(course.xp)} آتش
                         </span>
                       </div>
                       <div className="mt-3 h-0.75 justify-items-end overflow-hidden rounded-full [background:var(--color-hair)]">

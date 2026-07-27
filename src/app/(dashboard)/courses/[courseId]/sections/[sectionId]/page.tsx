@@ -1,17 +1,21 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { SessionContent } from '@/features/courses/presentation/components/session-content';
 import { useSessionDetail } from '@/features/courses/application/use-session-detail';
 import { useSessionComments } from '@/features/courses/application/use-session-comments';
 import { useAddSessionComment } from '@/features/courses/application/use-session-comments';
 import { useReportSectionWatchProgress } from '@/features/courses/application/use-courses';
 import { useCourses } from '@/features/courses/application/use-courses';
-import { sessionRepo, commentsRepo, coursesRepo } from '@/features/courses/infrastructure/repository-factory';
+import {
+  sessionRepo,
+  commentsRepo,
+  coursesRepo,
+} from '@/features/courses/infrastructure/repository-factory';
 import type { Course, CoursePart } from '@/features/courses/domain/courses.data';
 import { toPersianDigits } from '@/core/lib/persian';
-import { ErrorState, Icon, SessionSkeleton } from '@/shared/ui';
+import { ErrorState, Icon, OptionalImage, SessionSkeleton } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { formatDurationFa } from '@/features/courses/presentation/components/course-session-modal';
 import type { SectionWatchProgressInput } from '@/features/dashboard/domain/dashboard.types';
@@ -21,8 +25,12 @@ import type { PaginatedComments } from '@/features/courses/domain/comments-repos
 export default function SessionPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const courseId = params.courseId as string;
   const sectionId = params.sectionId as string;
+  const source = searchParams.get('from');
+  const returnHref = source === 'home' ? '/home' : '/courses';
+  const sourceQuery = source === 'home' ? '?from=home' : '';
 
   const { data: courses, loading: coursesLoading } = useCourses(coursesRepo);
   const course = courses?.find((c) => c.id === courseId) ?? null;
@@ -59,8 +67,8 @@ export default function SessionPage() {
       session.nextSectionId ??
       course.episodes[course.episodes.findIndex((p) => p.id === sectionId) + 1]?.id;
     if (!nextSectionId) return;
-    router.push(`/courses/${courseId}/sections/${nextSectionId}`);
-  }, [course, router, courseId, sectionId, session]);
+    router.push(`/courses/${courseId}/sections/${nextSectionId}${sourceQuery}`);
+  }, [course, router, courseId, sectionId, session, sourceQuery]);
 
   if (coursesLoading || sessionFetching) {
     return <SessionSkeleton />;
@@ -73,7 +81,7 @@ export default function SessionPage() {
           compact
           title="کورس پیدا نشد"
           message="این کورس وجود ندارد یا دسترسی به آن برای حساب شما فعال نیست."
-          action={{ label: 'بازگشت به کورس‌ها', href: '/courses', icon: 'social' }}
+          action={{ label: 'بازگشت', href: returnHref, icon: 'social' }}
         />
       </div>
     );
@@ -95,37 +103,47 @@ export default function SessionPage() {
               : 'جلسه مورد نظر آماده نیست. دوباره تلاش کن یا به لیست کورس‌ها برگرد.'
           }
           action={{ label: 'تلاش دوباره', onClick: () => window.location.reload(), icon: 'bolt' }}
-          secondaryAction={{ label: 'کورس‌ها', href: '/courses', icon: 'social' }}
+          secondaryAction={{ label: 'بازگشت', href: returnHref, icon: 'social' }}
         />
       </div>
     );
   }
 
-  const videoUrl = session?.videoUrl ?? null;
+  const videoUrl = sessionDetail?.videoUrl ?? session?.videoUrl ?? null;
+  const audioUrl = sessionDetail?.audioUrl ?? sessionDetail?.mediaUrl ?? session?.audioUrl ?? null;
 
   return (
-    <div className="min-h-screen">
-      <div className="grid items-start gap-6 lg:grid-cols-[1fr_380px]">
-        <div>
+    <div className="min-h-screen max-w-full min-w-0 overflow-x-clip">
+      <div className="grid min-w-0 items-start gap-6 min-[1440px]:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="min-w-0">
           {session && (
             <SessionContent
+              key={session.id}
               session={session}
+              course={course}
+              currentSectionId={sectionId}
               videoUrl={videoUrl ?? undefined}
-              commentsQuery={commentsQuery as UseInfiniteQueryResult<InfiniteData<PaginatedComments>>}
+              audioUrl={audioUrl ?? undefined}
+              commentsQuery={
+                commentsQuery as UseInfiniteQueryResult<InfiniteData<PaginatedComments>>
+              }
               onNextSession={handleNextSession}
+              onNavigateSection={(id) =>
+                router.push(`/courses/${courseId}/sections/${id}${sourceQuery}`)
+              }
               onWatchProgress={handleWatchProgress}
               onAddComment={handleAddComment}
-              onBack={() => router.push('/courses')}
+              onBack={() => router.push(returnHref)}
               isAddingComment={addComment.isPending}
             />
           )}
         </div>
 
-        <div className="border-hair sticky top-22 hidden h-fit overflow-hidden rounded-[20px] border [background:var(--glass)] lg:block">
+        <div className="border-hair sticky hidden h-fit overflow-hidden rounded-[20px] border [background:var(--glass)] min-[1440px]:block">
           <CourseDetail
             course={course}
             currentSectionId={sectionId}
-            onNavigate={(id) => router.push(`/courses/${courseId}/sections/${id}`)}
+            onNavigate={(id) => router.push(`/courses/${courseId}/sections/${id}${sourceQuery}`)}
           />
         </div>
       </div>
@@ -151,7 +169,16 @@ function CourseDetail({
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <b className="text-gold text-[14px] font-extrabold">
-                +{toPersianDigits(course.xp)} آتش
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="relative size-5 shrink-0">
+                    <OptionalImage
+                      src="/assets/phoenix_badge.webp"
+                      alt=""
+                      className="object-contain"
+                    />
+                  </span>
+                  +{toPersianDigits(course.xp)} آتش
+                </span>
               </b>
             </div>
             <small className="text-ink-3 mt-1 block text-[12px]">
@@ -206,7 +233,9 @@ function PartRow({
       onClick={onClick}
       className={cn(
         'flex w-full items-center justify-between gap-3 p-3 text-start transition-colors',
-        isActive ? 'bg-(--glass-3) border-hair border' : 'hover:cursor-pointer hover:bg-(--glass-3)',
+        isActive
+          ? 'border-hair border bg-(--glass-3)'
+          : 'hover:cursor-pointer hover:bg-(--glass-3)',
       )}
     >
       <div className="flex items-center gap-3">
@@ -233,6 +262,12 @@ function PartRow({
           <div className="text-ink-3 mt-1 flex items-center gap-1 text-[11.5px]">
             <Icon name="clock" size={12} />
             {formatDurationFa(part.durationSeconds!)}
+            <span className="text-gold mr-1 inline-flex shrink-0 items-center gap-1 rounded-xl border border-[#F3BA6326] bg-[#F3BA6312] px-2 py-0.5 text-[11px] font-extrabold">
+              <span className="relative size-4 shrink-0">
+                <OptionalImage src="/assets/phoenix_badge.webp" alt="" className="object-contain" />
+              </span>
+              +{toPersianDigits(part.xp ?? 0)} آتش
+            </span>
             <span
               className={cn(
                 'mr-1 shrink-0 rounded-xl px-2 py-0.5 text-[11px] font-bold',
