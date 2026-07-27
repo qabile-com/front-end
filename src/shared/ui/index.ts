@@ -1,5 +1,6 @@
 export { Icon, type IconName } from './icon';
 export { Button } from './button';
+export { BaseModal } from './base-modal';
 export { Container } from './container';
 export { GlassCard } from './glass-card';
 export { GradText } from './grad-text';
@@ -20,6 +21,7 @@ export {
   InlineSkeleton,
   ModalSkeleton,
   PageSkeleton,
+  PostDetailSkeleton,
   ProfileSkeleton,
   SessionSkeleton,
   Skeleton,

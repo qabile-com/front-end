@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
-import { GlassCard, Button, Icon } from '@/shared/ui';
+import { BaseModal, GlassCard, Button, Icon } from '@/shared/ui';
 import type { RoadmapStepDetail } from '../../domain/roadmap.types';
 
 interface StepModalProps {
@@ -24,8 +24,6 @@ export function StepModal({
 }: StepModalProps) {
   const [checkedStepIds, setCheckedStepIds] = useState<string[]>([]);
 
-  if (!isOpen) return null;
-
   const handleToggleStep = (id: string) => {
     setCheckedStepIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   };
@@ -43,7 +41,13 @@ export function StepModal({
   const typeLabel = detail.type === 'lesson' ? 'درس' : 'مهارت';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={detail.title}
+      className="bg-black/80"
+      panelClassName="w-full max-w-2xl"
+    >
       <GlassCard className="bg-panel border-hair text-ink flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl shadow-2xl">
         {/* Header */}
         <div className="border-hair flex shrink-0 items-center justify-between border-b p-5">
@@ -146,6 +150,6 @@ export function StepModal({
           </Button>
         </div>
       </GlassCard>
-    </div>
+    </BaseModal>
   );
 }

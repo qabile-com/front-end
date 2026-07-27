@@ -3,9 +3,8 @@
 
 import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
-import { GlassCard, Button, Icon } from '@/shared/ui';
+import { BaseModal, GlassCard, Button, Icon } from '@/shared/ui';
 import type { CurrentUser, RoadmapItem } from '@/features/dashboard/domain/dashboard.types';
-import { useScrollLock } from '@/shared/hooks/use-scroll-lock';
 
 interface Props {
   isOpen: boolean;
@@ -15,12 +14,14 @@ interface Props {
 }
 
 export function RoadmapDetailView({ isOpen, onClose, user, roadmap }: Props) {
-  useScrollLock(isOpen);
-
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="نقشه راه من"
+      className="bg-black/60"
+      panelClassName="w-full max-w-lg"
+    >
       <GlassCard className="border-hair flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden [background:var(--color-panel)]">
         {/* Header */}
         <div className="border-hair flex items-center justify-between border-b p-4">
@@ -117,6 +118,6 @@ export function RoadmapDetailView({ isOpen, onClose, user, roadmap }: Props) {
           })}
         </div>
       </GlassCard>
-    </div>
+    </BaseModal>
   );
 }

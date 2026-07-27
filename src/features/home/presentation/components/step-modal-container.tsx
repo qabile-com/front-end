@@ -2,7 +2,7 @@
 
 import { useRoadmapStepDetail } from '../../application/use-roadmap-step-detail';
 import type { IRoadmapStepRepository } from '../../domain/roadmap-repository';
-import { ErrorState, ModalSkeleton } from '@/shared/ui';
+import { BaseModal, ErrorState, ModalSkeleton } from '@/shared/ui';
 import { StepModal } from './step-modal';
 
 interface Props {
@@ -51,22 +51,22 @@ function StepLoader({
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <BaseModal isOpen onClose={onClose} title="در حال دریافت مرحله" className="bg-black/60" panelClassName="w-full max-w-md">
         <ModalSkeleton />
-      </div>
+      </BaseModal>
     );
   }
 
   if (error || !detail) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <BaseModal isOpen onClose={onClose} title="خطای مرحله" className="bg-black/60" panelClassName="w-full max-w-md">
         <ErrorState
           compact
           title="جزئیات مرحله آماده نشد"
           message={error ?? 'اطلاعات این مرحله دریافت نشد.'}
           action={{ label: 'بستن', onClick: onClose, icon: 'arrow-left' }}
         />
-      </div>
+      </BaseModal>
     );
   }
 
