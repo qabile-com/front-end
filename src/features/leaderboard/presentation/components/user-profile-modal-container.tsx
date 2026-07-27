@@ -1,8 +1,10 @@
 import { useUserProfile } from '../../application/use-user-profile';
+import { useRouter } from 'next/navigation';
 import { useFollowToggle } from '../../application/use-follow-toggle';
+import { useUserPosts } from '../../application/use-user-posts';
 import type { IUserProfileRepository } from '../../domain/user-profile-repository';
 import type { IFollowRepository } from '../../domain/follow-repository';
-import { ErrorState, ModalSkeleton } from '@/shared/ui';
+import { BaseModal, ErrorState, ModalSkeleton } from '@/shared/ui';
 import { UserProfileModal } from './user-profile-modal';
 import { followRepo } from '@/features/leaderboard/infrastructure/repository-factory';
 
@@ -37,27 +39,29 @@ function ProfileLoader({
   repository: IUserProfileRepository;
   followRepo: IFollowRepository;
 }) {
+  const router = useRouter();
   const { data: profile, loading, error } = useUserProfile(repository, userId);
+  const postsQuery = useUserPosts(repository, userId);
   const { isFollowed, toggle, isToggling } = useFollowToggle(followRepo, userId);
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <BaseModal isOpen onClose={onClose} title="در حال دریافت پروفایل" className="bg-black/60" panelClassName="w-full max-w-md">
         <ModalSkeleton />
-      </div>
+      </BaseModal>
     );
   }
 
   if (error || !profile) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <BaseModal isOpen onClose={onClose} title="خطای پروفایل" className="bg-black/60" panelClassName="w-full max-w-md">
         <ErrorState
           compact
           title="پروفایل کاربر آماده نشد"
           message={error ?? 'اطلاعات این کاربر دریافت نشد.'}
           action={{ label: 'بستن', onClick: onClose, icon: 'arrow-left' }}
         />
-      </div>
+      </BaseModal>
     );
   }
 
@@ -69,6 +73,11 @@ function ProfileLoader({
       isFollowed={isFollowed}
       onToggleFollow={toggle}
       isToggling={isToggling}
+      postsQuery={postsQuery}
+      onPostClick={(postId) => {
+        onClose();
+        router.push(`/social/${postId}`);
+      }}
     />
   );
 }

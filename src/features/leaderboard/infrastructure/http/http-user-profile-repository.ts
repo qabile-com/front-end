@@ -1,6 +1,10 @@
 // http-user-profile-repository.ts
-import { getUserProfile } from '@/core/api/users.api';
-import type { IUserProfileRepository, UserProfileData } from '../../domain/user-profile-repository';
+import { getUserPosts as getUserPostsApi, getUserProfile } from '@/core/api/users.api';
+import type {
+  IUserProfileRepository,
+  UserProfileData,
+  UserProfilePost,
+} from '../../domain/user-profile-repository';
 import { DEFAULT_AVATAR_GRADIENT } from '@/features/dashboard/domain/dashboard.types';
 
 type UserProfileDto = Omit<UserProfileData, 'avatar' | 'profileStats' | 'posts' | 'achievements'> & {
@@ -57,5 +61,33 @@ export class HttpUserProfileRepository implements IUserProfileRepository {
         time: p.createdAt,
       })),
     };
+  }
+
+  async getUserPosts(userId: string, limit = 6, offset = 0): Promise<UserProfilePost[]> {
+    const res = await getUserPostsApi(userId, { limit, offset });
+    const posts = (res.data.data ?? res.data) as {
+      id: string;
+      text: string;
+      likes: number;
+      comments?: { name: string; text: string; createdAt?: string; time?: string }[];
+      createdAt?: string;
+      time?: string;
+      image?: string;
+      hasImage?: boolean;
+    }[];
+
+    return posts.map((post) => ({
+      id: post.id,
+      text: post.text,
+      likes: post.likes,
+      comments: (post.comments ?? []).map((comment) => ({
+        name: comment.name,
+        text: comment.text,
+        time: comment.createdAt ?? comment.time ?? '',
+      })),
+      time: post.createdAt ?? post.time ?? '',
+      image: post.image,
+      hasImage: post.hasImage,
+    }));
   }
 }

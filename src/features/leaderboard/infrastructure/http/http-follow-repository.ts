@@ -1,13 +1,20 @@
 import type { IFollowRepository } from '../../domain/follow-repository';
+import {
+  followUser as followUserApi,
+  getFollowStatus as getFollowStatusApi,
+  unfollowUser as unfollowUserApi,
+} from '@/core/api/users.api';
 
 export class HttpFollowRepository implements IFollowRepository {
   async followUser(userId: string): Promise<void> {
-    throw new Error(`Follow user endpoint is not implemented yet: ${userId}`);
+    await followUserApi(userId);
   }
   async unfollowUser(userId: string): Promise<void> {
-    throw new Error(`Unfollow user endpoint is not implemented yet: ${userId}`);
+    await unfollowUserApi(userId);
   }
   async getFollowStatus(userId: string): Promise<boolean> {
-    throw new Error(`Follow status endpoint is not implemented yet: ${userId}`);
+    const res = await getFollowStatusApi(userId);
+    const data = res.data as { isFollowedByMe?: boolean; data?: { isFollowedByMe?: boolean } };
+    return Boolean(data.data?.isFollowedByMe ?? data.isFollowedByMe);
   }
 }

@@ -35,6 +35,17 @@ export interface UserProfileData {
   }[];
 }
 
+export interface UserProfilePost {
+  id: string;
+  text: string;
+  likes: number;
+  comments: PostComment[];
+  time: string;
+  image?: string;
+  hasImage?: boolean;
+}
+
 export interface IUserProfileRepository {
   getUserProfile(userId: string): Promise<UserProfileData>;
+  getUserPosts(userId: string, limit?: number, offset?: number): Promise<UserProfilePost[]>;
 }

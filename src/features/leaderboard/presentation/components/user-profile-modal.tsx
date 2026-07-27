@@ -1,12 +1,12 @@
 // src/features/dashboard/presentation/components/user-profile-modal.tsx
 'use client';
 
-import { useState } from 'react';
+import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
+import { getAvatarInitial } from '@/core/lib/avatar';
 import { toPersianDigits } from '@/core/lib/persian';
-import { GlassCard, Button, Icon, IconName } from '@/shared/ui';
-import type { UserProfileData } from '../../domain/user-profile-repository';
+import { BaseModal, GlassCard, Button, Icon, IconName } from '@/shared/ui';
+import type { UserProfileData, UserProfilePost } from '../../domain/user-profile-repository';
 import { cn } from '@/core/lib/cn';
-import { useScrollLock } from '@/shared/hooks/use-scroll-lock';
 
 interface Props {
   isOpen: boolean;
@@ -15,6 +15,8 @@ interface Props {
   isFollowed?: boolean;
   onToggleFollow?: () => void;
   isToggling?: boolean;
+  postsQuery: UseInfiniteQueryResult<InfiniteData<UserProfilePost[]>>;
+  onPostClick: (postId: string) => void;
 }
 
 export function UserProfileModal({
@@ -24,16 +26,21 @@ export function UserProfileModal({
   isFollowed,
   isToggling,
   onToggleFollow,
+  postsQuery,
+  onPostClick,
 }: Props) {
-  useScrollLock(isOpen);
-
-  const [isFollowing, setIsFollowing] = useState(false);
-
-  if (!isOpen) return null;
+  const posts = postsQuery.data?.pages.flat() ?? [];
+  const followed = Boolean(isFollowed);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <GlassCard className="border-hair relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-y-auto [background:var(--color-panel)]">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={user.name}
+      className="bg-black/60"
+      panelClassName="w-full max-w-2xl"
+    >
+      <GlassCard className="border-hair relative flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-y-auto overscroll-contain [background:var(--color-panel)]">
         {/* Header */}
         <div className="border-hair flex items-center justify-between border-b p-6">
           <button
@@ -56,7 +63,7 @@ export function UserProfileModal({
               className="flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold text-white"
               style={{ background: user.avatar }}
             >
-              {user.name.slice(0, 1)}
+              {getAvatarInitial(user.name)}
             </div>
             <div className="text-right">
               <h2 className="text-ink text-2xl font-bold">{user.name}</h2>
@@ -91,12 +98,13 @@ export function UserProfileModal({
               {/* Action Buttons */}
               <div className="flex justify-start gap-4 pb-2">
                 <Button
-                  variant={isFollowing ? 'ghost' : 'primary'}
+                  variant={followed ? 'ghost' : 'primary'}
                   size="sm"
-                  onClick={() => setIsFollowing(!isFollowing)}
-                  className={isFollowing ? 'border-gold text-gold border' : ''}
+                  disabled={isToggling}
+                  onClick={onToggleFollow}
+                  className={followed ? 'border-gold text-gold border' : ''}
                 >
-                  {isFollowing ? 'هم پرواز هستید' : 'هم پرواز شدن'}
+                  {isToggling ? '...' : followed ? 'هم پرواز هستید' : 'هم پرواز شدن'}
                 </Button>
                 {/* <Button
                   variant={isFollowed ? 'ghost' : 'primary'}
@@ -135,13 +143,43 @@ export function UserProfileModal({
 
         {/* User Posts */}
         <div className="my-2 px-6 pb-6">
-          <div className="max-h-60 space-y-4 overflow-y-auto pr-2">
-            {user.posts.map((post) => (
-              <div key={post.id} className="border-hair rounded-lg border bg-(--glass) p-4">
-                <div className="border-hair mb-4 flex items-center justify-between border-b pb-2">
-                  <h3 className="text-md text-ink-2 font-bold">پست‌ها</h3>
-                </div>
+          <div className="border-hair mb-4 flex items-center justify-between border-b pb-2">
+            <h3 className="text-ink-2 text-sm font-black">پست‌ها</h3>
+            {postsQuery.isFetching && !postsQuery.isFetchingNextPage && (
+              <span className="text-ink-4 text-xs">در حال بروزرسانی...</span>
+            )}
+          </div>
+          <div className="max-h-72 space-y-4 overflow-y-auto overscroll-contain pr-2">
+            {postsQuery.isLoading && (
+              <>
+                <PostPreviewSkeleton />
+                <PostPreviewSkeleton />
+              </>
+            )}
+            {!postsQuery.isLoading && posts.length === 0 && (
+              <p className="text-ink-3 rounded-lg border border-[var(--color-hair)] bg-(--glass) p-4 text-center text-sm">
+                هنوز پستی ثبت نشده است.
+              </p>
+            )}
+            {posts.map((post) => (
+              <button
+                key={post.id}
+                type="button"
+                onClick={() => onPostClick(post.id)}
+                className="border-hair block w-full rounded-lg border bg-(--glass) p-4 text-right transition-colors hover:border-[var(--color-hair-2)]"
+              >
                 <p className="text-ink-2 text-right text-sm leading-relaxed">{post.text}</p>
+                {(post.image || post.hasImage) && (
+                  <div className="border-hair mt-3 overflow-hidden rounded-lg border bg-black/20">
+                    {post.image ? (
+                      <img src={post.image} alt="" className="max-h-40 w-full object-contain" />
+                    ) : (
+                      <div className="text-ink-4 grid h-28 place-items-center">
+                        <Icon name="book" size={26} />
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="text-ink-4 mt-3 flex items-center gap-4 text-xs">
                   <span className="flex items-center gap-1">
                     <Icon name="heart" size={16} /> {toPersianDigits(post.likes)}
@@ -150,11 +188,36 @@ export function UserProfileModal({
                     <Icon name="msg" size={16} /> {toPersianDigits(post.comments.length)}
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
+            {postsQuery.hasNextPage && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full"
+                disabled={postsQuery.isFetchingNextPage}
+                onClick={() => postsQuery.fetchNextPage()}
+              >
+                {postsQuery.isFetchingNextPage ? '...' : 'نمایش بیشتر'}
+              </Button>
+            )}
           </div>
         </div>
       </GlassCard>
+    </BaseModal>
+  );
+}
+
+function PostPreviewSkeleton() {
+  return (
+    <div className="border-hair rounded-lg border bg-(--glass) p-4">
+      <div className="h-3 w-4/5 animate-pulse rounded-full bg-white/10" />
+      <div className="mt-3 h-3 w-2/3 animate-pulse rounded-full bg-white/10" />
+      <div className="mt-4 flex gap-3">
+        <div className="h-3 w-10 animate-pulse rounded-full bg-white/10" />
+        <div className="h-3 w-10 animate-pulse rounded-full bg-white/10" />
+      </div>
     </div>
   );
 }

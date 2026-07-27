@@ -1,6 +1,10 @@
 // src/features/dashboard/infrastructure/mock-user-profile-repository.ts
 
-import type { IUserProfileRepository, UserProfileData } from '../../domain/user-profile-repository';
+import type {
+  IUserProfileRepository,
+  UserProfileData,
+  UserProfilePost,
+} from '../../domain/user-profile-repository';
 import {
   ACHIEVEMENTS,
   LEADERBOARD,
@@ -51,19 +55,15 @@ export class MockUserProfileRepository implements IUserProfileRepository {
         xp = parseInt(row.points.replace(/\D/g, ''), 10) || 0;
         streak = streakNumber;
       }
+      const socialPost = POSTS.find((post) => post.authorId === userId);
+      if (socialPost) {
+        name = socialPost.author;
+        avatar = socialPost.avatar;
+        title = socialPost.badge ?? title;
+      }
     }
 
-    const userPosts = POSTS.filter(
-      (p) => p.authorId === (userId === CURRENT_USER.name ? 'arash' : 'other'),
-    )
-      .slice(0, 3)
-      .map((post) => ({
-        id: post.id,
-        text: post.text,
-        likes: post.likes,
-        comments: post.comments,
-        time: post.time,
-      }));
+    const userPosts = await this.getUserPosts(userId, 3, 0);
 
     return {
       id: userId,
@@ -82,5 +82,22 @@ export class MockUserProfileRepository implements IUserProfileRepository {
       achievements: ACHIEVEMENTS,
       posts: userPosts,
     };
+  }
+
+  async getUserPosts(userId: string, limit = 6, offset = 0): Promise<UserProfilePost[]> {
+    await delay(250);
+    const authorId = userId === CURRENT_USER.name ? 'arash' : userId;
+
+    return POSTS.filter((post) => post.authorId === authorId)
+      .slice(offset, offset + limit)
+      .map((post) => ({
+        id: post.id,
+        text: post.text,
+        likes: post.likes,
+        comments: post.comments,
+        time: post.time,
+        image: post.image,
+        hasImage: post.hasImage,
+      }));
   }
 }

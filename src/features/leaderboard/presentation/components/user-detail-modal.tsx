@@ -1,7 +1,7 @@
 // src/features/dashboard/presentation/components/user-detail-modal.tsx
 'use client';
 
-import { ErrorState, Icon, ModalSkeleton } from '@/shared/ui';
+import { BaseModal, ErrorState, Icon, ModalSkeleton } from '@/shared/ui';
 import { useUserDetail } from '../../application/use-user-detail';
 import type { IUserProfileRepository } from '../../domain/user-profile-repository';
 import { toPersianDigits } from '@/core/lib/persian';
@@ -16,8 +16,13 @@ export function UserDetailModal({ userId, repo, onClose }: UserDetailModalProps)
   const { detail, loading, error } = useUserDetail(repo, userId);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="border-hair glass w-full max-w-md rounded-2xl p-6">
+    <BaseModal
+      isOpen
+      onClose={onClose}
+      title="پروفایل کاربر"
+      className="bg-black/70"
+      panelClassName="border-hair glass w-full max-w-md rounded-2xl p-6"
+    >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-black">پروفایل کاربر</h2>
           <button onClick={onClose} className="text-ink-3 hover:text-ink">
@@ -58,7 +63,6 @@ export function UserDetailModal({ userId, repo, onClose }: UserDetailModalProps)
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </BaseModal>
   );
 }
