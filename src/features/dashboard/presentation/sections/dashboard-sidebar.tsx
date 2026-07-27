@@ -49,7 +49,7 @@ export function DashboardSidebar({ activeHref, user, nav }: SidebarProps) {
         <div className="mb-1.5 flex items-center justify-between text-[11px]">
           <span className="text-ink-2 flex items-center gap-1.5">
             <PhoenixIcon className="size-3.5 rounded-full" />
-            تجربه (XP)
+            تجربه (آتش)
           </span>
           <span className="text-gold font-bold tabular-nums">
             {toPersianDigits(user.xp.toLocaleString('en-US').replace(/,/g, '٬'))} /{' '}

@@ -26,7 +26,6 @@ export const USER: CurrentUser = {
 
 export const NAV: NavItem[] = [
   { id: 'home', label: 'خانه', icon: 'home-m', href: '/home' },
-  { id: 'lb', label: 'پرچم داران', icon: 'leaderboard', href: '/leaderboard' },
   { id: 'social', label: 'انجمن', icon: 'community', href: '/social' },
   { id: 'courses', label: 'تالار دانش', icon: 'social', href: '/courses' },
   { id: 'profile', label: 'پروفایل', icon: 'profile', href: '/profile' },

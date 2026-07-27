@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Icon } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
 import { clearAuthSession } from '@/core/auth/token';
@@ -17,12 +17,14 @@ import { XpEarnedModal } from '@/features/profile/presentation/components/xp-ear
 import { DashboardSidebar } from '../sections/dashboard-sidebar';
 import { MobileHeader } from '../sections/mobile-header';
 import { MobileNav } from '../sections/mobile-nav';
+import { MobileOnboarding } from '@/features/onboarding/presentation/mobile-onboarding';
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 const ROUTE_TO_TAB: Array<{ prefix: string; tab: DashboardTab }> = [
+  { prefix: '/ai', tab: 'home' },
   { prefix: '/home', tab: 'home' },
   { prefix: '/leaderboard', tab: 'lb' },
   { prefix: '/social', tab: 'social' },
@@ -80,10 +82,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   if (!user) return <DashboardLoader />;
 
   return (
-    <div className="dashboard-scope min-h-screen [background:radial-gradient(50%_40%_at_80%_-5%,rgba(255,98,0,.08),transparent_55%),radial-gradient(40%_35%_at_10%_8%,rgba(243,186,99,.04),transparent_55%),var(--color-bg)]">
+    <div className="dashboard-scope min-h-screen max-w-full overflow-x-clip [background:radial-gradient(50%_40%_at_80%_-5%,rgba(255,98,0,.08),transparent_55%),radial-gradient(40%_35%_at_10%_8%,rgba(243,186,99,.04),transparent_55%),var(--color-bg)]">
       <DashboardSidebar activeHref={activeHref} user={user} nav={NAV} />
 
-      <main className="flex min-h-screen flex-col lg:ms-65">
+      <main className="flex min-h-screen min-w-0 max-w-full flex-col overflow-x-clip lg:ms-65">
         <header className="border-hair sticky top-0 z-40 hidden h-16 items-center justify-between border-b px-8 [backdrop-filter:blur(20px)] [background:rgba(5,3,2,.85)] lg:flex">
           <h1 className="text-lg font-black">{title}</h1>
           <div className="flex items-center gap-3">
@@ -103,22 +105,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         <MobileHeader title={title} level={user.level} streak={user.streak} />
 
-        <div className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={pathname}
-              initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
-              transition={{ duration: reduceMotion ? 0 : 0.18, ease: [0.22, 1, 0.36, 1] }}
-            >
-              {children}
-            </motion.div>
-          </AnimatePresence>
+        <div className="min-w-0 flex-1 overflow-x-clip overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
+          <motion.div
+            key={pathname}
+            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {children}
+          </motion.div>
         </div>
       </main>
 
       <MobileNav activeHref={activeHref} />
+      <MobileOnboarding />
 
       {signupXp !== null && (
         <XpEarnedModal
