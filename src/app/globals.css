@@ -46,6 +46,13 @@
   --glass-3: rgba(255, 160, 100, 0.12);
   --glow: rgba(255, 98, 0, 0.26);
   --glow-2: rgba(255, 98, 0, 0.09);
+  --session-surface: rgba(13, 8, 5, 0.92);
+  --session-surface-2: rgba(255, 98, 0, 0.08);
+  --session-surface-3: rgba(255, 98, 0, 0.14);
+  --session-border: rgba(255, 130, 50, 0.18);
+  --session-border-strong: rgba(255, 130, 50, 0.36);
+  --session-active: linear-gradient(90deg, rgba(204, 67, 8, 0.72), rgba(255, 98, 0, 0.44));
+  --session-primary: linear-gradient(135deg, #e74a08 0%, #ff6200 46%, #ffb25d 100%);
 }
 
 .dashboard-scope {
@@ -74,6 +81,12 @@
   html,
   body {
     max-width: 100%;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
   }
 
   ::selection {
