@@ -1,26 +1,37 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { SessionContent } from '@/features/courses/presentation/components/session-content';
 import { useSessionDetail } from '@/features/courses/application/use-session-detail';
 import { useSessionComments } from '@/features/courses/application/use-session-comments';
 import { useAddSessionComment } from '@/features/courses/application/use-session-comments';
-import { useReportSectionWatchProgress } from '@/features/courses/application/use-courses';
-import { useCourses } from '@/features/courses/application/use-courses';
+import {
+  useCourses,
+  usePurchaseCourse,
+  useReportSectionWatchProgress,
+} from '@/features/courses/application/use-courses';
+import { useUser } from '@/features/dashboard/application/use-user';
 import {
   sessionRepo,
   commentsRepo,
   coursesRepo,
 } from '@/features/courses/infrastructure/repository-factory';
+import { userRepo } from '@/features/dashboard/infrastructure/repository-factory';
 import type { Course, CoursePart } from '@/features/courses/domain/courses.data';
 import { toPersianDigits } from '@/core/lib/persian';
-import { ErrorState, Icon, OptionalImage, SessionSkeleton } from '@/shared/ui';
+import { DashboardPageShell, ErrorState, Icon, OptionalImage, SessionSkeleton } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { formatDurationFa } from '@/features/courses/presentation/components/course-session-modal';
 import type { SectionWatchProgressInput } from '@/features/dashboard/domain/dashboard.types';
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
 import type { PaginatedComments } from '@/features/courses/domain/comments-repository';
+import { useActionRewardQueue } from '@/features/dashboard/application/use-action-reward-queue';
+import { ActionRewardModals } from '@/features/dashboard/presentation/components/action-reward-modals';
+import { showError, showSuccess } from '@/shared/lib/toast';
+import { PurchaseCourseModal } from '@/features/courses/presentation/sections/courses-tab';
+import { getApiErrorView } from '@/core/api/api-error-view';
+import { createAuthRedirectHref } from '@/core/auth/redirect';
 
 export default function SessionPage() {
   const router = useRouter();
@@ -29,36 +40,60 @@ export default function SessionPage() {
   const courseId = params.courseId as string;
   const sectionId = params.sectionId as string;
   const source = searchParams.get('from');
+  const [courseToPurchase, setCourseToPurchase] = useState<Course | null>(null);
   const returnHref = source === 'home' ? '/home' : '/courses';
   const sourceQuery = source === 'home' ? '?from=home' : '';
+  const currentPath = `/courses/${courseId}/sections/${sectionId}${sourceQuery}`;
 
-  const { data: courses, loading: coursesLoading } = useCourses(coursesRepo);
+  const coursesQuery = useCourses(coursesRepo);
+  const { data: courses, loading: coursesLoading } = coursesQuery;
+  const { user, refetch: refetchUser } = useUser(userRepo);
   const course = courses?.find((c) => c.id === courseId) ?? null;
+  const coursePrice = course?.priceInFire ?? 0;
+  const isCourseUnlocked = Boolean(
+    course && (course.isFree || course.isPurchased || course.isUnlocked || coursePrice <= 0),
+  );
 
   const {
     data: sessionDetail,
     isLoading: sessionLoading,
     isFetching: sessionFetching,
     error: sessionError,
+    refetch: refetchSession,
   } = useSessionDetail(sessionRepo, courseId, sectionId);
   const session = sessionDetail?.part ?? null;
 
-  const commentsQuery = useSessionComments(commentsRepo, courseId, sectionId);
+  const commentsQuery = useSessionComments(commentsRepo, courseId, sectionId, isCourseUnlocked);
   const addComment = useAddSessionComment(commentsRepo);
   const reportWatchProgress = useReportSectionWatchProgress(coursesRepo);
+  const purchaseCourse = usePurchaseCourse(coursesRepo);
+  const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
 
   const handleWatchProgress = useCallback(
     (body: SectionWatchProgressInput) => {
-      reportWatchProgress.mutate({ sectionId, body });
+      if (!isCourseUnlocked) return;
+
+      void reportWatchProgress
+        .mutateAsync({ sectionId, body })
+        .then((result) => {
+          enqueueReward(result.reward, {
+            xpDescription: 'آتش این جلسه به حسابت اضافه شد و پیشرفتت ثبت شد.',
+          });
+        })
+        .catch(() => undefined);
     },
-    [reportWatchProgress, sectionId],
+    [enqueueReward, isCourseUnlocked, reportWatchProgress, sectionId],
   );
 
   const handleAddComment = useCallback(
     (text: string) => {
+      if (!isCourseUnlocked) {
+        showError('برای ثبت نظر، ابتدا کورس را خریداری کن.');
+        return;
+      }
       addComment.mutate({ courseId, sectionId, text });
     },
-    [addComment, courseId, sectionId],
+    [addComment, courseId, isCourseUnlocked, sectionId],
   );
 
   const handleNextSession = useCallback(() => {
@@ -70,18 +105,44 @@ export default function SessionPage() {
     router.push(`/courses/${courseId}/sections/${nextSectionId}${sourceQuery}`);
   }, [course, router, courseId, sectionId, session, sourceQuery]);
 
+  const handlePurchaseCourse = useCallback(async () => {
+    if (!course) return;
+
+    try {
+      await purchaseCourse.mutateAsync(course.id);
+      showSuccess('کورس با موفقیت باز شد.');
+      await Promise.all([coursesQuery.refetch(), refetchSession(), refetchUser()]);
+      setCourseToPurchase(null);
+      router.refresh();
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'خرید کورس انجام نشد.');
+    }
+  }, [course, coursesQuery, purchaseCourse, refetchSession, refetchUser, router]);
+
   if (coursesLoading || sessionFetching) {
     return <SessionSkeleton />;
   }
 
-  if (!course) {
+  if (coursesQuery.rawError || !course) {
+    const errorView = getApiErrorView(coursesQuery.rawError, {
+      title: 'کورس پیدا نشد',
+      message: 'این کورس وجود ندارد یا دسترسی به آن برای حساب شما فعال نیست.',
+    });
+
     return (
       <div className="flex h-full min-h-64 items-center justify-center">
         <ErrorState
           compact
-          title="کورس پیدا نشد"
-          message="این کورس وجود ندارد یا دسترسی به آن برای حساب شما فعال نیست."
-          action={{ label: 'بازگشت', href: returnHref, icon: 'social' }}
+          title={!course ? 'کورس پیدا نشد' : errorView.title}
+          message={!course ? 'این کورس وجود ندارد یا حذف شده است.' : errorView.message}
+          icon={!course ? 'search' : errorView.icon}
+          tone={!course ? 'info' : errorView.tone}
+          action={
+            errorView.statusCode === 401
+              ? { label: 'ورود', href: createAuthRedirectHref(currentPath), icon: 'lock' }
+              : { label: 'تلاش دوباره', onClick: () => void coursesQuery.refetch(), icon: 'bolt' }
+          }
+          secondaryAction={{ label: 'بازگشت', href: returnHref, icon: 'social' }}
         />
       </div>
     );
@@ -92,17 +153,24 @@ export default function SessionPage() {
   }
 
   if (sessionError || !session) {
+    const errorView = getApiErrorView(sessionError, {
+      title: 'جلسه پیدا نشد',
+      message: 'جلسه مورد نظر آماده نیست. دوباره تلاش کن یا به لیست کورس‌ها برگرد.',
+    });
+
     return (
       <div className="flex h-full min-h-64 items-center justify-center">
         <ErrorState
           compact
-          title="جلسه پیدا نشد"
-          message={
-            sessionError instanceof Error
-              ? sessionError.message
-              : 'جلسه مورد نظر آماده نیست. دوباره تلاش کن یا به لیست کورس‌ها برگرد.'
+          title={!session ? 'جلسه پیدا نشد' : errorView.title}
+          message={!session ? 'جلسه مورد نظر وجود ندارد یا حذف شده است.' : errorView.message}
+          icon={!session ? 'search' : errorView.icon}
+          tone={!session ? 'info' : errorView.tone}
+          action={
+            errorView.statusCode === 401
+              ? { label: 'ورود', href: createAuthRedirectHref(currentPath), icon: 'lock' }
+              : { label: 'تلاش دوباره', onClick: () => void refetchSession(), icon: 'bolt' }
           }
-          action={{ label: 'تلاش دوباره', onClick: () => window.location.reload(), icon: 'bolt' }}
           secondaryAction={{ label: 'بازگشت', href: returnHref, icon: 'social' }}
         />
       </div>
@@ -113,41 +181,55 @@ export default function SessionPage() {
   const audioUrl = sessionDetail?.audioUrl ?? sessionDetail?.mediaUrl ?? session?.audioUrl ?? null;
 
   return (
-    <div className="min-h-screen max-w-full min-w-0 overflow-x-clip">
-      <div className="grid min-w-0 items-start gap-6 min-[1440px]:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="min-w-0">
-          {session && (
-            <SessionContent
-              key={session.id}
-              session={session}
+    <>
+      <DashboardPageShell size="wide" className="min-h-screen">
+        <div className="grid min-w-0 items-start gap-6 min-[1440px]:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="min-w-0">
+            {session && (
+              <SessionContent
+                key={session.id}
+                session={session}
+                course={course}
+                currentSectionId={sectionId}
+                videoUrl={videoUrl ?? undefined}
+                audioUrl={audioUrl ?? undefined}
+                fireBalance={user?.xp ?? 0}
+                isPurchasingCourse={purchaseCourse.isPending}
+                commentsQuery={
+                  commentsQuery as UseInfiniteQueryResult<InfiniteData<PaginatedComments>>
+                }
+                commentsLocked={!isCourseUnlocked}
+                onNextSession={handleNextSession}
+                onNavigateSection={(id) =>
+                  router.push(`/courses/${courseId}/sections/${id}${sourceQuery}`)
+                }
+                onWatchProgress={handleWatchProgress}
+                onAddComment={handleAddComment}
+                onBuyCourse={() => setCourseToPurchase(course)}
+                onBack={() => router.push(returnHref)}
+                isAddingComment={addComment.isPending}
+              />
+            )}
+          </div>
+
+          <div className="border-hair sticky hidden h-fit overflow-hidden rounded-[20px] border [background:var(--glass)] min-[1440px]:block">
+            <CourseDetail
               course={course}
               currentSectionId={sectionId}
-              videoUrl={videoUrl ?? undefined}
-              audioUrl={audioUrl ?? undefined}
-              commentsQuery={
-                commentsQuery as UseInfiniteQueryResult<InfiniteData<PaginatedComments>>
-              }
-              onNextSession={handleNextSession}
-              onNavigateSection={(id) =>
-                router.push(`/courses/${courseId}/sections/${id}${sourceQuery}`)
-              }
-              onWatchProgress={handleWatchProgress}
-              onAddComment={handleAddComment}
-              onBack={() => router.push(returnHref)}
-              isAddingComment={addComment.isPending}
+              onNavigate={(id) => router.push(`/courses/${courseId}/sections/${id}${sourceQuery}`)}
             />
-          )}
+          </div>
         </div>
-
-        <div className="border-hair sticky hidden h-fit overflow-hidden rounded-[20px] border [background:var(--glass)] min-[1440px]:block">
-          <CourseDetail
-            course={course}
-            currentSectionId={sectionId}
-            onNavigate={(id) => router.push(`/courses/${courseId}/sections/${id}${sourceQuery}`)}
-          />
-        </div>
-      </div>
-    </div>
+      </DashboardPageShell>
+      <PurchaseCourseModal
+        course={courseToPurchase}
+        fireBalance={user?.xp ?? 0}
+        isPurchasing={purchaseCourse.isPending}
+        onClose={() => setCourseToPurchase(null)}
+        onConfirm={() => void handlePurchaseCourse()}
+      />
+      <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
+    </>
   );
 }
 
@@ -217,6 +299,7 @@ function PartRow({
   onClick: () => void;
   isActive: boolean;
 }) {
+  const isLocked = Boolean(part.requiresPurchase);
   const status =
     part.status === 'done'
       ? { label: 'تکمیل شده', cls: 'text-[#2bd4a8] bg-[#2bd4a8]/20' }
@@ -242,6 +325,10 @@ function PartRow({
         {part.status === 'done' ? (
           <span className="grid size-10 shrink-0 place-items-center rounded-full text-[#1a0a00] [background:linear-gradient(135deg,#1f8a5b,#2bd4a8)]">
             <Icon name="check" size={18} />
+          </span>
+        ) : isLocked ? (
+          <span className="text-gold border-hair grid size-10 shrink-0 place-items-center rounded-full border bg-[#FF620014]">
+            <Icon name="lock" size={15} />
           </span>
         ) : part.status === 'partial' ? (
           <span
@@ -279,7 +366,9 @@ function PartRow({
           </div>
         </div>
       </div>
-      {isActive && <Icon name="play" size={16} className="text-ember shrink-0" />}
+      {isActive && (
+        <Icon name={isLocked ? 'lock' : 'play'} size={16} className="text-ember shrink-0" />
+      )}
     </button>
   );
 }

@@ -9,6 +9,7 @@ export function useSessionComments(
   repo: ICommentsRepository,
   courseId: string | null,
   sectionId: string | null,
+  enabled = true,
 ) {
   return useInfiniteQuery({
     queryKey: ['dashboard', 'comments', courseId, sectionId],
@@ -21,7 +22,7 @@ export function useSessionComments(
       return undefined;
     },
     initialPageParam: 0,
-    enabled: !!courseId && !!sectionId,
+    enabled: enabled && !!courseId && !!sectionId,
     staleTime: 2 * 60 * 1000,
   });
 }

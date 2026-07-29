@@ -17,6 +17,7 @@ export function useCourses(repo: ICoursesRepository) {
     courses: query.data ?? null,
     loading: query.isLoading,
     error: query.error instanceof Error ? query.error.message : null,
+    rawError: query.error,
   };
 }
 
@@ -39,6 +40,22 @@ export function useUpdateSectionProgress(repo: ICoursesRepository) {
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'comments'] }),
       ]);
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'section', variables.sectionId] });
+    },
+  });
+}
+
+export function usePurchaseCourse(repo: ICoursesRepository) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (courseId: string) => repo.purchaseCourse(courseId),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'courses'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'session'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] }),
+      ]);
     },
   });
 }

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
@@ -29,11 +29,15 @@ interface SessionContentProps {
   currentSectionId?: string;
   videoUrl?: string;
   audioUrl?: string;
+  fireBalance?: number;
+  isPurchasingCourse?: boolean;
   commentsQuery: UseInfiniteQueryResult<InfiniteData<PaginatedComments>>;
+  commentsLocked?: boolean;
   onNextSession: () => void;
   onNavigateSection?: (sectionId: string) => void;
   onWatchProgress: (body: SectionWatchProgressInput) => void;
   onAddComment: (text: string) => void;
+  onBuyCourse?: () => void;
   onBack: () => void;
   isAddingComment?: boolean;
   userName?: string;
@@ -55,9 +59,13 @@ export function SessionContent({
   onNavigateSection,
   onWatchProgress,
   commentsQuery,
+  commentsLocked = false,
   videoUrl,
+  fireBalance = 0,
+  isPurchasingCourse = false,
   userName,
   onAddComment,
+  onBuyCourse,
   onBack,
   isAddingComment = false,
 }: SessionContentProps) {
@@ -85,6 +93,14 @@ export function SessionContent({
   };
   const selectedSectionId = currentSectionId ?? session.id;
   const handleNavigateSection = onNavigateSection ?? (() => undefined);
+  const coursePrice = displayCourse.priceInFire ?? 0;
+  const isFreeCourse = displayCourse.isFree || coursePrice <= 0;
+  const isCourseUnlocked = Boolean(
+    displayCourse.isPurchased || displayCourse.isUnlocked || isFreeCourse,
+  );
+  const requiresPurchase = Boolean(session.requiresPurchase || !isCourseUnlocked);
+  const hasEnoughFire = fireBalance >= coursePrice;
+  const canTrackWatch = !requiresPurchase && Boolean(videoUrl);
 
   useEffect(() => {
     reportProgressRef.current = onWatchProgress;
@@ -94,6 +110,8 @@ export function SessionContent({
 
   const buildWatchPayload = useCallback(
     (event: SectionWatchEvent): SectionWatchProgressInput | null => {
+      if (!canTrackWatch) return null;
+
       const video = videoRef.current;
       const duration = Math.floor(video?.duration || session.durationSeconds || 0);
       if (!duration) return null;
@@ -110,7 +128,7 @@ export function SessionContent({
         event,
       };
     },
-    [displayCourse.id, session.courseId, session.durationSeconds],
+    [canTrackWatch, displayCourse.id, session.courseId, session.durationSeconds],
   );
 
   const reportWatchProgress = useCallback(
@@ -136,6 +154,8 @@ export function SessionContent({
   );
 
   const rememberWatchedTime = useCallback(() => {
+    if (!canTrackWatch) return;
+
     const video = videoRef.current;
     if (!video || !video.duration) return;
 
@@ -167,7 +187,7 @@ export function SessionContent({
     }
 
     reportWatchProgress('timeupdate');
-  }, [reportWatchProgress, session.id]);
+  }, [canTrackWatch, reportWatchProgress, session.id]);
 
   useEffect(() => {
     watchedRangesRef.current = [];
@@ -227,19 +247,24 @@ export function SessionContent({
   const hasNext = Boolean(session.nextSectionId || session.nextEpisodeId);
   const sessionXp =
     session.xp ?? Math.round((displayCourse.xp ?? 0) / Math.max(1, displayCourse.episodes.length));
-
   return (
     <motion.div
       initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
       animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
       transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-      className="mx-auto flex min-h-full w-full min-w-0 max-w-[920px] flex-col overflow-x-clip pb-28 md:pb-0"
+      className="mx-auto flex min-h-full w-full min-w-0 max-w-[920px] flex-col overflow-x-clip pb-28 md:pb-0 min-[1440px]:max-w-none"
     >
       <section className="min-w-0 max-w-full overflow-hidden rounded-[28px] border border-[var(--session-border)] bg-[var(--session-surface)] shadow-[0_30px_90px_-50px_var(--glow)] lg:rounded-[32px]">
         <div className="relative aspect-video min-h-[190px] overflow-hidden bg-black sm:min-h-0">
           <VideoOrCover
             session={session}
             videoUrl={videoUrl}
+            isLocked={requiresPurchase}
+            coursePrice={coursePrice}
+            fireBalance={fireBalance}
+            hasEnoughFire={hasEnoughFire}
+            isPurchasingCourse={isPurchasingCourse}
+            onBuyCourse={onBuyCourse}
             showVideo={showVideo}
             setShowVideo={setShowVideo}
             videoRef={videoRef}
@@ -250,7 +275,7 @@ export function SessionContent({
             }}
           />
 
-          {!showVideo && (
+          {!showVideo && !requiresPurchase && (
             <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between p-4 sm:p-6">
               <IconButton label="بازگشت" onClick={handleClose} icon="arrow-right" />
               <IconButton label="اشتراک‌گذاری" onClick={() => void handleShare()} icon="share" />
@@ -292,7 +317,17 @@ export function SessionContent({
               </p>
             </div>
             <div className="hidden md:flex md:justify-start">
-              <ContinueButton hasNext={hasNext} onNextSession={onNextSession} variant="desktop" />
+              {requiresPurchase ? (
+                <LockedCourseAction
+                  price={coursePrice}
+                  hasEnoughFire={hasEnoughFire}
+                  isPurchasing={isPurchasingCourse}
+                  onBuyCourse={onBuyCourse}
+                  variant="desktop"
+                />
+              ) : (
+                <ContinueButton hasNext={hasNext} onNextSession={onNextSession} variant="desktop" />
+              )}
             </div>
           </div>
         </motion.div>
@@ -320,7 +355,7 @@ export function SessionContent({
           />
         </div>
 
-        <SessionProgressCard progress={watchProgress} status={session.status} />
+        <SessionProgressCard progress={watchProgress} status={session.status} locked={requiresPurchase} />
 
         <div className="px-4 pt-4 sm:px-6">
           <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] border-b border-[var(--session-border)] min-[1440px]:grid-cols-2">
@@ -378,6 +413,7 @@ export function SessionContent({
                 <CommentsPanel
                   allComments={allComments}
                   commentsQuery={commentsQuery}
+                  isLocked={commentsLocked || requiresPurchase}
                   commentText={commentText}
                   setCommentText={setCommentText}
                   handleSubmitComment={handleSubmitComment}
@@ -392,7 +428,16 @@ export function SessionContent({
 
       <div className="fixed inset-x-0 bottom-0 z-80 border-t border-[var(--session-border)] bg-[#070302]/95 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] backdrop-blur-xl md:hidden">
         <div className="mx-auto flex max-w-[920px] min-w-0 items-center gap-3">
-          <ContinueButton hasNext={hasNext} onNextSession={onNextSession} />
+          {requiresPurchase ? (
+            <LockedCourseAction
+              price={coursePrice}
+              hasEnoughFire={hasEnoughFire}
+              isPurchasing={isPurchasingCourse}
+              onBuyCourse={onBuyCourse}
+            />
+          ) : (
+            <ContinueButton hasNext={hasNext} onNextSession={onNextSession} />
+          )}
           <button
             type="button"
             className="text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)]"
@@ -409,6 +454,12 @@ export function SessionContent({
 function VideoOrCover({
   session,
   videoUrl,
+  isLocked,
+  coursePrice,
+  fireBalance,
+  hasEnoughFire,
+  isPurchasingCourse,
+  onBuyCourse,
   showVideo,
   setShowVideo,
   videoRef,
@@ -418,6 +469,12 @@ function VideoOrCover({
 }: {
   session: CoursePart;
   videoUrl?: string;
+  isLocked: boolean;
+  coursePrice: number;
+  fireBalance: number;
+  hasEnoughFire: boolean;
+  isPurchasingCourse: boolean;
+  onBuyCourse?: () => void;
   showVideo: boolean;
   setShowVideo: (value: boolean) => void;
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -425,7 +482,7 @@ function VideoOrCover({
   reportWatchProgress: (event: SectionWatchEvent, force?: boolean) => void;
   syncLastTime: () => void;
 }) {
-  if (videoUrl && showVideo) {
+  if (!isLocked && videoUrl && showVideo) {
     return (
       <video
         ref={videoRef}
@@ -456,7 +513,43 @@ function VideoOrCover({
       )}
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.18)_0%,rgba(0,0,0,.42)_44%,rgba(0,0,0,.94)_100%)]" />
       <div className="absolute inset-x-0 top-0 h-32 bg-[radial-gradient(ellipse_at_top,rgba(255,98,0,.35),transparent_65%)]" />
-      {!videoUrl && (
+      {isLocked && (
+        <div className="absolute inset-x-3 bottom-3 z-10 rounded-[18px] border border-[rgba(255,98,0,.28)] bg-black/72 p-3 text-center shadow-[0_18px_50px_-32px_var(--glow)] backdrop-blur-md sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[340px] sm:p-4 sm:text-right">
+          <div className="mx-auto mb-2 grid size-10 place-items-center rounded-2xl border border-[rgba(243,186,99,.25)] bg-[rgba(255,98,0,.12)] text-gold sm:mx-0">
+            <Icon name="lock" size={19} />
+          </div>
+          <h3 className="text-ink text-sm font-black sm:text-base">
+            برای دسترسی به کورس باید آن را خریداری کنی
+          </h3>
+          <p className="text-ink-3 mt-1 text-xs leading-6">
+            بعد از خرید می‌توانی جلسه‌ها را ببینی و کورس را ادامه بدهی.
+          </p>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] font-black sm:mt-3 sm:text-xs">
+            <span className="rounded-xl border border-[rgba(243,186,99,.18)] bg-black/35 px-3 py-2 text-gold">
+              قیمت: {toPersianDigits(coursePrice)} آتش
+            </span>
+            <span
+              className={cn(
+                'rounded-xl border bg-black/35 px-3 py-2',
+                hasEnoughFire ? 'border-[#2bd4a8]/25 text-[#2bd4a8]' : 'border-red-500/25 text-red-300',
+              )}
+            >
+              موجودی: {toPersianDigits(fireBalance)}
+            </span>
+          </div>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            disabled={!hasEnoughFire || isPurchasingCourse || !onBuyCourse}
+            onClick={onBuyCourse}
+            className="mt-2 w-full sm:mt-3"
+          >
+            {isPurchasingCourse ? 'در حال خرید...' : 'خرید کورس'}
+          </Button>
+        </div>
+      )}
+      {!isLocked && !videoUrl && (
         <button
           type="button"
           onClick={() => setShowVideo(false)}
@@ -552,12 +645,47 @@ function ContinueButton({
   );
 }
 
+function LockedCourseAction({
+  price,
+  hasEnoughFire,
+  isPurchasing,
+  onBuyCourse,
+  variant = 'mobile',
+}: {
+  price: number;
+  hasEnoughFire: boolean;
+  isPurchasing: boolean;
+  onBuyCourse?: () => void;
+  variant?: 'mobile' | 'desktop';
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onBuyCourse}
+      disabled={!hasEnoughFire || isPurchasing || !onBuyCourse}
+      className={cn(
+        'flex min-h-13 items-center justify-center gap-2 rounded-[14px] px-5 text-[14px] font-black text-black shadow-[0_18px_42px_-18px_var(--glow)] transition-transform duration-250 [background:var(--session-primary)] hover:-translate-y-0.5 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-45',
+        variant === 'desktop' ? 'min-w-64' : 'flex-1',
+      )}
+    >
+      <Icon name={hasEnoughFire ? 'lock' : 'flame'} size={17} />
+      {isPurchasing
+        ? 'در حال خرید...'
+        : hasEnoughFire
+          ? `خرید با ${toPersianDigits(price)} آتش`
+          : 'آتش کافی نداری'}
+    </button>
+  );
+}
+
 function SessionProgressCard({
   progress,
   status,
+  locked,
 }: {
   progress: number;
   status: CoursePart['status'];
+  locked: boolean;
 }) {
   const normalizedProgress = Math.min(100, Math.max(0, progress));
 
@@ -566,9 +694,16 @@ function SessionProgressCard({
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-ink text-sm font-black">پیشرفت جلسه</p>
-          <p className="text-ink-3 mt-1 text-xs">
+          {locked && (
+            <p className="text-ink-3 mt-1 text-xs">
+              بعد از خرید کورس، با دیدن حداقل ۸۰٪ جلسه پیشرفتت ثبت می‌شود.
+            </p>
+          )}
+          {!locked && (
+            <p className="text-ink-3 mt-1 text-xs">
             {status === 'done' ? 'این جلسه کامل شده است.' : 'با دیدن حداقل ۸۰٪ جلسه، پیشرفتت ثبت می‌شود.'}
-          </p>
+            </p>
+          )}
         </div>
         <span className="text-gold text-lg font-black tabular-nums">
           {toPersianDigits(normalizedProgress)}٪
@@ -640,20 +775,19 @@ function SectionRow({
   onClick: () => void;
 }) {
   const isDone = part.status === 'done';
-  const isLocked = false;
+  const isLocked = Boolean(part.requiresPurchase);
   const duration = formatDurationFa(part.durationSeconds ?? 0);
 
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={isLocked}
       className={cn(
-        'flex min-h-15 w-full items-center gap-3 rounded-[14px] border px-3 py-3 text-right transition-[border-color,background,transform] disabled:cursor-not-allowed',
+        'flex min-h-15 w-full items-center gap-3 rounded-[14px] border px-3 py-3 text-right transition-[border-color,background,transform]',
         isActive
           ? 'text-gold border-[var(--session-border-strong)] bg-[var(--session-active)] shadow-[0_14px_34px_-26px_var(--glow)]'
           : 'text-ink-2 border-[var(--session-border)] bg-[var(--session-surface-2)] hover:border-[var(--session-border-strong)] hover:bg-[var(--session-surface-3)]',
-        isLocked && 'opacity-55',
+        isLocked && !isActive && 'opacity-75',
       )}
     >
       <span
@@ -751,6 +885,7 @@ function MiniInfo({ label, value }: { label: string; value: string }) {
 function CommentsPanel({
   allComments,
   commentsQuery,
+  isLocked,
   commentText,
   setCommentText,
   handleSubmitComment,
@@ -759,6 +894,7 @@ function CommentsPanel({
 }: {
   allComments: Comment[];
   commentsQuery: UseInfiniteQueryResult<InfiniteData<PaginatedComments>>;
+  isLocked: boolean;
   commentText: string;
   setCommentText: (value: string) => void;
   handleSubmitComment: () => void;
@@ -780,9 +916,43 @@ function CommentsPanel({
   }, [allComments.length, isAddingComment]);
 
   const submitAndFollowComment = () => {
+    if (isLocked) return;
     shouldScrollAfterSubmitRef.current = true;
     handleSubmitComment();
   };
+
+  if (isLocked) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-ink-2 text-sm font-black">
+            نظرات کاربران ({toPersianDigits(0)})
+          </h3>
+        </div>
+
+        <p className="text-ink-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-5 text-center text-sm leading-7">
+          نظرات این جلسه بعد از خرید کورس فعال می‌شود.
+        </p>
+
+        <div className="flex min-w-0 items-center gap-2 rounded-[18px] border border-[var(--session-border)] bg-black/25 p-2.5 opacity-70 sm:gap-3 sm:p-3">
+          <div className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] shadow-[0_8px_22px_-14px_var(--glow)] [background:var(--session-primary)]">
+            {userName?.[0] ?? 'ق'}
+          </div>
+          <Input
+            disabled
+            value=""
+            onChange={() => undefined}
+            placeholder="بعد از خرید کورس می‌توانی نظر ثبت کنی"
+            className="min-w-0 flex-1"
+          />
+          <Button type="button" variant="primary" size="sm" disabled className="min-h-11 shrink-0 px-3 sm:px-4">
+            انتشار
+            <Icon name="send" size={15} />
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -792,33 +962,40 @@ function CommentsPanel({
         </h3>
       </div>
 
-      <div className="space-y-4">
-        {commentsQuery.isLoading && <CommentsSkeleton />}
-        {commentsQuery.isError && <p className="text-danger text-sm">خطا در دریافت نظرات</p>}
-        {!commentsQuery.isLoading && allComments.length === 0 ? (
-          <p className="text-ink-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-5 text-center text-sm">
-            هنوز نظری برای این جلسه ثبت نشده است.
-          </p>
-        ) : (
-          allComments.map((comment) => <CommentItem key={comment.id} comment={comment} />)
-        )}
-        <div ref={commentsEndRef} aria-hidden />
-      </div>
-
-      {commentsQuery.hasNextPage && (
-        <button
-          type="button"
-          onClick={() => commentsQuery.fetchNextPage()}
-          className="text-gold hover:text-ember w-full text-center text-sm font-black transition-colors"
-          disabled={commentsQuery.isFetchingNextPage}
-        >
-          {commentsQuery.isFetchingNextPage ? (
-            <InlineSkeleton className="mx-auto h-4 w-24" />
-          ) : (
-            'نمایش بیشتر'
+      <div className="lg:max-h-[430px] lg:overflow-y-auto lg:overscroll-contain lg:rounded-[18px] lg:pe-1">
+        <div className="space-y-4">
+          {isLocked && (
+            <p className="text-ink-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-5 text-center text-sm leading-7">
+              نظرات این جلسه بعد از خرید کورس فعال می‌شود.
+            </p>
           )}
-        </button>
-      )}
+          {!isLocked && commentsQuery.isLoading && <CommentsSkeleton />}
+          {commentsQuery.isError && <p className="text-danger text-sm">خطا در دریافت نظرات</p>}
+          {!commentsQuery.isLoading && allComments.length === 0 ? (
+            <p className="text-ink-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-5 text-center text-sm">
+              هنوز نظری برای این جلسه ثبت نشده است.
+            </p>
+          ) : (
+            allComments.map((comment) => <CommentItem key={comment.id} comment={comment} />)
+          )}
+          <div ref={commentsEndRef} aria-hidden />
+
+          {commentsQuery.hasNextPage && (
+            <button
+              type="button"
+              onClick={() => commentsQuery.fetchNextPage()}
+              className="text-gold hover:text-ember w-full rounded-[14px] border border-[var(--session-border)] bg-black/20 px-4 py-3 text-center text-sm font-black transition-colors"
+              disabled={commentsQuery.isFetchingNextPage}
+            >
+              {commentsQuery.isFetchingNextPage ? (
+                <InlineSkeleton className="mx-auto h-4 w-24" />
+              ) : (
+                'نمایش بیشتر'
+              )}
+            </button>
+          )}
+        </div>
+      </div>
 
       <div className="flex min-w-0 items-center gap-2 rounded-[18px] border border-[var(--session-border)] bg-black/25 p-2.5 sm:gap-3 sm:p-3">
         <div className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] shadow-[0_8px_22px_-14px_var(--glow)] [background:var(--session-primary)]">
@@ -908,3 +1085,4 @@ function calculateWatchedSeconds(ranges: { start: number; end: number }[]) {
 export function formatDurationFa(totalSeconds: number | string): string {
   return toPersianDigits(formatDuration(totalSeconds));
 }
+

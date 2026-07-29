@@ -15,15 +15,22 @@ export class MockSessionRepository implements ISessionRepository {
       { id: `${sectionId}-c1`, name: 'سارا محمدی', text: 'خیلی مفید بود!', time: '۲ روز پیش' },
       { id: `${sectionId}-c2`, name: 'مهدی عباسی', text: 'توضیحات عالی بود', time: '۱ روز پیش' },
     ];
+    const isUnlocked = Boolean(course.isFree || course.isPurchased || course.isUnlocked);
+    const normalizedPart = applyMockWatchState({
+      ...part,
+      courseId: course.id,
+      requiresPurchase: !isUnlocked,
+      isUnlocked,
+    });
 
     return {
-      part: applyMockWatchState(part),
+      part: normalizedPart,
       videoUrl:
-        part.mediaType === 'audio'
-          ? undefined
-          : (part.videoUrl ?? 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'),
-      audioUrl: part.audioUrl ?? undefined,
-      mediaUrl: part.mediaUrl ?? undefined,
+        isUnlocked && part.mediaType !== 'audio'
+          ? (part.videoUrl ?? 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4')
+          : undefined,
+      audioUrl: isUnlocked ? (part.audioUrl ?? undefined) : undefined,
+      mediaUrl: isUnlocked ? (part.mediaUrl ?? undefined) : undefined,
       comments,
     };
   }

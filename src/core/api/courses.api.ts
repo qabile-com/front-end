@@ -7,6 +7,9 @@ export const getCourses = (params?: { limit?: number; offset?: number; q?: strin
 export const getCourseSection = (courseId: string, sectionId: string) =>
   httpClient.get(`/api/v1/courses/${courseId}/episodes/${sectionId}`);
 
+export const purchaseCourse = (courseId: string) =>
+  httpClient.post(`/api/v1/courses/${courseId}/purchase`);
+
 export const updateSectionProgress = (
   sectionId: string,
   body: { status: string; progress?: number },

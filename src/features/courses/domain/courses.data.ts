@@ -4,6 +4,8 @@ export type CoursePartMediaType = 'video' | 'audio';
 export interface CoursePart {
   id: string;
   courseId?: string;
+  isUnlocked?: boolean;
+  requiresPurchase?: boolean;
   previousSectionId?: string | null;
   previousEpisodeId?: string | null;
   nextSectionId?: string | null;
@@ -32,8 +34,13 @@ export interface Course {
   category: string;
   imageUrl?: string | null;
   duration: string;
+  durationSeconds?: number;
   views: string;
   xp: number;
+  priceInFire?: number;
+  isPurchased?: boolean;
+  isUnlocked?: boolean;
+  isFree?: boolean;
   episodes: CoursePart[];
 }
 
@@ -46,6 +53,9 @@ const RAW_COURSES: Course[] = [
     duration: '۴۵:۲۰',
     views: '۲،۳۴۰',
     xp: 250,
+    priceInFire: 0,
+    isFree: true,
+    isPurchased: true,
     episodes: [
       { id: 'c1-s1', title: 'قدم اول: ذهن‌آگاهی', duration: '۸:۳۰', status: 'done' },
       {
@@ -68,6 +78,8 @@ const RAW_COURSES: Course[] = [
     duration: '۱:۱۲:۰۰',
     views: '۴،۸۲۰',
     xp: 400,
+    priceInFire: 900,
+    isPurchased: false,
     episodes: [
       {
         id: 'c2-s1',
@@ -93,6 +105,8 @@ const RAW_COURSES: Course[] = [
     duration: '۳۸:۱۰',
     views: '۶،۱۰۰',
     xp: 300,
+    priceInFire: 650,
+    isPurchased: true,
     episodes: [
       { id: 'c3-s1', title: 'چرخه عادت', duration: '۸:۰۰', status: 'done' },
       { id: 'c3-s2', title: 'قانون دو دقیقه', duration: '۶:۳۰', status: 'done' },
@@ -109,6 +123,8 @@ const RAW_COURSES: Course[] = [
     duration: '۵۵:۴۵',
     views: '۳،۲۷۰',
     xp: 350,
+    priceInFire: 750,
+    isPurchased: false,
     episodes: [
       { id: 'c4-s1', title: 'درآمد فعال و غیرفعال', duration: '۱۲:۰۰', status: 'none' },
       { id: 'c4-s2', title: 'قانون ۵۰-۳۰-۲۰', duration: '۱۰:۳۰', status: 'none' },
@@ -125,6 +141,8 @@ const RAW_COURSES: Course[] = [
     duration: '۵۰:۰۰',
     views: '۸،۴۰۰',
     xp: 450,
+    priceInFire: 1100,
+    isPurchased: false,
     episodes: [
       { id: 'c5-s1', title: 'ذهنیت ثابت در برابر ذهنیت رشد', duration: '۱۲:۰۰', status: 'done' },
       {
@@ -146,6 +164,8 @@ const RAW_COURSES: Course[] = [
     duration: '۴۲:۰۰',
     views: '۱،۹۸۰',
     xp: 280,
+    priceInFire: 520,
+    isPurchased: false,
     episodes: [
       {
         id: 'c6-s1',
@@ -163,23 +183,29 @@ const RAW_COURSES: Course[] = [
 ];
 
 export function withCourseSectionNavigation(course: Course): Course {
+  const episodes = course.episodes.map((part, index, parts) => {
+    const mediaType = normalizeCoursePartMediaType(part);
+
+    return {
+      ...part,
+      courseId: part.courseId ?? course.id,
+      xp: part.xp ?? Math.round(course.xp / Math.max(1, parts.length)),
+      durationSeconds: part.durationSeconds ?? parseDurationToSeconds(part.duration),
+      previousSectionId: part.previousSectionId ?? parts[index - 1]?.id ?? null,
+      nextSectionId: part.nextSectionId ?? parts[index + 1]?.id ?? null,
+      mediaType,
+      videoUrl: part.videoUrl ?? (mediaType === 'video' ? part.mediaUrl : null),
+      audioUrl: part.audioUrl ?? (mediaType === 'audio' ? part.mediaUrl : null),
+    };
+  });
+
   return {
     ...course,
-    episodes: course.episodes.map((part, index, parts) => {
-      const mediaType = normalizeCoursePartMediaType(part);
-
-      return {
-        ...part,
-        courseId: part.courseId ?? course.id,
-        xp: part.xp ?? Math.round(course.xp / Math.max(1, parts.length)),
-        durationSeconds: part.durationSeconds ?? parseDurationToSeconds(part.duration),
-        previousSectionId: part.previousSectionId ?? parts[index - 1]?.id ?? null,
-        nextSectionId: part.nextSectionId ?? parts[index + 1]?.id ?? null,
-        mediaType,
-        videoUrl: part.videoUrl ?? (mediaType === 'video' ? part.mediaUrl : null),
-        audioUrl: part.audioUrl ?? (mediaType === 'audio' ? part.mediaUrl : null),
-      };
-    }),
+    durationSeconds:
+      course.durationSeconds ??
+      parseDurationToSeconds(course.duration) ??
+      episodes.reduce((sum, part) => sum + (part.durationSeconds ?? 0), 0),
+    episodes,
   };
 }
 
