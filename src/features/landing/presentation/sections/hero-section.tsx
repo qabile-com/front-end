@@ -79,9 +79,9 @@ export function HeroSection({ totalMembers = 52000, rating = 4.9, chips }: HeroS
     : [];
 
   return (
-    <section className="relative isolate flex min-h-screen items-center pt-[160px] pb-[90px]">
+    <section className="relative isolate flex min-h-screen items-start pt-[120px] pb-[90px] lg:items-center lg:pt-[160px]">
       <Container>
-        <div className="grid items-center gap-11 lg:grid-cols-[1.1fr_.9fr]">
+        <div className="grid items-start gap-11 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
           <div>
             <span className="border-hair text-ink-2 mb-6 inline-flex items-center gap-2.25 rounded-full border py-1.5 ps-2 pe-3.5 text-[13px] font-semibold [backdrop-filter:blur(var(--glass-blur))] [background:var(--glass)]">
               <span className="rounded-full px-2.25 py-0.75 text-[10.5px] font-extrabold text-[#1a0a00] [background:var(--gold-grad)]">
@@ -135,7 +135,7 @@ export function HeroSection({ totalMembers = 52000, rating = 4.9, chips }: HeroS
             </div>
           </div>
 
-          <div className="relative mx-auto grid w-full max-w-[580px] place-items-center overflow-visible max-lg:max-w-[380px]">
+          <div className="relative order-first mx-auto grid w-full max-w-[580px] place-items-center overflow-visible max-lg:max-w-[380px] lg:order-none">
             <div
               ref={glowRef}
               className="phoenix-glow pointer-events-none absolute inset-[-15%] z-0 rounded-full [background:radial-gradient(ellipse_70%_60%_at_50%_42%,rgba(255,98,0,.22),rgba(204,67,8,.08)_45%,transparent_70%)]"

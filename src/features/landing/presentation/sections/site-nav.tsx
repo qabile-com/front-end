@@ -7,25 +7,32 @@ import { BrandMark } from '../components/brand-mark';
 import { AuthEntryLink } from '../components/auth-entry-link';
 
 const NAV_LINKS = [
-  { label: 'امکانات', href: '#pillars' },
-  { label: 'مسیر رشد', href: '#roadmap' },
-  { label: 'رقابت', href: '#leaderboard' },
-  { label: 'دیدگاه‌ها', href: '#voices' },
-  { label: 'سؤالات', href: '#faq' },
+  { label: 'امکانات', href: '/#pillars' },
+  { label: 'مسیر رشد', href: '/#roadmap' },
+  { label: 'رقابت', href: '/#leaderboard' },
+  { label: 'دیدگاه‌ها', href: '/#voices' },
+  { label: 'سؤالات', href: '/#faq' },
+  { label: 'دانلود اپلیکیشن', href: '/download' },
 ];
 
 export function SiteNav() {
   const [scrolled, setScrolled] = useState(false);
 
   const handleSectionClick = (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
-    const sectionId = href.replace('#', '');
+    const isLandingHash = href.startsWith('/#');
+    const isSamePageHash = href.startsWith('#');
+
+    if (!isLandingHash && !isSamePageHash) return;
+    if (isLandingHash && window.location.pathname !== '/') return;
+
+    const sectionId = href.replace('/#', '').replace('#', '');
     const section = document.getElementById(sectionId);
 
     if (!section) return;
 
     event.preventDefault();
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    window.history.pushState(null, '', href);
+    window.history.pushState(null, '', isLandingHash ? href : `#${sectionId}`);
   };
 
   useEffect(() => {
