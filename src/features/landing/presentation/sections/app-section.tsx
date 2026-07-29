@@ -1,4 +1,5 @@
 import { Container, GlassCard, Icon } from '@/shared/ui';
+import Link from 'next/link';
 
 export function AppSection() {
   return (
@@ -35,23 +36,17 @@ export function AppSection() {
             ))}
           </ul>
 
-          <div className="mt-7 flex flex-wrap gap-3">
-            {[
-              { icon: 'apple', small: 'دریافت از', big: 'App Store' },
-              { icon: 'android', small: 'دریافت از', big: 'Google Play' },
-            ].map((store) => (
-              <a
-                key={store.big}
-                href="#"
-                className="flex items-center gap-2.5 rounded-sm bg-[#fdf6ef] px-5 py-3 text-[#160805] transition-transform hover:-translate-y-0.5"
-              >
-                <Icon name={store.icon as 'apple'} size={24} />
-                <span className="leading-tight">
-                  <small className="block text-[10.5px] opacity-65">{store.small}</small>
-                  <b className="block text-[15px] font-extrabold">{store.big}</b>
-                </span>
-              </a>
-            ))}
+          <div className="mt-7 flex justify-center">
+            <Link
+              href="/download"
+              className="inline-flex items-center gap-2.5 rounded-xl border border-transparent px-5 py-3 text-[15px] font-extrabold text-[#1a0a00] shadow-[0_8px_28px_-6px_var(--glow),inset_0_1px_0_rgba(255,255,255,.38)] transition-[transform,box-shadow,opacity] duration-[350ms] ease-[var(--ease-out-soft)] hover:-translate-y-0.5 hover:opacity-[.94] hover:shadow-[0_14px_40px_-8px_var(--glow),inset_0_1px_0_rgba(255,255,255,.46)] [background:var(--fire-grad)]"
+            >
+              <Icon name="download" size={20} />
+              <span className="leading-tight">
+                <small className="block text-[10.5px] opacity-65">راهنمای نصب</small>
+                <b className="block text-[15px] font-extrabold">دانلود اپلیکیشن</b>
+              </span>
+            </Link>
           </div>
         </div>
 

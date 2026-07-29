@@ -279,6 +279,14 @@ const ICONS = {
   ),
   'arrow-left': stroke(<path d="m15 18-6-6 6-6" />, { width: 2 }),
   'arrow-right': stroke(<path d="m9 18 6-6-6-6" />, { width: 2 }),
+  download: stroke(
+    <>
+      <path d="M12 3v12" />
+      <path d="M7 10l5 5 5-5" />
+      <path d="M4 21h16" />
+    </>,
+    { width: 2 },
+  ),
 
   'home-f': filled(
     <path d="M10.55 2.53a2 2 0 0 1 2.9 0l7 7.56A2 2 0 0 1 21 11.56V20a2 2 0 0 1-2 2h-4v-5a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v5H5a2 2 0 0 1-2-2v-8.44a2 2 0 0 1 .55-1.47l7-7.56Z" />,
