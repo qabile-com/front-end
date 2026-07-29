@@ -1,5 +1,3 @@
-export const ONBOARDING_STORAGE_KEY = 'qabile:onboarding:completed';
-
 export interface OnboardingSlide {
   id: string;
   imageSrc: string;

@@ -64,6 +64,7 @@
 
 @layer base {
   html {
+    background: var(--color-bg);
     scroll-behavior: auto;
   }
   header {
@@ -81,6 +82,7 @@
   html,
   body {
     max-width: 100%;
+    background: var(--color-bg);
   }
 
   *,
