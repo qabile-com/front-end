@@ -1,6 +1,7 @@
 import { useUserProfile } from '../../application/use-user-profile';
 import { useRouter } from 'next/navigation';
 import { useFollowToggle } from '../../application/use-follow-toggle';
+import { useBlockToggle } from '../../application/use-block-toggle';
 import { useUserPosts } from '../../application/use-user-posts';
 import type { IUserProfileRepository } from '../../domain/user-profile-repository';
 import type { IFollowRepository } from '../../domain/follow-repository';
@@ -43,6 +44,7 @@ function ProfileLoader({
   const { data: profile, loading, error } = useUserProfile(repository, userId);
   const postsQuery = useUserPosts(repository, userId);
   const { isFollowed, toggle, isToggling } = useFollowToggle(followRepo, userId);
+  const block = useBlockToggle(repository, userId);
 
   if (loading) {
     return (
@@ -73,6 +75,8 @@ function ProfileLoader({
       isFollowed={isFollowed}
       onToggleFollow={toggle}
       isToggling={isToggling}
+      onToggleBlock={() => block.mutate(Boolean(profile.blockedByMe))}
+      isBlocking={block.isPending}
       postsQuery={postsQuery}
       onPostClick={(postId) => {
         onClose();

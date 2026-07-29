@@ -9,7 +9,7 @@ import {
 } from '@/features/leaderboard/infrastructure/repository-factory';
 import { TabError, TabLoader } from '@/features/dashboard/presentation/components/dashboard-loading';
 import { LeaderboardTab } from '@/features/leaderboard/presentation/sections/leaderboard-tab';
-import { MotionPage } from '@/shared/ui';
+import { DashboardPageShell, MotionPage } from '@/shared/ui';
 
 export function LeaderboardPage() {
   const leaderboard = useLeaderboard(leaderboardRepo);
@@ -24,14 +24,16 @@ export function LeaderboardPage() {
 
   return (
     <MotionPage>
-    <LeaderboardTab
-      podium={leaderboard.data.podium}
-      leaderboard={leaderboard.data.leaderboard}
-      userProfileRepo={userProfileRepo}
-      seasonTargetDate={new Date(season.data.targetDate)}
-      seasonPointsNeeded={season.data.pointsNeeded}
-      seasonName={season.data.seasonName}
-    />
+      <DashboardPageShell>
+        <LeaderboardTab
+          podium={leaderboard.data.podium}
+          leaderboard={leaderboard.data.leaderboard}
+          userProfileRepo={userProfileRepo}
+          seasonTargetDate={new Date(season.data.targetDate)}
+          seasonPointsNeeded={season.data.pointsNeeded}
+          seasonName={season.data.seasonName}
+        />
+      </DashboardPageShell>
     </MotionPage>
   );
 }

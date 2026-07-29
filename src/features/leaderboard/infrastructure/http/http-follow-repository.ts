@@ -1,20 +1,21 @@
 import type { IFollowRepository } from '../../domain/follow-repository';
 import {
-  followUser as followUserApi,
-  getFollowStatus as getFollowStatusApi,
-  unfollowUser as unfollowUserApi,
-} from '@/core/api/users.api';
+  followForumUser,
+  getForumUser,
+  unfollowForumUser,
+} from '@/core/api/forum.api';
 
 export class HttpFollowRepository implements IFollowRepository {
   async followUser(userId: string): Promise<void> {
-    await followUserApi(userId);
+    await followForumUser(userId);
   }
   async unfollowUser(userId: string): Promise<void> {
-    await unfollowUserApi(userId);
+    await unfollowForumUser(userId);
   }
   async getFollowStatus(userId: string): Promise<boolean> {
-    const res = await getFollowStatusApi(userId);
-    const data = res.data as { isFollowedByMe?: boolean; data?: { isFollowedByMe?: boolean } };
-    return Boolean(data.data?.isFollowedByMe ?? data.isFollowedByMe);
+    const res = await getForumUser(userId);
+    const payload = res.data as typeof res.data | { data?: typeof res.data };
+    const data = 'data' in payload && payload.data ? payload.data : res.data;
+    return Boolean(data.followedByMe ?? data.isFollowedByMe);
   }
 }

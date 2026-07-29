@@ -17,5 +17,6 @@ export function useUserProfile(repo: IUserProfileRepository, userId: string) {
     data: query.data ?? null,
     loading: query.isLoading,
     error: query.error instanceof Error ? query.error.message : null,
+    rawError: query.error,
   };
 }

@@ -21,6 +21,7 @@ function getTitleFromStreak(streak: number): string {
   return 'ققنوس برنزی';
 }
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const mockBlockedUsers = new Set<string>();
 
 export class MockUserProfileRepository implements IUserProfileRepository {
   async getUserProfile(userId: string): Promise<UserProfileData> {
@@ -74,6 +75,8 @@ export class MockUserProfileRepository implements IUserProfileRepository {
       phone: null,
       email: null,
       role: 'user',
+      blockedByMe: mockBlockedUsers.has(userId),
+      canFollow: !mockBlockedUsers.has(userId),
       xp,
       xpMax,
       streak,
@@ -99,5 +102,15 @@ export class MockUserProfileRepository implements IUserProfileRepository {
         image: post.image,
         hasImage: post.hasImage,
       }));
+  }
+
+  async blockUser(userId: string): Promise<void> {
+    await delay(180);
+    mockBlockedUsers.add(userId);
+  }
+
+  async unblockUser(userId: string): Promise<void> {
+    await delay(180);
+    mockBlockedUsers.delete(userId);
   }
 }

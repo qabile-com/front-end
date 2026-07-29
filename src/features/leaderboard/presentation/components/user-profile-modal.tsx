@@ -4,9 +4,10 @@
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
 import { getAvatarInitial } from '@/core/lib/avatar';
 import { toPersianDigits } from '@/core/lib/persian';
-import { BaseModal, GlassCard, Button, Icon, IconName } from '@/shared/ui';
+import { BaseModal, GlassCard, Button, Icon, IconName, InlineSpinner } from '@/shared/ui';
 import type { UserProfileData, UserProfilePost } from '../../domain/user-profile-repository';
 import { cn } from '@/core/lib/cn';
+import { useAuthSession } from '@/providers/auth-provider';
 
 interface Props {
   isOpen: boolean;
@@ -15,6 +16,8 @@ interface Props {
   isFollowed?: boolean;
   onToggleFollow?: () => void;
   isToggling?: boolean;
+  onToggleBlock?: () => void;
+  isBlocking?: boolean;
   postsQuery: UseInfiniteQueryResult<InfiniteData<UserProfilePost[]>>;
   onPostClick: (postId: string) => void;
 }
@@ -26,11 +29,18 @@ export function UserProfileModal({
   isFollowed,
   isToggling,
   onToggleFollow,
+  onToggleBlock,
+  isBlocking,
   postsQuery,
   onPostClick,
 }: Props) {
+  const { user: currentUser } = useAuthSession();
   const posts = postsQuery.data?.pages.flat() ?? [];
-  const followed = Boolean(isFollowed);
+  const isOwnProfile = Boolean(currentUser?.id && user.id === currentUser.id);
+  const followed = Boolean(isFollowed ?? user.followedByMe);
+  const blocked = Boolean(user.blockedByMe);
+  const canFollow = Boolean(user.canFollow) && !blocked && !isOwnProfile;
+  const canBlock = !user.isAdam && !isOwnProfile;
 
   return (
     <BaseModal
@@ -100,11 +110,12 @@ export function UserProfileModal({
                 <Button
                   variant={followed ? 'ghost' : 'primary'}
                   size="sm"
-                  disabled={isToggling}
+                  disabled={isToggling || !canFollow}
                   onClick={onToggleFollow}
-                  className={followed ? 'border-gold text-gold border' : ''}
+                  className={cn('gap-1.5', followed && 'border-gold text-gold border')}
                 >
-                  {isToggling ? '...' : followed ? 'هم پرواز هستید' : 'هم پرواز شدن'}
+                  {isToggling && <InlineSpinner className="size-3.5" />}
+                  {followed ? 'هم پرواز هستید' : 'هم پرواز شدن'}
                 </Button>
                 {/* <Button
                   variant={isFollowed ? 'ghost' : 'primary'}
@@ -115,9 +126,21 @@ export function UserProfileModal({
                 >
                   {isToggling ? '...' : isFollowed ? 'لغو دنبال کردن' : 'دنبال کردن'}
                 </Button> */}
-                <Button variant="ghost" size="sm" className="border-danger text-danger border">
-                  بلاک
-                </Button>
+                {canBlock && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isBlocking}
+                    onClick={onToggleBlock}
+                    className={cn(
+                      'gap-1.5 border border-danger text-danger',
+                      blocked && 'border-gold text-gold',
+                    )}
+                  >
+                    {isBlocking && <InlineSpinner className="size-3.5" />}
+                    {blocked ? 'رفع بلاک' : 'بلاک'}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

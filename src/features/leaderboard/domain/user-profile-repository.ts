@@ -12,6 +12,11 @@ export interface UserProfileData {
   phone?: string | null;
   email?: string | null;
   role?: string;
+  isAdam?: boolean;
+  verified?: boolean;
+  followedByMe?: boolean;
+  blockedByMe?: boolean;
+  canFollow?: boolean;
   xp: number;
   xpMax: number;
   streak: number;
@@ -48,4 +53,6 @@ export interface UserProfilePost {
 export interface IUserProfileRepository {
   getUserProfile(userId: string): Promise<UserProfileData>;
   getUserPosts(userId: string, limit?: number, offset?: number): Promise<UserProfilePost[]>;
+  blockUser(userId: string): Promise<void>;
+  unblockUser(userId: string): Promise<void>;
 }
