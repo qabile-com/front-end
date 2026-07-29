@@ -11,6 +11,8 @@ import { useLikePost } from '@/features/social/application/use-like-post';
 import { useAdminDeleteComment } from '@/features/social/application/useAdminPinPost';
 import { SocialPostDetail } from '@/features/social/presentation/components/social-post-detail';
 import { getStoredAuthSession } from '@/core/auth/token';
+import { useUser } from '@/features/dashboard/application/use-user';
+import { userRepo } from '@/features/dashboard/infrastructure/repository-factory';
 import { ErrorState, Icon, PostDetailSkeleton } from '@/shared/ui';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { shareUrl } from '@/shared/lib/native-share';
@@ -28,6 +30,7 @@ export function SocialPostPage() {
   const addComment = useAddPostComment(socialRepo);
   const deleteComment = useAdminDeleteComment(adminRepo);
   const { like, unlike } = useLikePost(socialRepo);
+  const { user } = useUser(userRepo);
   const role = getStoredAuthSession()?.user?.role;
   const canManageComments = role === 'admin' || role === 'super_admin';
 
@@ -103,6 +106,7 @@ export function SocialPostPage() {
         }}
         canManageComments={canManageComments}
         isAddingComment={addComment.isPending}
+        currentUserName={user?.name}
       />
     </div>
   );

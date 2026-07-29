@@ -14,9 +14,17 @@ interface Props {
   post: Post;
   onAddComment?: (postId: string, text: string) => void;
   onShare?: () => void;
+  currentUserName?: string | null;
 }
 
-export function SocialPostDetailModal({ isOpen, onClose, post, onAddComment, onShare }: Props) {
+export function SocialPostDetailModal({
+  isOpen,
+  onClose,
+  post,
+  onAddComment,
+  onShare,
+  currentUserName,
+}: Props) {
   const [commentText, setCommentText] = useState('');
   const [liked, setLiked] = useState(false);
   const commentsEndRef = useRef<HTMLDivElement>(null);
@@ -140,7 +148,7 @@ export function SocialPostDetailModal({ isOpen, onClose, post, onAddComment, onS
 
         <div className="border-hair flex shrink-0 items-center gap-3 border-t p-4">
           <div className="bg-ember flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
-            {getAvatarInitial('شما')}
+            {getAvatarInitial(currentUserName)}
           </div>
           <Input
             placeholder="نظرت رو بنویس..."

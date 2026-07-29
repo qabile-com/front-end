@@ -18,6 +18,7 @@ interface SocialPostDetailProps {
   onDeleteComment?: (commentId: string) => void;
   canManageComments?: boolean;
   isAddingComment?: boolean;
+  currentUserName?: string | null;
 }
 
 export function SocialPostDetail({
@@ -30,6 +31,7 @@ export function SocialPostDetail({
   onDeleteComment,
   canManageComments = false,
   isAddingComment = false,
+  currentUserName,
 }: SocialPostDetailProps) {
   const [commentText, setCommentText] = useState('');
   const commentsEndRef = useRef<HTMLDivElement>(null);
@@ -200,7 +202,7 @@ export function SocialPostDetail({
 
       <div className="border-hair sticky bottom-0 flex items-center gap-3 border-t bg-[var(--color-panel)] p-4">
         <div className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] [background:var(--fire-grad)]">
-          {getAvatarInitial('شما')}
+          {getAvatarInitial(currentUserName)}
         </div>
         <Input
           placeholder="نظرت رو بنویس..."
