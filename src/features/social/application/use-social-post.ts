@@ -2,9 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ISocialRepository } from '../domain/social-repository';
-import type { Post } from '../domain/social.data';
+import type { Post, PostComment } from '../domain/social.data';
 
 export const socialPostQueryKey = (postId: string) => ['social-post', postId] as const;
+export const socialPostCommentsQueryKey = (postId: string) =>
+  ['social-post', postId, 'comments'] as const;
 
 export function useSocialPost(repo: ISocialRepository, postId: string) {
   return useQuery({
@@ -15,6 +17,15 @@ export function useSocialPost(repo: ISocialRepository, postId: string) {
   });
 }
 
+export function useSocialPostComments(repo: ISocialRepository, postId: string) {
+  return useQuery({
+    queryKey: socialPostCommentsQueryKey(postId),
+    queryFn: () => repo.getPostComments(postId),
+    enabled: Boolean(postId),
+    staleTime: 30_000,
+  });
+}
+
 export function useAddPostComment(repo: ISocialRepository) {
   const queryClient = useQueryClient();
 
@@ -22,11 +33,23 @@ export function useAddPostComment(repo: ISocialRepository) {
     mutationFn: ({ postId, text }: { postId: string; text: string }) =>
       repo.addComment(postId, text),
     onSuccess: (comment, variables) => {
+      queryClient.setQueryData<PostComment[]>(
+        socialPostCommentsQueryKey(variables.postId),
+        (current) => [...(current ?? []), comment],
+      );
       queryClient.setQueryData<Post>(socialPostQueryKey(variables.postId), (current) =>
-        current ? { ...current, comments: [...current.comments, comment] } : current,
+        current
+          ? {
+              ...current,
+              comments: [...current.comments, comment],
+              commentsCount: (current.commentsCount ?? current.comments.length) + 1,
+              commentedByMe: true,
+            }
+          : current,
       );
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       queryClient.invalidateQueries({ queryKey: socialPostQueryKey(variables.postId) });
+      queryClient.invalidateQueries({ queryKey: socialPostCommentsQueryKey(variables.postId) });
     },
   });
 }

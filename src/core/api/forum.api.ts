@@ -1,16 +1,61 @@
 import { httpClient } from './http-client';
 
+export interface ForumUserDto {
+  id: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  displayName?: string | null;
+  username?: string | null;
+  name?: string;
+  role?: string;
+  title?: string;
+  avatar?: string | null;
+  isAdam?: boolean;
+  verified?: boolean;
+  followersCount?: number;
+  followedByMe?: boolean;
+  isFollowedByMe?: boolean;
+  blockedByMe?: boolean;
+  canFollow?: boolean;
+  activityScore?: number;
+}
+
+export interface ForumUserProfileDto extends ForumUserDto {
+  stats?: {
+    postsCount?: number;
+    totalLikesReceived?: number;
+    totalCommentsReceived?: number;
+    followersCount?: number;
+    followingCount?: number;
+  };
+  topTags?: ForumTagDto[];
+}
+
 export interface ForumCommentDto {
-  name: string;
+  id?: string;
+  authorId?: string;
+  author?: ForumUserDto;
+  name?: string;
   text: string;
   createdAt: string;
 }
 
+export interface ForumAttachmentDto {
+  id: string;
+  kind: string;
+  url: string;
+}
+
+export interface ForumTagDto {
+  tag: string;
+  count: number;
+}
+
 export interface ForumPostDto {
   id: string;
-  author: string;
-  authorId: string;
-  avatar: string;
+  author?: ForumUserDto | string;
+  authorId?: string;
+  avatar?: string;
   badge?: string;
   isAdam?: boolean;
   verified?: boolean;
@@ -22,13 +67,12 @@ export interface ForumPostDto {
     icon: string;
   };
   hasImage?: boolean;
-  attachment?: {
-    id: string;
-    kind: string;
-    url: string;
-  };
+  attachment?: ForumAttachmentDto | null;
   likes: number;
+  commentsCount?: number;
   likedByMe: boolean;
+  commentedByMe?: boolean;
+  followsAuthor?: boolean;
   comments?: ForumCommentDto[];
   location?: string;
   emoji?: string;
@@ -38,40 +82,52 @@ export interface ForumPostDto {
   canFollowAuthor?: boolean;
   isAuthorFollowedByMe?: boolean;
 }
-export interface ActiveUserDto {
-  id: string;
-  name: string;
-  role: string;
-  avatar: string;
-  isAdam?: boolean;
-  canFollow?: boolean;
-  isFollowedByMe?: boolean;
-}
 
 export interface ForumFeedResponse {
   data: ForumPostDto[];
   meta: { limit: number; offset: number; totalItems: number; totalPages: number };
-  trendingTags: string[];
-  activeUsers: ActiveUserDto[];
+  trendingTags?: Array<string | ForumTagDto>;
+  activeUsers?: ForumUserDto[];
+  matchedUsers?: ForumUserDto[];
 }
 
-export const getForumFeed = (params?: { limit?: number; offset?: number; q?: string }) =>
-  httpClient.get<ForumFeedResponse>('/api/v1/forum/feed', { params });
+export interface ForumCommentsResponse {
+  data: ForumCommentDto[];
+  meta?: { limit: number; offset: number; totalItems: number; totalPages: number };
+}
+
+export const getForumFeed = (params?: {
+  limit?: number;
+  offset?: number;
+  q?: string;
+  hashtag?: string;
+  authorId?: string;
+  author?: string;
+  followingOnly?: boolean;
+}) => httpClient.get<ForumFeedResponse>('/api/v1/forum/feed', { params });
+
+export const getForumUserPosts = (
+  userId: string,
+  params?: { limit?: number; offset?: number; q?: string; hashtag?: string; author?: string },
+) => httpClient.get<ForumFeedResponse>(`/api/v1/forum/users/${userId}/posts`, { params });
+
+export const getForumUser = (userId: string) =>
+  httpClient.get<ForumUserProfileDto>(`/api/v1/forum/users/${userId}`);
 
 export const getForumPost = (postId: string) =>
   httpClient.get<ForumPostDto>(`/api/v1/forum/posts/${postId}`);
 
 export const getForumTrendingTags = () =>
-  httpClient.get<{ data: string[] }>('/api/v1/forum/trending-tags');
+  httpClient.get<{ data: Array<string | ForumTagDto> } | Array<string | ForumTagDto>>(
+    '/api/v1/forum/trending-tags',
+  );
 
 export const getForumActiveUsers = (params?: { limit?: number }) =>
-  httpClient.get<{ data: ActiveUserDto[] }>('/api/v1/forum/active-users', { params });
+  httpClient.get<{ data: ForumUserDto[] } | ForumUserDto[]>('/api/v1/forum/active-users', {
+    params,
+  });
 
-export const createForumPost = (body: {
-  text: string;
-  image?: File | null;
-  tags?: string[];
-}) => {
+export const createForumPost = (body: { text: string; image?: File | null; tags?: string[] }) => {
   if (body.image) {
     const formData = new FormData();
     formData.append('text', body.text);
@@ -87,17 +143,36 @@ export const createForumPost = (body: {
   });
 };
 
-export const addForumComment = (postId: string, body: { text: string }) =>
-  httpClient.post<{ comments: ForumCommentDto[] }>(`/api/v1/forum/posts/${postId}/comments`, body);
+export const deleteForumPost = (postId: string) =>
+  httpClient.delete<{ success: boolean }>(`/api/v1/forum/posts/${postId}`);
 
-// Like / unlike
+export const addForumComment = (postId: string, body: { text: string }) =>
+  httpClient.post<ForumPostDto>(`/api/v1/forum/posts/${postId}/comments`, body);
+
+export const getForumComments = (postId: string, params?: { limit?: number; offset?: number }) =>
+  httpClient.get<ForumCommentsResponse>(`/api/v1/forum/posts/${postId}/comments`, { params });
+
+export const deleteForumComment = (commentId: string) =>
+  httpClient.delete<{ success: boolean }>(`/api/v1/forum/comments/${commentId}`);
+
 export const likePost = (postId: string) =>
   httpClient.post<ForumPostDto>(`/api/v1/forum/posts/${postId}/like`);
 
 export const unlikePost = (postId: string) =>
   httpClient.delete<ForumPostDto>(`/api/v1/forum/posts/${postId}/like`);
 
-// Admin endpoints
+export const followForumUser = (userId: string) =>
+  httpClient.post<ForumUserDto>(`/api/v1/forum/users/${userId}/follow`);
+
+export const unfollowForumUser = (userId: string) =>
+  httpClient.delete<ForumUserDto>(`/api/v1/forum/users/${userId}/follow`);
+
+export const blockForumUser = (userId: string) =>
+  httpClient.post<{ success: boolean }>(`/api/v1/forum/users/${userId}/block`);
+
+export const unblockForumUser = (userId: string) =>
+  httpClient.delete<{ success: boolean }>(`/api/v1/forum/users/${userId}/block`);
+
 export const adminPinPost = (postId: string, isPinned: boolean) =>
   httpClient.patch<ForumPostDto>(`/api/v1/admin/forum/posts/${postId}`, { isPinned });
 

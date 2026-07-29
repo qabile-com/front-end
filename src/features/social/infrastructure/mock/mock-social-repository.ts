@@ -1,6 +1,6 @@
 // src/features/dashboard/infrastructure/mock-social-repository.ts
 
-import type { ISocialRepository } from '../../domain/social-repository';
+import type { ISocialRepository, SocialFeedFilters } from '../../domain/social-repository';
 import type { Post, ActiveUser, PostComment } from '../../domain/social.data';
 import { POSTS, TRENDING_TAGS, ACTIVE_USERS } from '../../domain/social.data';
 import { mockFollowedUsers } from '@/features/leaderboard/infrastructure/mock/mock-follow-repository';
@@ -11,9 +11,27 @@ export class MockSocialRepository implements ISocialRepository {
   // In-memory posts (starts with static data, new posts get prepended)
   private posts: Post[] = [...POSTS];
 
-  async getFeed(limit = 10, offset = 0): Promise<Post[]> {
+  async getFeed(limit = 10, offset = 0, filters: SocialFeedFilters = {}): Promise<Post[]> {
     await delay(400);
-    return this.posts.slice(offset, offset + limit).map(withFollowState);
+    const q = filters.q?.trim().toLowerCase();
+    const hashtag = filters.hashtag?.trim();
+    const authorId = filters.authorId?.trim();
+    const author = filters.author?.trim().toLowerCase();
+    const followingOnly = Boolean(filters.followingOnly);
+
+    return this.posts
+      .map(withFollowState)
+      .filter((post) => {
+        if (q && !post.text.toLowerCase().includes(q) && !post.author.toLowerCase().includes(q)) {
+          return false;
+        }
+        if (hashtag && !post.tags?.includes(hashtag)) return false;
+        if (authorId && post.authorId !== authorId) return false;
+        if (author && !post.author.toLowerCase().includes(author)) return false;
+        if (followingOnly && !post.isAuthorFollowedByMe) return false;
+        return true;
+      })
+      .slice(offset, offset + limit);
   }
 
   async getPost(postId: string): Promise<Post> {
@@ -21,6 +39,13 @@ export class MockSocialRepository implements ISocialRepository {
     const post = this.posts.find((p) => p.id === postId);
     if (!post) throw new Error('Post not found');
     return withFollowState({ ...post, comments: [...post.comments] });
+  }
+
+  async getPostComments(postId: string, limit = 30, offset = 0): Promise<PostComment[]> {
+    await delay(180);
+    const post = this.posts.find((p) => p.id === postId);
+    if (!post) throw new Error('Post not found');
+    return post.comments.slice(offset, offset + limit);
   }
 
   async getTrendingTags(): Promise<string[]> {
@@ -33,6 +58,7 @@ export class MockSocialRepository implements ISocialRepository {
     return ACTIVE_USERS.map((user) => ({
       ...user,
       isFollowedByMe: mockFollowedUsers.has(user.id),
+      followedByMe: mockFollowedUsers.has(user.id),
     }));
   }
 
@@ -71,6 +97,7 @@ export class MockSocialRepository implements ISocialRepository {
       likedByMe: false,
       isPinned: false,
       comments: [],
+      commentsCount: 0,
       image: imageUrl,
       hasImage: !!imageUrl,
     };
@@ -88,7 +115,39 @@ export class MockSocialRepository implements ISocialRepository {
       time: 'همین الان',
     };
     post.comments.push(newComment);
+    post.commentsCount = (post.commentsCount ?? post.comments.length - 1) + 1;
     return newComment;
+  }
+
+  async followUser(userId: string): Promise<ActiveUser> {
+    await delay(150);
+    mockFollowedUsers.add(userId);
+    return this.getMockActiveUser(userId, true);
+  }
+
+  async unfollowUser(userId: string): Promise<ActiveUser> {
+    await delay(150);
+    mockFollowedUsers.delete(userId);
+    return this.getMockActiveUser(userId, false);
+  }
+
+  async getFollowStatus(userId: string): Promise<boolean> {
+    await delay(100);
+    return mockFollowedUsers.has(userId);
+  }
+
+  private getMockActiveUser(userId: string, followed: boolean): ActiveUser {
+    const user = ACTIVE_USERS.find((item) => item.id === userId);
+    return {
+      id: userId,
+      name: user?.name ?? 'کاربر قبیله',
+      role: user?.role ?? '',
+      avatar: user?.avatar ?? 'linear-gradient(135deg,#cc4308,#ff6200,#f3ba63)',
+      isAdam: user?.isAdam,
+      canFollow: user?.canFollow,
+      isFollowedByMe: followed,
+      followedByMe: followed,
+    };
   }
 }
 
@@ -96,5 +155,6 @@ function withFollowState(post: Post): Post {
   return {
     ...post,
     isAuthorFollowedByMe: mockFollowedUsers.has(post.authorId),
+    commentsCount: post.commentsCount ?? post.comments.length,
   };
 }

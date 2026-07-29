@@ -1,6 +1,8 @@
 import type { IconKey } from '@/features/dashboard/domain/dashboard.types';
 
 export interface PostComment {
+  id?: string;
+  authorId?: string;
   name: string;
   text: string;
   time: string;
@@ -31,6 +33,8 @@ export interface Post {
   };
   likes: number;
   likedByMe: boolean;
+  commentsCount?: number;
+  commentedByMe?: boolean;
   comments: PostComment[];
   location?: string;
   emoji?: string;
@@ -47,8 +51,13 @@ export interface ActiveUser {
   role: string;
   avatar: string;
   isAdam?: boolean;
+  verified?: boolean;
+  followersCount?: number;
+  followedByMe?: boolean;
   canFollow?: boolean;
   isFollowedByMe?: boolean;
+  blockedByMe?: boolean;
+  activityScore?: number;
 }
 
 const FIRE_3 = 'linear-gradient(135deg,#cc4308,#ff6200,#f3ba63)';

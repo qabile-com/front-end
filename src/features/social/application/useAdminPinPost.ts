@@ -6,7 +6,8 @@ export function useAdminPinPost(repo: IAdminRepository) {
   return useMutation({
     mutationFn: ({ postId, isPinned }: { postId: string; isPinned: boolean }) =>
       repo.pinPost(postId, isPinned),
-    onSuccess: () => {
+    onSuccess: (post) => {
+      queryClient.setQueryData(['social-post', post.id], post);
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
     },
   });
@@ -18,6 +19,7 @@ export function useAdminDeletePost(repo: IAdminRepository) {
     mutationFn: (postId: string) => repo.deletePost(postId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['social-post'] });
     },
   });
 }
@@ -28,6 +30,7 @@ export function useAdminDeleteComment(repo: IAdminRepository) {
     mutationFn: (commentId: string) => repo.deleteComment(commentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['social-post'] });
     },
   });
 }
