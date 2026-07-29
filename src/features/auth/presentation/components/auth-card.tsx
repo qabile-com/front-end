@@ -26,7 +26,7 @@ export function AuthCard({ repository, getRedirectTo }: AuthCardProps) {
   const auth = useAuth(repository, getRedirectTo);
 
   return (
-    <div className="border-hair relative w-full max-w-[420px] overflow-hidden rounded-[28px] border p-9 px-8 shadow-[0_32px_80px_-28px_rgba(0,0,0,.7),0_0_0_1px_rgba(255,255,255,.03)_inset] [backdrop-filter:blur(var(--glass-blur))_saturate(140%)] [background:var(--glass)]">
+    <div className="border-hair relative w-full max-w-[420px] overflow-hidden rounded-[28px] border p-8 px-6 shadow-[0_32px_80px_-28px_rgba(0,0,0,.7),0_0_0_1px_rgba(255,255,255,.03)_inset] [backdrop-filter:blur(var(--glass-blur))_saturate(140%)] [background:var(--glass)] sm:p-9 sm:px-8">
       <span className="pointer-events-none absolute inset-0 rounded-[inherit] [mask-composite:exclude] [padding:1px] [-webkit-mask-composite:xor] [background:linear-gradient(155deg,rgba(255,190,130,.16),transparent_34%)] [mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)]" />
 
       {auth.success && <SuccessOverlay title={auth.success.title} msg={auth.success.msg} />}

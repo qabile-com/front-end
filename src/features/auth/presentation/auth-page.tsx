@@ -108,7 +108,7 @@ export function AuthPage() {
           </div>
         </aside>
 
-        <div className="relative flex min-h-screen flex-1 flex-col items-center justify-center px-5 py-10 max-lg:px-5 max-lg:pb-10">
+        <div className="relative flex min-h-screen flex-1 flex-col items-center justify-center px-5 py-10 lg:px-5 lg:pb-10">
           <MotionItem className="w-full max-w-[420px]">
             <AuthCard repository={authRepo} getRedirectTo={getRedirectTo} />
           </MotionItem>
