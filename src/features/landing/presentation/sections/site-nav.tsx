@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type MouseEvent } from 'react';
+import { motion } from 'framer-motion';
 import { Button, Container, Icon } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { BrandMark } from '../components/brand-mark';
