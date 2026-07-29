@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObjec
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/core/lib/cn';
+import { getAvatarInitial } from '@/core/lib/avatar';
 import { formatDuration } from '@/core/lib/format-duration';
 import { toPersianDigits } from '@/core/lib/persian';
 import { showError, showSuccess } from '@/shared/lib/toast';
@@ -260,11 +261,6 @@ export function SessionContent({
             session={session}
             videoUrl={videoUrl}
             isLocked={requiresPurchase}
-            coursePrice={coursePrice}
-            fireBalance={fireBalance}
-            hasEnoughFire={hasEnoughFire}
-            isPurchasingCourse={isPurchasingCourse}
-            onBuyCourse={onBuyCourse}
             showVideo={showVideo}
             setShowVideo={setShowVideo}
             videoRef={videoRef}
@@ -275,7 +271,7 @@ export function SessionContent({
             }}
           />
 
-          {!showVideo && !requiresPurchase && (
+          {!showVideo && (
             <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between p-4 sm:p-6">
               <IconButton label="بازگشت" onClick={handleClose} icon="arrow-right" />
               <IconButton label="اشتراک‌گذاری" onClick={() => void handleShare()} icon="share" />
@@ -285,11 +281,20 @@ export function SessionContent({
           {!showVideo && (
             <button
               type="button"
-              className="focus:ring-gold absolute inset-0 z-20 m-auto grid size-17 place-items-center rounded-full border border-[rgba(243,186,99,.45)] text-black shadow-[0_18px_42px_-16px_var(--glow)] transition-transform duration-250 [background:var(--session-primary)] hover:scale-105 focus:ring-2 focus:outline-none active:scale-95"
-              onClick={() => setShowVideo(true)}
-              aria-label="پخش ویدیو"
+              className={cn(
+                'focus:ring-gold absolute inset-0 z-20 m-auto grid size-17 place-items-center rounded-full border border-[rgba(243,186,99,.45)] text-black shadow-[0_18px_42px_-16px_var(--glow)] transition-transform duration-250 [background:var(--session-primary)] hover:scale-105 focus:ring-2 focus:outline-none active:scale-95',
+                requiresPurchase && 'cursor-pointer',
+              )}
+              onClick={() => {
+                if (requiresPurchase) {
+                  onBuyCourse?.();
+                  return;
+                }
+                setShowVideo(true);
+              }}
+              aria-label={requiresPurchase ? 'خرید دوره' : 'پخش ویدیو'}
             >
-              <Icon name="play" size={24} />
+              <Icon name={requiresPurchase ? 'lock' : 'play'} size={24} />
             </button>
           )}
         </div>
@@ -316,15 +321,18 @@ export function SessionContent({
                 مرور کن و با ادامه دادن مسیر، پیشرفتت را ثبت کن.
               </p>
             </div>
+            {requiresPurchase && (
+              <LockedCourseNotice
+                price={coursePrice}
+                fireBalance={fireBalance}
+                hasEnoughFire={hasEnoughFire}
+                isPurchasing={isPurchasingCourse}
+                onBuyCourse={onBuyCourse}
+              />
+            )}
             <div className="hidden md:flex md:justify-start">
               {requiresPurchase ? (
-                <LockedCourseAction
-                  price={coursePrice}
-                  hasEnoughFire={hasEnoughFire}
-                  isPurchasing={isPurchasingCourse}
-                  onBuyCourse={onBuyCourse}
-                  variant="desktop"
-                />
+                null
               ) : (
                 <ContinueButton hasNext={hasNext} onNextSession={onNextSession} variant="desktop" />
               )}
@@ -341,7 +349,7 @@ export function SessionContent({
           <SessionStat
             label={`بخش ${toPersianDigits(currentIndex + 1)} از ${toPersianDigits(displayCourse.episodes.length)}`}
             value={session.status === 'done' ? 'تکمیل شده' : 'سطح متوسط'}
-            icon="book"
+            icon="episodes"
           />
           <SessionStat label="آتش" value={`+${toPersianDigits(sessionXp)} آتش`} icon="flame" />
           <SessionStat
@@ -358,22 +366,22 @@ export function SessionContent({
         <SessionProgressCard progress={watchProgress} status={session.status} locked={requiresPurchase} />
 
         <div className="px-4 pt-4 sm:px-6">
-          <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] border-b border-[var(--session-border)] min-[1440px]:grid-cols-2">
+          <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-1 rounded-[18px] border border-[var(--session-border)] bg-black/28 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,.04)] min-[1440px]:grid-cols-2">
             {SESSION_TABS.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
+                aria-current={activeTab === tab.id ? 'page' : undefined}
                 className={cn(
-                  'relative min-h-12 px-2 text-sm font-black transition-colors',
+                  'relative min-h-11 rounded-[14px] border px-2 text-sm font-black transition-[background,border-color,color,box-shadow,transform] duration-250 active:scale-[.98]',
                   tab.id === 'sections' && 'min-[1440px]:hidden',
-                  activeTab === tab.id ? 'text-gold' : 'text-ink-3 hover:text-ink-2',
+                  activeTab === tab.id
+                    ? 'border-[rgba(243,186,99,.32)] text-[#1a0a00] shadow-[0_12px_30px_-22px_var(--glow)] [background:var(--session-primary)]'
+                    : 'border-transparent text-ink-3 hover:border-[var(--session-border)] hover:bg-[var(--session-surface-2)] hover:text-ink-2',
                 )}
               >
                 {tab.label}
-                {activeTab === tab.id && (
-                  <span className="bg-gold absolute inset-x-3 bottom-0 h-[2px] rounded-full shadow-[0_0_18px_var(--glow)]" />
-                )}
               </button>
             ))}
           </div>
@@ -455,11 +463,6 @@ function VideoOrCover({
   session,
   videoUrl,
   isLocked,
-  coursePrice,
-  fireBalance,
-  hasEnoughFire,
-  isPurchasingCourse,
-  onBuyCourse,
   showVideo,
   setShowVideo,
   videoRef,
@@ -470,11 +473,6 @@ function VideoOrCover({
   session: CoursePart;
   videoUrl?: string;
   isLocked: boolean;
-  coursePrice: number;
-  fireBalance: number;
-  hasEnoughFire: boolean;
-  isPurchasingCourse: boolean;
-  onBuyCourse?: () => void;
   showVideo: boolean;
   setShowVideo: (value: boolean) => void;
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -513,42 +511,7 @@ function VideoOrCover({
       )}
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.18)_0%,rgba(0,0,0,.42)_44%,rgba(0,0,0,.94)_100%)]" />
       <div className="absolute inset-x-0 top-0 h-32 bg-[radial-gradient(ellipse_at_top,rgba(255,98,0,.35),transparent_65%)]" />
-      {isLocked && (
-        <div className="absolute inset-x-3 bottom-3 z-10 rounded-[18px] border border-[rgba(255,98,0,.28)] bg-black/72 p-3 text-center shadow-[0_18px_50px_-32px_var(--glow)] backdrop-blur-md sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[340px] sm:p-4 sm:text-right">
-          <div className="mx-auto mb-2 grid size-10 place-items-center rounded-2xl border border-[rgba(243,186,99,.25)] bg-[rgba(255,98,0,.12)] text-gold sm:mx-0">
-            <Icon name="lock" size={19} />
-          </div>
-          <h3 className="text-ink text-sm font-black sm:text-base">
-            برای دسترسی به کورس باید آن را خریداری کنی
-          </h3>
-          <p className="text-ink-3 mt-1 text-xs leading-6">
-            بعد از خرید می‌توانی جلسه‌ها را ببینی و کورس را ادامه بدهی.
-          </p>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] font-black sm:mt-3 sm:text-xs">
-            <span className="rounded-xl border border-[rgba(243,186,99,.18)] bg-black/35 px-3 py-2 text-gold">
-              قیمت: {toPersianDigits(coursePrice)} آتش
-            </span>
-            <span
-              className={cn(
-                'rounded-xl border bg-black/35 px-3 py-2',
-                hasEnoughFire ? 'border-[#2bd4a8]/25 text-[#2bd4a8]' : 'border-red-500/25 text-red-300',
-              )}
-            >
-              موجودی: {toPersianDigits(fireBalance)}
-            </span>
-          </div>
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            disabled={!hasEnoughFire || isPurchasingCourse || !onBuyCourse}
-            onClick={onBuyCourse}
-            className="mt-2 w-full sm:mt-3"
-          >
-            {isPurchasingCourse ? 'در حال خرید...' : 'خرید کورس'}
-          </Button>
-        </div>
-      )}
+      {isLocked && <div className="absolute inset-0 bg-black/18" />}
       {!isLocked && !videoUrl && (
         <button
           type="button"
@@ -620,6 +583,76 @@ function IconTextButton({
   );
 }
 
+function LockedCourseNotice({
+  price,
+  fireBalance,
+  hasEnoughFire,
+  isPurchasing,
+  onBuyCourse,
+}: {
+  price: number;
+  fireBalance: number;
+  hasEnoughFire: boolean;
+  isPurchasing: boolean;
+  onBuyCourse?: () => void;
+}) {
+  return (
+    <div className="rounded-[20px] border border-[rgba(255,98,0,.24)] bg-[linear-gradient(135deg,rgba(255,98,0,.14),rgba(0,0,0,.28))] p-4 shadow-[0_18px_54px_-42px_var(--glow)]">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
+        <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-[rgba(243,186,99,.26)] bg-black/28 text-gold">
+          <Icon name="lock" size={19} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-ink text-sm font-black sm:text-base">
+            برای دیدن جلسه‌ها و ادامه دوره باید آن را بخری.
+          </h3>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs font-black">
+            <span className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-[rgba(243,186,99,.2)] bg-black/28 px-3 text-gold">
+              قیمت: {toPersianDigits(price)}
+              <Icon name="flame" size={14} />
+            </span>
+            <span
+              className={cn(
+                'inline-flex min-h-9 items-center gap-1.5 rounded-xl border bg-black/28 px-3',
+                hasEnoughFire
+                  ? 'border-[#2bd4a8]/25 text-[#2bd4a8]'
+                  : 'border-red-500/25 text-red-300',
+              )}
+            >
+              <Icon name="flame" size={14} />
+              آتش شما: {toPersianDigits(fireBalance)}
+            </span>
+          </div>
+          <div className="mt-4 flex flex-col gap-2 sm:max-w-[340px]">
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              disabled={!hasEnoughFire || isPurchasing || !onBuyCourse}
+              onClick={onBuyCourse}
+              className="w-full"
+            >
+              {isPurchasing ? (
+                'در حال خرید...'
+              ) : (
+                <>
+                  قیمت: {toPersianDigits(price)}
+                  <Icon name="flame" size={16} />
+                </>
+              )}
+            </Button>
+            {!hasEnoughFire && (
+              <p className="rounded-xl border border-red-500/25 px-3 py-2 text-center text-xs font-black text-red-300 [background:rgba(239,68,68,.08)]">
+                آتش کافی نداری
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ContinueButton({
   hasNext,
   onNextSession,
@@ -672,7 +705,7 @@ function LockedCourseAction({
       {isPurchasing
         ? 'در حال خرید...'
         : hasEnoughFire
-          ? `خرید با ${toPersianDigits(price)} آتش`
+          ? `خرید دوره با ${toPersianDigits(price)} آتش`
           : 'آتش کافی نداری'}
     </button>
   );
@@ -696,7 +729,7 @@ function SessionProgressCard({
           <p className="text-ink text-sm font-black">پیشرفت جلسه</p>
           {locked && (
             <p className="text-ink-3 mt-1 text-xs">
-              بعد از خرید کورس، با دیدن حداقل ۸۰٪ جلسه پیشرفتت ثبت می‌شود.
+              بعد از خرید دوره، با دیدن حداقل ۸۰٪ جلسه پیشرفتت ثبت می‌شود.
             </p>
           )}
           {!locked && (
@@ -903,6 +936,7 @@ function CommentsPanel({
 }) {
   const commentsEndRef = useRef<HTMLDivElement | null>(null);
   const shouldScrollAfterSubmitRef = useRef(false);
+  const currentUserInitial = getAvatarInitial(userName);
 
   useEffect(() => {
     if (!shouldScrollAfterSubmitRef.current || isAddingComment) return;
@@ -931,18 +965,18 @@ function CommentsPanel({
         </div>
 
         <p className="text-ink-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-5 text-center text-sm leading-7">
-          نظرات این جلسه بعد از خرید کورس فعال می‌شود.
+          نظرات این جلسه بعد از خرید دوره فعال می‌شود.
         </p>
 
         <div className="flex min-w-0 items-center gap-2 rounded-[18px] border border-[var(--session-border)] bg-black/25 p-2.5 opacity-70 sm:gap-3 sm:p-3">
           <div className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] shadow-[0_8px_22px_-14px_var(--glow)] [background:var(--session-primary)]">
-            {userName?.[0] ?? 'ق'}
+            {currentUserInitial}
           </div>
           <Input
             disabled
             value=""
             onChange={() => undefined}
-            placeholder="بعد از خرید کورس می‌توانی نظر ثبت کنی"
+            placeholder="بعد از خرید دوره می‌توانی نظر ثبت کنی"
             className="min-w-0 flex-1"
           />
           <Button type="button" variant="primary" size="sm" disabled className="min-h-11 shrink-0 px-3 sm:px-4">
@@ -966,7 +1000,7 @@ function CommentsPanel({
         <div className="space-y-4">
           {isLocked && (
             <p className="text-ink-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-5 text-center text-sm leading-7">
-              نظرات این جلسه بعد از خرید کورس فعال می‌شود.
+              نظرات این جلسه بعد از خرید دوره فعال می‌شود.
             </p>
           )}
           {!isLocked && commentsQuery.isLoading && <CommentsSkeleton />}
@@ -999,7 +1033,7 @@ function CommentsPanel({
 
       <div className="flex min-w-0 items-center gap-2 rounded-[18px] border border-[var(--session-border)] bg-black/25 p-2.5 sm:gap-3 sm:p-3">
         <div className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] shadow-[0_8px_22px_-14px_var(--glow)] [background:var(--session-primary)]">
-          {userName?.[0] ?? 'ق'}
+          {currentUserInitial}
         </div>
         <Input
           placeholder="نظرت رو بنویس..."
@@ -1025,19 +1059,23 @@ function CommentsPanel({
 }
 
 function CommentItem({ comment }: { comment: Comment }) {
+  const initial = getAvatarInitial(comment.name);
+
   return (
-    <div className="flex items-start gap-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-3">
-      <div className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] [background:var(--session-primary)]">
-        {comment.name?.[0] ?? '?'}
+    <div className="flex items-start gap-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-3.5">
+      <div className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] [background:var(--session-primary)]">
+        {initial}
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0 flex-1 space-y-2">
+        <div className="min-w-0">
           <span className="text-ink truncate text-sm font-black">{comment.name}</span>
-          <span className="text-ink-4 shrink-0 text-xs">
-            {comment.time ?? comment.createdAt ?? ''}
-          </span>
         </div>
-        <p className="text-ink-3 mt-1 text-sm leading-7">{comment.text}</p>
+        <p className="text-ink-3 text-sm leading-7">{comment.text}</p>
+        <div className="flex justify-end">
+          <time className="text-ink-4 text-xs font-bold" dateTime={comment.createdAt}>
+            {comment.time ?? comment.createdAt ?? ''}
+          </time>
+        </div>
       </div>
     </div>
   );

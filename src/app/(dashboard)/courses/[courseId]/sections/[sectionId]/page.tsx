@@ -115,7 +115,7 @@ export default function SessionPage() {
       setCourseToPurchase(null);
       router.refresh();
     } catch (error) {
-      showError(error instanceof Error ? error.message : 'خرید کورس انجام نشد.');
+      showError(error instanceof Error ? error.message : 'خرید دوره انجام نشد.');
     }
   }, [course, coursesQuery, purchaseCourse, refetchSession, refetchUser, router]);
 
@@ -208,6 +208,7 @@ export default function SessionPage() {
                 onBuyCourse={() => setCourseToPurchase(course)}
                 onBack={() => router.push(returnHref)}
                 isAddingComment={addComment.isPending}
+                userName={user?.name}
               />
             )}
           </div>
