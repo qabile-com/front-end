@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, type MouseEvent } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button, Container, Icon } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { BrandMark } from '../components/brand-mark';
@@ -103,30 +103,39 @@ export function SiteNav() {
         </div>
       </Container>
 
-      {menuOpen && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-          className="overflow-hidden lg:hidden"
-        >
-          <div className="border-hair [background:rgba(5,3,2,.88)] backdrop-blur-xl">
-            <nav className="flex flex-col gap-1 px-5 py-4">
-              {NAV_LINKS.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={handleSectionClick(link.href)}
-                  className="text-ink-2 hover:text-ink rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </nav>
-          </div>
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            key="mobile-menu"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden lg:hidden"
+          >
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, delay: 0.05 }}
+              className="border-hair [background:rgba(5,3,2,.88)] backdrop-blur-xl"
+            >
+              <nav className="flex flex-col gap-1 px-5 py-4">
+                {NAV_LINKS.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    onClick={handleSectionClick(link.href)}
+                    className="text-ink-2 hover:text-ink rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
