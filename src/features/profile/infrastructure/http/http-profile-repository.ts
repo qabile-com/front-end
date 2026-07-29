@@ -199,6 +199,7 @@ export class HttpProfileRepository implements IProfileRepository {
       email: p.email,
       isEmailVerified: p.isEmailVerified,
       role: p.role,
+      isCompleteOnboarding: p.isCompleteOnboarding ?? false,
       securitySettings: { ...DEFAULT_SECURITY_SETTINGS, ...p.securitySettings },
       profileStats: p.profileStats ?? [],
       achievements: (p.achievements ?? []).map((achievement) => ({

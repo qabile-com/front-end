@@ -1,15 +1,15 @@
 // src/features/dashboard/infrastructure/http-user-repository.ts
 
 import type { IUserRepository } from '../../domain/dashboard-repository';
-import { getDashboardBundle } from '@/core/api/dashboard.api';
-import { updateMyOnboarding } from '@/core/api/users.api';
+import { getMyProfile, updateMyOnboarding } from '@/core/api/users.api';
 import { DEFAULT_AVATAR_GRADIENT, type CurrentUser } from '../../domain/dashboard.types';
 import { getAvatarInitial } from '@/core/lib/avatar';
 
 export class HttpUserRepository implements IUserRepository {
   async getCurrentUser(): Promise<CurrentUser> {
-    const res = await getDashboardBundle();
-    return normalizeCurrentUser(res.data.user);
+    const res = await getMyProfile();
+    const payload = res.data.data ?? res.data;
+    return normalizeCurrentUser(payload);
   }
 
   async updateOnboardingCompletion(isCompleteOnboarding: boolean): Promise<CurrentUser> {

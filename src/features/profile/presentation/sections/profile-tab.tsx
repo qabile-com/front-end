@@ -4,6 +4,7 @@ import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { Panel } from '@/shared/ui';
+import { useLogout } from '@/features/auth/application/use-auth-guard';
 import { ProfileSettingsPanel } from '../components/profile-settings-panel';
 import { EditProfileModal } from '../components/edit-profile-modal';
 import type { Achievement, AchievementCondition } from '@/features/dashboard/domain/dashboard.types';
@@ -19,6 +20,7 @@ export function ProfileTab({ profile, profileRepo, initialEditProfileOpen = fals
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(initialEditProfileOpen);
+  const logout = useLogout();
   const sortedAchievements = sortAchievementsByUnlocked(profile.achievements);
 
   return (
@@ -173,6 +175,18 @@ export function ProfileTab({ profile, profileRepo, initialEditProfileOpen = fals
             ))}
           </div>
         </Panel>
+
+        <button
+          type="button"
+          onClick={logout}
+          className="lg:hidden border-hair flex min-h-13 w-full items-center justify-center gap-2.5 rounded-[18px] border border-red-500/25 px-4 text-[13.5px] font-extrabold text-red-300 shadow-[0_18px_42px_-34px_rgba(255,90,90,.75)] transition-[transform,border-color,background,color] duration-300 [background:linear-gradient(135deg,rgba(255,90,90,.12),rgba(255,98,0,.04))] active:scale-[.98]"
+          aria-label="خروج از حساب کاربری"
+        >
+          <span className="grid size-9 place-items-center rounded-[12px] border border-red-500/20 bg-red-500/10">
+            <Icon name="logout" size={19} />
+          </span>
+          خروج از حساب کاربری
+        </button>
       </div>
 
       {selectedAchievement && (

@@ -55,6 +55,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     mutationFn: () => userRepo.updateOnboardingCompletion(true),
     onSuccess: (updatedUser) => {
       queryClient.setQueryData(['dashboard', 'user', 'current'], updatedUser);
+      queryClient.setQueryData(['dashboard', 'profile', 'me'], (current: unknown) =>
+        current && typeof current === 'object'
+          ? { ...current, isCompleteOnboarding: true }
+          : current,
+      );
       void queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
     },
   });
