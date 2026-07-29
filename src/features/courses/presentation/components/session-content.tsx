@@ -448,10 +448,11 @@ export function SessionContent({
           )}
           <button
             type="button"
+            onClick={onBack}
             className="text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)]"
-            aria-label="ذخیره جلسه"
+            aria-label="بازگشت به دوره‌ها"
           >
-            <Icon name="book" size={22} />
+            <Icon name="arrow-right" size={22} />
           </button>
         </div>
       </div>
@@ -662,6 +663,7 @@ function ContinueButton({
   onNextSession: () => void;
   variant?: 'mobile' | 'desktop';
 }) {
+  const label = hasNext ? 'جلسه بعدی' : 'پایان دوره';
   return (
     <button
       type="button"
@@ -672,8 +674,8 @@ function ContinueButton({
         variant === 'desktop' ? 'min-w-56' : 'flex-1',
       )}
     >
-      ادامه آموزش
-      <Icon name="arrow-left" size={18} />
+      {label}
+      <Icon name={hasNext ? 'arrow-left' : 'check'} size={18} />
     </button>
   );
 }
