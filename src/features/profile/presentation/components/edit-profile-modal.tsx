@@ -265,7 +265,7 @@ function EditField({
   return (
     <label className="block text-right">
       <span className="mb-1.5 block text-[11px] font-bold">{label}</span>
-      <span className="flex h-11 items-center gap-2 rounded-[8px] border border-[rgba(255,98,0,.14)] bg-[rgba(255,98,0,.1)] px-2.5">
+      <span className="flex min-h-11 min-w-0 flex-wrap items-center gap-2 rounded-[8px] border border-[rgba(255,98,0,.14)] bg-[rgba(255,98,0,.1)] px-2.5 py-2">
         <Icon name={icon} size={17} className="text-ember shrink-0" />
         <input
           value={value}
@@ -273,10 +273,10 @@ function EditField({
           placeholder={placeholder}
           disabled={disabled}
           dir={ltr ? 'ltr' : 'rtl'}
-          className="placeholder:text-ink-4 min-w-0 flex-1 bg-transparent text-right text-[12px] outline-none disabled:opacity-60"
+          className="placeholder:text-ink-4 min-w-[120px] flex-1 truncate bg-transparent text-right text-[12px] outline-none disabled:opacity-60"
         />
         {badge && (
-          <span className="rounded-[6px] bg-[#2bd4a8] px-2.5 py-1 text-[10.5px] font-black text-black">
+          <span className="shrink-0 rounded-[6px] bg-[#2bd4a8] px-2.5 py-1 text-[10.5px] font-black whitespace-nowrap text-black">
             {badge}
           </span>
         )}
