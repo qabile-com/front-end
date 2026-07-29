@@ -3,10 +3,10 @@
 import toast, { Toaster } from 'react-hot-toast';
 
 const toastClassName =
-  'relative overflow-hidden rounded-[18px] border px-4 py-3 text-sm font-extrabold leading-7 text-[var(--color-ink)] shadow-[0_24px_80px_-34px_var(--glow),0_0_0_1px_rgba(255,255,255,.035)_inset] backdrop-blur-2xl [background:linear-gradient(135deg,rgba(24,11,4,.94),rgba(7,4,2,.94))] before:pointer-events-none before:absolute before:inset-x-4 before:top-0 before:h-px before:[background:linear-gradient(90deg,transparent,rgba(243,186,99,.65),transparent)]';
+  'relative overflow-hidden rounded-[18px] border px-4 py-3 text-sm font-extrabold leading-7 text-[var(--color-ink)] shadow-[0_24px_80px_-34px_var(--glow)] backdrop-blur-2xl [background:var(--glass-2)] before:pointer-events-none before:absolute before:inset-x-4 before:top-0 before:h-px before:[background:linear-gradient(90deg,transparent,rgba(243,186,99,.55),transparent)]';
 
-const successToastClassName = `${toastClassName} border-[rgba(255,98,0,.34)]`;
-const errorToastClassName = `${toastClassName} border-[rgba(255,90,90,.42)]`;
+const successToastClassName = `${toastClassName} border-[rgba(255,98,0,.28)]`;
+const errorToastClassName = `${toastClassName} border-[rgba(255,90,90,.35)]`;
 
 const toastStyle = {
   direction: 'rtl' as const,
