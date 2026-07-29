@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   EmberCanvas,
   GradText,
   Icon,
+  LandingPhoenix,
   MotionItem,
   MotionList,
   MotionPage,
@@ -17,6 +18,7 @@ import { toPersianDigits } from '@/core/lib/persian';
 import { useLandingPublicData } from '@/features/landing/application/use-landing-public-data';
 import { landingPublicRepo } from '@/features/landing/infrastructure/repository-factory';
 import { resolveAuthEntryTarget } from '@/core/auth/resolve-auth-entry';
+import { getSafeRedirectPath } from '@/core/auth/redirect';
 import { authRepo } from '../infrastructure/repository-factory';
 import { AuthCard } from './components/auth-card';
 
@@ -27,12 +29,18 @@ export function AuthPage() {
   const totalMembers = stats.data?.totalMembers ?? 52000;
   const rating = stats.data?.rating ?? 4.9;
 
+  const getRedirectTo = useCallback(() => {
+    return getSafeRedirectPath(new URLSearchParams(window.location.search).get('next'), '/home');
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
+    const next = getRedirectTo();
+
     void resolveAuthEntryTarget().then((target) => {
       if (cancelled) return;
       if (target === '/home') {
-        router.replace('/home');
+        router.replace(next);
         return;
       }
       setAuthCheckPending(false);
@@ -40,7 +48,7 @@ export function AuthPage() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [getRedirectTo, router]);
 
   if (authCheckPending) {
     return <AuthGateLoader />;
@@ -73,8 +81,8 @@ export function AuthPage() {
                 ققنوس از آتش نمی‌ترسد؛ &nbsp;<GradText>از سکون می‌ترسد.</GradText>
               </h2>
               <p className="text-ink-2 mt-3.5 max-w-125 text-[16px] leading-[1.85]">
-                ققنوس از دل آتش متولد می‌شود؛ تو هم با هر قدم، به نسخه‌ای بهتر از خودت
-                نزدیک‌تر می‌شوی.
+                ققنوس از دل آتش متولد می‌شود؛ تو هم با هر قدم، به نسخه‌ای بهتر از خودت نزدیک‌تر
+                می‌شوی.
               </p>
             </div>
 
@@ -102,14 +110,14 @@ export function AuthPage() {
 
         <div className="relative flex min-h-screen flex-1 flex-col items-center justify-center px-5 py-10 max-lg:px-5 max-lg:pb-10">
           <MotionItem className="w-full max-w-[420px]">
-            <AuthCard repository={authRepo} />
+            <AuthCard repository={authRepo} getRedirectTo={getRedirectTo} />
           </MotionItem>
 
           <Link
             href="/"
             className="text-ink-3 hover:text-gold mt-5 flex items-center gap-1.5 text-[13px] transition-colors"
           >
-            <Icon name="arrow-left" size={14} />
+            <Icon name="arrow-right" size={14} />
             بازگشت به صفحه اصلی
           </Link>
         </div>
@@ -133,7 +141,7 @@ function AuthGateLoader() {
         <div className="relative size-28">
           <span className="border-ember/30 absolute inset-0 animate-ping rounded-full border" />
           <span className="from-ember/25 via-gold/15 absolute inset-1 animate-pulse rounded-full bg-linear-to-br to-transparent blur-md" />
-          <PhoenixArt className="absolute inset-0 size-full object-contain drop-shadow-[0_0_24px_rgba(255,98,0,.45)]" />
+          <LandingPhoenix className="absolute inset-2 drop-shadow-[0_0_24px_rgba(255,98,0,.45)]" />
         </div>
         <div>
           <p className="text-ink text-base font-black">در حال بررسی ورود...</p>

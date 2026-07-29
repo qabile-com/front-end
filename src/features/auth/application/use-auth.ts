@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { saveAuthSession } from '@/core/auth/token';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type { IAuthRepository, VerifyOtpResult } from '../domain/auth-repository';
+import { getAuthErrorMessage } from './auth-error-message';
 
-export function useAuth(repo: IAuthRepository) {
+export function useAuth(repo: IAuthRepository, getRedirectTo: () => string = () => '/courses') {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<{ title: string; msg: string } | null>(null);
@@ -15,9 +16,13 @@ export function useAuth(repo: IAuthRepository) {
     (session: VerifyOtpResult) => {
       saveAuthSession(session);
 
-      if (session.isNewUser && session.signupReward) {
-        sessionStorage.setItem('signupReward', JSON.stringify(session.signupReward));
+      const firstLoginReward = session.firstLoginReward ?? (session.isNewUser ? session.signupReward : undefined);
+
+      if (firstLoginReward) {
+        sessionStorage.setItem('signupReward', JSON.stringify(firstLoginReward));
+        sessionStorage.setItem('showInstallAfterFirstLoginReward', '1');
       }
+
       if (session.unlockedAchievements?.length) {
         sessionStorage.setItem('signupAchievements', JSON.stringify(session.unlockedAchievements));
       }
@@ -26,9 +31,9 @@ export function useAuth(repo: IAuthRepository) {
         title: `خوش آمدی ${session.user.name}! 🔥`,
         msg: 'ورود موفقیت‌آمیز بود. در حال ورود به قبیله...',
       });
-      setTimeout(() => router.push('/courses'), 900);
+      setTimeout(() => router.push(getRedirectTo()), 900);
     },
-    [router],
+    [getRedirectTo, router],
   );
 
   const loginWithPassword = useCallback(
@@ -39,7 +44,7 @@ export function useAuth(repo: IAuthRepository) {
         completeLogin(session);
         return true;
       } catch (error: unknown) {
-        showError(getErrorMessage(error, 'ورود ناموفق بود. ایمیل یا رمز عبور را بررسی کنید.'));
+        showError(getAuthErrorMessage(error, 'ورود ناموفق بود. ایمیل یا رمز عبور را بررسی کن.'));
         return false;
       } finally {
         setLoading(false);
@@ -52,10 +57,11 @@ export function useAuth(repo: IAuthRepository) {
     async (identifier: string) => {
       setLoading(true);
       try {
-        await repo.requestOtp(identifier);
+        const message = await repo.requestOtp(identifier);
+        if (message) showSuccess(message);
         return true;
       } catch (error: unknown) {
-        showError(getErrorMessage(error, 'خطا در ارسال کد'));
+        showError(getAuthErrorMessage(error, 'کد تایید ارسال نشد.'));
         return false;
       } finally {
         setLoading(false);
@@ -65,14 +71,14 @@ export function useAuth(repo: IAuthRepository) {
   );
 
   const verifyOtp = useCallback(
-    async (identifier: string, code: string, name?: string, lastName?: string) => {
+    async (identifier: string, code: string) => {
       setLoading(true);
       try {
-        const session = await repo.verifyOtp(identifier, code, name, lastName);
+        const session = await repo.verifyOtp(identifier, code);
         completeLogin(session);
         return true;
       } catch (error: unknown) {
-        showError(getErrorMessage(error, 'کد تایید اشتباه است'));
+        showError(getAuthErrorMessage(error, 'کد تایید درست نیست.'));
         return false;
       } finally {
         setLoading(false);
@@ -85,11 +91,11 @@ export function useAuth(repo: IAuthRepository) {
     async (email: string) => {
       setLoading(true);
       try {
-        await repo.requestForgotPassword(email);
-        showSuccess('کد بازیابی رمز عبور ارسال شد');
+        const message = await repo.requestForgotPassword(email);
+        showSuccess(message || 'کد بازیابی رمز عبور ارسال شد');
         return true;
       } catch (error: unknown) {
-        showError(getErrorMessage(error, 'کد بازیابی ارسال نشد'));
+        showError(getAuthErrorMessage(error, 'کد بازیابی ارسال نشد.'));
         return false;
       } finally {
         setLoading(false);
@@ -104,7 +110,7 @@ export function useAuth(repo: IAuthRepository) {
       try {
         return await repo.verifyForgotPassword(email, code);
       } catch (error: unknown) {
-        showError(getErrorMessage(error, 'کد بازیابی اشتباه است'));
+        showError(getAuthErrorMessage(error, 'کد بازیابی درست نیست.'));
         return null;
       } finally {
         setLoading(false);
@@ -117,11 +123,11 @@ export function useAuth(repo: IAuthRepository) {
     async (verificationToken: string, password: string, passwordConfirmation: string) => {
       setLoading(true);
       try {
-        await repo.resetPassword(verificationToken, password, passwordConfirmation);
-        showSuccess('رمز عبور با موفقیت تغییر کرد');
+        const message = await repo.resetPassword(verificationToken, password, passwordConfirmation);
+        showSuccess(message || 'رمز عبور با موفقیت تغییر کرد');
         return true;
       } catch (error: unknown) {
-        showError(getErrorMessage(error, 'رمز عبور تغییر نکرد'));
+        showError(getAuthErrorMessage(error, 'رمز عبور تغییر نکرد.'));
         return false;
       } finally {
         setLoading(false);
@@ -141,8 +147,4 @@ export function useAuth(repo: IAuthRepository) {
     resetPassword,
     clearSuccess: () => setSuccess(null),
   };
-}
-
-function getErrorMessage(error: unknown, fallback: string) {
-  return error instanceof Error ? error.message : fallback;
 }

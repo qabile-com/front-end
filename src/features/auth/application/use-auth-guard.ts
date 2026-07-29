@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { logout as logoutRequest } from '@/core/api/auth.api';
 import { clearAuthSession, getRefreshToken } from '@/core/auth/token';
 import { useAuthSession } from '@/providers/auth-provider';
+import { createAuthRedirectHref } from '@/core/auth/redirect';
 
 export function useAuthGuard() {
   const router = useRouter();
@@ -13,7 +14,8 @@ export function useAuthGuard() {
   useEffect(() => {
     if (!isReady) return;
     if (!isLoggedIn) {
-      router.replace('/auth');
+      const currentPath = `${window.location.pathname}${window.location.search}`;
+      router.replace(createAuthRedirectHref(currentPath));
     }
   }, [isLoggedIn, isReady, router]);
 

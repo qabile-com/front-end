@@ -3,6 +3,10 @@ import type { StoredAuthUser } from '@/core/auth/token';
 export interface AuthUser {
   id: string;
   name: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  displayName?: string | null;
+  username?: string | null;
   phone?: string | null;
   email?: string | null;
   role: string;
@@ -11,6 +15,7 @@ export interface AuthUser {
   xp?: number;
   xpMax?: number;
   streak?: number;
+  isCompleteOnboarding?: boolean;
 }
 
 export interface AuthSession {
@@ -24,10 +29,16 @@ export interface VerifyOtpResult {
   accessToken: string;
   tokenType?: string;
   expiresAt?: number | string;
+  refreshTokenExpiresAt?: number | string;
   refreshToken?: string;
   user: AuthUser;
   isNewUser?: boolean;
   signupReward?: {
+    xpGranted: number;
+    ruleCode: string;
+    ruleTitle: string;
+  };
+  firstLoginReward?: {
     xpGranted: number;
     ruleCode: string;
     ruleTitle: string;
@@ -37,19 +48,14 @@ export interface VerifyOtpResult {
 
 export interface IAuthRepository {
   login(email: string, password: string): Promise<VerifyOtpResult>;
-  requestOtp(identifier: string): Promise<void>;
-  verifyOtp(
-    identifier: string,
-    code: string,
-    name?: string,
-    lastName?: string,
-  ): Promise<VerifyOtpResult>;
-  requestForgotPassword(email: string): Promise<void>;
+  requestOtp(identifier: string): Promise<string | void>;
+  verifyOtp(identifier: string, code: string): Promise<VerifyOtpResult>;
+  requestForgotPassword(email: string): Promise<string | void>;
   verifyForgotPassword(email: string, code: string): Promise<{ verificationToken: string }>;
   resetPassword(
     verificationToken: string,
     password: string,
     passwordConfirmation: string,
-  ): Promise<void>;
+  ): Promise<string | void>;
   getMe(): Promise<AuthUser>;
 }

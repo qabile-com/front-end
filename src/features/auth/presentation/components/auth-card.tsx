@@ -11,18 +11,19 @@ import { AuthTabs } from './auth-tabs';
 import { Field } from './field';
 import { OtpInput } from './otp-input';
 
-type View = 'login' | 'signup' | 'forgot';
+type View = 'login' | 'forgot';
 type LoginTab = 'pass' | 'otp';
 
 const RESEND_SECONDS = 120;
 
 interface AuthCardProps {
   repository: IAuthRepository;
+  getRedirectTo?: () => string;
 }
 
-export function AuthCard({ repository }: AuthCardProps) {
+export function AuthCard({ repository, getRedirectTo }: AuthCardProps) {
   const [view, setView] = useState<View>('login');
-  const auth = useAuth(repository);
+  const auth = useAuth(repository, getRedirectTo);
 
   return (
     <div className="border-hair relative w-full max-w-[420px] overflow-hidden rounded-[28px] border p-9 px-8 shadow-[0_32px_80px_-28px_rgba(0,0,0,.7),0_0_0_1px_rgba(255,255,255,.03)_inset] [backdrop-filter:blur(var(--glass-blur))_saturate(140%)] [background:var(--glass)]">
@@ -32,18 +33,9 @@ export function AuthCard({ repository }: AuthCardProps) {
 
       {view === 'login' && (
         <LoginView
-          onGoSignup={() => setView('signup')}
           onForgot={() => setView('forgot')}
           loading={auth.loading}
           loginWithPassword={auth.loginWithPassword}
-          requestOtp={auth.requestOtp}
-          verifyOtp={auth.verifyOtp}
-        />
-      )}
-      {view === 'signup' && (
-        <SignupView
-          onGoLogin={() => setView('login')}
-          loading={auth.loading}
           requestOtp={auth.requestOtp}
           verifyOtp={auth.verifyOtp}
         />
@@ -74,14 +66,12 @@ function CardHeader({ title, sub }: { title: string; sub: ReactNode }) {
 }
 
 function LoginView({
-  onGoSignup,
   onForgot,
   loginWithPassword,
   requestOtp,
   verifyOtp,
   loading,
 }: {
-  onGoSignup: () => void;
   onForgot: () => void;
   loginWithPassword: (email: string, password: string) => Promise<boolean>;
   requestOtp: (email: string) => Promise<boolean>;
@@ -104,14 +94,13 @@ function LoginView({
       {tab === 'pass' ? (
         <PasswordForm
           loading={loading}
-          onGoSignup={onGoSignup}
+          onUseOtp={() => setTab('otp')}
           onForgot={onForgot}
           onSubmit={loginWithPassword}
         />
       ) : (
         <OtpLoginForm
           loading={loading}
-          onGoSignup={onGoSignup}
           requestOtp={requestOtp}
           verifyOtp={verifyOtp}
         />
@@ -142,12 +131,12 @@ function AuthForm({
 }
 
 function PasswordForm({
-  onGoSignup,
+  onUseOtp,
   onForgot,
   onSubmit,
   loading,
 }: {
-  onGoSignup: () => void;
+  onUseOtp: () => void;
   onForgot: () => void;
   onSubmit: (email: string, password: string) => Promise<boolean>;
   loading: boolean;
@@ -222,27 +211,19 @@ function PasswordForm({
         ورود به قبیله
       </AuthButton>
       <Divider />
-      <AuthButton type="button" variant="alt" className="text-[#FDEEE299]">
+      <AuthButton type="button" variant="alt" className="text-[#FDEEE299]" onClick={onUseOtp}>
         <Icon name="mail" color="#FDEEE299" />
         ادامه با ایمیل
       </AuthButton>
-      <BottomLink>
-        حساب ندارید؟{' '}
-        <button type="button" onClick={onGoSignup} className="text-gold cursor-pointer font-bold hover:opacity-75">
-          ثبت نام کنید
-        </button>
-      </BottomLink>
     </AuthForm>
   );
 }
 
 function OtpLoginForm({
-  onGoSignup,
   requestOtp,
   verifyOtp,
   loading,
 }: {
-  onGoSignup: () => void;
   requestOtp: (email: string) => Promise<boolean>;
   verifyOtp: (email: string, code: string) => Promise<boolean>;
   loading: boolean;
@@ -275,8 +256,8 @@ function OtpLoginForm({
   if (!sent) {
     return (
       <AuthForm onSubmit={() => void handleSendOtp()}>
-        <div className="mb-4 flex items-end gap-2.5">
-          <div className="flex-1">
+        <div className="mb-4 flex flex-col gap-2.5 sm:flex-row sm:items-end">
+          <div className="w-full flex-1">
             <Field
               label="ایمیل"
               type="email"
@@ -295,17 +276,11 @@ function OtpLoginForm({
           <button
             type="submit"
             disabled={loading}
-            className="mb-4 h-[53px] shrink-0 rounded-[11px] px-4 text-[13.5px] font-extrabold whitespace-nowrap text-[#1a0a00] shadow-[0_6px_20px_-8px_var(--glow)] transition-transform [background:var(--fire-grad)] enabled:hover:-translate-y-0.5 disabled:opacity-50"
+            className="h-[53px] w-full shrink-0 rounded-[11px] px-4 text-[13.5px] font-extrabold whitespace-nowrap text-[#1a0a00] shadow-[0_6px_20px_-8px_var(--glow)] transition-transform [background:var(--fire-grad)] enabled:hover:-translate-y-0.5 disabled:opacity-50 sm:mb-4 sm:w-auto"
           >
-            {loading ? '...' : 'دریافت کد'}
+            {loading ? 'در حال ارسال' : 'دریافت کد'}
           </button>
         </div>
-        <BottomLink className="mt-2">
-          حساب ندارید؟{' '}
-          <button type="button" onClick={onGoSignup} className="text-gold cursor-pointer font-bold hover:opacity-75">
-            ثبت نام کنید
-          </button>
-        </BottomLink>
       </AuthForm>
     );
   }
@@ -325,150 +300,6 @@ function OtpLoginForm({
           ← تغییر ایمیل
         </button>
       </BottomLink>
-    </AuthForm>
-  );
-}
-
-function SignupView({
-  onGoLogin,
-  requestOtp,
-  verifyOtp,
-  loading,
-}: {
-  onGoLogin: () => void;
-  requestOtp: (email: string) => Promise<boolean>;
-  verifyOtp: (email: string, code: string, name?: string, lastName?: string) => Promise<boolean>;
-  loading: boolean;
-}) {
-  const [step, setStep] = useState<1 | 2>(1);
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [lastName, setLastName] = useState('');
-
-  if (step === 2) {
-    return (
-      <SignupStep2
-        email={email}
-        name={name}
-        lastName={lastName}
-        onBack={() => setStep(1)}
-        verifyOtp={verifyOtp}
-        loading={loading}
-      />
-    );
-  }
-
-  return (
-    <SignupStep1
-      onGoLogin={onGoLogin}
-      onNext={(nextEmail, nextName, nextLastName) => {
-        setEmail(nextEmail);
-        setName(nextName);
-        setLastName(nextLastName);
-        setStep(2);
-      }}
-      requestOtp={requestOtp}
-      loading={loading}
-    />
-  );
-}
-
-function SignupStep1({
-  onNext,
-  onGoLogin,
-  requestOtp,
-  loading,
-}: {
-  onNext: (email: string, name: string, lastName: string) => void;
-  onGoLogin: () => void;
-  requestOtp: (email: string) => Promise<boolean>;
-  loading: boolean;
-}) {
-  const [name, setName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [ref, setRef] = useState('');
-  const [errors, setErrors] = useState<{ name?: string; lastName?: string; email?: string }>({});
-
-  const submit = async () => {
-    const next: typeof errors = {};
-    if (!isNonEmpty(name)) next.name = 'نام را وارد کنید';
-    if (!isNonEmpty(lastName)) next.lastName = 'نام خانوادگی را وارد کنید';
-    if (!isValidEmail(email)) next.email = 'ایمیل معتبر نیست';
-    setErrors(next);
-    if (Object.keys(next).length) return;
-    const ok = await requestOtp(email);
-    if (ok) onNext(email, name, lastName);
-  };
-
-  return (
-    <AuthForm onSubmit={() => void submit()}>
-      <CardHeader title="عضویت در قبیله" sub="سفرت را همین‌جا شروع کن" />
-      <div className="h-5" />
-      <Field label="نام" placeholder="مثال: آرش" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} autoComplete="given-name" autoFocus />
-      <Field label="نام خانوادگی" placeholder="مثال: کریمی" value={lastName} onChange={(e) => setLastName(e.target.value)} error={errors.lastName} autoComplete="family-name" />
-      <Field label="ایمیل" type="email" inputMode="email" placeholder="name@email.com" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} autoComplete="email" />
-      <Field
-        label={
-          <span className="flex items-center">
-            کد معرف
-            <span className="text-gold ms-1.5 rounded-[6px] border border-[rgba(243,186,99,.22)] px-1.5 py-px text-[11px] font-bold [background:rgba(243,186,99,.12)]">
-              اختیاری
-            </span>
-          </span>
-        }
-        placeholder="اگر کد دارید وارد کنید"
-        value={ref}
-        onChange={(e) => setRef(e.target.value)}
-        autoComplete="off"
-      />
-      <AuthButton type="submit" loading={loading}>
-        دریافت کد تایید
-        <Icon name="flame" size={16} />
-      </AuthButton>
-      <BottomLink>
-        حساب دارید؟{' '}
-        <button type="button" onClick={onGoLogin} className="text-gold cursor-pointer font-bold hover:opacity-75">
-          وارد شوید
-        </button>
-      </BottomLink>
-    </AuthForm>
-  );
-}
-
-function SignupStep2({
-  email,
-  name,
-  lastName,
-  onBack,
-  verifyOtp,
-  loading,
-}: {
-  email: string;
-  name: string;
-  lastName: string;
-  onBack: () => void;
-  verifyOtp: (email: string, code: string, name?: string, lastName?: string) => Promise<boolean>;
-  loading: boolean;
-}) {
-  const [code, setCode] = useState('');
-  const { cooldown, start } = useCooldown(RESEND_SECONDS);
-  const submitCode = useOtpSubmit({
-    code,
-    loading,
-    onSubmit: (nextCode) => verifyOtp(email, nextCode, name, lastName),
-  });
-
-  return (
-    <AuthForm onSubmit={submitCode}>
-      <BackButton onClick={onBack} />
-      <CardHeader title="تایید ایمیل" sub={<><span>کد ۶ رقمی ارسال شده به</span><br /><b className="text-gold" dir="ltr">{email}</b></>} />
-      <div className="h-5" />
-      <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} autoFocus />
-      <ResendRow cooldown={cooldown} onResend={() => start(RESEND_SECONDS)} />
-      <AuthButton type="submit" loading={loading} disabled={!isCompleteOtp(code)}>
-        ساخت حساب و ورود
-      </AuthButton>
     </AuthForm>
   );
 }
@@ -621,7 +452,7 @@ function BackButton({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       className="text-ink-3 hover:text-gold mb-5 flex items-center gap-[7px] text-[13px] transition-colors"
     >
-      <Icon name="arrow-left" size={15} /> بازگشت
+      <Icon name="arrow-right" size={15} /> بازگشت
     </button>
   );
 }

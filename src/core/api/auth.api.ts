@@ -12,16 +12,33 @@ export interface OtpVerifyResponse {
   accessToken: string;
   tokenType?: string;
   expiresAt?: string | number;
+  accessTokenExpiredAt?: string | number;
   refreshToken?: string;
+  refreshTokenExpiredAt?: string | number;
   user: {
     id: string;
-    name: string;
+    name?: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    displayName?: string | null;
+    username?: string | null;
     phone?: string | null;
     email?: string | null;
     role: string;
+    title?: string;
+    level?: number;
+    xp?: number;
+    xpMax?: number;
+    streak?: number;
+    isCompleteOnboarding?: boolean;
   };
   isNewUser?: boolean;
   signupReward?: {
+    xpGranted: number;
+    ruleCode: string;
+    ruleTitle: string;
+  };
+  firstLoginReward?: {
     xpGranted: number;
     ruleCode: string;
     ruleTitle: string;
@@ -40,6 +57,8 @@ export interface RefreshTokenResponse {
   accessToken: string;
   refreshToken?: string;
   expiresAt?: string | number;
+  accessTokenExpiredAt?: string | number;
+  refreshTokenExpiredAt?: string | number;
 }
 
 export interface ForgotPasswordVerifyResponse {
@@ -57,12 +76,10 @@ export const login = (email: string, password?: string) =>
     ...(password ? { password } : {}),
   });
 
-export const verifyOtp = (email: string, code: string, name?: string, lastName?: string) =>
+export const verifyOtp = (email: string, code: string) =>
   httpClient.post<OtpVerifyResponse>('/api/v1/auth/otp/verify', {
     email,
     code,
-    name,
-    lastName,
   });
 
 export const getMe = () => httpClient.get<OtpVerifyResponse>('/api/v1/auth/me');
@@ -89,7 +106,7 @@ export const resetPassword = (
   password: string,
   passwordConfirmation: string,
 ) =>
-  httpClient.post<{ success: boolean }>('/api/v1/auth/password/reset', {
+  httpClient.post<{ success: boolean; message?: string }>('/api/v1/auth/password/reset', {
     verificationToken,
     password,
     passwordConfirmation,

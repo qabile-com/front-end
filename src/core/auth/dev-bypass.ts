@@ -5,6 +5,10 @@ export async function tryDevAutoLogin() {
 }
 
 export function createDevAuthSession() {
+  if (process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH !== 'true') {
+    return false;
+  }
+
   if (process.env.NEXT_PUBLIC_DEV_TOKEN) {
     if (getStoredAuthSession()) return true;
 

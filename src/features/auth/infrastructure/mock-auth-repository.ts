@@ -12,30 +12,28 @@ export class MockAuthRepository implements IAuthRepository {
     return createMockSession(email, 'آرش کریمی');
   }
 
-  async requestOtp(identifier: string): Promise<void> {
+  async requestOtp(identifier: string): Promise<string> {
     await delay(800);
     console.log(`[Mock] OTP sent to ${identifier}`);
+    return 'کد تایید برای ایمیل شما ارسال شد';
   }
 
-  async verifyOtp(identifier: string, code: string, name?: string): Promise<VerifyOtpResult> {
+  async verifyOtp(identifier: string, code: string): Promise<VerifyOtpResult> {
     await delay(1000);
     if (code !== '123456') throw new Error('کد تایید اشتباه است');
-    const isNewUser = Boolean(name);
+
     return {
-      ...createMockSession(identifier, name || 'کاربر جدید'),
-      isNewUser,
-      signupReward: isNewUser
-        ? { xpGranted: 50, ruleCode: 'signup', ruleTitle: 'Signup reward' }
-        : undefined,
-      unlockedAchievements: isNewUser
-        ? [{ id: 'ach1', label: 'آتش‌افروز', slug: 'atash-afrooz' }]
-        : [],
+      ...createMockSession(identifier, 'کاربر قبیله'),
+      isNewUser: false,
+      signupReward: undefined,
+      unlockedAchievements: [],
     };
   }
 
-  async requestForgotPassword(email: string): Promise<void> {
+  async requestForgotPassword(email: string): Promise<string> {
     await delay(700);
     console.log(`[Mock] Password reset OTP sent to ${email}`);
+    return 'کد بازیابی رمز عبور ارسال شد';
   }
 
   async verifyForgotPassword(email: string, code: string): Promise<{ verificationToken: string }> {
@@ -48,10 +46,11 @@ export class MockAuthRepository implements IAuthRepository {
     verificationToken: string,
     password: string,
     passwordConfirmation: string,
-  ): Promise<void> {
+  ): Promise<string> {
     await delay(700);
     if (!verificationToken) throw new Error('توکن تغییر رمز معتبر نیست');
     if (password !== passwordConfirmation) throw new Error('تکرار رمز عبور درست نیست');
+    return 'رمز عبور با موفقیت تغییر کرد';
   }
 
   async getMe(): Promise<AuthUser> {

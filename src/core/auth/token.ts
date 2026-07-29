@@ -7,14 +7,25 @@ export const AUTH_SESSION_EVENT = 'qabile-auth-session-change';
 export interface StoredAuthUser {
   id: string;
   name: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  displayName?: string | null;
+  username?: string | null;
   phone?: string | null;
   email?: string | null;
   role: string;
+  title?: string;
+  level?: number;
+  xp?: number;
+  xpMax?: number;
+  streak?: number;
+  isCompleteOnboarding?: boolean;
 }
 
 export interface StoredAuthMeta {
   tokenType?: string;
   expiresAt?: number;
+  refreshTokenExpiresAt?: number;
 }
 
 export interface StoredAuthSession {
@@ -50,11 +61,13 @@ export function updateStoredTokens({
   accessToken,
   refreshToken,
   expiresAt,
+  refreshTokenExpiresAt,
   tokenType,
 }: {
   accessToken: string;
   refreshToken?: string | null;
   expiresAt?: number | string | null;
+  refreshTokenExpiresAt?: number | string | null;
   tokenType?: string;
 }) {
   if (!canUseStorage()) return;
@@ -69,6 +82,8 @@ export function updateStoredTokens({
       ...currentMeta,
       tokenType: tokenType ?? currentMeta.tokenType,
       expiresAt: normalizeExpiresAt(expiresAt) ?? currentMeta.expiresAt,
+      refreshTokenExpiresAt:
+        normalizeExpiresAt(refreshTokenExpiresAt) ?? currentMeta.refreshTokenExpiresAt,
     }),
   );
   notifyAuthSessionChange();
@@ -80,6 +95,7 @@ export function saveAuthSession({
   tokenType,
   expiresInSeconds,
   expiresAt,
+  refreshTokenExpiresAt,
   refreshToken,
 }: {
   accessToken: string;
@@ -87,6 +103,7 @@ export function saveAuthSession({
   tokenType?: string;
   expiresInSeconds?: number;
   expiresAt?: number | string | null;
+  refreshTokenExpiresAt?: number | string | null;
   refreshToken?: string | null;
 }) {
   if (!canUseStorage()) return;
@@ -96,6 +113,7 @@ export function saveAuthSession({
     expiresAt:
       normalizeExpiresAt(expiresAt) ??
       (expiresInSeconds ? Date.now() + expiresInSeconds * 1000 : undefined),
+    refreshTokenExpiresAt: normalizeExpiresAt(refreshTokenExpiresAt),
   };
 
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);

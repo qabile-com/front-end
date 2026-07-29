@@ -4,6 +4,7 @@ import type {
   VerifyOtpResult,
 } from '../domain/auth-repository';
 import * as authApi from '@/core/api/auth.api';
+import type { OtpVerifyResponse } from '@/core/api/auth.api';
 
 export class HttpAuthRepository implements IAuthRepository {
   async login(email: string, password: string): Promise<VerifyOtpResult> {
@@ -12,44 +13,27 @@ export class HttpAuthRepository implements IAuthRepository {
       throw new Error(response.data.message ?? 'ورود با رمز عبور کامل نشد');
     }
 
-    return {
-      accessToken: response.data.accessToken,
-      expiresAt: response.data.expiresAt,
-      refreshToken: response.data.refreshToken,
-      user: response.data.user,
-    };
+    return mapAuthSession(response.data as OtpVerifyResponse);
   }
 
-  async requestOtp(identifier: string): Promise<void> {
-    await authApi.requestOtp(identifier);
+  async requestOtp(identifier: string): Promise<string | void> {
+    const response = await authApi.requestOtp(identifier);
+    return response.data.message;
   }
 
-  async verifyOtp(
-    identifier: string,
-    code: string,
-    name?: string,
-    lastName?: string,
-  ): Promise<VerifyOtpResult> {
-    const response = await authApi.verifyOtp(identifier, code, name, lastName);
-    return {
-      accessToken: response.data.accessToken,
-      tokenType: response.data.tokenType,
-      expiresAt: response.data.expiresAt,
-      refreshToken: response.data.refreshToken,
-      user: response.data.user,
-      isNewUser: response.data.isNewUser,
-      signupReward: response.data.signupReward,
-      unlockedAchievements: response.data.unlockedAchievements,
-    };
+  async verifyOtp(identifier: string, code: string): Promise<VerifyOtpResult> {
+    const response = await authApi.verifyOtp(identifier, code);
+    return mapAuthSession(response.data);
   }
 
   async getMe(): Promise<AuthUser> {
     const response = await authApi.getMe();
-    return response.data.user;
+    return mapAuthUser(response.data.user);
   }
 
-  async requestForgotPassword(email: string): Promise<void> {
-    await authApi.requestForgotPassword(email);
+  async requestForgotPassword(email: string): Promise<string | void> {
+    const response = await authApi.requestForgotPassword(email);
+    return response.data.message;
   }
 
   async verifyForgotPassword(email: string, code: string): Promise<{ verificationToken: string }> {
@@ -61,7 +45,71 @@ export class HttpAuthRepository implements IAuthRepository {
     verificationToken: string,
     password: string,
     passwordConfirmation: string,
-  ): Promise<void> {
-    await authApi.resetPassword(verificationToken, password, passwordConfirmation);
+  ): Promise<string | void> {
+    const response = await authApi.resetPassword(verificationToken, password, passwordConfirmation);
+    return 'message' in response.data ? response.data.message : undefined;
   }
+}
+
+function mapAuthSession(response: OtpVerifyResponse): VerifyOtpResult {
+  return {
+    accessToken: response.accessToken,
+    tokenType: response.tokenType,
+    expiresAt: response.accessTokenExpiredAt ?? response.expiresAt,
+    refreshTokenExpiresAt: response.refreshTokenExpiredAt,
+    refreshToken: response.refreshToken,
+    user: mapAuthUser(response.user),
+    isNewUser: response.isNewUser,
+    signupReward: response.signupReward,
+    firstLoginReward: response.firstLoginReward,
+    unlockedAchievements: normalizeUnlockedAchievements(response.unlockedAchievements),
+  };
+}
+
+function mapAuthUser(user: OtpVerifyResponse['user']): AuthUser {
+  const displayName = user.displayName ?? user.name ?? [user.firstName, user.lastName].filter(Boolean).join(' ');
+
+  return {
+    id: user.id,
+    name: displayName || user.email || 'کاربر قبیله',
+    firstName: user.firstName,
+    lastName: user.lastName,
+    displayName,
+    username: user.username,
+    phone: user.phone,
+    email: user.email,
+    role: user.role,
+    title: user.title,
+    level: user.level,
+    xp: user.xp,
+    xpMax: user.xpMax,
+    streak: user.streak,
+    isCompleteOnboarding: user.isCompleteOnboarding,
+  };
+}
+
+function normalizeUnlockedAchievements(items: unknown[] | undefined) {
+  if (!Array.isArray(items)) return [];
+
+  return items.map((item, index) => {
+    const achievement = item as {
+      id?: string;
+      slug?: string;
+      title?: string;
+      label?: string;
+      repeatIndex?: number;
+      count?: number;
+      isShareable?: boolean;
+    };
+
+    return {
+      ...achievement,
+      id: achievement.id ?? achievement.slug ?? `achievement-${index}`,
+      label: achievement.label ?? achievement.title ?? achievement.slug ?? 'دستاورد جدید',
+      icon: 'flame',
+      unlocked: true,
+      count: achievement.count ?? achievement.repeatIndex ?? 1,
+      isShareable: achievement.isShareable,
+    };
+  });
 }
