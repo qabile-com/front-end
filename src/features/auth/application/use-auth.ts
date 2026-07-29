@@ -7,6 +7,14 @@ import { showError, showSuccess } from '@/shared/lib/toast';
 import type { IAuthRepository, VerifyOtpResult } from '../domain/auth-repository';
 import { getAuthErrorMessage } from './auth-error-message';
 
+function resolveUserName(user: VerifyOtpResult['user']): string {
+  if (user.displayName?.trim()) return user.displayName.trim();
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+  if (fullName) return fullName;
+  if (user.name?.trim()) return user.name.trim();
+  return 'کاربر جدید';
+}
+
 export function useAuth(repo: IAuthRepository, getRedirectTo: () => string = () => '/courses') {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -27,8 +35,9 @@ export function useAuth(repo: IAuthRepository, getRedirectTo: () => string = () 
         sessionStorage.setItem('signupAchievements', JSON.stringify(session.unlockedAchievements));
       }
 
+      const userName = resolveUserName(session.user);
       setSuccess({
-        title: `خوش آمدی ${session.user.name}! 🔥`,
+        title: `خوش آمدی ${userName}! 🔥`,
         msg: 'ورود موفقیت‌آمیز بود. در حال ورود به قبیله...',
       });
       setTimeout(() => router.push(getRedirectTo()), 900);
