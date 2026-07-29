@@ -30,6 +30,7 @@ import {
 import type {
   IProfileRepository,
   MyProfile,
+  PaginatedXpHistory,
   ProfileSecuritySettings,
   ProfileSettingField,
   UpdateProfileInput,
@@ -41,13 +42,21 @@ import {
   recordMockWatchProgress,
 } from '@/features/courses/infrastructure/mock/mock-course-watch-store';
 
+let mockCurrentUser: CurrentUser = { ...USER };
+
 // ---------- User Repository ----------
 export class MockUserRepository implements IUserRepository {
   private cache: CurrentUser | null = null;
   async getCurrentUser(): Promise<CurrentUser> {
-    if (this.cache) return this.cache;
     await delay(200);
-    this.cache = { ...USER };
+    this.cache = { ...mockCurrentUser };
+    return this.cache;
+  }
+
+  async updateOnboardingCompletion(isCompleteOnboarding: boolean): Promise<CurrentUser> {
+    await delay(180);
+    mockCurrentUser = { ...mockCurrentUser, isCompleteOnboarding };
+    this.cache = { ...mockCurrentUser };
     return this.cache;
   }
 }
@@ -83,14 +92,66 @@ export class MockCoursesRepository implements ICoursesRepository {
       await delay(250);
       this.cache = COURSES.map((course) => ({
         ...course,
-        episodes: course.episodes.map((part) => applyMockWatchState({ ...part })),
+        isUnlocked: course.isUnlocked ?? course.isPurchased ?? course.isFree ?? false,
+        episodes: course.episodes.map((part) =>
+          applyMockWatchState({
+            ...part,
+            isUnlocked: course.isUnlocked ?? course.isPurchased ?? course.isFree ?? false,
+            requiresPurchase: !(course.isUnlocked ?? course.isPurchased ?? course.isFree ?? false),
+          }),
+        ),
       }));
     }
     this.cache = this.cache.map((course) => ({
       ...course,
-      episodes: course.episodes.map((part) => applyMockWatchState(part)),
+      isUnlocked: course.isUnlocked ?? course.isPurchased ?? course.isFree ?? false,
+      episodes: course.episodes.map((part) =>
+        applyMockWatchState({
+          ...part,
+          isUnlocked: course.isUnlocked ?? course.isPurchased ?? course.isFree ?? false,
+          requiresPurchase: !(course.isUnlocked ?? course.isPurchased ?? course.isFree ?? false),
+        }),
+      ),
     }));
     return this.cache;
+  }
+
+  async purchaseCourse(courseId: string) {
+    await delay(350);
+    const courses = await this.getCourses();
+    const course = courses.find((item) => item.id === courseId);
+    if (!course) throw new Error('Course not found');
+    if (course.isPurchased || course.isFree) {
+      course.isPurchased = true;
+      course.isUnlocked = true;
+      return {
+        courseId: course.id,
+        course: { ...course, isPurchased: true, isUnlocked: true },
+        balance: { fire: mockCurrentUser.xp },
+        spentFire: 0,
+        isUnlocked: true,
+      };
+    }
+
+    const price = course.priceInFire ?? 0;
+    if (price > mockCurrentUser.xp) {
+      throw new Error('آتش کافی برای خرید این دوره نداری.');
+    }
+
+    mockCurrentUser = { ...mockCurrentUser, xp: mockCurrentUser.xp - price };
+    course.isPurchased = true;
+    course.isUnlocked = true;
+    this.cache = courses.map((item) =>
+      item.id === courseId ? { ...item, isPurchased: true, isUnlocked: true } : item,
+    );
+
+    return {
+      courseId: course.id,
+      course: { ...course, isPurchased: true, isUnlocked: true },
+      balance: { fire: mockCurrentUser.xp },
+      spentFire: price,
+      isUnlocked: true,
+    };
   }
 
   async updateSectionProgress(
@@ -166,7 +227,9 @@ export class MockProfileRepository implements IProfileRepository {
     this.cache = {
       id: 'current-user',
       name: USER.name,
+      firstName: USER.name,
       lastName: USER.lastName,
+      displayName: [USER.name, USER.lastName].filter(Boolean).join(' '),
       username: 'Sample',
       initial: USER.initial,
       avatar: USER.avatar,
@@ -197,17 +260,99 @@ export class MockProfileRepository implements IProfileRepository {
     return this.cache;
   }
 
+  async getXpHistory(params?: {
+    limit?: number;
+    offset?: number;
+    q?: string;
+  }): Promise<PaginatedXpHistory> {
+    await delay(220);
+    const limit = params?.limit ?? 10;
+    const offset = params?.offset ?? 0;
+    const q = params?.q?.trim().toLowerCase();
+    const allItems = [
+      {
+        id: 'history-1',
+        amount: 90,
+        sourceType: 'episode',
+        courseId: 'c1',
+        episodeId: 'c1-s1',
+        roadmapStepId: null,
+        eventKey: 'episode:current-user:c1-s1:done',
+        title: 'قدم اول: ذهن‌آگاهی',
+        meta: { title: 'قدم اول: ذهن‌آگاهی' },
+        createdAt: '2026-07-28T12:00:00.000Z',
+      },
+      {
+        id: 'history-2',
+        amount: 50,
+        sourceType: 'roadmap',
+        courseId: null,
+        episodeId: null,
+        roadmapStepId: 'step-1',
+        eventKey: 'roadmap:current-user:step-1:done',
+        title: 'از خاکستر پرواز آغاز می‌شود',
+        meta: { title: 'از خاکستر پرواز آغاز می‌شود' },
+        createdAt: '2026-07-27T15:30:00.000Z',
+      },
+      {
+        id: 'history-3',
+        amount: -650,
+        sourceType: 'course_purchase',
+        courseId: 'c3',
+        episodeId: null,
+        roadmapStepId: null,
+        eventKey: 'course:current-user:c3:purchase',
+        title: 'خرید کورس عادت‌سازی اتمی',
+        meta: { title: 'خرید کورس عادت‌سازی اتمی' },
+        createdAt: '2026-07-26T10:12:00.000Z',
+      },
+      {
+        id: 'history-4',
+        amount: 150,
+        sourceType: 'achievement',
+        courseId: null,
+        episodeId: null,
+        roadmapStepId: null,
+        eventKey: 'achievement:current-user:atash-afrooz',
+        title: 'دستاورد آتش‌افروز',
+        meta: { title: 'دستاورد آتش‌افروز' },
+        createdAt: '2026-07-25T09:10:00.000Z',
+      },
+    ];
+    const filtered = q
+      ? allItems.filter(
+          (item) =>
+            item.title.toLowerCase().includes(q) || item.sourceType.toLowerCase().includes(q),
+        )
+      : allItems;
+
+    return {
+      items: filtered.slice(offset, offset + limit),
+      limit,
+      offset,
+      totalItems: filtered.length,
+      totalPages: Math.max(1, Math.ceil(filtered.length / limit)),
+    };
+  }
+
   async updateMyProfile(input: UpdateProfileInput): Promise<MyProfile> {
     await delay(250);
     const profile = await this.getMyProfile();
     this.cache = {
       ...profile,
-      name: input.name?.trim() || profile.name,
+      firstName: input.firstName?.trim() || profile.firstName,
       lastName: input.lastName?.trim() || profile.lastName,
+      displayName:
+        input.displayName?.trim() ||
+        [input.firstName?.trim() || profile.firstName, input.lastName?.trim() || profile.lastName]
+          .filter(Boolean)
+          .join(' '),
+      name:
+        input.displayName?.trim() ||
+        [input.firstName?.trim() || profile.firstName, input.lastName?.trim() || profile.lastName]
+          .filter(Boolean)
+          .join(' '),
       username: input.username ?? profile.username,
-      email: input.email ?? profile.email,
-      isEmailVerified:
-        input.email && input.email !== profile.email ? false : profile.isEmailVerified,
     };
     return this.cache;
   }
@@ -352,6 +497,14 @@ export class MockUserDetailRepository implements IUserProfileRepository {
         image: post.image,
         hasImage: post.hasImage,
       }));
+  }
+
+  async blockUser(): Promise<void> {
+    await delay(120);
+  }
+
+  async unblockUser(): Promise<void> {
+    await delay(120);
   }
 }
 

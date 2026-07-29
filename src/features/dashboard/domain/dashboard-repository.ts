@@ -18,6 +18,7 @@ import type { IProfileRepository } from '@/features/profile/domain/profile-repos
  */
 export interface IUserRepository {
   getCurrentUser(): Promise<CurrentUser>;
+  updateOnboardingCompletion(isCompleteOnboarding: boolean): Promise<CurrentUser>;
 }
 
 /**
@@ -47,6 +48,7 @@ export interface ILeaderboardRepository {
  */
 export interface ICoursesRepository {
   getCourses(): Promise<Course[]>;
+  purchaseCourse(courseId: string): Promise<CoursePurchaseResult>;
   updateSectionProgress(
     sectionId: string,
     body: { status: string; progress?: number },
@@ -55,6 +57,16 @@ export interface ICoursesRepository {
     sectionId: string,
     body: SectionWatchProgressInput,
   ): Promise<SectionWatchProgressResult>;
+}
+
+export interface CoursePurchaseResult {
+  courseId: string;
+  course?: Course;
+  balance: {
+    fire: number;
+  };
+  spentFire: number;
+  isUnlocked: boolean;
 }
 
 export type { IProfileRepository };

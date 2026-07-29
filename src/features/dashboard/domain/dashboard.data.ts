@@ -22,6 +22,7 @@ export const USER: CurrentUser = {
   xpMax: 10000,
   streak: 23,
   avatar: DEFAULT_AVATAR_GRADIENT,
+  isCompleteOnboarding: false,
 };
 
 export const NAV: NavItem[] = [

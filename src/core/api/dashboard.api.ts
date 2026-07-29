@@ -15,6 +15,7 @@ export interface DashboardBundle {
     streak: number;
     avatar?: string | null;
     achievements?: Achievement[];
+    isCompleteOnboarding?: boolean;
   };
   home: {
     stats: { icon: string; tone: string; value: string; label: string }[];

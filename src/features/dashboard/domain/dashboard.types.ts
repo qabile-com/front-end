@@ -14,6 +14,7 @@ export interface CurrentUser {
   streak?: number;
   avatar: string;
   achievements?: Achievement[];
+  isCompleteOnboarding?: boolean;
 }
 
 export interface NavItem {
