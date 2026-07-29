@@ -77,7 +77,6 @@
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    padding-top: env(safe-area-inset-top);
   }
 
   html,
