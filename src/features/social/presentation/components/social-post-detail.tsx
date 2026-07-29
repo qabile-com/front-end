@@ -15,6 +15,8 @@ interface SocialPostDetailProps {
   onLike?: () => void;
   onUnlike?: () => void;
   onAuthorClick?: (authorId: string) => void;
+  onDeleteComment?: (commentId: string) => void;
+  canManageComments?: boolean;
   isAddingComment?: boolean;
 }
 
@@ -25,17 +27,25 @@ export function SocialPostDetail({
   onLike,
   onUnlike,
   onAuthorClick,
+  onDeleteComment,
+  canManageComments = false,
   isAddingComment = false,
 }: SocialPostDetailProps) {
   const [commentText, setCommentText] = useState('');
   const commentsEndRef = useRef<HTMLDivElement>(null);
+  const shouldScrollAfterSubmitRef = useRef(false);
+  const commentsTotal = post.commentsCount ?? post.comments.length;
 
   useEffect(() => {
+    if (!shouldScrollAfterSubmitRef.current || isAddingComment) return;
+
     commentsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [post.comments.length]);
+    shouldScrollAfterSubmitRef.current = false;
+  }, [post.comments.length, isAddingComment]);
 
   const handleSubmitComment = () => {
     if (!commentText.trim() || !onAddComment) return;
+    shouldScrollAfterSubmitRef.current = true;
     onAddComment(post.id, commentText.trim());
     setCommentText('');
   };
@@ -60,7 +70,7 @@ export function SocialPostDetail({
           )}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-ink truncate text-base font-black group-hover:text-gold">
+              <h1 className="text-ink group-hover:text-gold truncate text-base font-black">
                 {post.author}
               </h1>
               {post.isAdam && (
@@ -113,14 +123,18 @@ export function SocialPostDetail({
             <button
               type="button"
               onClick={post.likedByMe ? onUnlike : onLike}
-              className={post.likedByMe ? 'flex items-center gap-1.5 text-danger' : 'hover:text-ink flex items-center gap-1.5'}
+              className={
+                post.likedByMe
+                  ? 'text-danger flex items-center gap-1.5'
+                  : 'hover:text-ink flex items-center gap-1.5'
+              }
             >
               <Icon name="heart" size={17} className={post.likedByMe ? 'fill-current' : ''} />
               {toPersianDigits(post.likes)}
             </button>
             <span className="flex items-center gap-1.5">
               <Icon name="msg" size={17} />
-              {toPersianDigits(post.comments.length)}
+              {toPersianDigits(post.commentsCount ?? post.comments.length)}
             </span>
             <button
               type="button"
@@ -135,34 +149,57 @@ export function SocialPostDetail({
       </div>
 
       <section className="border-hair border-t p-4 sm:p-6">
-        <h2 className="text-ink-2 mb-4 text-sm font-black">نظرات هم‌قبیله‌ای‌ها</h2>
-        <div className="space-y-4">
-          {post.comments.length === 0 ? (
-            <p className="text-ink-3 rounded-[16px] border border-[var(--color-hair)] bg-black/20 p-5 text-center text-sm">
-              هنوز نظری برای این پست ثبت نشده است.
-            </p>
-          ) : (
-            post.comments.map((comment, index) => (
-              <div key={`${comment.name}-${comment.time}-${index}`} className="flex items-start gap-3">
-                <div className="grid size-9 shrink-0 place-items-center rounded-full [background:var(--fire-grad)] text-xs font-black text-[#1a0a00]">
-                  {getAvatarInitial(comment.name)}
-                </div>
-                <div className="min-w-0 flex-1 rounded-[16px] bg-black/20 p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-ink text-sm font-black">{comment.name}</span>
-                    <span className="text-ink-4 text-xs">{formatRelativeTime(comment.time)}</span>
+        <h2 className="text-ink-2 mb-4 flex items-center gap-2 text-sm font-black">
+          <span>نظرات هم‌قبیله‌ای‌ها</span>
+          <span className="text-gold px-2 py-0.5 text-xs">
+            ( {toPersianDigits(commentsTotal)} )
+          </span>
+        </h2>
+        <div className="lg:max-h-[430px] lg:overflow-y-auto lg:overscroll-contain lg:rounded-[18px] lg:pe-1">
+          <div className="space-y-4">
+            {post.comments.length === 0 ? (
+              <p className="text-ink-3 rounded-[16px] border border-[var(--color-hair)] bg-black/20 p-5 text-center text-sm">
+                هنوز نظری ثبت نشده؛ اولین نظر را تو بنویس.
+              </p>
+            ) : (
+              post.comments.map((comment, index) => (
+                <div
+                  key={`${comment.name}-${comment.time}-${index}`}
+                  className="flex items-start gap-3"
+                >
+                  <div className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] [background:var(--fire-grad)]">
+                    {getAvatarInitial(comment.name)}
                   </div>
-                  <p className="text-ink-2 mt-1 text-sm leading-7">{comment.text}</p>
+                  <div className="min-w-0 flex-1 rounded-[16px] bg-black/20 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-ink text-sm font-black">{comment.name}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="text-ink-4 text-xs">
+                          {formatRelativeTime(comment.time)}
+                        </span>
+                        {canManageComments && comment.id && (
+                          <button
+                            type="button"
+                            onClick={() => onDeleteComment?.(comment.id!)}
+                            className="text-danger/80 hover:text-danger rounded-lg px-2 py-1 text-[11px] font-black transition-colors"
+                          >
+                            حذف
+                          </button>
+                        )}
+                      </span>
+                    </div>
+                    <p className="text-ink-2 mt-1 text-sm leading-7">{comment.text}</p>
+                  </div>
                 </div>
-              </div>
-            ))
-          )}
-          <div ref={commentsEndRef} />
+              ))
+            )}
+            <div ref={commentsEndRef} />
+          </div>
         </div>
       </section>
 
       <div className="border-hair sticky bottom-0 flex items-center gap-3 border-t bg-[var(--color-panel)] p-4">
-        <div className="grid size-9 shrink-0 place-items-center rounded-full [background:var(--fire-grad)] text-xs font-black text-[#1a0a00]">
+        <div className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] [background:var(--fire-grad)]">
           {getAvatarInitial('شما')}
         </div>
         <Input

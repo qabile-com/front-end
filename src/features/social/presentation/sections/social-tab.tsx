@@ -1,20 +1,30 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BaseModal, ErrorState, Icon, InlineSkeleton, SocialSkeleton, type IconName } from '@/shared/ui';
+import {
+  BaseModal,
+  Button,
+  ErrorState,
+  Icon,
+  Input,
+  InlineSkeleton,
+  InlineSpinner,
+  SocialSkeleton,
+  type IconName,
+} from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
 import { getAvatarInitial } from '@/core/lib/avatar';
 import { toPersianDigits } from '@/core/lib/persian';
 import type { Post, ActiveUser } from '../../domain/social.data';
+import type { IProfileRepository, MyProfile } from '@/features/profile/domain/profile-repository';
+import { useUpdateMyProfile } from '@/features/profile/application/use-edit-profile';
 import { Panel } from '@/shared/ui';
 import { AdamAvatar } from '@/features/dashboard/presentation/sections/dashboard-sidebar';
 import { CreatePost } from './create-post';
-import { SharePostModal } from '../components/share-post-modal';
-import { UserProfileModalContainer } from '@/features/leaderboard/presentation/components/user-profile-modal-container';
 import { adminRepo, socialRepo } from '@/features/social/infrastructure/repository-factory';
-import { userProfileRepo } from '@/features/leaderboard/infrastructure/repository-factory';
 import {
   type UseInfiniteQueryResult,
   type InfiniteData,
@@ -23,47 +33,75 @@ import {
 import { IAdminRepository } from '../../domain/admin-repository';
 import { useLikePost } from '../../application/use-like-post';
 import { useToggleUserFollow } from '../../application/use-toggle-user-follow';
-import { followRepo } from '@/features/leaderboard/infrastructure/repository-factory';
+import { shareUrl } from '@/shared/lib/native-share';
+import { showError, showSuccess } from '@/shared/lib/toast';
 
 type Feed = 'for-you' | 'following';
 
 interface SocialTabProps {
   feedQuery: UseInfiniteQueryResult<InfiniteData<Post[]>>;
+  feed: Feed;
+  onFeedChange: (feed: Feed) => void;
   tags: string[];
   activeUsers: ActiveUser[];
+  search: string;
+  onSearchChange: (value: string) => void;
   onPublish: (text: string, imageFile?: File | null) => void;
   currentUserRole?: string;
+  currentProfile?: MyProfile | null;
+  isCurrentProfileLoading?: boolean;
+  profileRepo: IProfileRepository;
   adminRepo?: IAdminRepository;
 }
 
 export function SocialTab({
   feedQuery,
+  feed,
+  onFeedChange,
   tags,
   activeUsers,
+  search,
+  onSearchChange,
   onPublish,
   currentUserRole,
+  currentProfile,
+  isCurrentProfileLoading,
+  profileRepo,
 }: SocialTabProps) {
   const router = useRouter();
-  const followToggle = useToggleUserFollow(followRepo);
-  const [feed, setFeed] = useState<Feed>('for-you');
-  const [query, setQuery] = useState('');
-  const [sharePostId, setSharePostId] = useState<string | null>(null);
-  const [selectedProfileUserId, setSelectedProfileUserId] = useState<string | null>(null);
+  const followToggle = useToggleUserFollow(socialRepo);
+  const updateProfile = useUpdateMyProfile(profileRepo);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [isCompleteProfileOpen, setIsCompleteProfileOpen] = useState(false);
 
   const allPosts = useMemo(() => feedQuery.data?.pages.flat() ?? [], [feedQuery.data]);
-  // Client‑side filtering (replace with server‑side later)
-  const visible = useMemo(() => {
-    let list = allPosts;
-    if (feed === 'following') {
-      // TODO: replace with API param once backend supports it
-      list = list.filter((p) => p.authorId === 'adam'); // placeholder
+  const handleShare = async (post: Post) => {
+    try {
+      await shareUrl({
+        title: post.author ? `Post by ${post.author}` : 'Qabile post',
+        text: post.text ? post.text.slice(0, 120) : 'Check this Qabile post.',
+        path: `/social/${post.id}`,
+      });
+      showSuccess('Post link copied.');
+    } catch (shareError) {
+      if (shareError instanceof DOMException && shareError.name === 'AbortError') return;
+      showError('Sharing failed.');
     }
-    const q = query.trim();
-    if (q) list = list.filter((p) => p.text.includes(q) || p.author.includes(q));
-    return list;
-  }, [feed, query, allPosts]);
-  const handleShare = (postId: string) => setSharePostId(postId);
+  };
+
+  const handleOpenCreatePost = () => {
+    if (isCurrentProfileLoading) {
+      showError('پروفایل هنوز در حال دریافت است. چند لحظه دیگر دوباره تلاش کن.');
+      return;
+    }
+
+    if (!hasRequiredForumProfile(currentProfile)) {
+      setIsCompleteProfileOpen(true);
+      return;
+    }
+
+    setIsCreatePostOpen(true);
+  };
 
   return (
     <div className="grid gap-7 min-[1100px]:grid-cols-[1fr_300px]">
@@ -76,8 +114,8 @@ export function SocialTab({
             className="absolute inset-y-0 start-3.5 my-auto text-[#FF6200]"
           />
           <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
             placeholder="جستجوی پست، کاربر یا #هشتگ"
             className="text-ink border-hair placeholder:text-ink-3 focus:border-hair-2 h-12 w-full rounded-xl border ps-11 pe-4 text-[14px] outline-none [background:var(--glass-2)]"
           />
@@ -94,7 +132,7 @@ export function SocialTab({
             <button
               key={id}
               type="button"
-              onClick={() => setFeed(id)}
+              onClick={() => onFeedChange(id)}
               className={cn(
                 'rounded-lg py-2.5 text-[13.5px] font-bold transition-colors',
                 feed === id ? 'text-[#1a0a00] [background:var(--fire-grad)]' : 'text-ink-2',
@@ -123,18 +161,18 @@ export function SocialTab({
         )}
 
         {/* Feed */}
-        {feedQuery.isSuccess && visible.length === 0 && (
+        {feedQuery.isSuccess && allPosts.length === 0 && (
           <div className="text-ink-3 border-hair rounded-[20px] border py-16 text-center [background:var(--glass)]">
             نتیجه‌ای پیدا نشد
           </div>
         )}
-        {visible.map((post) => (
+        {allPosts.map((post) => (
           <PostCard
             key={post.id}
             post={post}
             onClick={() => router.push(`/social/${post.id}`)}
-            onShare={() => handleShare(post.id)}
-            onAuthorClick={(authorId) => setSelectedProfileUserId(authorId)}
+            onShare={() => void handleShare(post)}
+            onAuthorClick={(authorId) => router.push(`/social/users/${authorId}`)}
             onToggleAuthorFollow={(authorId, isFollowedByMe) =>
               followToggle.mutate({ userId: authorId, isFollowedByMe })
             }
@@ -167,12 +205,14 @@ export function SocialTab({
           <h4 className="mb-3 text-[14px] font-extrabold">داغ‌ترین هشتگ‌ها</h4>
           <div className="flex flex-wrap gap-2">
             {tags.map((tag) => (
-              <span
+              <button
                 key={tag}
+                type="button"
+                onClick={() => onSearchChange(tag)}
                 className="text-ember rounded-full border border-[rgba(255,98,0,.18)] px-3 py-1.5 text-[12.5px] font-bold [background:rgba(255,98,0,.08)]"
               >
                 {tag}
-              </span>
+              </button>
             ))}
           </div>
         </Panel>
@@ -182,20 +222,27 @@ export function SocialTab({
           <div className="flex flex-col gap-3">
             {activeUsers.map((u) => (
               <div key={u.id} className="flex items-center gap-2.5">
-                {u.isAdam ? (
-                  <AdamAvatar className="size-9" />
-                ) : (
-                  <span
-                    className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-white"
-                    style={{ background: u.avatar }}
-                  >
-                    {getAvatarInitial(u.name)}
+                <Link
+                  href={`/social/users/${u.id}`}
+                  className="group flex min-w-0 flex-1 items-center gap-2.5 rounded-xl text-start transition-colors hover:bg-white/[.03] focus-visible:ring-2 focus-visible:ring-ember focus-visible:outline-none"
+                >
+                  {u.isAdam ? (
+                    <AdamAvatar className="size-9" />
+                  ) : (
+                    <span
+                      className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-white"
+                      style={{ background: u.avatar }}
+                    >
+                      {getAvatarInitial(u.name)}
+                    </span>
+                  )}
+                  <span className="min-w-0 flex-1 leading-tight">
+                    <b className="block truncate text-[13px] font-bold transition-colors group-hover:text-gold">
+                      {u.name}
+                    </b>
+                    <small className="text-ink-3 text-[11px]">{u.role}</small>
                   </span>
-                )}
-                <span className="min-w-0 flex-1 leading-tight">
-                  <b className="block truncate text-[13px] font-bold">{u.name}</b>
-                  <small className="text-ink-3 text-[11px]">{u.role}</small>
-                </span>
+                </Link>
                 {u.canFollow && (
                   <button
                     type="button"
@@ -207,17 +254,16 @@ export function SocialTab({
                       })
                     }
                     className={cn(
-                      'rounded-full border px-2.5 py-1 text-[11px] font-extrabold transition-colors disabled:opacity-60',
+                      'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-extrabold transition-colors disabled:opacity-80',
                       u.isFollowedByMe
-                        ? 'border-[rgba(243,186,99,.28)] text-ink-2 bg-white/5'
+                        ? 'text-ink-2 border-[rgba(243,186,99,.28)] bg-white/5'
                         : 'text-gold border-[rgba(243,186,99,.32)] hover:border-[rgba(243,186,99,.5)]',
                     )}
                   >
-                    {followToggle.isPending && followToggle.variables?.userId === u.id
-                      ? '...'
-                      : u.isFollowedByMe
-                        ? 'هم‌پرواز'
-                        : 'هم پرواز شدن'}
+                    {followToggle.isPending && followToggle.variables?.userId === u.id && (
+                      <InlineSpinner className="size-3" />
+                    )}
+                    {u.isFollowedByMe ? 'هم‌پرواز' : 'هم پرواز شدن'}
                   </button>
                 )}
               </div>
@@ -229,13 +275,37 @@ export function SocialTab({
       {/* Post Detail Modal */}
       <button
         type="button"
-        onClick={() => setIsCreatePostOpen(true)}
+        onClick={handleOpenCreatePost}
         aria-label="ایجاد پست جدید"
         className="fixed bottom-24 left-4 z-40 inline-flex min-h-14 min-w-14 items-center justify-center gap-2 rounded-full border border-[rgba(255,130,50,.36)] px-4 text-[#1a0a00] shadow-[0_18px_48px_-18px_var(--glow)] transition-[transform,opacity,box-shadow] duration-250 [background:var(--fire-grad)] hover:-translate-y-0.5 hover:shadow-[0_24px_56px_-18px_var(--glow)] active:scale-95 lg:bottom-8 lg:left-8 lg:min-w-40"
       >
-        <Icon name="plus" size={22} />
+        <Icon name="edit-post" size={22} />
         <span className="hidden text-sm font-black lg:inline">ایجاد پست</span>
       </button>
+
+      {isCompleteProfileOpen && (
+        <CompleteForumProfileModal
+          isOpen
+          profile={currentProfile}
+          isPending={updateProfile.isPending}
+          onClose={() => setIsCompleteProfileOpen(false)}
+          onSubmit={async ({ displayName, username }) => {
+            try {
+              await updateProfile.mutateAsync({
+                displayName,
+                username,
+              });
+              showSuccess('پروفایل انجمن کامل شد.');
+              setIsCompleteProfileOpen(false);
+              setIsCreatePostOpen(true);
+            } catch (error) {
+              showError(
+                error instanceof Error ? error.message : 'پروفایل ذخیره نشد. دوباره تلاش کن.',
+              );
+            }
+          }}
+        />
+      )}
 
       <BaseModal
         isOpen={isCreatePostOpen}
@@ -262,19 +332,172 @@ export function SocialTab({
           />
         </div>
       </BaseModal>
-
-      {/* User Profile Modal */}
-      {selectedProfileUserId && (
-        <UserProfileModalContainer
-          userId={selectedProfileUserId}
-          onClose={() => setSelectedProfileUserId(null)}
-          repository={userProfileRepo}
-        />
-      )}
-
-      {/* Share Modal */}
-      <SharePostModal isOpen={sharePostId !== null} onClose={() => setSharePostId(null)} />
     </div>
+  );
+}
+
+function hasRequiredForumProfile(profile?: MyProfile | null) {
+  return Boolean(profile?.displayName?.trim() && profile?.username?.trim());
+}
+
+function CompleteForumProfileModal({
+  isOpen,
+  profile,
+  isPending,
+  onClose,
+  onSubmit,
+}: {
+  isOpen: boolean;
+  profile?: MyProfile | null;
+  isPending: boolean;
+  onClose: () => void;
+  onSubmit: (input: { displayName: string; username: string }) => Promise<void>;
+}) {
+  const [displayName, setDisplayName] = useState(profile?.displayName || profile?.name || '');
+  const [username, setUsername] = useState(profile?.username ?? '');
+  const [errors, setErrors] = useState<{ displayName?: string; username?: string }>({});
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const nextErrors: typeof errors = {};
+    const nextDisplayName = displayName.trim().replace(/\s+/g, ' ');
+    const nextUsername = username.trim().replace(/^@+/, '');
+
+    if (nextDisplayName.length < 2) {
+      nextErrors.displayName = 'نام نمایشی باید حداقل ۲ کاراکتر باشد.';
+    }
+
+    if (nextDisplayName.length > 64) {
+      nextErrors.displayName = 'نام نمایشی نباید بیشتر از ۶۴ کاراکتر باشد.';
+    }
+
+    if (!/^[a-zA-Z0-9_]{3,24}$/.test(nextUsername)) {
+      nextErrors.username = 'نام کاربری باید ۳ تا ۲۴ کاراکتر انگلیسی، عدد یا _ باشد.';
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length) return;
+
+    await onSubmit({ displayName: nextDisplayName, username: nextUsername });
+  };
+
+  return (
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="تکمیل اطلاعات پروفایل"
+      zIndexClassName="z-[1000]"
+      panelClassName="w-full max-w-md"
+    >
+      <form
+        onSubmit={submit}
+        className="border-hair overflow-hidden rounded-[24px] border bg-[var(--color-panel)] shadow-[0_34px_110px_-48px_var(--glow)]"
+      >
+        <div className="border-hair flex items-center justify-between border-b px-5 py-4">
+          <div>
+            <h3 className="text-base font-black">تکمیل اطلاعات پروفایل</h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="بستن"
+            className="text-ink-3 hover:text-ink grid size-9 shrink-0 place-items-center rounded-full transition-colors hover:bg-white/5"
+          >
+            <Icon name="plus" size={20} className="rotate-45" />
+          </button>
+        </div>
+
+        <div className="space-y-4 p-5">
+          <p className="text-ink-3 rounded-[16px] border border-[var(--color-hair)] bg-black/20 p-3 text-xs leading-6">
+            برای اینکه دیگران تو را درست بشناسند، نام نمایشی و نام کاربری‌ات را کامل کن.
+          </p>
+          <ProfileCompletionField
+            label="نام نمایشی"
+            icon="user"
+            value={displayName}
+            error={errors.displayName}
+            placeholder="مثلاً آرش کریمی"
+            autoFocus
+            onChange={(value) => {
+              setDisplayName(value);
+              setErrors((current) => ({ ...current, displayName: undefined }));
+            }}
+          />
+          <ProfileCompletionField
+            label="نام کاربری"
+            icon="search"
+            value={username}
+            error={errors.username}
+            placeholder="sample_user"
+            ltr
+            onChange={(value) => {
+              setUsername(value);
+              setErrors((current) => ({ ...current, username: undefined }));
+            }}
+          />
+
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              disabled={isPending}
+              className="sm:flex-1"
+            >
+              بعداً
+            </Button>
+            <Button type="submit" variant="primary" disabled={isPending} className="sm:flex-1">
+              {isPending && <InlineSpinner className="size-4" />}
+              ذخیره و ایجاد پست
+            </Button>
+          </div>
+        </div>
+      </form>
+    </BaseModal>
+  );
+}
+
+function ProfileCompletionField({
+  label,
+  icon,
+  value,
+  error,
+  placeholder,
+  autoFocus,
+  ltr,
+  onChange,
+}: {
+  label: string;
+  icon: IconName;
+  value: string;
+  error?: string;
+  placeholder: string;
+  autoFocus?: boolean;
+  ltr?: boolean;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="text-ink-2 mb-2 block text-sm font-black">{label}</span>
+      <div className="relative">
+        <Icon
+          name={icon}
+          size={18}
+          className="text-ember pointer-events-none absolute inset-y-0 start-3.5 my-auto"
+        />
+        <Input
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          invalid={Boolean(error)}
+          autoFocus={autoFocus}
+          dir={ltr ? 'ltr' : 'rtl'}
+          className={cn('ps-11', ltr && 'text-left')}
+        />
+      </div>
+      {error && <p className="text-danger mt-2 text-xs font-bold">{error}</p>}
+    </label>
   );
 }
 
@@ -369,24 +592,26 @@ function PostCard({
         <div className="flex items-center gap-3">
           {/* ... author avatar and name (unchanged) ... */}
           {/* Admin actions */}
-          {post.isAdam ? (
-            <AdamAvatar className="size-11" />
-          ) : (
-            <div
-              className="flex cursor-pointer items-center gap-3"
-              onClick={(e) => {
-                e.stopPropagation();
-                onAuthorClick(post.authorId);
-              }}
-            >
+          <button
+            type="button"
+            className="shrink-0 rounded-full focus-visible:ring-2 focus-visible:ring-ember focus-visible:outline-none"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAuthorClick(post.authorId);
+            }}
+            aria-label={`مشاهده پروفایل ${post.author}`}
+          >
+            {post.isAdam ? (
+              <AdamAvatar className="size-11" />
+            ) : (
               <span
                 className="grid size-11 shrink-0 place-items-center rounded-full text-sm font-black text-white"
                 style={{ background: post.avatar }}
               >
                 {getAvatarInitial(post.author)}
               </span>
-            </div>
-          )}
+            )}
+          </button>
           <div
             className="min-w-0 flex-1 leading-tight"
             onClick={(e) => {
@@ -427,13 +652,14 @@ function PostCard({
                 onToggleAuthorFollow(post.authorId, isFollowingAuthor);
               }}
               className={cn(
-                'ms-auto shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-extrabold transition-colors disabled:opacity-60',
+                'ms-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-extrabold transition-colors disabled:opacity-80',
                 isFollowingAuthor
-                  ? 'border-[rgba(243,186,99,.28)] bg-white/5 text-ink-2'
+                  ? 'text-ink-2 border-[rgba(243,186,99,.28)] bg-white/5'
                   : 'text-gold border-[rgba(243,186,99,.32)] hover:border-[rgba(243,186,99,.5)]',
               )}
             >
-              {isCurrentAuthorToggling ? '...' : isFollowingAuthor ? 'هم‌پرواز' : 'هم پرواز شدن'}
+              {isCurrentAuthorToggling && <InlineSpinner className="size-3" />}
+              {isFollowingAuthor ? 'هم‌پرواز' : 'هم پرواز شدن'}
             </button>
           )}
         </div>
@@ -482,7 +708,7 @@ function PostCard({
               className="hover:text-ink flex items-center gap-1.5 transition-colors"
             >
               <Icon name="msg" size={18} />
-              {toPersianDigits(post.comments.length)}
+              {toPersianDigits(post.commentsCount ?? post.comments.length)}
             </button>
             <button
               type="button"
@@ -493,7 +719,9 @@ function PostCard({
               اشتراک‌گذاری
             </button>
           </div>
-          <time className="text-ink-4 block text-xs sm:text-[13px]">{formatRelativeTime(post.time)}</time>
+          <time className="text-ink-4 block text-xs sm:text-[13px]">
+            {formatRelativeTime(post.time)}
+          </time>
         </div>
       </div>
     </article>

@@ -20,16 +20,18 @@ export function SocialPostDetailModal({ isOpen, onClose, post, onAddComment, onS
   const [commentText, setCommentText] = useState('');
   const [liked, setLiked] = useState(false);
   const commentsEndRef = useRef<HTMLDivElement>(null);
+  const shouldScrollAfterSubmitRef = useRef(false);
 
-  // Auto-scroll to bottom when comments change
   useEffect(() => {
-    if (commentsEndRef.current) {
-      commentsEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
+    if (!shouldScrollAfterSubmitRef.current) return;
+
+    commentsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    shouldScrollAfterSubmitRef.current = false;
   }, [post.comments.length]);
 
   const handleSubmitComment = () => {
     if (commentText.trim() && onAddComment) {
+      shouldScrollAfterSubmitRef.current = true;
       onAddComment(post.id, commentText.trim());
       setCommentText('');
     }
@@ -98,7 +100,7 @@ export function SocialPostDetailModal({ isOpen, onClose, post, onAddComment, onS
                 </button>
                 <span className="flex items-center gap-1">
                   <Icon name="msg" size={16} />
-                  {toPersianDigits(post.comments.length)}
+                  {toPersianDigits(post.commentsCount ?? post.comments.length)}
                 </span>
                 <button
                   onClick={onShare}
@@ -114,22 +116,24 @@ export function SocialPostDetailModal({ isOpen, onClose, post, onAddComment, onS
 
           <div className="p-4">
             <p className="text-ink-3 mb-3 text-xs font-bold">نظرات هم‌قبله‌ای‌ها</p>
-            <div className="flex flex-col gap-4">
-              {post.comments.map((comment, idx) => (
-                <div key={idx} className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-white">
-                    {getAvatarInitial(comment.name)}
-                  </div>
-                  <div className="flex-1 text-right">
-                    <div className="flex items-center justify-between">
-                      <span className="text-ink text-sm font-bold">{comment.name}</span>
-                      <span className="text-ink-4 text-xs">{formatRelativeTime(comment.time)}</span>
+            <div className="lg:max-h-[360px] lg:overflow-y-auto lg:overscroll-contain lg:rounded-[16px] lg:pe-1">
+              <div className="flex flex-col gap-4">
+                {post.comments.map((comment, idx) => (
+                  <div key={idx} className="flex items-start gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-white">
+                      {getAvatarInitial(comment.name)}
                     </div>
-                    <p className="text-ink-2 mt-1 text-sm">{comment.text}</p>
+                    <div className="flex-1 text-right">
+                      <div className="flex items-center justify-between">
+                        <span className="text-ink text-sm font-bold">{comment.name}</span>
+                        <span className="text-ink-4 text-xs">{formatRelativeTime(comment.time)}</span>
+                      </div>
+                      <p className="text-ink-2 mt-1 text-sm">{comment.text}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-              <div ref={commentsEndRef} />
+                ))}
+                <div ref={commentsEndRef} />
+              </div>
             </div>
           </div>
         </div>
