@@ -6,6 +6,19 @@ import {
   updateStoredTokens,
 } from '@/core/auth/token';
 
+export class ApiError extends Error {
+  statusCode?: number;
+  error?: string;
+  path?: string;
+  requestId?: string;
+
+  constructor(message: string, details: Partial<ApiError> = {}) {
+    super(message);
+    this.name = 'ApiError';
+    Object.assign(this, details);
+  }
+}
+
 const httpClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001',
   timeout: 10000,
@@ -35,7 +48,12 @@ httpClient.interceptors.response.use(
               { refreshToken },
               { headers: { 'Content-Type': 'application/json' } },
             );
-            updateStoredTokens(response.data);
+            updateStoredTokens({
+              accessToken: response.data.accessToken,
+              refreshToken: response.data.refreshToken,
+              expiresAt: response.data.accessTokenExpiredAt ?? response.data.expiresAt,
+              refreshTokenExpiresAt: response.data.refreshTokenExpiredAt,
+            });
             originalRequest.headers.Authorization = `Bearer ${response.data.accessToken}`;
             return httpClient(originalRequest);
           } catch {
@@ -44,12 +62,19 @@ httpClient.interceptors.response.use(
         }
       }
 
-      if (error.response.status === 401 || error.response.status === 403) {
+      if (error.response.status === 401) {
         clearAuthSession();
       }
       const data = error.response.data;
-      const message = data?.message || error.message;
-      return Promise.reject(new Error(message));
+      const message = Array.isArray(data?.message) ? data.message.join('، ') : data?.message || error.message;
+      return Promise.reject(
+        new ApiError(message, {
+          statusCode: data?.statusCode ?? error.response.status,
+          error: data?.error,
+          path: data?.path,
+          requestId: data?.requestId,
+        }),
+      );
     }
     return Promise.reject(error);
   },

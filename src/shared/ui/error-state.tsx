@@ -33,7 +33,7 @@ const TONE_CLASS: Record<ErrorStateTone, string> = {
 
 export function ErrorState({
   title = 'مشکلی پیش آمد',
-  message = 'لطفاً دوباره تلاش کنید. اگر مشکل ادامه داشت، کمی بعد برگردید.',
+  message = 'لطفاً دوباره تلاش کن. اگر مشکل ادامه داشت، کمی بعد برگرد.',
   action,
   secondaryAction,
   icon = 'shield',
@@ -109,10 +109,7 @@ function ErrorStateButton({
   );
 }
 
-export function getErrorMessage(
-  error: unknown,
-  fallback = 'ارتباط برقرار نشد. لطفاً دوباره تلاش کنید.',
-) {
+export function getErrorMessage(error: unknown, fallback = 'ارتباط برقرار نشد. لطفاً دوباره تلاش کن.') {
   if (error instanceof Error && error.message) return error.message;
   if (typeof error === 'string' && error.trim()) return error;
   return fallback;

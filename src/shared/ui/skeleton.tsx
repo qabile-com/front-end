@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/core/lib/cn';
+import { DashboardPageShell } from './dashboard-page-shell';
 
 interface SkeletonProps {
   className?: string;
@@ -83,35 +84,37 @@ export function ProfileSkeleton() {
 export function SocialSkeleton() {
   return (
     <div
-      className="grid gap-7 min-[1100px]:grid-cols-[1fr_300px]"
-      aria-label="در حال بارگذاری انجمن"
+      className="space-y-4"
+      aria-label="?? ??? ???????? ??????"
       role="status"
     >
-      <div className="space-y-4">
-        <Skeleton className="h-12 rounded-2xl" />
-        {Array.from({ length: 3 }).map((_, index) => (
-          <div
-            key={index}
-            className="border-hair rounded-[20px] border p-4 [background:var(--glass)]"
-          >
-            <div className="flex items-center gap-3">
-              <Skeleton className="size-11 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-3 w-20" />
-              </div>
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={index}
+          className="border-hair rounded-[20px] border p-4 [background:var(--glass)]"
+        >
+          <div className="flex items-center gap-3">
+            <Skeleton className="size-11 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-20" />
             </div>
-            <div className="mt-5 space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-4/5" />
-            </div>
+            <Skeleton className="h-8 w-24 rounded-full max-sm:hidden" />
           </div>
-        ))}
-      </div>
-      <div className="hidden space-y-4 min-[1100px]:block">
-        <Skeleton className="h-38 rounded-[20px]" />
-        <Skeleton className="h-54 rounded-[20px]" />
-      </div>
+          <div className="mt-5 space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-4/5" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+          <div className="mt-5 flex items-center justify-between">
+            <div className="flex gap-2">
+              <Skeleton className="size-9 rounded-xl" />
+              <Skeleton className="size-9 rounded-xl" />
+            </div>
+            <Skeleton className="h-4 w-20" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -142,20 +145,77 @@ export function PostDetailSkeleton() {
 
 export function SessionSkeleton() {
   return (
-    <div
-      className="grid items-start gap-6 lg:grid-cols-[1fr_380px]"
-      aria-label="در حال بارگذاری جلسه"
+    <DashboardPageShell
+      size="wide"
+      className="min-h-screen"
+      aria-label="?? ??? ???????? ????"
       role="status"
     >
-      <div className="space-y-5">
-        <Skeleton className="aspect-video rounded-[20px]" />
-        <Skeleton className="h-7 w-2/3" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-4/5" />
-        <Skeleton className="h-48 rounded-[20px]" />
+      <div className="grid min-w-0 items-start gap-6 min-[1440px]:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="min-w-0 space-y-4">
+          <div className="overflow-hidden rounded-[24px] border border-[rgba(255,98,0,.18)] bg-black shadow-[0_30px_90px_-58px_var(--glow)]">
+            <div className="relative">
+              <Skeleton className="aspect-video w-full rounded-none" />
+              <div className="absolute inset-x-3 top-3 flex items-center justify-between">
+                <Skeleton className="size-10 rounded-full" />
+                <Skeleton className="size-10 rounded-full" />
+              </div>
+              <Skeleton className="absolute right-4 bottom-4 h-10 w-32 rounded-full" />
+            </div>
+            <div className="space-y-4 p-4 sm:p-5">
+              <div className="flex flex-wrap items-center gap-2">
+                <Skeleton className="h-8 w-24 rounded-full" />
+                <Skeleton className="h-8 w-28 rounded-full" />
+              </div>
+              <Skeleton className="h-7 w-3/4" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <Skeleton key={index} className="h-18 rounded-2xl" />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="border-hair overflow-hidden rounded-[22px] border [background:var(--glass)]">
+            <div className="grid grid-cols-2 gap-1 border-b border-[rgba(255,98,0,.12)] p-2 sm:grid-cols-3">
+              <Skeleton className="h-10 rounded-xl" />
+              <Skeleton className="h-10 rounded-xl" />
+              <Skeleton className="hidden h-10 rounded-xl sm:block" />
+            </div>
+            <div className="space-y-3 p-4 sm:p-5">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-11/12" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          </div>
+
+          <Skeleton className="h-13 rounded-2xl sm:hidden" />
+        </div>
+
+        <aside className="sticky top-0 hidden min-[1440px]:block">
+          <div className="border-hair rounded-[24px] border p-4 [background:var(--glass)]">
+            <Skeleton className="mb-4 h-6 w-36" />
+            <div className="space-y-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="rounded-2xl border border-[rgba(255,98,0,.12)] p-3">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="size-10 rounded-xl" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-6 w-12 rounded-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
       </div>
-      <Skeleton className="sticky top-22 hidden h-130 rounded-[20px] lg:block" />
-    </div>
+    </DashboardPageShell>
   );
 }
 

@@ -12,6 +12,7 @@ interface BaseModalProps {
   title?: string;
   className?: string;
   panelClassName?: string;
+  contentClassName?: string;
   zIndexClassName?: string;
   closeOnOutsideClick?: boolean;
   closeOnEscape?: boolean;
@@ -24,6 +25,7 @@ export function BaseModal({
   title,
   className,
   panelClassName,
+  contentClassName,
   zIndexClassName = 'z-50',
   closeOnOutsideClick = true,
   closeOnEscape = true,
@@ -65,7 +67,7 @@ export function BaseModal({
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? titleId : undefined}
-            className={panelClassName}
+            className={cn('max-h-[calc(100dvh-2rem)] overflow-hidden', panelClassName)}
             initial={reduceMotion ? false : { opacity: 0, y: 18, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reduceMotion ? undefined : { opacity: 0, y: 10, scale: 0.985 }}
@@ -73,7 +75,14 @@ export function BaseModal({
             onMouseDown={(event) => event.stopPropagation()}
           >
             {title && <span id={titleId} className="sr-only">{title}</span>}
-            {children}
+            <div
+              className={cn(
+                'max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain',
+                contentClassName,
+              )}
+            >
+              {children}
+            </div>
           </motion.div>
         </motion.div>
       )}
