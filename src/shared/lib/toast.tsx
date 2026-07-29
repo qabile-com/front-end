@@ -3,7 +3,7 @@
 import toast, { Toaster } from 'react-hot-toast';
 
 const toastClassName =
-  'relative overflow-hidden rounded-[18px] border px-4 py-3 text-sm font-extrabold leading-7 text-[var(--color-ink)] shadow-[0_24px_80px_-34px_var(--glow)] backdrop-blur-2xl border-hair before:pointer-events-none before:absolute before:inset-x-4 before:top-0 before:h-px before:[background:linear-gradient(90deg,transparent,rgba(243,186,99,.5),transparent)]';
+  'relative overflow-hidden rounded-[18px] border px-4 py-3 text-sm font-extrabold leading-7 text-white shadow-[0_24px_80px_-34px_var(--glow)] backdrop-blur-2xl border-hair before:pointer-events-none before:absolute before:inset-x-4 before:top-0 before:h-px before:[background:linear-gradient(90deg,transparent,rgba(243,186,99,.5),transparent)]';
 
 const successToastClassName = `${toastClassName} border-[rgba(255,98,0,.24)]`;
 const errorToastClassName = `${toastClassName} border-[rgba(255,90,90,.35)]`;
