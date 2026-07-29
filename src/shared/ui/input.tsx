@@ -16,7 +16,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       ref={ref}
       dir="rtl"
       className={cn(
-        'text-ink placeholder:text-ink-3 w-full rounded-[11px] border px-3.5 py-[13px] text-[15px] outline-none [background:var(--glass-2)]',
+        'text-ink placeholder:text-ink-3 w-full rounded-[11px] border px-3.5 py-[13px] text-[16px] outline-none [background:var(--glass-2)]',
         'transition-[border-color,box-shadow,background] duration-300',
         'focus:border-[rgba(255,98,0,.42)] focus:bg-[rgba(255,160,100,.065)] focus:shadow-[0_0_0_3px_rgba(255,98,0,.12)]',
         invalid
