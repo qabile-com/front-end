@@ -68,7 +68,7 @@ export function ForumUserProfilePage() {
 
   const user = profile.data;
   const isOwnProfile = Boolean(currentUser?.id && user.id === currentUser.id);
-  const followed = Boolean(follow.isFollowed || user.followedByMe);
+  const followed = follow.isLoading ? Boolean(user.followedByMe) : follow.isFollowed;
   const blocked = Boolean(user.blockedByMe);
   const canFollow = Boolean(user.canFollow) && !blocked && !isOwnProfile;
   const canBlock = !user.isAdam && !isOwnProfile;
@@ -120,7 +120,10 @@ export function ForumUserProfilePage() {
                     size="sm"
                     disabled={follow.isToggling}
                     onClick={() => follow.toggle()}
-                    className={cn('gap-1.5', followed && 'border-gold text-gold border')}
+                    className={cn(
+                      'min-w-31 gap-1.5 transition-[border-color,background,color,opacity]',
+                      followed && 'border-gold/50 bg-white/5 text-gold border',
+                    )}
                   >
                     {follow.isToggling && <InlineSpinner className="size-3.5" />}
                     {followed ? 'هم‌پرواز هستید' : 'هم پرواز شدن'}
