@@ -1,17 +1,21 @@
 import { httpClient } from './http-client';
+import type { ForumUserDto } from './forum.api';
+
+export interface CourseCommentDto {
+  id: string;
+  name?: string | null;
+  text: string;
+  time?: string | null;
+  authorId?: string;
+  author?: ForumUserDto | null;
+  avatar?: string | null;
+  moderationStatus?: string;
+  createdAt?: string;
+}
 
 interface CommentsResponse {
   data: {
-    comments: Array<{
-      id: string;
-      name: string;
-      text: string;
-      time: string;
-      authorId?: string;
-      avatar?: string | null;
-      moderationStatus?: string;
-      createdAt?: string;
-    }>;
+    comments: CourseCommentDto[];
     nextCursor?: string;
     totalItems: number;
   };
@@ -29,7 +33,7 @@ export const getSessionComments = (courseId: string, sectionId: string, limit = 
   });
 
 export const addSessionComment = (courseId: string, sectionId: string, text: string) =>
-  httpClient.post<{ data: CommentsResponse['data']['comments'][number] }>(
+  httpClient.post<{ data: CourseCommentDto }>(
     `/api/v1/courses/${courseId}/episodes/${sectionId}/comments`,
     { text },
   );

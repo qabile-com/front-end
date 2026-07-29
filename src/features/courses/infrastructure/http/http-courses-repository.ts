@@ -58,8 +58,8 @@ type PurchaseCourseDto = {
 };
 
 export class HttpCoursesRepository implements ICoursesRepository {
-  async getCourses(): Promise<Course[]> {
-    const res = await getCourses();
+  async getCourses(filters?: { limit?: number; offset?: number; q?: string }): Promise<Course[]> {
+    const res = await getCourses(filters);
     const courses = (res.data.data ?? res.data) as CourseDto[];
     return courses.map((course) =>
       withCourseSectionNavigation({

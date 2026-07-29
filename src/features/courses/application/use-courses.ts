@@ -5,17 +5,25 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ICoursesRepository } from '@/features/dashboard/domain/dashboard-repository';
 import type { SectionWatchProgressInput } from '@/features/dashboard/domain/dashboard.types';
 
-export function useCourses(repo: ICoursesRepository) {
+export interface CourseListFilters {
+  limit?: number;
+  offset?: number;
+  q?: string;
+}
+
+export function useCourses(repo: ICoursesRepository, filters: CourseListFilters = {}) {
   const query = useQuery({
-    queryKey: ['dashboard', 'courses'],
-    queryFn: () => repo.getCourses(),
+    queryKey: ['dashboard', 'courses', filters],
+    queryFn: () => repo.getCourses(filters),
+    placeholderData: (previous) => previous,
     staleTime: 5 * 60 * 1000,
   });
 
   return {
     ...query,
     courses: query.data ?? null,
-    loading: query.isLoading,
+    loading: query.isPending,
+    fetching: query.isFetching,
     error: query.error instanceof Error ? query.error.message : null,
     rawError: query.error,
   };

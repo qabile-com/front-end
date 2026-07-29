@@ -47,7 +47,7 @@ export interface ILeaderboardRepository {
  * Courses data.
  */
 export interface ICoursesRepository {
-  getCourses(): Promise<Course[]>;
+  getCourses(filters?: { limit?: number; offset?: number; q?: string }): Promise<Course[]>;
   purchaseCourse(courseId: string): Promise<CoursePurchaseResult>;
   updateSectionProgress(
     sectionId: string,
