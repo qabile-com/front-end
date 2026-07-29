@@ -88,7 +88,7 @@ export function ProfileTab({ profile, profileRepo, initialEditProfileOpen = fals
           </Panel> */}
 
           <Panel title="تنظیمات">
-            <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
               {profile.settings.map((s) => (
                 <button
                   key={s.label}
