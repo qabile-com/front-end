@@ -9,7 +9,7 @@ export function AiComingSoonPage() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <MotionPage className="mx-auto flex min-h-[calc(100dvh-9rem)] w-full max-w-3xl items-center justify-center">
+    <MotionPage className="mx-auto flex w-full max-w-3xl items-center justify-center">
       <section className="border-hair relative w-full overflow-hidden rounded-[28px] border p-6 text-center [background:radial-gradient(circle_at_50%_0%,rgba(255,98,0,.2),transparent_38%),var(--glass)] sm:p-10">
         <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(255,98,0,.8),transparent)]" />
 
