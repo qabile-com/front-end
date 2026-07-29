@@ -12,12 +12,13 @@ import type { IProfileRepository, MyProfile } from '../../domain/profile-reposit
 interface ProfileTabProps {
   profile: MyProfile;
   profileRepo: IProfileRepository;
+  initialEditProfileOpen?: boolean;
 }
 
-export function ProfileTab({ profile, profileRepo }: ProfileTabProps) {
+export function ProfileTab({ profile, profileRepo, initialEditProfileOpen = false }: ProfileTabProps) {
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(initialEditProfileOpen);
   const sortedAchievements = sortAchievementsByUnlocked(profile.achievements);
 
   return (
@@ -107,6 +108,28 @@ export function ProfileTab({ profile, profileRepo }: ProfileTabProps) {
               ))}
             </div>
           </Panel>
+
+          {/* <Panel title="آتش">
+            <Link
+              href="/profile/fire-history"
+              className="border-hair hover:border-hair-2 group flex min-w-0 items-center gap-3 rounded-[18px] border p-4 text-start transition-[transform,border-color,box-shadow] [background:linear-gradient(135deg,rgba(255,98,0,.12),rgba(243,186,99,.05))] hover:-translate-y-0.5 hover:shadow-[0_18px_44px_-34px_var(--glow)]"
+            >
+              <span className="grid size-12 shrink-0 place-items-center rounded-2xl text-[#1a0a00] shadow-[0_14px_34px_-18px_var(--glow)] [background:var(--fire-grad)]">
+                <Icon name="flame" size={23} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <b className="text-ink block text-sm font-black">تاریخچه آتش</b>
+                <span className="text-ink-3 mt-1 block text-xs leading-6">
+                  دریافت‌ها و خرج‌کردن‌های آتش حسابت را ببین.
+                </span>
+              </span>
+              <Icon
+                name="arrow-left"
+                size={17}
+                className="text-gold shrink-0 transition-transform group-hover:-translate-x-1"
+              />
+            </Link>
+          </Panel> */}
         </div>
 
         <Panel
@@ -359,20 +382,57 @@ const ACHIEVEMENT_IMAGE_BY_LABEL: Record<string, string> = {
   'صدای قبیله': '/assets/achievements/seda-qabile.png',
 };
 
+const ACHIEVEMENT_SLUG_ALIASES: Record<string, string> = {
+  'atashafrooz': 'atash-afrooz',
+  'atash-afrooz': 'atash-afrooz',
+  'fire-starter': 'atash-afrooz',
+  star: 'setare',
+  setareh: 'setare',
+  setare: 'setare',
+  'farzand-ghabile': 'farzand-ghabile',
+  'farzand-qabile': 'farzand-ghabile',
+  'child-of-tribe': 'farzand-ghabile',
+  tizbal: 'tizbaal',
+  tizbaal: 'tizbaal',
+  hero: 'gahreman',
+  ghahreman: 'gahreman',
+  gahreman: 'gahreman',
+  'safir-ghabile': 'safir-ghabile',
+  'safir-qabile': 'safir-ghabile',
+  ambassador: 'safir-ghabile',
+  'vares-atash': 'vares-ghabile',
+  'vares-ghabile': 'vares-ghabile',
+  'vares-qabile': 'vares-ghabile',
+  'warese-atash': 'vares-ghabile',
+  'heir-of-fire': 'vares-ghabile',
+  'seda-ghabile': 'seda-qabile',
+  'seda-qabile': 'seda-qabile',
+  'seda-ye-ghabile': 'seda-qabile',
+  'sedaye-ghabile': 'seda-qabile',
+  'sedaye-qabile': 'seda-qabile',
+  'voice-of-tribe': 'seda-qabile',
+  'ghalb-ghabile': 'ghalb-ghabile',
+  'ghalb-qabile': 'ghalb-ghabile',
+  'heart-of-tribe': 'ghalb-ghabile',
+};
+
 function getAchievementCount(achievement: Achievement) {
   return achievement.count ?? 1;
 }
 
 function getAchievementImage(achievement: Achievement) {
-  return (
-    (achievement.slug ? `/assets/achievements/${achievement.slug}.png` : undefined) ??
-    ACHIEVEMENT_IMAGE_BY_LABEL[achievement.label] ??
-    '/assets/achievements/atash-afrooz.png'
-  );
+  const slug = getAchievementSlug(achievement);
+  return slug
+    ? `/assets/achievements/${slug}.png`
+    : ACHIEVEMENT_IMAGE_BY_LABEL[achievement.label] ?? '/assets/achievements/atash-afrooz.png';
 }
 
 function getAchievementSlug(achievement: Achievement) {
-  return achievement.slug ?? ACHIEVEMENT_SLUG_BY_LABEL[achievement.label];
+  const rawSlug = achievement.slug?.trim();
+  return (
+    (rawSlug ? ACHIEVEMENT_SLUG_ALIASES[rawSlug] ?? rawSlug : undefined) ??
+    ACHIEVEMENT_SLUG_BY_LABEL[achievement.label]
+  );
 }
 
 function getAchievementDescription(achievement: Achievement) {

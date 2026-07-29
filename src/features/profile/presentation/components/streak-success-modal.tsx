@@ -6,19 +6,27 @@ import { toPersianDigits } from '@/core/lib/persian';
 interface StreakSuccessModalProps {
   isOpen: boolean;
   streak: number;
+  freezesRemaining?: number;
+  freezeUsed?: boolean;
   onClose: () => void;
 }
 
-export function StreakSuccessModal({ isOpen, streak, onClose }: StreakSuccessModalProps) {
+export function StreakSuccessModal({
+  isOpen,
+  streak,
+  freezesRemaining,
+  freezeUsed = false,
+  onClose,
+}: StreakSuccessModalProps) {
   return (
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
       title="افزایش زنجیره"
       zIndexClassName="z-[1100]"
-      panelClassName="border-hair relative w-full max-w-[530px] overflow-visible rounded-[16px] border bg-[#030201] px-4 pb-8 pt-[260px] text-center shadow-[0_36px_120px_-48px_var(--glow)] sm:px-8"
+      panelClassName="border-hair relative w-full max-w-[530px] rounded-[16px] border bg-[#030201] px-4 py-6 text-center shadow-[0_36px_120px_-48px_var(--glow)] sm:px-8"
     >
-        <div className="pointer-events-none absolute inset-x-0 -top-8 mx-auto h-[330px] max-w-[390px]">
+        <div className="pointer-events-none relative mx-auto -mb-8 h-[250px] max-w-[340px] sm:h-[300px] sm:max-w-[390px]">
           <OptionalImage
             src="/assets/strick-phoenix.png"
             alt=""
@@ -32,6 +40,15 @@ export function StreakSuccessModal({ isOpen, streak, onClose }: StreakSuccessMod
           <h3 className="text-gold mt-4 text-[24px] font-black sm:text-[26px]">
             زنجیره‌ات به {toPersianDigits(streak)} روز رسید.
           </h3>
+
+          {(freezeUsed || typeof freezesRemaining === 'number') && (
+            <p className="text-ink-3 mt-3 text-[12px] leading-6">
+              {freezeUsed ? 'یک محافظ زنجیره برای حفظ پروازت مصرف شد. ' : ''}
+              {typeof freezesRemaining === 'number'
+                ? `${toPersianDigits(freezesRemaining)} محافظ زنجیره باقی مانده.`
+                : null}
+            </p>
+          )}
 
           <button
             type="button"

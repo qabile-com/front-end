@@ -88,7 +88,45 @@ export function AchievementEarnedModal({ achievement, onClose }: AchievementEarn
 }
 
 function getAchievementImage(achievement: Achievement) {
-  return achievement.slug
-    ? `/assets/achievements/${achievement.slug}.png`
-    : '/assets/achievements/atash-afrooz.png';
+  const slug = normalizeAchievementSlug(achievement.slug);
+  return slug ? `/assets/achievements/${slug}.png` : '/assets/achievements/atash-afrooz.png';
 }
+
+function normalizeAchievementSlug(slug?: string) {
+  if (!slug) return undefined;
+  return ACHIEVEMENT_SLUG_ALIASES[slug.trim()] ?? slug.trim();
+}
+
+const ACHIEVEMENT_SLUG_ALIASES: Record<string, string> = {
+  'atashafrooz': 'atash-afrooz',
+  'atash-afrooz': 'atash-afrooz',
+  'fire-starter': 'atash-afrooz',
+  star: 'setare',
+  setareh: 'setare',
+  setare: 'setare',
+  'farzand-ghabile': 'farzand-ghabile',
+  'farzand-qabile': 'farzand-ghabile',
+  'child-of-tribe': 'farzand-ghabile',
+  tizbal: 'tizbaal',
+  tizbaal: 'tizbaal',
+  hero: 'gahreman',
+  ghahreman: 'gahreman',
+  gahreman: 'gahreman',
+  'safir-ghabile': 'safir-ghabile',
+  'safir-qabile': 'safir-ghabile',
+  ambassador: 'safir-ghabile',
+  'vares-atash': 'vares-ghabile',
+  'vares-ghabile': 'vares-ghabile',
+  'vares-qabile': 'vares-ghabile',
+  'warese-atash': 'vares-ghabile',
+  'heir-of-fire': 'vares-ghabile',
+  'seda-ghabile': 'seda-qabile',
+  'seda-qabile': 'seda-qabile',
+  'seda-ye-ghabile': 'seda-qabile',
+  'sedaye-ghabile': 'seda-qabile',
+  'sedaye-qabile': 'seda-qabile',
+  'voice-of-tribe': 'seda-qabile',
+  'ghalb-ghabile': 'ghalb-ghabile',
+  'ghalb-qabile': 'ghalb-ghabile',
+  'heart-of-tribe': 'ghalb-ghabile',
+};

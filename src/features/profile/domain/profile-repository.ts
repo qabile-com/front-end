@@ -15,7 +15,9 @@ export interface VerificationResult {
 export interface MyProfile {
   id: string;
   name: string;
+  firstName: string;
   lastName: string;
+  displayName: string;
   username?: string | null;
   initial: string;
   avatar: string;
@@ -29,6 +31,7 @@ export interface MyProfile {
   email?: string | null;
   isEmailVerified?: boolean;
   role?: string;
+  isCompleteOnboarding?: boolean;
   securitySettings: ProfileSecuritySettings;
   profileStats: { value: string; label: string }[];
   achievements: Achievement[];
@@ -43,14 +46,37 @@ export interface MyProfile {
 }
 
 export interface UpdateProfileInput {
-  name?: string;
+  firstName?: string;
   lastName?: string;
+  displayName?: string;
   username?: string | null;
   email?: string | null;
 }
 
+export interface XpHistoryItem {
+  id: string;
+  amount: number;
+  sourceType: string;
+  courseId?: string | null;
+  episodeId?: string | null;
+  roadmapStepId?: string | null;
+  eventKey?: string | null;
+  title?: string | null;
+  meta?: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface PaginatedXpHistory {
+  items: XpHistoryItem[];
+  totalItems: number;
+  totalPages: number;
+  limit: number;
+  offset: number;
+}
+
 export interface IProfileRepository {
   getMyProfile(): Promise<MyProfile>;
+  getXpHistory(params?: { limit?: number; offset?: number; q?: string }): Promise<PaginatedXpHistory>;
   updateMyProfile(input: UpdateProfileInput): Promise<MyProfile>;
   updateProfileAvatar(file: File): Promise<MyProfile>;
   requestEmailVerification(email: string): Promise<void>;

@@ -21,7 +21,7 @@ interface EditProfileModalProps {
 
 export function EditProfileModal({ profile, repo, onClose }: EditProfileModalProps) {
   const router = useRouter();
-  const [name, setName] = useState(profile.name);
+  const [firstName, setFirstName] = useState(profile.firstName || profile.name);
   const [lastName, setLastName] = useState(profile.lastName);
   const [username, setUsername] = useState(profile.username ?? '');
   const fileRef = useRef<HTMLInputElement>(null);
@@ -33,14 +33,19 @@ export function EditProfileModal({ profile, repo, onClose }: EditProfileModalPro
   const isBusy = updateProfile.isPending || updateAvatar.isPending || deleteAccount.isPending;
 
   const handleSave = async () => {
-    if (!name.trim()) {
+    if (!firstName.trim()) {
       showError('نام را وارد کنید');
       return;
     }
 
     try {
+      const nextFirstName = firstName.trim();
+      const nextLastName = lastName.trim();
+
       await updateProfile.mutateAsync({
-        name: name.trim(),
+        firstName: nextFirstName,
+        lastName: nextLastName,
+        displayName: [nextFirstName, nextLastName].filter(Boolean).join(' '),
         username: username.trim() || null,
       });
       showSuccess('پروفایل ذخیره شد');
@@ -137,8 +142,8 @@ export function EditProfileModal({ profile, repo, onClose }: EditProfileModalPro
             <EditSection title="اطلاعات شخصی">
               <EditField
                 label="نام"
-                value={name}
-                onChange={setName}
+                value={firstName}
+                onChange={setFirstName}
                 icon="user"
                 placeholder="آرش"
                 disabled={isBusy}

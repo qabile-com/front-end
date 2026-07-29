@@ -3,6 +3,7 @@ import {
   confirmPhoneChange,
   deleteMyAccount,
   getMyProfile,
+  getMyXpHistory,
   requestPasswordChangeCode,
   requestEmailVerification,
   requestPhoneChangeCode,
@@ -15,10 +16,12 @@ import {
 import type {
   IProfileRepository,
   MyProfile,
+  PaginatedXpHistory,
   ProfileSecuritySettings,
   ProfileSettingField,
   UpdateProfileInput,
   VerificationResult,
+  XpHistoryItem,
 } from '../../domain/profile-repository';
 import { DEFAULT_AVATAR_GRADIENT } from '@/features/dashboard/domain/dashboard.types';
 
@@ -28,7 +31,14 @@ const DEFAULT_SECURITY_SETTINGS: ProfileSecuritySettings = {
   weeklySummary: true,
 };
 
-type MyProfileDto = Omit<MyProfile, 'initial' | 'avatar' | 'posts' | 'achievements'> & {
+type MyProfileDto = Omit<
+  MyProfile,
+  'name' | 'firstName' | 'lastName' | 'displayName' | 'initial' | 'avatar' | 'posts' | 'achievements'
+> & {
+  name?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  displayName?: string | null;
   initial?: string;
   avatar?: string | null;
   securitySettings?: Partial<ProfileSecuritySettings>;
@@ -48,48 +58,61 @@ type MyProfileDto = Omit<MyProfile, 'initial' | 'avatar' | 'posts' | 'achievemen
   }[];
 };
 
+type XpHistoryDto = Omit<XpHistoryItem, 'title'> & {
+  meta?: (Record<string, unknown> & { title?: string | null }) | null;
+  title?: string | null;
+};
+
+type PaginatedXpHistoryDto = {
+  data?: XpHistoryDto[];
+  meta?: {
+    limit?: number;
+    offset?: number;
+    totalItems?: number;
+    totalPages?: number;
+  };
+};
+
 export class HttpProfileRepository implements IProfileRepository {
   async getMyProfile(): Promise<MyProfile> {
     const res = await getMyProfile();
     const p = (res.data.data ?? res.data) as MyProfileDto;
+    return this.normalizeProfile(p);
+  }
+
+  async getXpHistory(params?: {
+    limit?: number;
+    offset?: number;
+    q?: string;
+  }): Promise<PaginatedXpHistory> {
+    const res = await getMyXpHistory(params);
+    const payload = (res.data ?? {}) as PaginatedXpHistoryDto | XpHistoryDto[];
+    const items = Array.isArray(payload) ? payload : (payload.data ?? []);
+    const meta = Array.isArray(payload) ? undefined : payload.meta;
 
     return {
-      id: p.id,
-      name: p.name,
-      lastName: p.lastName,
-      username: p.username,
-      initial: p.initial ?? p.name[0] ?? '?',
-      avatar: p.avatar ?? DEFAULT_AVATAR_GRADIENT,
-      title: p.title,
-      level: p.level,
-      xp: p.xp,
-      xpMax: p.xpMax,
-      streak: p.streak,
-      phone: p.phone,
-      isPhoneVerified: p.isPhoneVerified,
-      email: p.email,
-      isEmailVerified: p.isEmailVerified,
-      role: p.role,
-      securitySettings: { ...DEFAULT_SECURITY_SETTINGS, ...p.securitySettings },
-      profileStats: p.profileStats ?? [],
-      achievements: (p.achievements ?? []).map((achievement) => ({
-        ...achievement,
-        count: achievement.count ?? achievement.timesAchieved ?? achievement.earnedCount,
-        isShareable: achievement.isShareable ?? achievement.shareable,
+      items: items.map((item) => ({
+        ...item,
+        title: item.title ?? item.meta?.title ?? null,
       })),
-      settings: p.settings ?? [],
-      posts: (p.posts ?? []).map((post) => ({
-        id: post.id,
-        text: post.text,
-        likes: post.likes,
-        commentsCount: post.commentsCount ?? post.comments?.length ?? 0,
-        time: post.time ?? post.createdAt ?? '',
-      })),
+      limit: meta?.limit ?? params?.limit ?? items.length,
+      offset: meta?.offset ?? params?.offset ?? 0,
+      totalItems: meta?.totalItems ?? items.length,
+      totalPages: meta?.totalPages ?? 1,
     };
   }
 
   async updateMyProfile(input: UpdateProfileInput): Promise<MyProfile> {
-    const res = await updateMyProfile(input);
+    const firstName = input.firstName?.trim();
+    const lastName = input.lastName?.trim();
+    const displayName = input.displayName?.trim() || [firstName, lastName].filter(Boolean).join(' ');
+
+    const res = await updateMyProfile({
+      firstName,
+      lastName,
+      displayName,
+      username: input.username?.trim() || null,
+    });
     const data = res.data.data ?? res.data;
     return this.normalizeProfile(data as MyProfileDto);
   }
@@ -152,12 +175,19 @@ export class HttpProfileRepository implements IProfileRepository {
   }
 
   private normalizeProfile(p: MyProfileDto): MyProfile {
+    const firstName = p.firstName ?? '';
+    const lastName = p.lastName ?? '';
+    const displayName = p.displayName ?? [firstName, lastName].filter(Boolean).join(' ');
+    const name = displayName || p.name || firstName || '';
+
     return {
       id: p.id,
-      name: p.name,
-      lastName: p.lastName,
+      name,
+      firstName,
+      lastName,
+      displayName,
       username: p.username,
-      initial: p.initial ?? p.name[0] ?? '?',
+      initial: p.initial ?? name[0] ?? '?',
       avatar: p.avatar ?? DEFAULT_AVATAR_GRADIENT,
       title: p.title,
       level: p.level,

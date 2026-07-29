@@ -18,10 +18,17 @@ export const getUserPosts = (userId: string, params?: { limit?: number; offset?:
 
 export const getMyProfile = () => httpClient.get('/api/v1/users/me/profile');
 
+export const getMyXpHistory = (params?: { limit?: number; offset?: number; q?: string }) =>
+  httpClient.get('/api/v1/users/me/xp-history', { params });
+
+export const updateMyOnboarding = (isCompleteOnboarding: boolean) =>
+  httpClient.patch('/api/v1/users/me/onboarding', { isCompleteOnboarding });
+
 export const updateMyProfile = (body: {
-  name?: string;
+  firstName?: string;
   username?: string | null;
-  email?: string | null;
+  lastName?: string;
+  displayName?: string;
 }) => httpClient.patch('/api/v1/users/me/profile', body);
 
 export const updateMyProfileAvatar = (file: File) => {
@@ -36,7 +43,7 @@ export const requestEmailVerification = (email: string) =>
 export const deleteMyAccount = () => httpClient.delete('/api/v1/users/me');
 
 export const updateMyProfileSetting = (field: string, value: boolean) =>
-  httpClient.patch(`/api/v1/users/me/settings/${field}`, { value });
+  httpClient.patch(`/api/v1/users/me/settings/${field}`, { enabled: value });
 
 export const requestPhoneChangeCode = (currentPhone: string) =>
   httpClient.post('/api/v1/users/me/phone-change/request', { currentPhone });
