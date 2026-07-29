@@ -22,6 +22,8 @@ export { ErrorState, getErrorMessage } from './error-state';
 export { MotionItem, MotionList, MotionPage, MotionPress } from './motion';
 export {
   CardGridSkeleton,
+  CoursesPageSkeleton,
+  HomePageSkeleton,
   InlineSkeleton,
   ModalSkeleton,
   PageSkeleton,
