@@ -220,7 +220,11 @@ export function SocialTab({
         <Panel title={undefined}>
           <h4 className="mb-3 text-[14px] font-extrabold text-[#FDEEE299]">اعضای فعال</h4>
           <div className="flex flex-col gap-3">
-            {activeUsers.map((u) => (
+            {activeUsers.map((u) => {
+              const isFollowingUser = Boolean(u.isFollowedByMe ?? u.followedByMe);
+              const isUserToggling = followToggle.isPending && followToggle.variables?.userId === u.id;
+
+              return (
               <div key={u.id} className="flex items-center gap-2.5">
                 <Link
                   href={`/social/users/${u.id}`}
@@ -246,28 +250,27 @@ export function SocialTab({
                 {u.canFollow && (
                   <button
                     type="button"
-                    disabled={followToggle.isPending && followToggle.variables?.userId === u.id}
+                    disabled={isUserToggling}
                     onClick={() =>
                       followToggle.mutate({
                         userId: u.id,
-                        isFollowedByMe: Boolean(u.isFollowedByMe),
+                        isFollowedByMe: isFollowingUser,
                       })
                     }
                     className={cn(
-                      'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-extrabold transition-colors disabled:opacity-80',
-                      u.isFollowedByMe
-                        ? 'text-ink-2 border-[rgba(243,186,99,.28)] bg-white/5'
-                        : 'text-gold border-[rgba(243,186,99,.32)] hover:border-[rgba(243,186,99,.5)]',
+                      'inline-flex min-h-8 min-w-22 items-center justify-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-extrabold transition-[border-color,background,color,opacity] disabled:opacity-80',
+                      isFollowingUser
+                        ? 'border-gold/40 bg-white/5 text-gold'
+                        : 'text-[#1a0a00] [background:var(--fire-grad)] border-transparent',
                     )}
                   >
-                    {followToggle.isPending && followToggle.variables?.userId === u.id && (
-                      <InlineSpinner className="size-3" />
-                    )}
-                    {u.isFollowedByMe ? 'هم‌پرواز' : 'هم پرواز شدن'}
+                    {isUserToggling && <InlineSpinner className="size-3" />}
+                    {isFollowingUser ? 'هم‌پرواز' : 'هم پرواز شدن'}
                   </button>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </Panel>
       </div>
@@ -652,10 +655,10 @@ function PostCard({
                 onToggleAuthorFollow(post.authorId, isFollowingAuthor);
               }}
               className={cn(
-                'ms-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-extrabold transition-colors disabled:opacity-80',
+                'ms-auto inline-flex min-h-8 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-extrabold transition-[border-color,background,color,opacity] disabled:opacity-80',
                 isFollowingAuthor
-                  ? 'text-ink-2 border-[rgba(243,186,99,.28)] bg-white/5'
-                  : 'text-gold border-[rgba(243,186,99,.32)] hover:border-[rgba(243,186,99,.5)]',
+                  ? 'border-gold/40 bg-white/5 text-gold'
+                  : 'text-[#1a0a00] [background:var(--fire-grad)] border-transparent',
               )}
             >
               {isCurrentAuthorToggling && <InlineSpinner className="size-3" />}

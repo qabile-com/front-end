@@ -36,15 +36,18 @@ export function useToggleUserFollow(repo: ISocialRepository) {
         'social',
         'active-users',
       ]);
+      const previousProfile = queryClient.getQueryData<UserProfileData>([
+        'dashboard',
+        'profile',
+        userId,
+      ]);
 
       queryClient.setQueriesData<InfiniteData<Post[]>>({ queryKey: ['social-feed'] }, (current) =>
         updateFeedAuthorFollow(current, userId, nextFollowed),
       );
 
       queryClient.setQueriesData<Post>({ queryKey: ['social-post'] }, (current) =>
-        current?.authorId === userId
-          ? { ...current, isAuthorFollowedByMe: nextFollowed }
-          : current,
+        updatePostAuthorFollow(current, userId, nextFollowed),
       );
 
       queryClient.setQueryData<ActiveUser[]>(['social', 'active-users'], (current) =>
@@ -65,40 +68,24 @@ export function useToggleUserFollow(repo: ISocialRepository) {
 
       queryClient.setQueryData(['follow-status', userId], nextFollowed);
       queryClient.setQueryData<UserProfileData>(['dashboard', 'profile', userId], (current) =>
-        current
-          ? {
-              ...current,
-              followedByMe: nextFollowed,
-              stats: {
-                ...current.stats,
-                peersFollowed: Math.max(
-                  0,
-                  current.stats.peersFollowed + (nextFollowed ? 1 : -1),
-                ),
-              },
-            }
-          : current,
+        updateUserProfileFollow(current, nextFollowed),
       );
 
-      return { previousFeed, previousActiveUsers };
+      return { previousFeed, previousActiveUsers, previousProfile, intendedFollowed: nextFollowed };
     },
     onError: (_error, variables, context) => {
       context?.previousFeed.forEach(([queryKey, data]) => queryClient.setQueryData(queryKey, data));
       queryClient.setQueryData(['social', 'active-users'], context?.previousActiveUsers);
+      queryClient.setQueryData(['dashboard', 'profile', variables.userId], context?.previousProfile);
       queryClient.setQueryData(['follow-status', variables.userId], variables.isFollowedByMe);
     },
-    onSuccess: (updatedUser, variables) => {
-      const followed = Boolean(updatedUser.isFollowedByMe ?? updatedUser.followedByMe);
+    onSuccess: (updatedUser, variables, context) => {
+      const followed = context?.intendedFollowed ?? !variables.isFollowedByMe;
 
       queryClient.setQueryData<ActiveUser[]>(['social', 'active-users'], (current) =>
         current?.map((user) =>
           user.id === variables.userId
-            ? {
-                ...user,
-                ...updatedUser,
-                isFollowedByMe: followed,
-                followedByMe: followed,
-              }
+            ? updateActiveUserFollow(user, followed, updatedUser)
             : user,
         ),
       );
@@ -108,28 +95,14 @@ export function useToggleUserFollow(repo: ISocialRepository) {
       );
 
       queryClient.setQueriesData<Post>({ queryKey: ['social-post'] }, (current) =>
-        current?.authorId === variables.userId
-          ? { ...current, isAuthorFollowedByMe: followed }
-          : current,
+        updatePostAuthorFollow(current, variables.userId, followed),
       );
 
       queryClient.setQueryData(['follow-status', variables.userId], followed);
       queryClient.setQueryData<UserProfileData>(
         ['dashboard', 'profile', variables.userId],
         (current) =>
-          current
-            ? {
-                ...current,
-                followedByMe: followed,
-                blockedByMe: updatedUser.blockedByMe ?? current.blockedByMe,
-                canFollow: updatedUser.canFollow ?? current.canFollow,
-                stats: {
-                  ...current.stats,
-                  peersFollowed:
-                    updatedUser.followersCount ?? current.stats.peersFollowed,
-                },
-              }
-            : current,
+          updateUserProfileFollow(current, followed, updatedUser),
       );
     },
     onSettled: (_data, _error, variables) => {
@@ -140,6 +113,60 @@ export function useToggleUserFollow(repo: ISocialRepository) {
       queryClient.invalidateQueries({ queryKey: ['follow-status', variables.userId] });
     },
   });
+}
+
+function updateActiveUserFollow(
+  user: ActiveUser,
+  followed: boolean,
+  updatedUser?: ActiveUser,
+): ActiveUser {
+  const followersCount =
+    typeof updatedUser?.followersCount === 'number'
+      ? updatedUser.followersCount
+      : typeof user.followersCount === 'number'
+        ? Math.max(0, user.followersCount + (followed ? 1 : -1))
+        : user.followersCount;
+
+  return {
+    ...user,
+    ...updatedUser,
+    followersCount,
+    isFollowedByMe: followed,
+    followedByMe: followed,
+  };
+}
+
+function updatePostAuthorFollow(post: Post | undefined, userId: string, followed: boolean) {
+  return post?.authorId === userId ? { ...post, isAuthorFollowedByMe: followed } : post;
+}
+
+function updateUserProfileFollow(
+  profile: UserProfileData | undefined,
+  followed: boolean,
+  updatedUser?: ActiveUser,
+) {
+  if (!profile) return profile;
+
+  const followersCount =
+    typeof updatedUser?.followersCount === 'number'
+      ? updatedUser.followersCount
+      : Math.max(0, profile.stats.peersFollowed + (followed ? 1 : -1));
+
+  return {
+    ...profile,
+    followedByMe: followed,
+    blockedByMe: updatedUser?.blockedByMe ?? profile.blockedByMe,
+    canFollow: updatedUser?.canFollow ?? profile.canFollow,
+    stats: {
+      ...profile.stats,
+      peersFollowed: followersCount,
+    },
+    profileStats: profile.profileStats.map((stat) =>
+      stat.label.includes('هم‌پرواز') || stat.label.includes('هم پرواز')
+        ? { ...stat, value: String(followersCount) }
+        : stat,
+    ),
+  };
 }
 
 function updateFeedAuthorFollow(
