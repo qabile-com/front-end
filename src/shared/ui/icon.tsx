@@ -101,6 +101,12 @@ const ICONS = {
     { width: 1.5 },
   ),
   plus: stroke(<path d="M12 5v14M5 12h14" />, { width: 2.2, caps: false }),
+  menu: stroke(
+    <>
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </>,
+    { width: 2, caps: true },
+  ),
   'edit-post': (props) => (
     <svg viewBox="0 0 20 20" fill="none" {...props}>
       <path

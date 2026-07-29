@@ -124,7 +124,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <DashboardSidebar activeHref={activeHref} user={user} nav={NAV} />
 
       <main className="flex min-h-screen max-w-full min-w-0 flex-col overflow-x-clip lg:ms-65">
-        <header className="border-hair sticky top-0 z-40 hidden h-16 items-center justify-between border-b px-8 [backdrop-filter:blur(20px)] [background:rgba(5,3,2,.85)] lg:flex">
+        <header className="border-hair sticky top-0 z-40 hidden h-16 items-center justify-between border-b px-8 pt-[env(safe-area-inset-top)] [backdrop-filter:blur(20px)] [background:rgba(5,3,2,.85)] lg:flex">
           <h1 className="text-lg font-black">{title}</h1>
           <div className="flex items-center gap-3">
             {/* {showAiChatAction && (

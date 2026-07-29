@@ -17,7 +17,7 @@ export function MobileHeader({ title, user, showAiChatAction = false }: MobileHe
   return (
     <header
       dir="ltr"
-      className="border-hair sticky top-0 z-40 flex min-h-[72px] items-center justify-between gap-3 border-b px-4 py-3 [backdrop-filter:blur(14px)] [background:rgba(5,3,2,.94)] lg:hidden"
+      className="border-hair sticky top-0 z-40 flex min-h-[72px] items-center justify-between gap-3 border-b px-4 py-3 pt-[env(safe-area-inset-top)] [backdrop-filter:blur(14px)] [background:rgba(5,3,2,.94)] lg:hidden"
     >
       <div className="flex min-w-0 items-center gap-2.5">
         <span

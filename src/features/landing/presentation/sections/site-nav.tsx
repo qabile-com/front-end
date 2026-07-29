@@ -17,6 +17,7 @@ const NAV_LINKS = [
 
 export function SiteNav() {
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleSectionClick = (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
     const isLandingHash = href.startsWith('/#');
@@ -33,6 +34,7 @@ export function SiteNav() {
     event.preventDefault();
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     window.history.pushState(null, '', isLandingHash ? href : `#${sectionId}`);
+    setMenuOpen(false);
   };
 
   useEffect(() => {
@@ -53,14 +55,24 @@ export function SiteNav() {
   return (
     <header
       className={cn(
-        'fixed inset-x-0 top-0 z-[100] transition-[background,border-color,backdrop-filter] duration-300',
+        'fixed inset-x-0 top-0 z-[100] transition-[background,border-color,backdrop-filter] duration-300 pt-[env(safe-area-inset-top)]',
         scrolled
           ? 'border-hair border-b backdrop-blur-[20px] [background:rgba(5,3,2,.72)]'
           : 'border-b border-transparent',
       )}
     >
       <Container className="flex h-[72px] items-center justify-between">
-        <BrandMark />
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            aria-label="منو"
+            onClick={() => setMenuOpen((value) => !value)}
+            className="border-hair text-ink grid size-10 place-items-center rounded-xl border [background:var(--glass-2)] lg:hidden"
+          >
+            <Icon name="menu" size={18} />
+          </button>
+          <BrandMark />
+        </div>
 
         <nav className="hidden items-center gap-7 lg:flex">
           {NAV_LINKS.map((link) => (
@@ -87,15 +99,25 @@ export function SiteNav() {
               شروع رایگان
             </Button>
           </AuthEntryLink>
-          <button
-            type="button"
-            aria-label="منو"
-            className="border-hair text-ink grid size-10 place-items-center rounded-xl border [background:var(--glass-2)] lg:hidden"
-          >
-            <Icon name="plus" size={18} />
-          </button>
         </div>
       </Container>
+
+      {menuOpen && (
+        <div className="border-hair lg:hidden [background:var(--glass)]">
+          <nav className="flex flex-col gap-1 px-5 py-4">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={handleSectionClick(link.href)}
+                className="text-ink-2 hover:text-ink rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
