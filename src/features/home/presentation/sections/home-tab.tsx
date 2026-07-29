@@ -7,7 +7,11 @@ import { Icon, MotionItem, MotionList, Panel } from '@/shared/ui';
 import type { IconName } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { formatPersianNumber, toPersianDigits } from '@/core/lib/persian';
-import type { CurrentUser, RoadmapItem, RoadmapStatus } from '@/features/dashboard/domain/dashboard.types';
+import type {
+  CurrentUser,
+  RoadmapItem,
+  RoadmapStatus,
+} from '@/features/dashboard/domain/dashboard.types';
 import type { Course } from '@/features/courses/domain/courses.data';
 import { PhoenixIcon } from '@/features/dashboard/presentation/sections/dashboard-sidebar';
 import type { ActiveRoadmap } from '@/features/roadmap/domain/roadmap.types';
@@ -128,7 +132,11 @@ function HeroCarousel({ user }: { user: CurrentUser }) {
   return (
     <section className="min-w-0">
       {active.href ? (
-        <Link href={active.href} className={heroFrameClass} aria-label={`${active.eyebrow}: ${active.title}`}>
+        <Link
+          href={active.href}
+          className={heroFrameClass}
+          aria-label={`${active.eyebrow}: ${active.title}`}
+        >
           {heroImage}
         </Link>
       ) : (
@@ -248,7 +256,7 @@ function RoadmapPanel({
       className="w-full border-0 bg-transparent [background:transparent] xl:sticky xl:top-0 xl:max-w-[400px]"
       bodyClassName="p-0"
     >
-      {activeRoadmap && (
+      {/* {activeRoadmap && (
         <div className="px-3 pt-3 sm:px-4">
           <div className="border-hair rounded-2xl border bg-black/25 px-3 py-2.5">
             <div className="mb-2 flex items-center justify-between gap-3 text-xs font-black">
@@ -260,7 +268,7 @@ function RoadmapPanel({
             </div>
           </div>
         </div>
-      )}
+      )} */}
       <MotionList className="relative min-w-0 p-3 sm:p-4">
         {roadmap.map((item, index) => {
           const icon = RM_ICON[item.status];
