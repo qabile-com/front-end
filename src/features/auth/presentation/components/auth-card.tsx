@@ -78,7 +78,7 @@ function LoginView({
   verifyOtp: (email: string, code: string) => Promise<boolean>;
   loading: boolean;
 }) {
-  const [tab, setTab] = useState<LoginTab>('pass');
+  const [tab, setTab] = useState<LoginTab>('otp');
 
   return (
     <>
