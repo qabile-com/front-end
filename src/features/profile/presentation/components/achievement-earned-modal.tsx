@@ -37,59 +37,59 @@ export function AchievementEarnedModal({ achievement, onClose }: AchievementEarn
       zIndexClassName="z-[1110]"
       panelClassName="border-hair w-full max-w-[426px] overflow-hidden rounded-[10px] border bg-[#050302] px-5 py-6 text-center shadow-[0_28px_90px_-40px_var(--glow)] sm:px-8"
     >
-        <div className="relative mx-auto size-[190px] overflow-hidden rounded-[8px] border border-[rgba(255,98,0,.72)] bg-black">
-          <OptionalImage
-            src={getAchievementImage(achievement)}
-            alt={achievement.label}
-            className="object-cover"
-            loading="lazy"
-          />
-          {count > 1 && (
-            <span className="bg-ember absolute start-2 top-2 rounded-[5px] px-2 py-1 text-[11px] font-black text-white">
-              {toPersianDigits(count)}x
-            </span>
-          )}
-        </div>
+      <div className="relative mx-auto size-[190px] overflow-hidden rounded-[8px] border border-[rgba(255,98,0,.72)] bg-black">
+        <OptionalImage
+          src={getAchievementImage(achievement)}
+          alt={achievement.label}
+          className="object-cover"
+          loading="lazy"
+        />
+        {count > 1 && (
+          <span className="bg-ember absolute start-2 top-2 rounded-[5px] px-2 py-1 text-[11px] font-black text-white">
+            {toPersianDigits(count)}x
+          </span>
+        )}
+      </div>
 
-        <p className="text-ink-3 mt-5 text-[12px]">دستاورد جدید دریافت شد</p>
-        <h3 className="text-gold mt-2 text-[24px] font-black">{achievement.label}</h3>
+      <p className="text-ink-3 mt-5 text-[12px]">دستاورد جدید دریافت شد</p>
+      <h3 className="text-gold mt-2 text-[24px] font-black">{achievement.label}</h3>
 
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[12.5px]">
-          <span className="text-ink-3 font-bold">شرایط دریافت:</span>
-          {(achievement.conditions ?? []).map((condition) => (
-            <span key={condition.id} className="text-gold inline-flex items-center gap-2 font-bold">
-              <span>{condition.label}</span>
-              <Icon name="check" size={22} />
-            </span>
-          ))}
-        </div>
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[12.5px]">
+        <span className="text-ink-3 font-bold">شرایط دریافت:</span>
+        {(achievement.conditions ?? []).map((condition) => (
+          <span key={condition.id} className="text-gold inline-flex items-center gap-2 font-bold">
+            <span>{condition.label}</span>
+            <Icon name="check" size={22} />
+          </span>
+        ))}
+      </div>
 
-        <Button
-          type="button"
-          variant="primary"
-          size="md"
-          block
-          onClick={handleShare}
-          className="mt-5 h-11 rounded-[7px] text-[13px]"
-        >
-          <Icon name="share" size={17} />
-          اشتراک گذاری
-        </Button>
+      <Button
+        type="button"
+        variant="primary"
+        size="md"
+        block
+        onClick={handleShare}
+        className="mt-5 h-11 rounded-[7px] text-[13px]"
+      >
+        <Icon name="share" size={17} />
+        اشتراک گذاری
+      </Button>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-ink-3 hover:text-gold mt-4 text-[12px] font-bold transition-colors"
-        >
-          ادامه
-        </button>
+      <button
+        type="button"
+        onClick={onClose}
+        className="text-ink-3 hover:text-gold mt-4 text-[12px] font-bold transition-colors"
+      >
+        ادامه
+      </button>
     </BaseModal>
   );
 }
 
 function getAchievementImage(achievement: Achievement) {
   const slug = normalizeAchievementSlug(achievement.slug);
-  return slug ? `/assets/achievements/${slug}.png` : '/assets/achievements/atash-afrooz.png';
+  return slug ? `/assets/achievements/${slug}.webp` : '/assets/achievements/atash-afrooz.webp';
 }
 
 function normalizeAchievementSlug(slug?: string) {
@@ -98,7 +98,7 @@ function normalizeAchievementSlug(slug?: string) {
 }
 
 const ACHIEVEMENT_SLUG_ALIASES: Record<string, string> = {
-  'atashafrooz': 'atash-afrooz',
+  atashafrooz: 'atash-afrooz',
   'atash-afrooz': 'atash-afrooz',
   'fire-starter': 'atash-afrooz',
   star: 'setare',

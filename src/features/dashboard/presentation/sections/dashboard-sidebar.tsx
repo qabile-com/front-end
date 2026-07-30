@@ -140,7 +140,7 @@ export function AdamAvatar({ className }: { className?: string }) {
     >
       <Icon name="ai" size={20} className="text-[#1a0a00]" />
       <OptionalImage
-        src="/assets/adam-ai.png"
+        src="/assets/adam-ai.webp"
         alt="Adam"
         className="object-cover mix-blend-lighten"
       />
@@ -158,7 +158,7 @@ export function AdamAvatar({ className }: { className?: string }) {
 //     >
 //       <Icon name="ai" size={20} className="text-[#1a0a00]" />
 //       <OptionalImage
-//         src="/assets/adam-ai.png"
+//         src="/assets/adam-ai.webp"
 //         alt="آدم"
 //         className="object-cover mix-blend-lighten"
 //       />

@@ -428,15 +428,15 @@ const ACHIEVEMENT_SLUG_BY_LABEL: Record<string, string> = {
 };
 
 const ACHIEVEMENT_IMAGE_BY_LABEL: Record<string, string> = {
-  آتش‌افروز: '/assets/achievements/atash-afrooz.png',
-  'وارث آتش': '/assets/achievements/vares-ghabile.png',
-  قهرمان: '/assets/achievements/gahreman.png',
-  'سفیر قبیله': '/assets/achievements/safir-ghabile.png',
-  تیزبال: '/assets/achievements/tizbaal.png',
-  'فرزند قبیله': '/assets/achievements/farzand-ghabile.png',
-  ستاره: '/assets/achievements/setare.png',
-  'قلب قبیله': '/assets/achievements/ghalb-ghabile.png',
-  'صدای قبیله': '/assets/achievements/seda-qabile.png',
+  آتش‌افروز: '/assets/achievements/atash-afrooz.webp',
+  'وارث آتش': '/assets/achievements/vares-ghabile.webp',
+  قهرمان: '/assets/achievements/gahreman.webp',
+  'سفیر قبیله': '/assets/achievements/safir-ghabile.webp',
+  تیزبال: '/assets/achievements/tizbaal.webp',
+  'فرزند قبیله': '/assets/achievements/farzand-ghabile.webp',
+  ستاره: '/assets/achievements/setare.webp',
+  'قلب قبیله': '/assets/achievements/ghalb-ghabile.webp',
+  'صدای قبیله': '/assets/achievements/seda-qabile.webp',
 };
 
 const ACHIEVEMENT_SLUG_ALIASES: Record<string, string> = {
@@ -480,8 +480,8 @@ function getAchievementCount(achievement: Achievement) {
 function getAchievementImage(achievement: Achievement) {
   const slug = getAchievementSlug(achievement);
   return slug
-    ? `/assets/achievements/${slug}.png`
-    : (ACHIEVEMENT_IMAGE_BY_LABEL[achievement.label] ?? '/assets/achievements/atash-afrooz.png');
+    ? `/assets/achievements/${slug}.webp`
+    : (ACHIEVEMENT_IMAGE_BY_LABEL[achievement.label] ?? '/assets/achievements/atash-afrooz.webp');
 }
 
 function getAchievementSlug(achievement: Achievement) {
