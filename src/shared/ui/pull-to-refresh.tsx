@@ -85,7 +85,10 @@ export function PullToRefresh({
   const showIndicator = pullDistance > 0 || isRefreshing;
 
   return (
-    <div ref={containerRef} className={cn('relative overflow-y-auto', className)}>
+    <div
+      ref={containerRef}
+      className={cn('relative overflow-y-auto overscroll-behavior-contain min-h-0', className)}
+    >
       <div
         aria-hidden="true"
         className={cn(

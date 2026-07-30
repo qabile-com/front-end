@@ -129,7 +129,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="dashboard-scope min-h-screen max-w-full overflow-x-clip [background:var(--color-bg)]">
       <DashboardSidebar activeHref={activeHref} user={user} nav={NAV} />
 
-      <main className="flex min-h-screen max-w-full min-w-0 flex-col overflow-x-clip lg:ms-65">
+      <main className="flex h-full max-w-full min-w-0 flex-col overflow-x-clip lg:ms-65">
         <PullToRefresh onRefresh={handleRefresh} className="min-w-0 flex-1 overflow-x-clip">
           <header className="border-hair sticky top-0 z-40 hidden h-16 items-center justify-between border-b px-8 pt-[env(safe-area-inset-top)] [backdrop-filter:blur(20px)] [background:rgba(5,3,2,.85)] lg:flex">
             <h1 className="text-lg font-black">{title}</h1>
