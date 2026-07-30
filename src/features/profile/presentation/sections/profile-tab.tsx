@@ -248,6 +248,30 @@ export function ProfileTab({
           />
         </BaseModal>
       )}
+
+      {isSettingsOpen && (
+        <BaseModal
+          isOpen
+          onClose={() => setIsSettingsOpen(false)}
+          title="تنظیمات"
+          zIndexClassName="z-[1000]"
+          panelClassName="w-full max-w-md"
+        >
+          <ProfileSettingsPanel profile={profile} repo={profileRepo} onClose={() => setIsSettingsOpen(false)} />
+        </BaseModal>
+      )}
+
+      {isEditProfileOpen && (
+        <BaseModal
+          isOpen
+          onClose={() => setIsEditProfileOpen(false)}
+          title="ویرایش پروفایل"
+          zIndexClassName="z-[1000]"
+          panelClassName="w-full max-w-md"
+        >
+          <EditProfileModal profile={profile} repo={profileRepo} onClose={() => setIsEditProfileOpen(false)} />
+        </BaseModal>
+      )}
     </>
   );
 }
