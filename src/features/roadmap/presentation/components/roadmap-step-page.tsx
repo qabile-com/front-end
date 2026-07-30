@@ -94,13 +94,13 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
     <MotionPage>
       <DashboardPageShell
         size="narrow"
-        className="h-[calc(100dvh-7.5rem)] min-h-[520px] sm:h-[calc(100dvh-9rem)] lg:h-[calc(100dvh-7.5rem)]"
+        className="min-h-[520px] sm:h-[calc(100dvh-9rem)] lg:h-[calc(100dvh-7.5rem)]"
       >
-        <article className="roadmap-step-card relative mx-auto flex h-full min-h-0 w-full max-w-[820px] flex-col overflow-hidden rounded-none border border-transparent bg-black shadow-[0_28px_90px_-54px_var(--glow)] sm:rounded-[24px] sm:border-[rgba(255,98,0,.24)] lg:max-w-[860px]">
+        <article className="roadmap-step-card relative mx-auto flex w-full max-w-[820px] flex-col overflow-hidden rounded-none border border-transparent bg-black shadow-[0_28px_90px_-54px_var(--glow)] sm:rounded-[24px] sm:border-[rgba(255,98,0,.24)] sm:h-full lg:max-w-[860px]">
           <StepTopBar step={stepWithProgress} onBack={() => router.back()} />
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain px-3.5 py-4 pb-38 sm:px-5 sm:pb-8 lg:px-6 lg:py-5">
+          <div className="flex min-h-0 flex-col sm:flex-1 sm:overflow-hidden">
+            <div className="min-h-0 px-3.5 py-4 pb-38 sm:flex-1 sm:[scrollbar-gutter:stable] sm:overflow-y-auto sm:overscroll-contain sm:px-5 sm:pb-8 lg:px-6 lg:py-5">
               <div className="space-y-5">
                 <StepIntro step={stepWithProgress} />
                 <StepBody
