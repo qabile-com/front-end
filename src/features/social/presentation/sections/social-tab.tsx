@@ -18,6 +18,7 @@ import { cn } from '@/core/lib/cn';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
 import { getAvatarInitial } from '@/core/lib/avatar';
 import { toPersianDigits } from '@/core/lib/persian';
+import { useIsLargeScreen } from '@/core/lib/use-is-large-screen';
 import type { Post, ActiveUser } from '../../domain/social.data';
 import type { IProfileRepository, MyProfile } from '@/features/profile/domain/profile-repository';
 import { useUpdateMyProfile } from '@/features/profile/application/use-edit-profile';
@@ -117,7 +118,7 @@ export function SocialTab({
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="جستجوی پست، کاربر یا #هشتگ"
-            className="text-ink border-hair placeholder:text-ink-3 focus:border-hair-2 h-12 w-full rounded-xl border ps-11 pe-4 text-[14px] outline-none [background:var(--glass-2)]"
+            className="text-ink border-hair placeholder:text-ink-3 focus:border-hair-2 h-12 w-full rounded-xl border ps-11 pe-4 text-base outline-none [background:var(--glass-2)]"
           />
         </div>
 
@@ -356,6 +357,7 @@ function CompleteForumProfileModal({
   onClose: () => void;
   onSubmit: (input: { displayName: string; username: string }) => Promise<void>;
 }) {
+  const isLargeScreen = useIsLargeScreen();
   const [displayName, setDisplayName] = useState(profile?.displayName || profile?.name || '');
   const [username, setUsername] = useState(profile?.username ?? '');
   const [errors, setErrors] = useState<{ displayName?: string; username?: string }>({});
@@ -421,7 +423,7 @@ function CompleteForumProfileModal({
             value={displayName}
             error={errors.displayName}
             placeholder="مثلاً آرش کریمی"
-            autoFocus
+            autoFocus={isLargeScreen}
             onChange={(value) => {
               setDisplayName(value);
               setErrors((current) => ({ ...current, displayName: undefined }));

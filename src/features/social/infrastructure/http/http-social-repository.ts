@@ -16,7 +16,7 @@ import {
 } from '@/core/api/forum.api';
 import type { ISocialRepository } from '../../domain/social-repository';
 import type { SocialFeedFilters } from '../../domain/social-repository';
-import type { ActiveUser, Post, PostComment } from '../../domain/social.data';
+import type { ActiveUser, AchievementCard, Post, PostComment } from '../../domain/social.data';
 
 const FALLBACK_AVATAR = 'linear-gradient(135deg,#cc4308,#ff6200,#f3ba63)';
 
@@ -72,8 +72,8 @@ export class HttpSocialRepository implements ISocialRepository {
     return this.feedExtras.activeUsers;
   }
 
-  async createPost(text: string, imageFile?: File | null): Promise<Post> {
-    const res = await createForumPost({ text, image: imageFile });
+async createPost(text: string, imageFile?: File | null, achievement?: AchievementCard | null): Promise<Post> {
+    const res = await createForumPost({ text, image: imageFile, achievement });
     return apiForumPostToDomain(res.data);
   }
 

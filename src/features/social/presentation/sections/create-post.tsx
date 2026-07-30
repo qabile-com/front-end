@@ -2,68 +2,51 @@
 'use client';
 
 import { useState } from 'react';
+import { Icon } from '@/shared/ui';
+import type { AchievementCard } from '../../domain/social.data';
 
 interface Props {
-  onPublish: (text: string, imageFile?: File | null) => void;
+  onPublish: (text: string, imageFile?: File | null, achievement?: AchievementCard | null) => void;
   onPublished?: () => void;
+  achievement?: AchievementCard | null;
 }
 
-export function CreatePost({ onPublish, onPublished }: Props) {
-  const [text, setText] = useState('');
-  // Image upload is temporarily disabled. Keep the publish contract unchanged
-  // so enabling it again later only needs restoring the UI below.
-  // const [imageFile, setImageFile] = useState<File | null>(null);
-  // const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  // const fileInputRef = useRef<HTMLInputElement>(null);
-  //
-  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0];
-  //   if (!file) return;
-  //   setImageFile(file);
-  //   setImagePreview(URL.createObjectURL(file));
-  // };
+export function CreatePost({ onPublish, onPublished, achievement }: Props) {
+  const hasAchievement = Boolean(achievement?.title);
+  const [text, setText] = useState(hasAchievement ? `من دستاورد ${achievement?.title} را در قبیله ققنوس دریافت کردم. 🎉` : '');
 
   const publish = () => {
-    if (!text.trim()) return;
-    onPublish(text.trim(), null);
+    if (!text.trim() && !hasAchievement) return;
+    onPublish(text.trim(), null, hasAchievement ? achievement : null);
     setText('');
-    // setImageFile(null);
-    // setImagePreview(null);
     onPublished?.();
   };
 
   return (
     <article className="border-hair rounded-[20px] border bg-(--glass) p-5">
+      {hasAchievement && achievement && (
+        <div className="border-hair mb-3 rounded-2xl border bg-[#120904] p-4">
+          <div className="flex items-start gap-3">
+            <span className="border-hair text-gold mt-0.5 inline-flex size-11 shrink-0 items-center justify-center rounded-xl border bg-[rgba(255,98,0,.1)]">
+              <Icon name={achievement.icon as any} size={22} />
+            </span>
+            <div className="min-w-0 flex-1 text-right">
+              <p className="text-gold text-[13px] font-extrabold">
+                دستاورد: نشان {achievement.title} دریافت شد
+              </p>
+              <p className="text-ink-2 mt-1 text-[13px] leading-7">{achievement.sub}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="جرقه‌ی بعدی را ثبت کن..."
-        rows={5}
+        placeholder={hasAchievement ? 'متن پست خودت رو بنویس...' : 'جرقه‌ی بعدی را ثبت کن...'}
+        rows={hasAchievement ? 4 : 5}
         className="text-ink placeholder:text-ink-3 w-full resize-none rounded-xl bg-(--glass-2) p-4 outline-none"
       />
-
-      {/* Image preview - temporarily disabled */}
-      {/*
-      {imagePreview && (
-        <div className="border-hair relative mt-3 grid max-h-[60dvh] place-items-center overflow-hidden rounded-xl border bg-black/35 p-2">
-          <img
-            src={imagePreview}
-            alt="preview"
-            className="h-auto max-h-[56dvh] w-auto max-w-full rounded-lg object-contain"
-          />
-          <button
-            onClick={() => {
-              setImageFile(null);
-              setImagePreview(null);
-            }}
-            className="absolute top-2 right-2 rounded-full bg-black/50 p-1 text-white transition-colors hover:bg-black/70"
-          >
-            <Icon name="plus" size={16} className="rotate-45" />
-          </button>
-        </div>
-      )}
-      */}
 
       {/* Toolbar & Publish */}
       <div className="mt-4 flex flex-wrap items-center gap-2 place-self-end">

@@ -24,7 +24,11 @@ export interface Post {
   verified?: boolean;
   time: string;
   text: string;
-  achievement?: AchievementCard;
+  achievement?: {
+    title: string;
+    sub: string;
+    icon: string;
+  };
   hasImage?: boolean;
   attachment?: {
     id: string;
