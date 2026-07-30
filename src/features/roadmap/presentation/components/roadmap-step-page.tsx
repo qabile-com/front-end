@@ -86,9 +86,14 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
     }
   }, [isDone, stepWithProgress, condition.satisfied, timerFinished, checkedItems]);
 
-  const isLocked = stepWithProgress.status === 'next' || Boolean(stepWithProgress.condition && !isConditionSatisfied);
+  const isLocked = stepWithProgress.status === 'next';
 
-  const canComplete = !completeStep.isPending && !activeRoadmap.loading && !isDone && !isLocked && isConditionSatisfied;
+  const canComplete =
+    !completeStep.isPending &&
+    !activeRoadmap.loading &&
+    !isDone &&
+    !isLocked &&
+    isConditionSatisfied;
 
   const handleComplete = useCallback(async () => {
     if (!canComplete) return;
@@ -108,7 +113,9 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
     if (condition.message) return condition.message;
     if (conditionType === 'checklist' && stepWithProgress.checklist) {
       const total = stepWithProgress.checklist.length;
-      const checked = stepWithProgress.checklist.filter((item) => Boolean(checkedItems[item])).length;
+      const checked = stepWithProgress.checklist.filter((item) =>
+        Boolean(checkedItems[item]),
+      ).length;
       if (checked < total) {
         return `برای تکمیل این مرحله ${toPersianDigits(total - checked)} مورد دیگر را تیک بزن.`;
       }
@@ -122,7 +129,7 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
         size="narrow"
         className="min-h-[520px] sm:h-[calc(100dvh-9rem)] lg:h-[calc(100dvh-7.5rem)]"
       >
-        <article className="roadmap-step-card relative mx-auto flex w-full max-w-[820px] flex-col overflow-hidden rounded-none border border-transparent bg-black shadow-[0_28px_90px_-54px_var(--glow)] sm:rounded-[24px] sm:border-[rgba(255,98,0,.24)] sm:h-full lg:max-w-[860px]">
+        <article className="roadmap-step-card relative mx-auto flex w-full max-w-[820px] flex-col overflow-hidden rounded-none border border-transparent bg-black shadow-[0_28px_90px_-54px_var(--glow)] sm:h-full sm:rounded-[24px] sm:border-[rgba(255,98,0,.24)] lg:max-w-[860px]">
           <StepTopBar step={stepWithProgress} onBack={() => router.back()} />
 
           <div className="flex min-h-0 flex-col sm:flex-1 sm:overflow-hidden">
@@ -138,7 +145,7 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
 
               {conditionMessage && (
                 <div className="border-hair mt-5 rounded-[14px] border bg-black/30 p-4 text-center">
-                  <p className="text-ink-3 text-[13px] font-bold leading-7">{conditionMessage}</p>
+                  <p className="text-ink-3 text-[13px] leading-7 font-bold">{conditionMessage}</p>
                 </div>
               )}
             </div>
@@ -219,7 +226,9 @@ function StepBody({
     case 'social-connect':
       return <ConnectStep step={step} />;
     case 'checklist':
-      return <ChecklistStep step={step} checkedItems={checkedItems} onCheckedChange={onCheckedChange} />;
+      return (
+        <ChecklistStep step={step} checkedItems={checkedItems} onCheckedChange={onCheckedChange} />
+      );
     default:
       return null;
   }
@@ -317,7 +326,10 @@ function ChecklistStep({
             key={item}
             type="button"
             onClick={() => {
-              const next: Record<string, boolean> = { ...checkedItems, [item]: !checkedItems[item] };
+              const next: Record<string, boolean> = {
+                ...checkedItems,
+                [item]: !checkedItems[item],
+              };
               onCheckedChange(next);
             }}
             className="flex w-full items-center gap-3 rounded-[14px] border border-[rgba(255,98,0,.18)] bg-[rgba(36,13,5,.72)] p-3.5 text-right transition-colors hover:border-[rgba(255,98,0,.42)]"
@@ -384,7 +396,7 @@ function RoadmapImage({
       className={cn(
         'relative overflow-hidden rounded-[14px] border border-[rgba(255,98,0,.18)] bg-black/45',
         wide
-          ? 'aspect-[4.2] mx-auto w-full max-w-full min-h-18 sm:max-w-[520px] lg:max-w-[640px]'
+          ? 'mx-auto aspect-[4.2] min-h-18 w-full max-w-full sm:max-w-[520px] lg:max-w-[640px]'
           : 'mx-auto aspect-[2.15] w-full max-w-[430px]',
       )}
     >
@@ -393,7 +405,10 @@ function RoadmapImage({
         <img
           src={slot.src}
           alt={slot.alt}
-          className={cn('absolute inset-0 size-full', slot.fit === 'contain' ? 'object-contain' : 'object-cover')}
+          className={cn(
+            'absolute inset-0 size-full',
+            slot.fit === 'contain' ? 'object-contain' : 'object-cover',
+          )}
           loading="lazy"
           onError={() => setImageFailed(true)}
         />
