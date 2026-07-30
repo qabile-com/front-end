@@ -35,10 +35,38 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
 
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [timerFinished, setTimerFinished] = useState(false);
+  const timerSecondsRef = useRef(0);
+  const timerIntervalRef = useRef<number | null>(null);
 
   const isDone = stepWithProgress.status === 'done';
   const isLocked = stepWithProgress.status === 'next';
   const conditionType = stepWithProgress.condition?.type;
+
+  useEffect(() => {
+    if (conditionType !== 'timer' || stepWithProgress.condition?.type !== 'timer') {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+      timerSecondsRef.current = 0;
+      return;
+    }
+
+    const requiredSeconds = stepWithProgress.condition.seconds;
+    timerSecondsRef.current = requiredSeconds;
+
+    timerIntervalRef.current = window.setInterval(() => {
+      timerSecondsRef.current = Math.max(0, timerSecondsRef.current - 1);
+      if (timerSecondsRef.current <= 0) {
+        if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+        setTimerFinished(true);
+      }
+    }, 1000);
+
+    return () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    };
+  }, [conditionType, stepWithProgress.condition]);
 
   const isConditionSatisfied = useMemo(() => {
     if (isDone) return true;
@@ -77,9 +105,6 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
   const conditionMessage = useMemo(() => {
     if (isDone) return null;
     if (condition.message) return condition.message;
-    if (conditionType === 'timer' && !timerFinished) {
-      return `برای تکمیل این مرحله باید ${toPersianDigits(stepWithProgress.condition?.seconds ?? 0)} ثانیه در این صفحه بمانید.`;
-    }
     if (conditionType === 'checklist' && stepWithProgress.checklist) {
       const total = stepWithProgress.checklist.length;
       const checked = stepWithProgress.checklist.filter((item) => Boolean(checkedItems[item])).length;
@@ -88,7 +113,7 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
       }
     }
     return null;
-  }, [isDone, condition.message, conditionType, timerFinished, stepWithProgress.checklist, stepWithProgress.condition, checkedItems]);
+  }, [isDone, condition.message, conditionType, stepWithProgress.checklist, checkedItems]);
 
   return (
     <MotionPage>
@@ -115,16 +140,6 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
                   <p className="text-ink-3 text-[13px] font-bold leading-7">{conditionMessage}</p>
                 </div>
               )}
-
-              {conditionType === 'timer' && stepWithProgress.condition?.type === 'timer' && (
-                <TimerDisplay
-                  key={stepWithProgress.id}
-                  seconds={stepWithProgress.condition.seconds}
-                  onComplete={() => {
-                    setTimerFinished(true);
-                  }}
-                />
-              )}
             </div>
 
             <CompleteFooter
@@ -141,46 +156,6 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
 
       <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
     </MotionPage>
-  );
-}
-
-function TimerDisplay({ seconds, onComplete }: { seconds: number; onComplete: () => void }) {
-  const [remaining, setRemaining] = useState(seconds);
-  const intervalRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (remaining <= 0) {
-      onComplete();
-      return;
-    }
-
-    intervalRef.current = window.setInterval(() => {
-      setRemaining((prev) => {
-        if (prev <= 1) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          onComplete();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [remaining, onComplete]);
-
-  return (
-    <div className="border-hair mt-5 rounded-[14px] border bg-black/30 p-4 text-center">
-      <p className="text-ink-3 text-[13px] font-bold leading-7">
-        برای تکمیل این مرحله باید در این صفحه بمانید.
-      </p>
-      {remaining > 0 && (
-        <p className="text-gold mt-2 text-lg font-black">
-          {toPersianDigits(remaining)} ثانیه
-        </p>
-      )}
-    </div>
   );
 }
 
