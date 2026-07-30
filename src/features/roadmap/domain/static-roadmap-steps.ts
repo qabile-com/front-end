@@ -1,14 +1,19 @@
 import type { RoadmapStatus } from '@/features/dashboard/domain/dashboard.types';
 
 export type RoadmapStepKind =
-  | 'video'
   | 'social-compose'
   | 'social-profile'
   | 'article'
-  | 'audio'
   | 'social-follow'
   | 'social-connect'
   | 'checklist';
+
+export type RoadmapStepCondition =
+  | { type: 'posts'; min: number }
+  | { type: 'engagement'; minLikes: number; minComments: number }
+  | { type: 'timer'; seconds: number }
+  | { type: 'follows'; min: number }
+  | { type: 'checklist' };
 
 export interface StaticRoadmapStep {
   id: number;
@@ -26,6 +31,7 @@ export interface StaticRoadmapStep {
   imageSlots?: { src: string; alt: string; size?: 'default' | 'wide'; fit?: 'cover' | 'contain' }[];
   socialLinks?: { label: string; value: string }[];
   checklist?: string[];
+  condition?: RoadmapStepCondition;
 }
 
 export const ROADMAP_ASSET_PATHS = {
@@ -37,20 +43,20 @@ export const ROADMAP_ASSET_PATHS = {
 } as const;
 
 export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
+  // {
+  //   id: 1,
+  //   title: 'از خاکستر پرواز آغاز می‌شود',
+  //   category: 'شروع سفر',
+  //   description:
+  //     'قبل از هر چیز باید بدانیم از کجا شروع می‌کنیمقبل از هر پروازی باید مسیر را بشناسی. این ویدیو را ببین تا با استاد آدام، قبیله ققنوس و سفری که قرار است با هم شروع کنیم آشنا شوی.',
+  //   xp: 50,
+  //   type: 'ویدیو',
+  //   status: 'current',
+  //   kind: 'video',
+  //   duration: '۸:۳۰',
+  // },
   {
     id: 1,
-    title: 'از خاکستر پرواز آغاز می‌شود',
-    category: 'شروع سفر',
-    description:
-      'قبل از هر چیز باید بدانیم از کجا شروع می‌کنیمقبل از هر پروازی باید مسیر را بشناسی. این ویدیو را ببین تا با استاد آدام، قبیله ققنوس و سفری که قرار است با هم شروع کنیم آشنا شوی.',
-    xp: 50,
-    type: 'ویدیو',
-    status: 'current',
-    kind: 'video',
-    duration: '۸:۳۰',
-  },
-  {
-    id: 2,
     title: 'اولین شعله‌ات را روشن کن',
     category: 'تعامل اجتماعی',
     description:
@@ -59,6 +65,7 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
     type: 'تعامل اجتماعی',
     status: 'next',
     kind: 'social-compose',
+    condition: { type: 'posts', min: 1 },
     instructions: [
       {
         title: 'در موبایل',
@@ -86,7 +93,7 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
     ],
   },
   {
-    id: 3,
+    id: 2,
     title: 'آتش با آتش زنده می‌ماند',
     category: 'تعامل اجتماعی',
     description:
@@ -95,6 +102,7 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
     type: 'تعامل اجتماعی',
     status: 'next',
     kind: 'social-profile',
+    condition: { type: 'engagement', minLikes: 5, minComments: 5 },
     instructions: [
       {
         title: 'در موبایل',
@@ -121,7 +129,7 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
     ],
   },
   {
-    id: 4,
+    id: 3,
     title: 'سوخت مغزت را بشناس',
     category: 'روانشناسی',
     description:
@@ -130,6 +138,7 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
     type: 'مقاله',
     status: 'next',
     kind: 'article',
+    condition: { type: 'timer', seconds: 10 },
     content: [
       `انگیزه فقط اراده نیست؛ تغذیه چگونه روی انرژی، تمرکز، خلق‌وخو و پشتکار تو اثر می‌گذارد؟
 خیلی از ما وقتی انگیزه کافی برای انجام کارها نداریم، خودمان را سرزنش می‌کنیم. فکر می‌کنیم مشکل از اراده ضعیف یا تنبلی است. اما واقعیت این است که مغز و بدن ما قبل از هر چیز به سوخت مناسب نیاز دارند.
@@ -148,20 +157,20 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
 نوسان قند خون؛ دشمن تمرکز`,
     ],
   },
+  // {
+  //   id: 5,
+  //   title: 'راز استمرار',
+  //   category: 'روانشناسی',
+  //   description:
+  //     'موفق‌ها با انگیزه زندگی نمی‌کنند؛ با عادت زندگی می‌کنند. این فایل صوتی کوتاه را گوش کن و یاد بگیر چطور به مسیرت پایبند بمانی.',
+  //   xp: 70,
+  //   type: 'صوت',
+  //   status: 'next',
+  //   kind: 'audio',
+  //   duration: '۱۰ ثانیه',
+  // },
   {
-    id: 5,
-    title: 'راز استمرار',
-    category: 'روانشناسی',
-    description:
-      'موفق‌ها با انگیزه زندگی نمی‌کنند؛ با عادت زندگی می‌کنند. این فایل صوتی کوتاه را گوش کن و یاد بگیر چطور به مسیرت پایبند بمانی.',
-    xp: 70,
-    type: 'صوت',
-    status: 'next',
-    kind: 'audio',
-    duration: '۱۰ ثانیه',
-  },
-  {
-    id: 6,
+    id: 4,
     title: 'آتش را همه‌جا دنبال کن',
     category: 'شبکه‌های اجتماعی',
     description:
@@ -170,6 +179,7 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
     type: 'شبکه اجتماعی',
     status: 'next',
     kind: 'social-follow',
+    condition: { type: 'timer', seconds: 10 },
     socialLinks: [
       { label: 'qabileh.app', value: 'https://instagram.com/qabileh.app' },
       { label: 'adam.ai', value: 'https://instagram.com/adan.ai' },
@@ -177,7 +187,7 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
     imageSlots: [{ src: ROADMAP_ASSET_PATHS.step6, alt: 'راهنمای دنبال کردن صفحه اینستاگرام' }],
   },
   {
-    id: 7,
+    id: 5,
     title: 'با هم‌پروازهایت اوج بگیر',
     category: 'تعامل اجتماعی',
     description:
@@ -186,6 +196,7 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
     type: 'تعامل اجتماعی',
     status: 'next',
     kind: 'social-connect',
+    condition: { type: 'follows', min: 5 },
     instructions: [
       {
         title: 'در موبایل',
@@ -204,15 +215,16 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
     ],
   },
   {
-    id: 8,
+    id: 6,
     title: 'تمرین تمرکز عمیق',
-    category: 'تعامل اجتماعی',
+    category: 'مهارت',
     description:
       'در این تمرین باید به یک جلسه تمرکز عمیق ۲۵ دقیقه‌ای وارد شوی و مراحل زیر را به ترتیب کامل کنی.',
     xp: 120,
     type: 'مهارت',
     status: 'next',
     kind: 'checklist',
+    condition: { type: 'checklist' },
     checklist: [
       'گوشیت رو روی حالت بی‌صدا یا پرواز بگذار',
       'به تایمر ۲۵ دقیقه‌ای ست کن',

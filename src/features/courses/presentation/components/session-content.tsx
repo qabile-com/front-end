@@ -253,9 +253,9 @@ export function SessionContent({
       initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
       animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
       transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-      className="mx-auto flex min-h-full w-full min-w-0 max-w-[920px] flex-col overflow-x-clip pb-28 md:pb-0 min-[1440px]:max-w-none"
+      className="mx-auto flex min-h-full w-full max-w-[920px] min-w-0 flex-col overflow-x-clip pb-28 min-[1440px]:max-w-none md:pb-0"
     >
-      <section className="min-w-0 max-w-full overflow-hidden rounded-[28px] border border-[var(--session-border)] bg-[var(--session-surface)] shadow-[0_30px_90px_-50px_var(--glow)] lg:rounded-[32px]">
+      <section className="max-w-full min-w-0 overflow-hidden rounded-[28px] border border-[var(--session-border)] bg-[var(--session-surface)] shadow-[0_30px_90px_-50px_var(--glow)] lg:rounded-[32px]">
         <div className="relative aspect-video min-h-[190px] overflow-hidden bg-black sm:min-h-0">
           <VideoOrCover
             session={session}
@@ -308,7 +308,11 @@ export function SessionContent({
           {showVideo && (
             <div className="mb-5 flex items-center justify-between gap-3">
               <IconTextButton label="بازگشت" onClick={handleClose} icon="arrow-right" />
-              <IconTextButton label="اشتراک‌گذاری" onClick={() => void handleShare()} icon="share" />
+              <IconTextButton
+                label="اشتراک‌گذاری"
+                onClick={() => void handleShare()}
+                icon="share"
+              />
             </div>
           )}
           <div className="flex min-w-0 flex-col gap-5">
@@ -317,8 +321,9 @@ export function SessionContent({
                 {session.title}
               </h1>
               <p className="text-ink-2 mt-3 max-w-2xl text-[13.5px] leading-7 sm:text-sm">
-                {session.description ??
-                  `این جلسه بخشی از مسیر «${displayCourse.title}» است. ویدیو را کامل ببین، نکات مهم را
+                {session.description
+                  ? session.description
+                  : `این جلسه بخشی از مسیر «${displayCourse.title}» است. ویدیو را کامل ببین، نکات مهم را
                   مرور کن و با ادامه دادن مسیر، پیشرفتت را ثبت کن.`}
               </p>
             </div>
@@ -332,9 +337,7 @@ export function SessionContent({
               />
             )}
             <div className="hidden md:flex md:justify-start">
-              {requiresPurchase ? (
-                null
-              ) : (
+              {requiresPurchase ? null : (
                 <ContinueButton hasNext={hasNext} onNextSession={onNextSession} variant="desktop" />
               )}
             </div>
@@ -364,7 +367,11 @@ export function SessionContent({
           />
         </div>
 
-        <SessionProgressCard progress={watchProgress} status={session.status} locked={requiresPurchase} />
+        <SessionProgressCard
+          progress={watchProgress}
+          status={session.status}
+          locked={requiresPurchase}
+        />
 
         <div className="px-4 pt-4 sm:px-6">
           <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-1 rounded-[18px] border border-[var(--session-border)] bg-black/28 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,.04)] min-[1440px]:grid-cols-2">
@@ -379,7 +386,7 @@ export function SessionContent({
                   tab.id === 'sections' && 'min-[1440px]:hidden',
                   activeTab === tab.id
                     ? 'border-[rgba(243,186,99,.32)] text-[#1a0a00] shadow-[0_12px_30px_-22px_var(--glow)] [background:var(--session-primary)]'
-                    : 'border-transparent text-ink-3 hover:border-[var(--session-border)] hover:bg-[var(--session-surface-2)] hover:text-ink-2',
+                    : 'text-ink-3 hover:text-ink-2 border-transparent hover:border-[var(--session-border)] hover:bg-[var(--session-surface-2)]',
                 )}
               >
                 {tab.label}
@@ -599,9 +606,9 @@ function LockedCourseNotice({
   onBuyCourse?: () => void;
 }) {
   return (
-    <div className="w-full max-w-[920px] mx-auto rounded-[20px] border border-[rgba(255,98,0,.24)] bg-[linear-gradient(135deg,rgba(255,98,0,.14),rgba(0,0,0,.28))] p-4 shadow-[0_18px_54px_-42px_var(--glow)]">
+    <div className="mx-auto w-full max-w-[920px] rounded-[20px] border border-[rgba(255,98,0,.24)] bg-[linear-gradient(135deg,rgba(255,98,0,.14),rgba(0,0,0,.28))] p-4 shadow-[0_18px_54px_-42px_var(--glow)]">
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
-        <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-[rgba(243,186,99,.26)] bg-black/28 text-gold">
+        <span className="text-gold grid size-11 shrink-0 place-items-center rounded-2xl border border-[rgba(243,186,99,.26)] bg-black/28">
           <Icon name="lock" size={19} />
         </span>
         <div className="min-w-0 flex-1">
@@ -609,7 +616,7 @@ function LockedCourseNotice({
             برای دیدن جلسه‌ها و ادامه دوره باید آن را بخری.
           </h3>
           <div className="mt-3 flex flex-wrap gap-2 text-xs font-black">
-            <span className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-[rgba(243,186,99,.2)] bg-black/28 px-3 text-gold">
+            <span className="text-gold inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-[rgba(243,186,99,.2)] bg-black/28 px-3">
               قیمت: {toPersianDigits(price)}
               <Icon name="flame" size={14} />
             </span>
@@ -737,7 +744,9 @@ function SessionProgressCard({
           )}
           {!locked && (
             <p className="text-ink-3 mt-1 text-xs">
-            {status === 'done' ? 'این جلسه کامل شده است.' : 'با دیدن حداقل ۸۰٪ جلسه، پیشرفتت ثبت می‌شود.'}
+              {status === 'done'
+                ? 'این جلسه کامل شده است.'
+                : 'با دیدن حداقل ۸۰٪ جلسه، پیشرفتت ثبت می‌شود.'}
             </p>
           )}
         </div>
@@ -963,9 +972,7 @@ function CommentsPanel({
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-ink-2 text-sm font-black">
-            نظرات کاربران ({toPersianDigits(0)})
-          </h3>
+          <h3 className="text-ink-2 text-sm font-black">نظرات کاربران ({toPersianDigits(0)})</h3>
         </div>
 
         <p className="text-ink-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-5 text-center text-sm leading-7">
@@ -983,7 +990,13 @@ function CommentsPanel({
             placeholder="بعد از خرید دوره می‌توانی نظر ثبت کنی"
             className="min-w-0 flex-1"
           />
-          <Button type="button" variant="primary" size="sm" disabled className="min-h-11 shrink-0 px-3 sm:px-4">
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            disabled
+            className="min-h-11 shrink-0 px-3 sm:px-4"
+          >
             انتشار
             <Icon name="send" size={15} />
           </Button>
@@ -1127,4 +1140,3 @@ function calculateWatchedSeconds(ranges: { start: number; end: number }[]) {
 export function formatDurationFa(totalSeconds: number | string): string {
   return toPersianDigits(formatDuration(totalSeconds));
 }
-

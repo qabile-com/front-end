@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Button, CopyButton, DashboardPageShell, Icon, MotionPage } from '@/shared/ui';
@@ -8,6 +8,7 @@ import { cn } from '@/core/lib/cn';
 import { formatPersianNumber, toPersianDigits } from '@/core/lib/persian';
 import { useActiveRoadmap } from '../../application/use-active-roadmap';
 import { useCompleteRoadmapStep } from '../../application/use-complete-roadmap-step';
+import { useStepCondition } from '../../application/use-step-condition';
 import {
   getRoadmapStepBackendId,
   mergeStaticStepWithProgress,
@@ -30,8 +31,39 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
   );
   const completeStep = useCompleteRoadmapStep(roadmapRepo);
   const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
+  const condition = useStepCondition(stepWithProgress);
 
-  const handleComplete = async () => {
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+  const [timerFinished, setTimerFinished] = useState(false);
+
+  const isDone = stepWithProgress.status === 'done';
+  const isLocked = stepWithProgress.status === 'next';
+  const conditionType = stepWithProgress.condition?.type;
+
+  const isConditionSatisfied = useMemo(() => {
+    if (isDone) return true;
+    if (!stepWithProgress.condition) return true;
+
+    switch (stepWithProgress.condition.type) {
+      case 'posts':
+      case 'engagement':
+      case 'follows':
+        return condition.satisfied;
+      case 'timer':
+        return timerFinished;
+      case 'checklist':
+        if (!stepWithProgress.checklist?.length) return true;
+        return stepWithProgress.checklist.every((item) => Boolean(checkedItems[item]));
+      default:
+        return true;
+    }
+  }, [isDone, stepWithProgress, condition.satisfied, timerFinished, checkedItems]);
+
+  const canComplete = !completeStep.isPending && !activeRoadmap.loading && !isDone && !isLocked && isConditionSatisfied;
+
+  const handleComplete = useCallback(async () => {
+    if (!canComplete) return;
+
     const reward = await completeStep.mutateAsync({
       roadmapId: activeRoadmap.roadmap?.id,
       stepId: getRoadmapStepBackendId(stepWithProgress, activeRoadmap.roadmap),
@@ -40,7 +72,23 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
     enqueueReward(reward, {
       xpDescription: `آتش مرحله ${toPersianDigits(stepWithProgress.id)} به حساب قبیله‌ات اضافه شد.`,
     });
-  };
+  }, [canComplete, completeStep, activeRoadmap.roadmap, stepWithProgress, enqueueReward]);
+
+  const conditionMessage = useMemo(() => {
+    if (isDone) return null;
+    if (condition.message) return condition.message;
+    if (conditionType === 'timer' && !timerFinished) {
+      return `برای تکمیل این مرحله باید ${toPersianDigits(stepWithProgress.condition?.seconds ?? 0)} ثانیه در این صفحه بمانید.`;
+    }
+    if (conditionType === 'checklist' && stepWithProgress.checklist) {
+      const total = stepWithProgress.checklist.length;
+      const checked = stepWithProgress.checklist.filter((item) => Boolean(checkedItems[item])).length;
+      if (checked < total) {
+        return `برای تکمیل این مرحله ${toPersianDigits(total - checked)} مورد دیگر را تیک بزن.`;
+      }
+    }
+    return null;
+  }, [isDone, condition.message, conditionType, timerFinished, stepWithProgress.checklist, stepWithProgress.condition, checkedItems]);
 
   return (
     <MotionPage>
@@ -55,8 +103,28 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
             <div className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain px-3.5 py-4 pb-38 sm:px-5 sm:pb-8 lg:px-6 lg:py-5">
               <div className="space-y-5">
                 <StepIntro step={stepWithProgress} />
-                <StepBody step={stepWithProgress} />
+                <StepBody
+                  step={stepWithProgress}
+                  checkedItems={checkedItems}
+                  onCheckedChange={setCheckedItems}
+                />
               </div>
+
+              {conditionMessage && (
+                <div className="border-hair mt-5 rounded-[14px] border bg-black/30 p-4 text-center">
+                  <p className="text-ink-3 text-[13px] font-bold leading-7">{conditionMessage}</p>
+                </div>
+              )}
+
+              {conditionType === 'timer' && stepWithProgress.condition?.type === 'timer' && (
+                <TimerDisplay
+                  key={stepWithProgress.id}
+                  seconds={stepWithProgress.condition.seconds}
+                  onComplete={() => {
+                    setTimerFinished(true);
+                  }}
+                />
+              )}
             </div>
 
             <CompleteFooter
@@ -64,6 +132,7 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
               status={stepWithProgress.status}
               isCompleting={completeStep.isPending}
               isLoadingProgress={activeRoadmap.loading}
+              canComplete={canComplete}
               onComplete={handleComplete}
             />
           </div>
@@ -72,6 +141,46 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
 
       <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
     </MotionPage>
+  );
+}
+
+function TimerDisplay({ seconds, onComplete }: { seconds: number; onComplete: () => void }) {
+  const [remaining, setRemaining] = useState(seconds);
+  const intervalRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (remaining <= 0) {
+      onComplete();
+      return;
+    }
+
+    intervalRef.current = window.setInterval(() => {
+      setRemaining((prev) => {
+        if (prev <= 1) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          onComplete();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [remaining, onComplete]);
+
+  return (
+    <div className="border-hair mt-5 rounded-[14px] border bg-black/30 p-4 text-center">
+      <p className="text-ink-3 text-[13px] font-bold leading-7">
+        برای تکمیل این مرحله باید در این صفحه بمانید.
+      </p>
+      {remaining > 0 && (
+        <p className="text-gold mt-2 text-lg font-black">
+          {toPersianDigits(remaining)} ثانیه
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -113,12 +222,16 @@ function StepIntro({ step }: { step: StaticRoadmapStep }) {
   );
 }
 
-function StepBody({ step }: { step: StaticRoadmapStep }) {
+function StepBody({
+  step,
+  checkedItems,
+  onCheckedChange,
+}: {
+  step: StaticRoadmapStep;
+  checkedItems: Record<string, boolean>;
+  onCheckedChange: (checked: Record<string, boolean>) => void;
+}) {
   switch (step.kind) {
-    case 'video':
-      return <VideoStep step={step} />;
-    case 'audio':
-      return <AudioStep step={step} />;
     case 'article':
       return <ArticleStep step={step} />;
     case 'social-follow':
@@ -129,57 +242,10 @@ function StepBody({ step }: { step: StaticRoadmapStep }) {
     case 'social-connect':
       return <ConnectStep step={step} />;
     case 'checklist':
-      return <ChecklistStep step={step} />;
+      return <ChecklistStep step={step} checkedItems={checkedItems} onCheckedChange={onCheckedChange} />;
     default:
       return null;
   }
-}
-
-function VideoStep({ step }: { step: StaticRoadmapStep }) {
-  return (
-    <section className="overflow-hidden rounded-[18px] border border-[rgba(255,98,0,.12)] bg-[radial-gradient(circle_at_50%_35%,rgba(255,98,0,.18),transparent_34%),rgba(16,8,5,.82)]">
-      <div className="grid aspect-video min-h-[178px] place-items-center">
-        <button
-          type="button"
-          className="bg-ember grid size-14 place-items-center rounded-full text-[#1a0a00] shadow-[0_0_42px_-6px_var(--glow)] transition-transform duration-300 hover:scale-105 active:scale-95 sm:size-16"
-          aria-label="پخش ویدیو"
-        >
-          <Icon name="play" size={24} />
-        </button>
-      </div>
-      <div className="flex items-center justify-end px-4 pb-3 text-xs font-black text-white">
-        <span>{toPersianDigits(step.duration ?? '۰:۰۰')}</span>
-      </div>
-    </section>
-  );
-}
-
-function InstructionImageStep({ step }: { step: StaticRoadmapStep }) {
-  return (
-    <section className="rounded-[18px] border border-[rgba(255,98,0,.16)] bg-[rgba(36,13,5,.72)] p-3 sm:p-4">
-      <h3 className="border-b border-[rgba(255,98,0,.22)] pb-3 text-right text-sm font-black">
-        نحوه انجام
-      </h3>
-      <div className="space-y-4 pt-3">
-        {step.instructions?.map((instruction, index) => (
-          <div key={`${instruction.title}-${index}`} className="space-y-3">
-            <p className="text-ink-2 text-right text-[13px] leading-7">
-              <b className="text-gold">{instruction.title}: </b>
-              <span className="lg:hidden">{instruction.mobile}</span>
-              <span className="hidden lg:inline">{instruction.desktop}</span>
-            </p>
-            {step.imageSlots?.[index] && (
-              <RoadmapImage
-                slot={step.imageSlots[index]}
-                index={index}
-                wide={step.imageSlots[index].size === 'wide'}
-              />
-            )}
-          </div>
-        ))}
-      </div>
-    </section>
-  );
 }
 
 function ArticleStep({ step }: { step: StaticRoadmapStep }) {
@@ -197,174 +263,6 @@ function ArticleStep({ step }: { step: StaticRoadmapStep }) {
       </div>
     </section>
   );
-}
-
-function AudioStep({ step }: { step: StaticRoadmapStep }) {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const hasAudio = Boolean(step.audioSrc);
-  const progress = duration > 0 ? Math.min(100, Math.max(0, (currentTime / duration) * 100)) : 0;
-
-  const bars = useMemo(
-    () =>
-      Array.from({ length: 38 }, (_, index) => ({
-        id: index,
-        height: 18 + ((index * 17) % 42),
-        progressPoint: ((index + 1) / 38) * 100,
-      })),
-    [],
-  );
-
-  const syncAudioTime = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    setCurrentTime(audio.currentTime);
-  };
-
-  const syncAudioDuration = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
-  };
-
-  const togglePlayback = async () => {
-    const audio = audioRef.current;
-    if (!audio || !hasAudio) return;
-
-    if (audio.paused) {
-      await audio.play();
-      setIsPlaying(true);
-      return;
-    }
-
-    audio.pause();
-    setIsPlaying(false);
-  };
-
-  const seekBy = (seconds: number) => {
-    const audio = audioRef.current;
-    if (!audio || !hasAudio) return;
-    const nextTime = Math.min(
-      Math.max(audio.currentTime + seconds, 0),
-      duration || audio.duration || 0,
-    );
-    audio.currentTime = nextTime;
-    setCurrentTime(nextTime);
-  };
-
-  const seekToProgress = (value: string) => {
-    const audio = audioRef.current;
-    if (!audio || !hasAudio || !duration) return;
-    const nextTime = (Number(value) / 100) * duration;
-    audio.currentTime = nextTime;
-    setCurrentTime(nextTime);
-  };
-
-  return (
-    <section className="rounded-[18px] border border-[rgba(255,98,0,.18)] bg-[rgba(36,13,5,.82)] p-4 sm:p-5">
-      {step.audioSrc && (
-        <audio
-          ref={audioRef}
-          src={step.audioSrc}
-          preload="metadata"
-          onLoadedMetadata={syncAudioDuration}
-          onDurationChange={syncAudioDuration}
-          onTimeUpdate={syncAudioTime}
-          onPause={() => setIsPlaying(false)}
-          onPlay={() => setIsPlaying(true)}
-          onEnded={() => {
-            setIsPlaying(false);
-            setCurrentTime(0);
-          }}
-        />
-      )}
-
-      <div className="flex h-28 items-center justify-center gap-2 sm:h-32">
-        {bars.map((bar) => (
-          <span
-            key={bar.id}
-            className={cn(
-              'w-1.5 rounded-full transition-colors duration-200 sm:w-2',
-              progress >= bar.progressPoint
-                ? 'bg-ember shadow-[0_0_18px_-5px_var(--glow)]'
-                : 'bg-white/30',
-            )}
-            style={{ height: bar.height }}
-          />
-        ))}
-      </div>
-
-      <div className="mt-1 flex items-center justify-between gap-3 text-[11px] font-bold text-white/70">
-        <span>{formatAudioTime(currentTime)}</span>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={0.1}
-          value={progress}
-          disabled={!hasAudio || !duration}
-          onChange={(event) => seekToProgress(event.currentTarget.value)}
-          aria-label="پیشرفت صوت"
-          className="accent-ember h-2 min-w-0 flex-1 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-        />
-        <span>{formatAudioTime(duration)}</span>
-      </div>
-
-      {!hasAudio && (
-        <p className="text-ink-3 mt-3 text-center text-xs leading-6">
-          لینک فایل صوتی هنوز برای این مرحله تنظیم نشده است.
-        </p>
-      )}
-
-      <div className="mt-4 flex items-center justify-center gap-7 text-sm font-black text-white sm:gap-8">
-        <button
-          type="button"
-          onClick={() => seekBy(-10)}
-          disabled={!hasAudio}
-          className="inline-flex min-h-11 items-center gap-2 disabled:cursor-not-allowed disabled:opacity-45"
-        >
-          <Icon name="arrow-right" size={16} />
-          ۱۰ ثانیه
-        </button>
-        <button
-          type="button"
-          onClick={() => void togglePlayback()}
-          disabled={!hasAudio}
-          className="bg-ember grid size-14 place-items-center rounded-full text-[#1a0a00] shadow-[0_0_38px_-8px_var(--glow)] transition-transform duration-250 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:scale-100"
-          aria-label={isPlaying ? 'توقف صوت' : 'پخش صوت'}
-        >
-          {isPlaying ? (
-            <span className="flex items-center gap-1">
-              <span className="h-5 w-1.5 rounded-full bg-current" />
-              <span className="h-5 w-1.5 rounded-full bg-current" />
-            </span>
-          ) : (
-            <Icon name="play" size={22} />
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={() => seekBy(10)}
-          disabled={!hasAudio}
-          className="inline-flex min-h-11 items-center gap-2 disabled:cursor-not-allowed disabled:opacity-45"
-        >
-          ۱۰ ثانیه
-          <Icon name="arrow-left" size={16} />
-        </button>
-      </div>
-    </section>
-  );
-}
-
-function formatAudioTime(seconds: number) {
-  if (!Number.isFinite(seconds) || seconds <= 0) return '۰:۰۰';
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60)
-    .toString()
-    .padStart(2, '0');
-  return toPersianDigits(`${minutes}:${remainingSeconds}`);
 }
 
 function SocialFollowStep({ step }: { step: StaticRoadmapStep }) {
@@ -424,18 +322,27 @@ function ConnectStep({ step }: { step: StaticRoadmapStep }) {
   );
 }
 
-function ChecklistStep({ step }: { step: StaticRoadmapStep }) {
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
-
+function ChecklistStep({
+  step,
+  checkedItems,
+  onCheckedChange,
+}: {
+  step: StaticRoadmapStep;
+  checkedItems: Record<string, boolean>;
+  onCheckedChange: (checked: Record<string, boolean>) => void;
+}) {
   return (
     <section className="space-y-3">
       {step.checklist?.map((item) => {
-        const isChecked = Boolean(checked[item]);
+        const isChecked = Boolean(checkedItems[item]);
         return (
           <button
             key={item}
             type="button"
-            onClick={() => setChecked((prev) => ({ ...prev, [item]: !prev[item] }))}
+            onClick={() => {
+              const next: Record<string, boolean> = { ...checkedItems, [item]: !checkedItems[item] };
+              onCheckedChange(next);
+            }}
             className="flex w-full items-center gap-3 rounded-[14px] border border-[rgba(255,98,0,.18)] bg-[rgba(36,13,5,.72)] p-3.5 text-right transition-colors hover:border-[rgba(255,98,0,.42)]"
           >
             <span
@@ -452,6 +359,34 @@ function ChecklistStep({ step }: { step: StaticRoadmapStep }) {
           </button>
         );
       })}
+    </section>
+  );
+}
+
+function InstructionImageStep({ step }: { step: StaticRoadmapStep }) {
+  return (
+    <section className="rounded-[18px] border border-[rgba(255,98,0,.16)] bg-[rgba(36,13,5,.72)] p-3 sm:p-4">
+      <h3 className="border-b border-[rgba(255,98,0,.22)] pb-3 text-right text-sm font-black">
+        نحوه انجام
+      </h3>
+      <div className="space-y-4 pt-3">
+        {step.instructions?.map((instruction, index) => (
+          <div key={`${instruction.title}-${index}`} className="space-y-3">
+            <p className="text-ink-2 text-right text-[13px] leading-7">
+              <b className="text-gold">{instruction.title}: </b>
+              <span className="lg:hidden">{instruction.mobile}</span>
+              <span className="hidden lg:inline">{instruction.desktop}</span>
+            </p>
+            {step.imageSlots?.[index] && (
+              <RoadmapImage
+                slot={step.imageSlots[index]}
+                index={index}
+                wide={step.imageSlots[index].size === 'wide'}
+              />
+            )}
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
@@ -513,12 +448,14 @@ function CompleteFooter({
   status,
   isCompleting,
   isLoadingProgress,
+  canComplete,
   onComplete,
 }: {
   xp: number;
   status: StaticRoadmapStep['status'];
   isCompleting: boolean;
   isLoadingProgress: boolean;
+  canComplete: boolean;
   onComplete: () => void;
 }) {
   const reduceMotion = useReducedMotion();
@@ -540,7 +477,7 @@ function CompleteFooter({
           type="button"
           variant="primary"
           block
-          disabled={isCompleting || isLoadingProgress || isDone || isLocked}
+          disabled={isCompleting || isLoadingProgress || isDone || isLocked || !canComplete}
           onClick={onComplete}
           className="rounded-full text-white"
         >

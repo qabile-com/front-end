@@ -1,4 +1,5 @@
 import type { ActionRewardResult, RoadmapStatus } from '@/features/dashboard/domain/dashboard.types';
+import type { StaticRoadmapStep } from './static-roadmap-steps';
 
 export interface RoadmapStepProgress {
   id: string;
@@ -47,3 +48,12 @@ export interface CompleteRoadmapStepResult extends ActionRewardResult {
   roadmap?: ActiveRoadmap;
   step?: RoadmapStepProgress;
 }
+
+export interface StepConditionResult {
+  satisfied: boolean;
+  message?: string;
+}
+
+export type StepConditionChecker = (
+  step: StaticRoadmapStep,
+) => Promise<StepConditionResult> | StepConditionResult;
