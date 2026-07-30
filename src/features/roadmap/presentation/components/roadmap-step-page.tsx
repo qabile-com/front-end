@@ -381,9 +381,7 @@ function RoadmapImage({
     <div
       className={cn(
         'relative overflow-hidden rounded-[14px] border border-[rgba(255,98,0,.18)] bg-black/45',
-        wide
-          ? 'aspect-[4.2] mx-auto w-full max-w-full min-h-18 sm:max-w-[520px] lg:max-w-[640px]'
-          : 'mx-auto aspect-[2.15] w-full max-w-[430px]',
+        wide ? 'aspect-[4.2] min-h-18' : 'mx-auto aspect-[2.15] w-full max-w-[430px]',
       )}
     >
       {!imageFailed && (
@@ -391,7 +389,7 @@ function RoadmapImage({
         <img
           src={slot.src}
           alt={slot.alt}
-          className={cn('absolute inset-0 size-full', slot.fit === 'cover' ? 'object-cover' : 'object-contain')}
+          className={cn('absolute inset-0 size-full', slot.fit === 'contain' ? 'object-contain' : 'object-cover')}
           loading="lazy"
           onError={() => setImageFailed(true)}
         />

@@ -100,7 +100,7 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
       'انسان برای رشد به ارتباط نیاز دارد. وارد انجمن شو، حداقل 5 را لایک کن و برای 5 نفر یک نظر ارزشمند بنویس. شاید شروع یک دوستی بزرگ همین امروز باشد.',
     xp: 150,
     type: 'تعامل اجتماعی',
-    status: 'next',
+    status: 'current',
     kind: 'social-profile',
     condition: { type: 'engagement', minLikes: 5, minComments: 5 },
     instructions: [
@@ -136,7 +136,7 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
       'انگیزه فقط اراده نیست. این مقاله را بخوان و یاد بگیر تغذیه چطور روی انرژی، تمرکز، خلق‌وخو و پشتکار تو اثر می‌گذارد.',
     xp: 30,
     type: 'مقاله',
-    status: 'next',
+    status: 'current',
     kind: 'article',
     condition: { type: 'timer', seconds: 10 },
     content: [
@@ -177,7 +177,7 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
       'آموزش فقط داخل قبیله نیست. صفحه‌های رسمی قبیله ققنوس را دنبال کن تا هیچ نکته، چالش یا فرصت تازه‌ای را از دست ندهی.',
     xp: 50,
     type: 'شبکه اجتماعی',
-    status: 'next',
+    status: 'current',
     kind: 'social-follow',
     condition: { type: 'timer', seconds: 10 },
     socialLinks: [
@@ -194,7 +194,7 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
       'رشد، تنهایی اتفاق نمی‌افتد. وارد انجمن شو، پروفایل ۵ نفر که احساس می‌کنی هم‌مسیرت هستند را باز کن و روی دکمه «هم‌پرواز شو» بزن. هر پرواز بزرگ، از یک همراه خوب شروع می‌شود.',
     xp: 150,
     type: 'تعامل اجتماعی',
-    status: 'next',
+    status: 'current',
     kind: 'social-connect',
     condition: { type: 'follows', min: 5 },
     instructions: [
@@ -222,7 +222,7 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
       'در این تمرین باید به یک جلسه تمرکز عمیق ۲۵ دقیقه‌ای وارد شوی و مراحل زیر را به ترتیب کامل کنی.',
     xp: 120,
     type: 'مهارت',
-    status: 'next',
+    status: 'current',
     kind: 'checklist',
     condition: { type: 'checklist' },
     checklist: [
