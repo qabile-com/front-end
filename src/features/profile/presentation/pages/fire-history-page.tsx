@@ -104,7 +104,7 @@ export function FireHistoryPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="جستجو در تاریخچه آتش..."
-              className="border-hair text-ink placeholder:text-ink-4 h-12 w-full rounded-2xl border bg-black/25 pe-11 ps-4 text-sm outline-none transition-colors focus:border-[rgba(255,98,0,.45)]"
+              className="border-hair text-ink placeholder:text-ink-4 h-12 w-full rounded-2xl border bg-black/25 pe-11 ps-4 text-base outline-none transition-colors focus:border-[rgba(255,98,0,.45)]"
             />
           </label>
         </div>

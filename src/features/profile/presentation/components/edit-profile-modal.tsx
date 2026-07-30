@@ -273,7 +273,7 @@ function EditField({
           placeholder={placeholder}
           disabled={disabled}
           dir={ltr ? 'ltr' : 'rtl'}
-          className="placeholder:text-ink-4 min-w-[120px] flex-1 truncate bg-transparent text-right text-[12px] outline-none disabled:opacity-60"
+          className="placeholder:text-ink-4 min-w-[120px] flex-1 truncate bg-transparent text-right text-base outline-none disabled:opacity-60"
         />
         {badge && (
           <span className="shrink-0 rounded-[6px] bg-[#2bd4a8] px-2.5 py-1 text-[10.5px] font-black whitespace-nowrap text-black">

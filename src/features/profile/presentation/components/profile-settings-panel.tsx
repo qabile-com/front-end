@@ -430,7 +430,7 @@ function SingleInputStep({
             onChange={(event) => onChange(event.target.value)}
             inputMode={inputMode}
             disabled={disabled}
-            className="placeholder:text-ink-4 h-full min-w-0 flex-1 bg-transparent px-3 text-right text-sm outline-none disabled:opacity-60"
+            className="placeholder:text-ink-4 h-full min-w-0 flex-1 bg-transparent px-3 text-right text-base outline-none disabled:opacity-60"
             placeholder="name@email.com"
           />
           <Icon name={icon} size={18} className="text-gold shrink-0" />
@@ -576,7 +576,7 @@ function PasswordStep({
           onChange={(event) => setPassword(event.target.value)}
           type="password"
           disabled={disabled}
-          className="placeholder:text-ink-4 h-full min-w-0 flex-1 bg-transparent px-3 text-right text-sm outline-none disabled:opacity-60"
+          className="placeholder:text-ink-4 h-full min-w-0 flex-1 bg-transparent px-3 text-right text-base outline-none disabled:opacity-60"
           placeholder="رمز عبور"
         />
         <Icon name="lock" size={18} className="text-gold shrink-0" />
@@ -587,7 +587,7 @@ function PasswordStep({
           onChange={(event) => setPasswordConfirmation(event.target.value)}
           type="password"
           disabled={disabled}
-          className="placeholder:text-ink-4 h-full min-w-0 flex-1 bg-transparent px-3 text-right text-sm outline-none disabled:opacity-60"
+          className="placeholder:text-ink-4 h-full min-w-0 flex-1 bg-transparent px-3 text-right text-base outline-none disabled:opacity-60"
           placeholder="تکرار رمز عبور"
         />
         <Icon name="lock" size={18} className="text-gold shrink-0" />
