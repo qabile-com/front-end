@@ -19,35 +19,37 @@ export function PullToRefresh({
 }: PullToRefreshProps) {
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isPulling, setIsPulling] = useState(false);
   const startYRef = useRef(0);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const isPullingRef = useRef(false);
+  const rafRef = useRef<number>(0);
 
   const isAtTop = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return true;
-    return el.scrollTop <= 0;
+    return window.scrollY <= 1;
   }, []);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     if (!isAtTop() || isRefreshing) return;
     startYRef.current = e.touches[0].clientY;
-    setIsPulling(true);
+    isPullingRef.current = true;
   }, [isAtTop, isRefreshing]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!isPulling || isRefreshing) return;
+    if (!isPullingRef.current || isRefreshing) return;
     const currentY = e.touches[0].clientY;
     const diff = currentY - startYRef.current;
-    if (diff > 0 && isAtTop()) {
-      setPullDistance(Math.min(diff, threshold * 1.5));
-      e.preventDefault();
+    if (diff > 5 && isAtTop()) {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        setPullDistance(Math.min(diff, threshold * 1.5));
+      });
     }
-  }, [isPulling, isRefreshing, isAtTop, threshold]);
+  }, [isAtTop, isRefreshing, threshold]);
 
   const handleTouchEnd = useCallback(async () => {
-    if (!isPulling) return;
-    setIsPulling(false);
+    if (!isPullingRef.current) return;
+    isPullingRef.current = false;
+
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
     if (pullDistance >= threshold && onRefresh && !isRefreshing) {
       setIsRefreshing(true);
@@ -62,40 +64,38 @@ export function PullToRefresh({
     }
 
     setPullDistance(0);
-  }, [isPulling, pullDistance, threshold, onRefresh, isRefreshing]);
+  }, [pullDistance, threshold, onRefresh, isRefreshing]);
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    el.addEventListener('touchstart', handleTouchStart, { passive: true });
-    el.addEventListener('touchmove', handleTouchMove, { passive: false });
-    el.addEventListener('touchend', handleTouchEnd);
-    el.addEventListener('touchcancel', handleTouchEnd);
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('touchcancel', handleTouchEnd);
 
     return () => {
-      el.removeEventListener('touchstart', handleTouchStart);
-      el.removeEventListener('touchmove', handleTouchMove);
-      el.removeEventListener('touchend', handleTouchEnd);
-      el.removeEventListener('touchcancel', handleTouchEnd);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchEnd);
     };
   }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   const progress = Math.min(pullDistance / threshold, 1);
   const showIndicator = pullDistance > 0 || isRefreshing;
 
+  if (!onRefresh) {
+    return <>{children}</>;
+  }
+
   return (
-    <div
-      ref={containerRef}
-      className={cn('relative overflow-y-auto overscroll-behavior-contain min-h-0', className)}
-    >
+    <div className={cn('relative', className)}>
       <div
         aria-hidden="true"
         className={cn(
-          'flex items-center justify-center overflow-hidden transition-[height,opacity] duration-200',
+          'fixed left-0 right-0 top-0 z-50 flex items-center justify-center overflow-hidden transition-[height,opacity] duration-200',
           showIndicator ? 'h-12 opacity-100' : 'h-0 opacity-0',
         )}
-        style={{ height: showIndicator ? Math.max(pullDistance, 48) : 0 }}
+        style={{ height: showIndicator ? 48 : 0 }}
       >
         <div className="flex items-center gap-2 text-ink-2">
           {isRefreshing ? (
@@ -117,14 +117,7 @@ export function PullToRefresh({
         </div>
       </div>
 
-      <div
-        style={{
-          transform: `translateY(${isRefreshing ? 48 : pullDistance * 0.5}px)`,
-          transition: isPulling ? 'none' : 'transform 0.2s ease-out',
-        }}
-      >
-        {children}
-      </div>
+      {children}
     </div>
   );
 }

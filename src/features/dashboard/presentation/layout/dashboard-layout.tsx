@@ -1,11 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Icon } from '@/shared/ui';
-import { PullToRefresh } from '@/shared/ui/pull-to-refresh';
 import { formatPersianNumber, toPersianDigits } from '@/core/lib/persian';
 import { clearAuthSession } from '@/core/auth/token';
 import { createAuthRedirectHref } from '@/core/auth/redirect';
@@ -57,12 +56,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     mutationFn: () => userRepo.updateOnboardingCompletion(true),
     onSuccess: (updatedUser) => {
       queryClient.setQueryData(['dashboard', 'user', 'current'], updatedUser);
-      queryClient.setQueryData(['dashboard', 'profile', 'me'], (current: unknown) =>
-        current && typeof current === 'object'
-          ? { ...current, isCompleteOnboarding: true }
-          : current,
-      );
-      void queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
     },
   });
 
@@ -117,10 +110,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     });
   }, [shouldShowInstallAfterSignupXp, signupAchievements?.length, signupXp]);
 
-  const handleRefresh = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-  }, [queryClient]);
-
   if (userLoading) return <DashboardLoader />;
   if (userError) return <DashboardError error={userError} onRetry={() => void refetchUser()} />;
   if (!user) return <DashboardLoader />;
@@ -129,34 +118,34 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="dashboard-scope min-h-screen max-w-full overflow-x-clip [background:var(--color-bg)]">
       <DashboardSidebar activeHref={activeHref} user={user} nav={NAV} />
 
-      <main className="flex h-full max-w-full min-w-0 flex-col overflow-x-clip lg:ms-65">
-        <PullToRefresh onRefresh={handleRefresh} className="min-w-0 flex-1 overflow-x-clip">
-          <header className="border-hair sticky top-0 z-40 hidden h-16 items-center justify-between border-b px-8 pt-[env(safe-area-inset-top)] [backdrop-filter:blur(20px)] [background:rgba(5,3,2,.85)] lg:flex">
-            <h1 className="text-lg font-black">{title}</h1>
-            <div className="flex items-center gap-3">
-              {/* {showAiChatAction && (
-                <Link
-                  href="/ai"
-                  className="text-ink border-hair hover:border-hair-2 hover:text-gold inline-flex min-h-10 items-center gap-2 rounded-xl border px-3.5 text-[13px] font-extrabold transition-[transform,border-color,color,box-shadow] duration-300 [background:var(--glass-2)] hover:-translate-y-0.5 hover:shadow-[0_12px_34px_-18px_var(--glow)]"
-                >
-                  <Icon name="adam-chat" size={20} />
-                  چت با آدم
-                </Link>
-              )} */}
-              <span className="text-ember border-hair inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.75 text-[13px] font-extrabold [background:var(--glass-2)]">
-                <Icon name="flame" size={16} />
-                {toPersianDigits(user.streak ?? 0)} روز
-              </span>
-              <span className="text-ember border-hair inline-flex min-h-10 items-center gap-2 rounded-full border px-3.5 text-[13px] font-extrabold [background:var(--glass-2)]">
-                {formatPersianNumber(user.xp)}
-                <Icon name="flame" size={18} />
-              </span>
-            </div>
-          </header>
+      <main className="flex min-h-screen max-w-full min-w-0 flex-col overflow-x-clip lg:ms-65">
+        <header className="border-hair sticky top-0 z-40 hidden h-16 items-center justify-between border-b px-8 pt-[env(safe-area-inset-top)] [backdrop-filter:blur(20px)] [background:rgba(5,3,2,.85)] lg:flex">
+          <h1 className="text-lg font-black">{title}</h1>
+          <div className="flex items-center gap-3">
+            {/* {showAiChatAction && (
+              <Link
+                href="/ai"
+                className="text-ink border-hair hover:border-hair-2 hover:text-gold inline-flex min-h-10 items-center gap-2 rounded-xl border px-3.5 text-[13px] font-extrabold transition-[transform,border-color,color,box-shadow] duration-300 [background:var(--glass-2)] hover:-translate-y-0.5 hover:shadow-[0_12px_34px_-18px_var(--glow)]"
+              >
+                <Icon name="adam-chat" size={20} />
+                چت با آدم
+              </Link>
+            )} */}
+            <span className="text-ember border-hair inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.75 text-[13px] font-extrabold [background:var(--glass-2)]">
+              <Icon name="flame" size={16} />
+              {toPersianDigits(user.streak ?? 0)} روز
+            </span>
+            <span className="text-ember border-hair inline-flex min-h-10 items-center gap-2 rounded-full border px-3.5 text-[13px] font-extrabold [background:var(--glass-2)]">
+              {formatPersianNumber(user.xp)}
+              <Icon name="flame" size={18} />
+            </span>
+          </div>
+        </header>
 
-          <MobileHeader title={title} user={user} showAiChatAction={showAiChatAction} />
+        <MobileHeader title={title} user={user} showAiChatAction={showAiChatAction} />
 
-          <div className="p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
+        <div className="min-w-0 flex-1 overflow-x-clip">
+          <div className="overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
             <motion.div
               key={pathname}
               initial={reduceMotion ? false : { opacity: 0, y: 8 }}
@@ -166,7 +155,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               {children}
             </motion.div>
           </div>
-        </PullToRefresh>
+        </div>
       </main>
 
       <MobileNav activeHref={activeHref} />
