@@ -11,9 +11,9 @@ export function mergeStaticRoadmapWithProgress(
 
     return {
       num: staticStep.id,
-      type: progress?.type || staticStep.type,
-      title: progress?.title || staticStep.title,
-      xp: progress?.xp ?? staticStep.xp,
+      type: staticStep.type,
+      title: staticStep.title,
+      xp: staticStep.xp,
       status: progress?.status ?? staticStep.status,
     };
   });
@@ -28,9 +28,6 @@ export function mergeStaticStepWithProgress(
 
   return {
     ...staticStep,
-    title: progress.title || staticStep.title,
-    type: progress.type || staticStep.type,
-    xp: progress.xp ?? staticStep.xp,
     status: progress.status,
   };
 }

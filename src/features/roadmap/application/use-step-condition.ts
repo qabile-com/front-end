@@ -118,18 +118,33 @@ export function useStepCondition(step: StaticRoadmapStep | null | undefined) {
     return { satisfied: true, message: undefined, loading: false, refetch: () => Promise.resolve() };
   }
 
-  switch (condition.type) {
-    case 'posts':
-      return { ...postsQuery, loading: postsQuery.isPending, refetch: postsQuery.refetch };
-    case 'engagement':
-      return { ...engagementQuery, loading: engagementQuery.isPending, refetch: engagementQuery.refetch };
-    case 'follows':
-      return { ...followsQuery, loading: followsQuery.isPending, refetch: followsQuery.refetch };
-    case 'timer':
-      return { ...timerQuery, loading: timerQuery.isPending, refetch: timerQuery.refetch };
-    case 'checklist':
-      return { ...checklistQuery, loading: checklistQuery.isPending, refetch: checklistQuery.refetch };
-    default:
-      return { satisfied: true, message: undefined, loading: false, refetch: () => Promise.resolve() };
-  }
+  const base = {
+    posts: postsQuery.data,
+    engagement: engagementQuery.data,
+    follows: followsQuery.data,
+    timer: timerQuery.data,
+    checklist: checklistQuery.data,
+  }[condition.type];
+
+  return {
+    satisfied: base?.satisfied ?? false,
+    message: base?.message,
+    loading: base === undefined,
+    refetch: async () => {
+      switch (condition.type) {
+        case 'posts':
+          return postsQuery.refetch();
+        case 'engagement':
+          return engagementQuery.refetch();
+        case 'follows':
+          return followsQuery.refetch();
+        case 'timer':
+          return timerQuery.refetch();
+        case 'checklist':
+          return checklistQuery.refetch();
+        default:
+          return Promise.resolve();
+      }
+    },
+  };
 }

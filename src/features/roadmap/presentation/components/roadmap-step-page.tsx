@@ -39,7 +39,6 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
   const timerIntervalRef = useRef<number | null>(null);
 
   const isDone = stepWithProgress.status === 'done';
-  const isLocked = stepWithProgress.status === 'next';
   const conditionType = stepWithProgress.condition?.type;
 
   useEffect(() => {
@@ -86,6 +85,8 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
         return true;
     }
   }, [isDone, stepWithProgress, condition.satisfied, timerFinished, checkedItems]);
+
+  const isLocked = stepWithProgress.status === 'next' || Boolean(stepWithProgress.condition && !isConditionSatisfied);
 
   const canComplete = !completeStep.isPending && !activeRoadmap.loading && !isDone && !isLocked && isConditionSatisfied;
 
@@ -148,6 +149,7 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
               isCompleting={completeStep.isPending}
               isLoadingProgress={activeRoadmap.loading}
               canComplete={canComplete}
+              isLocked={isLocked}
               onComplete={handleComplete}
             />
           </div>
@@ -426,6 +428,7 @@ function CompleteFooter({
   isCompleting,
   isLoadingProgress,
   canComplete,
+  isLocked,
   onComplete,
 }: {
   xp: number;
@@ -433,11 +436,11 @@ function CompleteFooter({
   isCompleting: boolean;
   isLoadingProgress: boolean;
   canComplete: boolean;
+  isLocked: boolean;
   onComplete: () => void;
 }) {
   const reduceMotion = useReducedMotion();
   const isDone = status === 'done';
-  const isLocked = status === 'next';
 
   return (
     <footer className="fixed inset-x-0 bottom-0 z-80 mt-auto shrink-0 border-t border-[rgba(255,98,0,.08)] bg-black/95 px-3.5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:static sm:inset-auto sm:z-20 sm:px-5 lg:flex lg:items-center lg:justify-between lg:px-6 lg:pb-4">
