@@ -10,6 +10,7 @@ import { AuthButton } from './auth-button';
 import { AuthTabs } from './auth-tabs';
 import { Field } from './field';
 import { OtpInput } from './otp-input';
+import { useIsLargeScreen } from '@/core/lib/use-is-large-screen';
 
 type View = 'login' | 'forgot';
 type LoginTab = 'pass' | 'otp';
@@ -141,6 +142,7 @@ function PasswordForm({
   onSubmit: (email: string, password: string) => Promise<boolean>;
   loading: boolean;
 }) {
+  const isLargeScreen = useIsLargeScreen();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -169,7 +171,7 @@ function PasswordForm({
         }}
         error={errors.email}
         autoComplete="email"
-        autoFocus
+        autoFocus={isLargeScreen}
       />
       <Field
         label="رمز عبور"
@@ -228,6 +230,7 @@ function OtpLoginForm({
   verifyOtp: (email: string, code: string) => Promise<boolean>;
   loading: boolean;
 }) {
+  const isLargeScreen = useIsLargeScreen();
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -268,10 +271,10 @@ function OtpLoginForm({
                 setEmail(e.target.value);
                 setError(undefined);
               }}
-              error={error}
-              autoComplete="email"
-              autoFocus
-            />
+               error={error}
+               autoComplete="email"
+               autoFocus={isLargeScreen}
+             />
           </div>
           <button
             type="submit"
@@ -290,7 +293,7 @@ function OtpLoginForm({
       <p className="text-ink-2 mb-3.5 text-center text-[13px] leading-[1.65]">
         کد تایید به <b className="text-gold" dir="ltr">{email}</b> ارسال شد
       </p>
-      <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} autoFocus />
+      <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} autoFocus={isLargeScreen} />
       <ResendRow cooldown={cooldown} onResend={() => void requestOtp(email).then((ok) => ok && start(RESEND_SECONDS))} />
       <AuthButton type="submit" loading={loading} disabled={!isCompleteOtp(code)}>
         تایید و ورود
@@ -321,6 +324,7 @@ function ForgotPasswordView({
     passwordConfirmation: string,
   ) => Promise<boolean>;
 }) {
+  const isLargeScreen = useIsLargeScreen();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -389,7 +393,7 @@ function ForgotPasswordView({
             }}
             error={error}
             autoComplete="email"
-            autoFocus
+            autoFocus={isLargeScreen}
           />
           <AuthButton type="submit" loading={loading}>
             دریافت کد بازیابی
@@ -402,7 +406,7 @@ function ForgotPasswordView({
           <p className="text-ink-2 mb-3.5 text-center text-[13px] leading-[1.65]">
             کد بازیابی به <b className="text-gold" dir="ltr">{email}</b> ارسال شد
           </p>
-          <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} autoFocus />
+      <OtpInput value={code} onChange={setCode} ok={isCompleteOtp(code)} autoFocus={isLargeScreen} />
           <ResendRow cooldown={cooldown} onResend={() => void requestForgotPassword(email).then((ok) => ok && start(RESEND_SECONDS))} />
           <AuthButton type="submit" loading={loading} disabled={!isCompleteOtp(code)}>
             ادامه
@@ -423,7 +427,7 @@ function ForgotPasswordView({
             }}
             error={error}
             autoComplete="new-password"
-            autoFocus
+            autoFocus={isLargeScreen}
           />
           <Field
             label="تکرار رمز عبور"

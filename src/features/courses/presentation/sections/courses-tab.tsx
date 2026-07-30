@@ -140,7 +140,7 @@ export function CoursesTab({
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="جستجوی کورس، موضوع یا مهارت..."
-              className="border-hair focus:border-ember placeholder:text-ink-4 h-13 w-full rounded-[18px] border bg-black/28 pr-12 pl-12 text-sm font-bold transition-colors outline-none"
+              className="border-hair focus:border-ember placeholder:text-ink-4 h-13 w-full rounded-[18px] border bg-black/28 pr-12 pl-12 text-base font-bold transition-colors outline-none"
             />
             {isSearching && (
               <InlineSpinner className="text-ember absolute top-1/2 left-4 size-4 -translate-y-1/2" />

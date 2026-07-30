@@ -127,12 +127,17 @@ export const getForumActiveUsers = (params?: { limit?: number }) =>
     params,
   });
 
-export const createForumPost = (body: { text: string; image?: File | null; tags?: string[] }) => {
+export const createForumPost = (body: { text: string; image?: File | null; tags?: string[]; achievement?: { title: string; sub: string; icon: string } }) => {
   if (body.image) {
     const formData = new FormData();
     formData.append('text', body.text);
     formData.append('image', body.image);
     body.tags?.forEach((tag) => formData.append('tags[]', tag));
+    if (body.achievement) {
+      formData.append('achievementTitle', body.achievement.title);
+      formData.append('achievementSub', body.achievement.sub);
+      formData.append('achievementIcon', body.achievement.icon);
+    }
 
     return httpClient.post<ForumPostDto>('/api/v1/forum/posts', formData);
   }
@@ -140,6 +145,7 @@ export const createForumPost = (body: { text: string; image?: File | null; tags?
   return httpClient.post<ForumPostDto>('/api/v1/forum/posts', {
     text: body.text,
     tags: body.tags,
+    achievement: body.achievement,
   });
 };
 

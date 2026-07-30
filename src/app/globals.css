@@ -262,6 +262,17 @@
     transform: none;
   }
 }
+@keyframes splashPulse {
+  0%,
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.7;
+    filter: brightness(1.1);
+  }
+}
 
 @layer components {
   .bg-field {

@@ -51,7 +51,7 @@ export function BaseModal({
       {isOpen && (
         <motion.div
           className={cn(
-            'fixed inset-0 flex items-center justify-center overflow-hidden overscroll-contain bg-black/70 p-4 backdrop-blur-sm',
+            'fixed inset-0 mb-0 flex items-center justify-center overflow-hidden overscroll-contain bg-black/70 p-4 backdrop-blur-sm',
             zIndexClassName,
             className,
           )}
@@ -74,7 +74,11 @@ export function BaseModal({
             transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
             onMouseDown={(event) => event.stopPropagation()}
           >
-            {title && <span id={titleId} className="sr-only">{title}</span>}
+            {title && (
+              <span id={titleId} className="sr-only">
+                {title}
+              </span>
+            )}
             <div
               className={cn(
                 'max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain',

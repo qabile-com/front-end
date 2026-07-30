@@ -42,7 +42,7 @@ export function RoadmapsPage() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="جستجوی نقشه راه..."
-                className="border-hair focus:border-ember h-12 w-full rounded-2xl border bg-black/30 pr-10 pl-4 text-sm outline-none transition-colors placeholder:text-ink-4"
+                className="border-hair focus:border-ember h-12 w-full rounded-2xl border bg-black/30 pr-10 pl-4 text-base outline-none transition-colors placeholder:text-ink-4"
               />
             </label>
           </header>
