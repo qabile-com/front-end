@@ -115,7 +115,12 @@ export function useStepCondition(step: StaticRoadmapStep | null | undefined) {
   });
 
   if (!step || !condition) {
-    return { satisfied: true, message: undefined, loading: false, refetch: () => Promise.resolve() };
+    return {
+      satisfied: true,
+      message: undefined,
+      loading: false,
+      refetch: () => Promise.resolve(),
+    };
   }
 
   const base = {

@@ -16,6 +16,7 @@ import {
 import { roadmapRepo } from '../../infrastructure/repository-factory';
 import { useActionRewardQueue } from '@/features/dashboard/application/use-action-reward-queue';
 import { ActionRewardModals } from '@/features/dashboard/presentation/components/action-reward-modals';
+import { showError } from '@/shared/lib/toast';
 import type { StaticRoadmapStep } from '../../domain/static-roadmap-steps';
 
 interface RoadmapStepPageProps {
@@ -92,11 +93,15 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
     !completeStep.isPending &&
     !activeRoadmap.loading &&
     !isDone &&
-    !isLocked &&
-    isConditionSatisfied;
+    !isLocked;
 
   const handleComplete = useCallback(async () => {
     if (!canComplete) return;
+
+    if (!isConditionSatisfied) {
+      showError(condition.message || 'شرایط تکمیل این مرحله هنوز تکمیل نشده است.');
+      return;
+    }
 
     const reward = await completeStep.mutateAsync({
       roadmapId: activeRoadmap.roadmap?.id,
@@ -106,7 +111,7 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
     enqueueReward(reward, {
       xpDescription: `آتش مرحله ${toPersianDigits(stepWithProgress.id)} به حساب قبیله‌ات اضافه شد.`,
     });
-  }, [canComplete, completeStep, activeRoadmap.roadmap, stepWithProgress, enqueueReward]);
+  }, [canComplete, completeStep, activeRoadmap.roadmap, stepWithProgress, enqueueReward, isConditionSatisfied, condition.message]);
 
   const conditionMessage = useMemo(() => {
     if (isDone) return null;
