@@ -19,8 +19,8 @@ export function PullToRefresh({
 }: PullToRefreshProps) {
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isPulling, setIsPulling] = useState(false);
   const startYRef = useRef(0);
-  const isPullingRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const isAtTop = useCallback(() => {
@@ -32,22 +32,22 @@ export function PullToRefresh({
   const handleTouchStart = useCallback((e: TouchEvent) => {
     if (!isAtTop() || isRefreshing) return;
     startYRef.current = e.touches[0].clientY;
-    isPullingRef.current = true;
+    setIsPulling(true);
   }, [isAtTop, isRefreshing]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!isPullingRef.current || isRefreshing) return;
+    if (!isPulling || isRefreshing) return;
     const currentY = e.touches[0].clientY;
     const diff = currentY - startYRef.current;
     if (diff > 0 && isAtTop()) {
       setPullDistance(Math.min(diff, threshold * 1.5));
       e.preventDefault();
     }
-  }, [isAtTop, isRefreshing, threshold]);
+  }, [isPulling, isRefreshing, isAtTop, threshold]);
 
   const handleTouchEnd = useCallback(async () => {
-    if (!isPullingRef.current) return;
-    isPullingRef.current = false;
+    if (!isPulling) return;
+    setIsPulling(false);
 
     if (pullDistance >= threshold && onRefresh && !isRefreshing) {
       setIsRefreshing(true);
@@ -62,7 +62,7 @@ export function PullToRefresh({
     }
 
     setPullDistance(0);
-  }, [pullDistance, threshold, onRefresh, isRefreshing]);
+  }, [isPulling, pullDistance, threshold, onRefresh, isRefreshing]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -114,7 +114,14 @@ export function PullToRefresh({
         </div>
       </div>
 
-      {children}
+      <div
+        style={{
+          transform: `translateY(${isRefreshing ? 48 : pullDistance * 0.5}px)`,
+          transition: isPulling ? 'none' : 'transform 0.2s ease-out',
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
