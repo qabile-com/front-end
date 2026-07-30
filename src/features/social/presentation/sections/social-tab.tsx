@@ -638,35 +638,37 @@ function PostCard({
           </div>
           {/* {post.location && <div className="mt-3 text-sm text-orange-300">📍 {post.location}</div>}
         </div> */}
-          {isAdmin && (
-            <div className="ms-auto flex gap-2" onClick={(e) => e.stopPropagation()}>
-              <button onClick={handlePinToggle} className="text-gold hover:text-ember">
-                <Icon name={post.isPinned ? 'star' : 'star-line'} size={18} />
+          <div className="ms-auto flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            {isAdmin && (
+              <>
+                <button onClick={handlePinToggle} className="text-gold hover:text-ember">
+                  <Icon name={post.isPinned ? 'star' : 'star-line'} size={18} />
+                </button>
+                <button onClick={handleDeletePost} className="text-danger hover:text-red-400">
+                  <Icon name="trash" size={18} />
+                </button>
+              </>
+            )}
+            {canFollowAuthor && (
+              <button
+                type="button"
+                disabled={isCurrentAuthorToggling}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggleAuthorFollow(post.authorId, isFollowingAuthor);
+                }}
+                className={cn(
+                  'inline-flex min-h-8 min-w-22 items-center justify-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-extrabold transition-[border-color,background,color,opacity] disabled:opacity-80',
+                  isFollowingAuthor
+                    ? 'border-gold/40 bg-white/5 text-gold'
+                    : 'text-[#1a0a00] [background:var(--fire-grad)] border-transparent',
+                )}
+              >
+                {isCurrentAuthorToggling && <InlineSpinner className="size-3" />}
+                {isFollowingAuthor ? 'هم‌پرواز' : 'هم پرواز شدن'}
               </button>
-              <button onClick={handleDeletePost} className="text-danger hover:text-red-400">
-                <Icon name="trash" size={18} />
-              </button>
-            </div>
-          )}
-          {canFollowAuthor && (
-            <button
-              type="button"
-              disabled={isCurrentAuthorToggling}
-              onClick={(event) => {
-                event.stopPropagation();
-                onToggleAuthorFollow(post.authorId, isFollowingAuthor);
-              }}
-              className={cn(
-                'ms-auto inline-flex min-h-8 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-extrabold transition-[border-color,background,color,opacity] disabled:opacity-80',
-                isFollowingAuthor
-                  ? 'border-gold/40 bg-white/5 text-gold'
-                  : 'text-[#1a0a00] [background:var(--fire-grad)] border-transparent',
-              )}
-            >
-              {isCurrentAuthorToggling && <InlineSpinner className="size-3" />}
-              {isFollowingAuthor ? 'هم‌پرواز' : 'هم پرواز شدن'}
-            </button>
-          )}
+            )}
+          </div>
         </div>
         <p className="mt-3.5 text-[14.5px] leading-[1.8] whitespace-pre-line">{post.text}</p>
         {post.achievement && (
