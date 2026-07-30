@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { saveAuthSession } from '@/core/auth/token';
+import { useAuthSession } from '@/providers/auth-provider';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type { IAuthRepository, VerifyOtpResult } from '../domain/auth-repository';
 import { getAuthErrorMessage } from './auth-error-message';
@@ -17,14 +18,17 @@ function resolveUserName(user: VerifyOtpResult['user']): string {
 
 export function useAuth(repo: IAuthRepository, getRedirectTo: () => string = () => '/courses') {
   const router = useRouter();
+  const { refreshFromStorage } = useAuthSession();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<{ title: string; msg: string } | null>(null);
 
   const completeLogin = useCallback(
     (session: VerifyOtpResult) => {
       saveAuthSession(session);
+      refreshFromStorage();
 
-      const firstLoginReward = session.firstLoginReward ?? (session.isNewUser ? session.signupReward : undefined);
+      const firstLoginReward =
+        session.firstLoginReward ?? (session.isNewUser ? session.signupReward : undefined);
 
       if (firstLoginReward) {
         sessionStorage.setItem('signupReward', JSON.stringify(firstLoginReward));
@@ -42,7 +46,7 @@ export function useAuth(repo: IAuthRepository, getRedirectTo: () => string = () 
       });
       setTimeout(() => router.push(getRedirectTo()), 900);
     },
-    [getRedirectTo, router],
+    [getRedirectTo, refreshFromStorage, router],
   );
 
   const loginWithPassword = useCallback(
