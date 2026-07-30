@@ -57,6 +57,11 @@ httpClient.interceptors.response.use(
             originalRequest.headers.Authorization = `Bearer ${response.data.accessToken}`;
             return httpClient(originalRequest);
           } catch {
+            const currentToken = getAccessToken();
+            const originalToken = originalRequest.headers.Authorization?.replace('Bearer ', '');
+            if (currentToken && currentToken !== originalToken) {
+              return Promise.reject(error);
+            }
             clearAuthSession();
           }
         }
