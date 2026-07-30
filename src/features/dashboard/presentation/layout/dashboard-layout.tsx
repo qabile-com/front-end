@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Icon } from '@/shared/ui';
+import { PullToRefresh } from '@/shared/ui/pull-to-refresh';
 import { formatPersianNumber, toPersianDigits } from '@/core/lib/persian';
 import { clearAuthSession } from '@/core/auth/token';
 import { createAuthRedirectHref } from '@/core/auth/redirect';
@@ -21,6 +22,7 @@ import { MobileHeader } from '../sections/mobile-header';
 import { MobileNav } from '../sections/mobile-nav';
 import { MobileOnboarding } from '@/features/onboarding/presentation/mobile-onboarding';
 import {
+  DISMISS_USER_KEY,
   FIRST_LOGIN_INSTALL_PROMPT_SEEN_KEY,
   InstallAppModal,
 } from '@/features/landing/presentation/components/install-app-modal';
@@ -92,7 +94,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       sessionStorage.removeItem('signupReward');
       const shouldShowInstallPrompt = sessionStorage.getItem('showInstallAfterFirstLoginReward') === '1';
       sessionStorage.removeItem('showInstallAfterFirstLoginReward');
-      if (shouldShowInstallPrompt && canShowFirstLoginInstallPrompt()) {
+      if (shouldShowInstallPrompt && canShowFirstLoginInstallPrompt(user.id)) {
         queueMicrotask(() => setShouldShowInstallAfterSignupXp(true));
       }
       queueMicrotask(() => setSignupXp(xp));
@@ -114,6 +116,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       setInstallPromptOpen(true);
     });
   }, [shouldShowInstallAfterSignupXp, signupAchievements?.length, signupXp]);
+
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+  }, [queryClient]);
 
   if (userLoading) return <DashboardLoader />;
   if (userError) return <DashboardError error={userError} onRetry={() => void refetchUser()} />;
@@ -149,16 +155,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         <MobileHeader title={title} user={user} showAiChatAction={showAiChatAction} />
 
-        <div className="min-w-0 flex-1 overflow-x-clip overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
-          <motion.div
-            key={pathname}
-            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: reduceMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {children}
-          </motion.div>
-        </div>
+        <PullToRefresh onRefresh={handleRefresh} className="min-w-0 flex-1 overflow-x-clip">
+          <div className="overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
+            <motion.div
+              key={pathname}
+              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {children}
+            </motion.div>
+          </div>
+        </PullToRefresh>
       </main>
 
       <MobileNav activeHref={activeHref} />
@@ -182,6 +190,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <InstallAppModal
         isOpen={installPromptOpen}
         markFirstLoginPromptAsSeen
+        currentUserId={user.id}
         onClose={() => setInstallPromptOpen(false)}
       />
 
@@ -197,7 +206,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   );
 }
 
-function canShowFirstLoginInstallPrompt() {
+function canShowFirstLoginInstallPrompt(currentUserId?: string | null) {
   if (typeof window === 'undefined') return false;
 
   const isStandalone =
@@ -206,5 +215,15 @@ function canShowFirstLoginInstallPrompt() {
   const isMobile = window.matchMedia('(max-width: 767px)').matches;
   const alreadySeen = window.localStorage.getItem(FIRST_LOGIN_INSTALL_PROMPT_SEEN_KEY) === '1';
 
-  return isMobile && !isStandalone && !alreadySeen;
+  if (!isMobile || isStandalone || alreadySeen) {
+    if (currentUserId) {
+      const dismissedUserId = window.localStorage.getItem(DISMISS_USER_KEY) ?? '';
+      if (dismissedUserId && dismissedUserId !== currentUserId) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  return true;
 }

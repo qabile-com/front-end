@@ -5,6 +5,7 @@ import { QueryProvider } from '@/providers/query-provider';
 import { AuthProvider } from '@/providers/auth-provider';
 import { PwaProvider } from '@/providers/pwa-provider';
 import { GlassToaster } from '@/shared/lib/toast';
+import { RootLayoutClient } from './root-layout-client';
 
 export const metadata: Metadata = {
   title: 'قبیله ققنوس | اکوسیستم رشد و یادگیری گیمیفای‌شده',
@@ -41,13 +42,15 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl" className="h-full antialiased">
       <body className="flex min-h-full flex-col">
-        <AuthProvider>
-          <QueryProvider>
-            <PwaProvider />
-            {children}
-            <GlassToaster />
-          </QueryProvider>
-        </AuthProvider>
+        <RootLayoutClient>
+          <AuthProvider>
+            <QueryProvider>
+              <PwaProvider />
+              {children}
+              <GlassToaster />
+            </QueryProvider>
+          </AuthProvider>
+        </RootLayoutClient>
       </body>
     </html>
   );
