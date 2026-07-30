@@ -317,8 +317,9 @@ export function SessionContent({
                 {session.title}
               </h1>
               <p className="text-ink-2 mt-3 max-w-2xl text-[13.5px] leading-7 sm:text-sm">
-                این جلسه بخشی از مسیر «{displayCourse.title}» است. ویدیو را کامل ببین، نکات مهم را
-                مرور کن و با ادامه دادن مسیر، پیشرفتت را ثبت کن.
+                {session.description ??
+                  `این جلسه بخشی از مسیر «${displayCourse.title}» است. ویدیو را کامل ببین، نکات مهم را
+                  مرور کن و با ادامه دادن مسیر، پیشرفتت را ثبت کن.`}
               </p>
             </div>
             {requiresPurchase && (
@@ -598,7 +599,7 @@ function LockedCourseNotice({
   onBuyCourse?: () => void;
 }) {
   return (
-    <div className="rounded-[20px] border border-[rgba(255,98,0,.24)] bg-[linear-gradient(135deg,rgba(255,98,0,.14),rgba(0,0,0,.28))] p-4 shadow-[0_18px_54px_-42px_var(--glow)]">
+    <div className="w-full max-w-[920px] mx-auto rounded-[20px] border border-[rgba(255,98,0,.24)] bg-[linear-gradient(135deg,rgba(255,98,0,.14),rgba(0,0,0,.28))] p-4 shadow-[0_18px_54px_-42px_var(--glow)]">
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
         <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-[rgba(243,186,99,.26)] bg-black/28 text-gold">
           <Icon name="lock" size={19} />
@@ -874,8 +875,9 @@ function AboutPanel({
       <div className="rounded-[18px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-4">
         <h2 className="text-ink text-base font-black">{course.title}</h2>
         <p className="mt-2">
-          در این بخش روی موضوع «{session.title}» تمرکز می‌کنی. هدف این جلسه این است که با دیدن و
-          تمرین کردن، مسیر دوره را مرحله‌به‌مرحله جلو ببری.
+          {session.description ??
+            `در این بخش روی موضوع «{session.title}» تمرکز می‌کنی. هدف این جلسه این است که با دیدن و
+            تمرین کردن، مسیر دوره را مرحله‌به‌مرحله جلو ببری.`}
         </p>
       </div>
 

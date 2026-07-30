@@ -26,6 +26,7 @@ export interface CoursePart {
   xpGrantedAt?: string | null;
   steps?: { id: string; text: string; isCompleted: boolean }[];
   views?: number;
+  description?: string;
 }
 
 export interface Course {
