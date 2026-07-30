@@ -28,6 +28,9 @@ export function mergeStaticStepWithProgress(
 
   return {
     ...staticStep,
+    title: progress.title || staticStep.title,
+    type: progress.type || staticStep.type,
+    xp: progress.xp ?? staticStep.xp,
     status: progress.status,
   };
 }
