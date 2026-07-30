@@ -6,17 +6,33 @@ import { STATIC_ROADMAP_STEPS } from '../domain/static-roadmap-steps';
 export function mergeStaticRoadmapWithProgress(
   activeRoadmap?: ActiveRoadmap | null,
 ): RoadmapItem[] {
-  return STATIC_ROADMAP_STEPS.map((staticStep) => {
-    const progress = findStepProgress(activeRoadmap, staticStep.id);
-
-    return {
+  if (!activeRoadmap?.steps?.length) {
+    return STATIC_ROADMAP_STEPS.map((staticStep) => ({
       num: staticStep.id,
       type: staticStep.type,
       title: staticStep.title,
       xp: staticStep.xp,
-      status: progress?.status ?? staticStep.status,
-    };
-  });
+      status: staticStep.status,
+    }));
+  }
+
+  const stepMap = new Map(
+    STATIC_ROADMAP_STEPS.map((staticStep) => [staticStep.id, staticStep]),
+  );
+
+  return activeRoadmap.steps
+    .slice()
+    .sort((a, b) => a.num - b.num)
+    .map((step) => {
+      const staticStep = stepMap.get(step.num);
+      return {
+        num: step.num,
+        type: step.type || staticStep?.type || '',
+        title: step.title || staticStep?.title || '',
+        xp: step.xp ?? staticStep?.xp ?? 0,
+        status: step.status,
+      };
+    });
 }
 
 export function mergeStaticStepWithProgress(
