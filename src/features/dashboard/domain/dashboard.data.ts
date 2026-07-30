@@ -12,6 +12,7 @@ import type {
 } from './dashboard.types';
 
 export const USER: CurrentUser = {
+  id: 'mock-user-1',
   name: 'آرش',
   lastName: 'آرش کریمی',
   initial: 'آ',

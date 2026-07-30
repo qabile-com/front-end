@@ -29,6 +29,7 @@ function normalizeCurrentUser(user: CurrentUserDto): CurrentUser {
   const displayName = user.displayName?.trim();
   const name = displayName || user.name?.trim() || [user.firstName, user.lastName].filter(Boolean).join(' ') || '';
   return {
+    id: user.id ?? '',
     name,
     lastName: user.lastName ?? '',
     role: normalizeRole(user.role),

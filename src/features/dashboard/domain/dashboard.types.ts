@@ -3,6 +3,7 @@ export type IconKey = string;
 export const DEFAULT_AVATAR_GRADIENT = 'linear-gradient(135deg,#ff8a3d,#cc4308)';
 
 export interface CurrentUser {
+  id: string;
   name: string;
   lastName: string;
   initial: string;
