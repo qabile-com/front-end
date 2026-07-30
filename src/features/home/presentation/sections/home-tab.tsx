@@ -65,6 +65,11 @@ const COURSE_FALLBACKS = [
   'linear-gradient(135deg, rgba(255,126,36,.88), rgba(12,8,6,.96))',
 ];
 
+const ROADMAP_STEP_TYPE_LABEL: Record<string, string> = {
+  exercise: 'تمرین',
+  lesson: 'درس',
+};
+
 interface HomeTabProps {
   user: CurrentUser;
   courses: Course[];
@@ -314,7 +319,7 @@ function RoadmapPanel({
 
                 <span className="flex min-w-0 flex-1 flex-col items-start justify-center leading-tight">
                   <span className="text-ink-3 mb-2 block text-[11px] font-extrabold sm:text-[12px]">
-                    {item.type}
+                    {ROADMAP_STEP_TYPE_LABEL[item.type] || item.type}
                   </span>
                   <b className="block max-w-full truncate text-[13px] font-black text-white sm:text-[14px]">
                     {item.title}

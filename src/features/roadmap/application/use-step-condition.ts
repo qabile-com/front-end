@@ -92,9 +92,17 @@ export function useStepCondition(step: StaticRoadmapStep | null | undefined) {
         return { satisfied: false };
       }
 
+      let message = '';
+
+      if (step.id === 4) {
+        message = 'مطمئن بشید که پیج رو فالو کردید';
+      } else if (step.id === 3) {
+        message = 'لطفا کل متن را بخوانید';
+      }
+
       return {
         satisfied: false,
-        message: `برای تکمیل این مرحله باید ${condition.seconds} ثانیه در این صفحه بمانید.`,
+        message,
       };
     },
   });
