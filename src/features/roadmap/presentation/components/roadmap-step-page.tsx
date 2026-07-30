@@ -482,7 +482,7 @@ function CompleteFooter({
               ? 'قبلاً تکمیل شده'
               : isLocked
                 ? 'مرحله قفل است'
-                : 'تکمیل شد'}
+                : 'تکمیل کردن'}
           <Icon name="check" size={18} />
         </Button>
       </motion.div>
