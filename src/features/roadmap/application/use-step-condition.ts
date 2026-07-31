@@ -6,7 +6,7 @@ import type { StepConditionResult } from '../domain/roadmap.types';
 import { profileRepo } from '@/features/profile/infrastructure/repository-factory';
 import { userRepo } from '@/features/dashboard/infrastructure/repository-factory';
 import { useUser } from '@/features/dashboard/application/use-user';
-import { getForumUser } from '@/core/api/forum.api';
+import { getForumUser, getForumLikeHistory, getForumCommentHistory } from '@/core/api/forum.api';
 
 export function useStepCondition(
   step: StaticRoadmapStep | null | undefined,
@@ -45,11 +45,24 @@ export function useStepCondition(
         return { satisfied: false };
       }
 
-      const profile = await profileRepo.getMyProfile();
-      const posts = profile.posts ?? [];
-      const totalLikes = posts.reduce((sum, post) => sum + post.likes, 0);
-      const totalComments = posts.reduce((sum, post) => sum + post.commentsCount, 0);
-      const satisfied = totalLikes >= condition.minLikes && totalComments >= condition.minComments;
+      let likesCount = 0;
+      let commentsCount = 0;
+
+      try {
+        const likesRes = await getForumLikeHistory({ limit: 100, offset: 0 });
+        likesCount = likesRes.data.data?.length ?? 0;
+      } catch {
+        likesCount = 0;
+      }
+
+      try {
+        const commentsRes = await getForumCommentHistory({ limit: 100, offset: 0 });
+        commentsCount = commentsRes.data?.data?.length ?? 0;
+      } catch {
+        commentsCount = 0;
+      }
+
+      const satisfied = likesCount >= condition.minLikes && commentsCount >= condition.minComments;
 
       return {
         satisfied,
