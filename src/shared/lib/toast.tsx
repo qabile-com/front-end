@@ -13,6 +13,8 @@ const baseToastStyle = {
   maxWidth: 'min(92vw, 430px)',
   background: 'rgba(30, 18, 12, 0.96)',
   color: '#fff',
+  minHeight: '64px',
+  height: 'auto',
 };
 
 const toastStyle = { ...baseToastStyle };
