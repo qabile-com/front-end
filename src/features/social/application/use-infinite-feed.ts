@@ -15,6 +15,6 @@ export function useInfiniteFeed(repo: ISocialRepository, filters: SocialFeedFilt
       return allPages.length;
     },
     initialPageParam: 0,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   });
 }
