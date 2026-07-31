@@ -127,14 +127,15 @@ function RoadmapCard({ roadmap }: { roadmap: RoadmapSummary }) {
                 نقشه فعال
               </span>
             )}
-            {isComplete && (
-              <span className="text-success rounded-full border border-success/40 bg-success/10 px-2.5 py-1 text-[11px] font-black">
+            {isComplete ? (
+              <span className="text-success border-success/40 bg-success/10 rounded-full border px-2.5 py-1 text-[11px] font-black">
                 تکمیل شده
               </span>
+            ) : (
+              <span className="text-ink-3 rounded-full border border-[rgba(255,255,255,.08)] bg-black/20 px-2.5 py-1 text-[11px] font-black">
+                {STATUS_LABEL[roadmap.status ?? 'not_started']}
+              </span>
             )}
-            <span className="text-ink-3 rounded-full border border-[rgba(255,255,255,.08)] bg-black/20 px-2.5 py-1 text-[11px] font-black">
-              {STATUS_LABEL[roadmap.status ?? 'not_started']}
-            </span>
           </div>
           <h2 className="truncate text-lg font-black text-white">{roadmap.title}</h2>
           {roadmap.description && (
