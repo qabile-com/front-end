@@ -3,6 +3,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   BaseModal,
   Button,
@@ -53,6 +54,7 @@ interface SocialTabProps {
   isCurrentProfileLoading?: boolean;
   profileRepo: IProfileRepository;
   adminRepo?: IAdminRepository;
+  newPostIds?: Set<string>;
 }
 
 export function SocialTab({
@@ -68,6 +70,7 @@ export function SocialTab({
   currentProfile,
   isCurrentProfileLoading,
   profileRepo,
+  newPostIds,
 }: SocialTabProps) {
   const router = useRouter();
   const followToggle = useToggleUserFollow(socialRepo);
@@ -167,22 +170,39 @@ export function SocialTab({
             نتیجه‌ای پیدا نشد
           </div>
         )}
-        {allPosts.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            onClick={() => router.push(`/social/${post.id}`)}
-            onShare={() => void handleShare(post)}
-            onAuthorClick={(authorId) => router.push(`/social/users/${authorId}`)}
-            onToggleAuthorFollow={(authorId, isFollowedByMe) =>
-              followToggle.mutate({ userId: authorId, isFollowedByMe })
-            }
-            isTogglingAuthorFollow={followToggle.isPending}
-            togglingAuthorId={followToggle.variables?.userId}
-            currentUserRole={currentUserRole}
-            adminRepo={adminRepo}
-          />
-        ))}
+        <AnimatePresence mode="popLayout">
+          {allPosts.map((post) => {
+            const isNew = newPostIds?.has(post.id);
+            return (
+              <motion.div
+                key={post.id}
+                layout
+                initial={isNew ? { opacity: 0, y: -30, scale: 0.97 } : false}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 260,
+                  damping: 22,
+                  mass: 0.8,
+                }}
+              >
+                <PostCard
+                  post={post}
+                  onClick={() => router.push(`/social/${post.id}`)}
+                  onShare={() => void handleShare(post)}
+                  onAuthorClick={(authorId) => router.push(`/social/users/${authorId}`)}
+                  onToggleAuthorFollow={(authorId, isFollowedByMe) =>
+                    followToggle.mutate({ userId: authorId, isFollowedByMe })
+                  }
+                  isTogglingAuthorFollow={followToggle.isPending}
+                  togglingAuthorId={followToggle.variables?.userId}
+                  currentUserRole={currentUserRole}
+                  adminRepo={adminRepo}
+                />
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
 
         {/* Load more pagination */}
         {feedQuery.hasNextPage && !feedQuery.isFetchingNextPage && (
@@ -636,6 +656,25 @@ function PostCard({
             <small className={`${post.isAdam ? 'text-gold' : 'text-ink-3'} text-[12px]`}>
               {post.isAdam ? 'ققنوس' : post.badge}
             </small>
+            {canFollowAuthor && !isFollowingAuthor && (
+              <button
+                type="button"
+                disabled={isCurrentAuthorToggling}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggleAuthorFollow(post.authorId, isFollowingAuthor);
+                }}
+                className={cn(
+                  'mt-2 inline-flex min-h-8 min-w-22 items-center justify-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-extrabold transition-[border-color,background,color,opacity] disabled:opacity-80',
+                  isFollowingAuthor
+                    ? 'border-gold/40 text-gold bg-white/5'
+                    : 'border-transparent text-[#1a0a00] [background:var(--fire-grad)]',
+                )}
+              >
+                {isCurrentAuthorToggling && <InlineSpinner className="size-3" />}
+                {isFollowingAuthor ? 'هم‌پرواز' : 'هم پرواز شدن'}
+              </button>
+            )}
           </div>
           {/* {post.location && <div className="mt-3 text-sm text-orange-300">📍 {post.location}</div>}
         </div> */}
@@ -649,25 +688,6 @@ function PostCard({
                   <Icon name="trash" size={18} />
                 </button>
               </>
-            )}
-            {canFollowAuthor && (
-              <button
-                type="button"
-                disabled={isCurrentAuthorToggling}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onToggleAuthorFollow(post.authorId, isFollowingAuthor);
-                }}
-                className={cn(
-                  'inline-flex min-h-8 min-w-22 items-center justify-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-extrabold transition-[border-color,background,color,opacity] disabled:opacity-80',
-                  isFollowingAuthor
-                    ? 'border-gold/40 text-gold bg-white/5'
-                    : 'border-transparent text-[#1a0a00] [background:var(--fire-grad)]',
-                )}
-              >
-                {isCurrentAuthorToggling && <InlineSpinner className="size-3" />}
-                {isFollowingAuthor ? 'هم‌پرواز' : 'هم پرواز شدن'}
-              </button>
             )}
           </div>
         </div>

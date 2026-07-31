@@ -21,6 +21,8 @@ export function useSocialData(repo: ISocialRepository) {
     retry: 1,
   });
 
+  const newPostIdsRef = { current: new Set<string>() };
+
   const publishPostMutation = useMutation({
     mutationFn: ({
       text,
@@ -29,7 +31,8 @@ export function useSocialData(repo: ISocialRepository) {
       text: string;
       imageFile?: File | null;
     }) => repo.createPost(text, imageFile),
-    onSuccess: () => {
+    onSuccess: (newPost) => {
+      newPostIdsRef.current.add(newPost.id);
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
     },
   });
@@ -67,5 +70,6 @@ export function useSocialData(repo: ISocialRepository) {
     addComment,
     refetchTags: tagsQuery.refetch,
     refetchActiveUsers: activeUsersQuery.refetch,
+    newPostIds: newPostIdsRef.current,
   };
 }

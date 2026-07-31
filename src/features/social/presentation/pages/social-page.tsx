@@ -33,21 +33,22 @@ export function SocialPage() {
   return (
     <MotionPage>
       <DashboardPageShell size="wide">
-        <SocialTab
-          feedQuery={feedQuery}
-          feed={feed}
-          onFeedChange={setFeed}
-          tags={social.tags}
-          activeUsers={social.activeUsers}
-          search={search}
-          onSearchChange={setSearch}
-          onPublish={social.publishPost}
-          currentUserRole={user?.role}
-          currentProfile={profile.data}
-          isCurrentProfileLoading={profile.loading}
-          profileRepo={profileRepo}
-          adminRepo={adminRepo}
-        />
+      <SocialTab
+        feedQuery={feedQuery}
+        feed={feed}
+        onFeedChange={setFeed}
+        tags={social.tags}
+        activeUsers={social.activeUsers}
+        search={search}
+        onSearchChange={setSearch}
+        onPublish={social.publishPost}
+        currentUserRole={user?.role}
+        currentProfile={profile.data}
+        isCurrentProfileLoading={profile.loading}
+        profileRepo={profileRepo}
+        adminRepo={adminRepo}
+        newPostIds={social.newPostIds}
+      />
       </DashboardPageShell>
     </MotionPage>
   );
