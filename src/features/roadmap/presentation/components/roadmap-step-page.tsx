@@ -100,12 +100,30 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
   const handleComplete = useCallback(async () => {
     if (!canComplete) return;
 
-    setShouldCheckCondition(true);
-    await conditionRef.current.refetch();
+    if (stepWithProgress.condition?.type === 'checklist' && stepWithProgress.checklist) {
+      const allChecked = stepWithProgress.checklist.every((item) => Boolean(checkedItems[item]));
+      if (!allChecked) {
+        showError('برای تکمیل این مرحله باید همه موارد را تیک بزنید.');
+        return;
+      }
+    } else {
+      setShouldCheckCondition(true);
 
-    if (!conditionRef.current.satisfied) {
-      showError(conditionRef.current.message || 'شرایط تکمیل این مرحله هنوز تکمیل نشده است.');
-      return;
+      await new Promise<void>((resolve) => {
+        const timeout = setTimeout(() => resolve(), 10000);
+        const interval = setInterval(() => {
+          if (!conditionRef.current.loading) {
+            clearTimeout(timeout);
+            clearInterval(interval);
+            resolve();
+          }
+        }, 50);
+      });
+
+      if (!conditionRef.current.satisfied) {
+        showError(conditionRef.current.message || 'شرایط تکمیل این مرحله هنوز تکمیل نشده است.');
+        return;
+      }
     }
 
     const reward = await completeStep.mutateAsync({
@@ -122,6 +140,7 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
     activeRoadmap.roadmap,
     stepWithProgress,
     enqueueReward,
+    checkedItems,
   ]);
 
   const conditionMessage = useMemo(() => {
