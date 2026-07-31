@@ -12,7 +12,13 @@ export function useStepCondition(
   step: StaticRoadmapStep | null | undefined,
   enabled = false,
   checkedItems: Record<string, boolean> = {},
-) {
+  elapsedSeconds = 0,
+): {
+  satisfied: boolean;
+  message?: string;
+  loading: boolean;
+  refetch: () => Promise<StepConditionResult | null>;
+} {
   const { user } = useUser(userRepo);
   const condition = step?.condition;
 
@@ -104,11 +110,13 @@ export function useStepCondition(
 
   const timerQuery = useQuery({
     enabled: enabled && Boolean(step && condition?.type === 'timer'),
-    queryKey: ['roadmap-step-condition', 'timer', step.id],
+    queryKey: ['roadmap-step-condition', 'timer', step.id, elapsedSeconds],
     queryFn: async (): Promise<StepConditionResult> => {
       if (!step || !condition || condition.type !== 'timer') {
         return { satisfied: false };
       }
+
+      const satisfied = elapsedSeconds >= condition.seconds;
 
       let message = '';
 
@@ -119,8 +127,8 @@ export function useStepCondition(
       }
 
       return {
-        satisfied: false,
-        message,
+        satisfied,
+        message: satisfied ? undefined : message,
       };
     },
   });
@@ -137,9 +145,7 @@ export function useStepCondition(
 
       return {
         satisfied: allChecked,
-        message: allChecked
-          ? undefined
-          : 'برای تکمیل این مرحله باید همه موارد را تیک بزنید.',
+        message: allChecked ? undefined : 'برای تکمیل این مرحله باید همه موارد را تیک بزنید.',
       };
     },
   });
@@ -149,7 +155,7 @@ export function useStepCondition(
       satisfied: true,
       message: undefined,
       loading: false,
-      refetch: () => Promise.resolve(),
+      refetch: () => Promise.resolve(null),
     };
   }
 
@@ -165,21 +171,28 @@ export function useStepCondition(
     satisfied: base?.satisfied ?? false,
     message: base?.message,
     loading: base === undefined,
-    refetch: async () => {
+    refetch: async (): Promise<StepConditionResult | null> => {
+      let result: { data?: StepConditionResult } = {};
       switch (condition.type) {
         case 'posts':
-          return postsQuery.refetch();
+          result = await postsQuery.refetch();
+          break;
         case 'engagement':
-          return engagementQuery.refetch();
+          result = await engagementQuery.refetch();
+          break;
         case 'follows':
-          return followsQuery.refetch();
+          result = await followsQuery.refetch();
+          break;
         case 'timer':
-          return timerQuery.refetch();
+          result = await timerQuery.refetch();
+          break;
         case 'checklist':
-          return checklistQuery.refetch();
+          result = await checklistQuery.refetch();
+          break;
         default:
-          return Promise.resolve();
+          break;
       }
+      return result.data ?? null;
     },
   };
 }

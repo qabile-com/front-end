@@ -35,14 +35,36 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
   const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [shouldCheckCondition, setShouldCheckCondition] = useState(false);
-  const condition = useStepCondition(stepWithProgress, shouldCheckCondition, checkedItems);
-  const conditionRef = useRef(condition);
-  useEffect(() => {
-    conditionRef.current = condition;
-  });
+
+  const mountTimeRef = useRef<number | null>(null);
+  const elapsedRef = useRef(0);
+  const intervalRef = useRef<number | null>(null);
+  const [elapsedForCheck, setElapsedForCheck] = useState(0);
+
+  const condition = useStepCondition(stepWithProgress, shouldCheckCondition, checkedItems, elapsedForCheck);
 
   const isDone = stepWithProgress.status === 'done';
   const conditionType = stepWithProgress.condition?.type;
+
+  useEffect(() => {
+    if (conditionType !== 'timer') return;
+    mountTimeRef.current = Date.now();
+    elapsedRef.current = 0;
+
+    intervalRef.current = window.setInterval(() => {
+      if (mountTimeRef.current) {
+        const elapsed = Math.floor((Date.now() - mountTimeRef.current) / 1000);
+        elapsedRef.current = elapsed;
+        setElapsedForCheck(elapsed);
+      }
+    }, 1000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      mountTimeRef.current = null;
+    };
+  }, [conditionType]);
 
   const isLocked = stepWithProgress.status === 'next';
 
@@ -59,20 +81,10 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
       }
     } else {
       setShouldCheckCondition(true);
+      const fresh = await condition.refetch();
 
-      await new Promise<void>((resolve) => {
-        const timeout = setTimeout(() => resolve(), 10000);
-        const interval = setInterval(() => {
-          if (!conditionRef.current.loading) {
-            clearTimeout(timeout);
-            clearInterval(interval);
-            resolve();
-          }
-        }, 50);
-      });
-
-      if (!conditionRef.current.satisfied) {
-        showError(conditionRef.current.message || 'شرایط تکمیل این مرحله هنوز تکمیل نشده است.');
+      if (!fresh?.satisfied) {
+        showError(fresh?.message || condition.message || 'شرایط تکمیل این مرحله هنوز تکمیل نشده است.');
         return;
       }
     }
@@ -92,6 +104,7 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
     stepWithProgress,
     enqueueReward,
     checkedItems,
+    condition,
   ]);
 
   const conditionMessage = useMemo(() => {
