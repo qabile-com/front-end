@@ -169,6 +169,8 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
               isLocked={isLocked}
               onComplete={handleComplete}
               nextStep={Math.min(step.id + 1, activeRoadmap.roadmap?.totalSteps ?? step.id + 1)}
+              isLastStep={step.id >= (activeRoadmap.roadmap?.totalSteps ?? 0)}
+              isRoadmapComplete={(activeRoadmap.roadmap?.completedSteps ?? 0) >= (activeRoadmap.roadmap?.totalSteps ?? 0)}
             />
           </div>
         </article>
@@ -457,6 +459,8 @@ function CompleteFooter({
   isLocked,
   onComplete,
   nextStep,
+  isLastStep,
+  isRoadmapComplete,
 }: {
   xp: number;
   status: StaticRoadmapStep['status'];
@@ -466,6 +470,8 @@ function CompleteFooter({
   isLocked: boolean;
   nextStep: number;
   onComplete: () => void;
+  isLastStep: boolean;
+  isRoadmapComplete: boolean;
 }) {
   const reduceMotion = useReducedMotion();
   const isDone = status === 'done';
@@ -473,9 +479,11 @@ function CompleteFooter({
   return (
     <footer className="fixed inset-x-0 bottom-0 z-80 mt-auto shrink-0 border-t border-[rgba(255,98,0,.08)] bg-black/95 px-3.5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:static sm:inset-auto sm:z-20 sm:px-5 lg:flex lg:items-center lg:justify-between lg:px-6 lg:pb-4">
       <p className="text-ink-3 mb-4 text-center text-[12px] leading-6 lg:order-1 lg:mb-0 lg:text-right">
-        با تکمیل این مرحله
-        <b className="text-gold mx-1"> {formatPersianNumber(xp) + ' آتش '} </b>
-        دریافت می‌کنی
+        {isRoadmapComplete
+          ? 'نقشه راه تکمیل شده است'
+          : `با تکمیل این مرحله
+            <b className="text-gold mx-1"> ${formatPersianNumber(xp) + ' آتش '} </b>
+            دریافت می‌کنی`}
       </p>
       <motion.div
         className="lg:order-2 lg:w-40"
@@ -496,17 +504,21 @@ function CompleteFooter({
                 ? 'قبلاً تکمیل شده'
                 : isLocked
                   ? 'مرحله قفل است'
-                  : 'تکمیل کردن'}
+                  : isRoadmapComplete
+                    ? 'نقشه راه تکمیل شده است'
+                    : 'تکمیل کردن'}
             <Icon name="check" size={18} />
           </Button>
-          <Link
-            href={`/roadmap/steps/${nextStep}`}
-            className={cn(
-              'text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)]',
-            )}
-          >
-            <Icon name="arrow-left" size={22} />
-          </Link>
+          {!isLastStep && (
+            <Link
+              href={`/roadmap/steps/${nextStep}`}
+              className={cn(
+                'text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)]',
+              )}
+            >
+              <Icon name="arrow-left" size={22} />
+            </Link>
+          )}
           {/* <button
             type="button"
             onClick={nextStep}
