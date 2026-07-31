@@ -18,6 +18,7 @@ import { useActionRewardQueue } from '@/features/dashboard/application/use-actio
 import { ActionRewardModals } from '@/features/dashboard/presentation/components/action-reward-modals';
 import { showError } from '@/shared/lib/toast';
 import type { StaticRoadmapStep } from '../../domain/static-roadmap-steps';
+import Link from 'next/link';
 
 interface RoadmapStepPageProps {
   step: StaticRoadmapStep;
@@ -167,7 +168,7 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
               canComplete={canComplete}
               isLocked={isLocked}
               onComplete={handleComplete}
-              nextStep={step.id + 1}
+              nextStep={Math.min(step.id + 1, activeRoadmap.roadmap?.totalSteps ?? step.id + 1)}
             />
           </div>
         </article>
@@ -498,14 +499,22 @@ function CompleteFooter({
                   : 'تکمیل کردن'}
             <Icon name="check" size={18} />
           </Button>
-          <button
+          <Link
+            href={`/roadmap/steps/${nextStep}`}
+            className={cn(
+              'text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)]',
+            )}
+          >
+            <Icon name="arrow-left" size={22} />
+          </Link>
+          {/* <button
             type="button"
             onClick={nextStep}
             className="text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)]"
             aria-label="بازگشت به دوره‌ها"
           >
             <Icon name="arrow-left" size={22} />
-          </button>
+          </button> */}
         </div>
       </motion.div>
     </footer>
