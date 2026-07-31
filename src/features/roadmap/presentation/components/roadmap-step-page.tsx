@@ -41,57 +41,8 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
     conditionRef.current = condition;
   });
 
-  const [timerFinished, setTimerFinished] = useState(false);
-  const timerSecondsRef = useRef(0);
-  const timerIntervalRef = useRef<number | null>(null);
-
   const isDone = stepWithProgress.status === 'done';
   const conditionType = stepWithProgress.condition?.type;
-
-  useEffect(() => {
-    if (conditionType !== 'timer' || stepWithProgress.condition?.type !== 'timer') {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = null;
-      timerSecondsRef.current = 0;
-      return;
-    }
-
-    const requiredSeconds = stepWithProgress.condition.seconds;
-    timerSecondsRef.current = requiredSeconds;
-
-    timerIntervalRef.current = window.setInterval(() => {
-      timerSecondsRef.current = Math.max(0, timerSecondsRef.current - 1);
-      if (timerSecondsRef.current <= 0) {
-        if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-        timerIntervalRef.current = null;
-        setTimerFinished(true);
-      }
-    }, 1000);
-
-    return () => {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = null;
-    };
-  }, [conditionType, stepWithProgress.condition]);
-
-  const isConditionSatisfied = useMemo(() => {
-    if (isDone) return true;
-    if (!stepWithProgress.condition) return true;
-
-    switch (stepWithProgress.condition.type) {
-      case 'posts':
-      case 'engagement':
-      case 'follows':
-        return condition.satisfied;
-      case 'timer':
-        return timerFinished;
-      case 'checklist':
-        if (!stepWithProgress.checklist?.length) return true;
-        return stepWithProgress.checklist.every((item) => Boolean(checkedItems[item]));
-      default:
-        return true;
-    }
-  }, [isDone, stepWithProgress, condition.satisfied, timerFinished, checkedItems]);
 
   const isLocked = stepWithProgress.status === 'next';
 

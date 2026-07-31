@@ -106,7 +106,8 @@ function RoadmapCard({ roadmap }: { roadmap: RoadmapSummary }) {
   const percent = roadmap.totalSteps
     ? Math.round((roadmap.completedSteps / roadmap.totalSteps) * 100)
     : 0;
-  const currentStep = roadmap.completedSteps + 1;
+  const isComplete = roadmap.status === 'done' || roadmap.completedSteps >= roadmap.totalSteps;
+  const currentStep = isComplete ? roadmap.totalSteps : roadmap.completedSteps + 1;
   const href = currentStep ? `/roadmap/steps/${currentStep}` : '/roadmap';
 
   return (
@@ -124,6 +125,11 @@ function RoadmapCard({ roadmap }: { roadmap: RoadmapSummary }) {
             {roadmap.isActive && (
               <span className="text-ember rounded-full border border-[rgba(255,98,0,.28)] bg-[rgba(255,98,0,.12)] px-2.5 py-1 text-[11px] font-black">
                 نقشه فعال
+              </span>
+            )}
+            {isComplete && (
+              <span className="text-success rounded-full border border-success/40 bg-success/10 px-2.5 py-1 text-[11px] font-black">
+                تکمیل شده
               </span>
             )}
             <span className="text-ink-3 rounded-full border border-[rgba(255,255,255,.08)] bg-black/20 px-2.5 py-1 text-[11px] font-black">
@@ -161,12 +167,14 @@ function RoadmapCard({ roadmap }: { roadmap: RoadmapSummary }) {
         href={href}
         className={cn(
           'inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-black transition-[transform,border-color,box-shadow,opacity] duration-300 hover:-translate-y-0.5',
-          roadmap.isActive
-            ? 'text-[#1a0a00] shadow-[0_8px_28px_-12px_var(--glow)] [background:var(--fire-grad)]'
-            : 'border-hair hover:border-hair-2 border [background:var(--glass-2)]',
+          isComplete
+            ? 'border-success/40 text-success bg-success/10 hover:border-success/60'
+            : roadmap.isActive
+              ? 'text-[#1a0a00] shadow-[0_8px_28px_-12px_var(--glow)] [background:var(--fire-grad)]'
+              : 'border-hair hover:border-hair-2 border [background:var(--glass-2)]',
         )}
       >
-        {roadmap.isActive ? 'ادامه مسیر' : 'مشاهده مسیر'}
+        {isComplete ? 'تکمیل شده است' : roadmap.isActive ? 'ادامه مسیر' : 'مشاهده مسیر'}
         <Icon name="arrow-left" size={18} />
       </Link>
     </article>
