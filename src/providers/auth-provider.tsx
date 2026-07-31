@@ -18,6 +18,7 @@ import {
   type StoredAuthUser,
 } from '@/core/auth/token';
 import { createDevAuthSession } from '@/core/auth/dev-bypass';
+import { resetAllQueries } from '@/providers/query-provider';
 
 interface AuthContextType {
   isReady: boolean;
@@ -65,11 +66,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshFromStorage]);
 
   const login: AuthContextType['login'] = useCallback((nextSession) => {
+    resetAllQueries();
     saveAuthSession(nextSession);
   }, []);
 
   const logout = useCallback(() => {
     clearAuthSession();
+    resetAllQueries();
   }, []);
 
   const value = useMemo<AuthContextType>(
