@@ -33,14 +33,14 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
   );
   const completeStep = useCompleteRoadmapStep(roadmapRepo);
   const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [shouldCheckCondition, setShouldCheckCondition] = useState(false);
-  const condition = useStepCondition(stepWithProgress, shouldCheckCondition);
+  const condition = useStepCondition(stepWithProgress, shouldCheckCondition, checkedItems);
   const conditionRef = useRef(condition);
   useEffect(() => {
     conditionRef.current = condition;
   });
 
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [timerFinished, setTimerFinished] = useState(false);
   const timerSecondsRef = useRef(0);
   const timerIntervalRef = useRef<number | null>(null);

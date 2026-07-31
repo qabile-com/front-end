@@ -8,7 +8,11 @@ import { userRepo } from '@/features/dashboard/infrastructure/repository-factory
 import { useUser } from '@/features/dashboard/application/use-user';
 import { getForumUser } from '@/core/api/forum.api';
 
-export function useStepCondition(step: StaticRoadmapStep | null | undefined, enabled = false) {
+export function useStepCondition(
+  step: StaticRoadmapStep | null | undefined,
+  enabled = false,
+  checkedItems: Record<string, boolean> = {},
+) {
   const { user } = useUser(userRepo);
   const condition = step?.condition;
 
@@ -110,15 +114,19 @@ export function useStepCondition(step: StaticRoadmapStep | null | undefined, ena
 
   const checklistQuery = useQuery({
     enabled: enabled && Boolean(step && condition?.type === 'checklist'),
-    queryKey: ['roadmap-step-condition', 'checklist', step.id],
+    queryKey: ['roadmap-step-condition', 'checklist', step.id, checkedItems],
     queryFn: async (): Promise<StepConditionResult> => {
       if (!step || !condition || condition.type !== 'checklist') {
         return { satisfied: false };
       }
 
+      const allChecked = step.checklist?.every((item) => Boolean(checkedItems[item])) ?? false;
+
       return {
-        satisfied: false,
-        message: 'برای تکمیل این مرحله باید همه موارد را تیک بزنید.',
+        satisfied: allChecked,
+        message: allChecked
+          ? undefined
+          : 'برای تکمیل این مرحله باید همه موارد را تیک بزنید.',
       };
     },
   });
