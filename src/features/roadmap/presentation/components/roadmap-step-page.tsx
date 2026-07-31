@@ -33,7 +33,12 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
   );
   const completeStep = useCompleteRoadmapStep(roadmapRepo);
   const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
-  const condition = useStepCondition(stepWithProgress);
+  const [shouldCheckCondition, setShouldCheckCondition] = useState(false);
+  const condition = useStepCondition(stepWithProgress, shouldCheckCondition);
+  const conditionRef = useRef(condition);
+  useEffect(() => {
+    conditionRef.current = condition;
+  });
 
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [timerFinished, setTimerFinished] = useState(false);
@@ -95,8 +100,11 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
   const handleComplete = useCallback(async () => {
     if (!canComplete) return;
 
-    if (!isConditionSatisfied) {
-      showError(condition.message || 'شرایط تکمیل این مرحله هنوز تکمیل نشده است.');
+    setShouldCheckCondition(true);
+    await conditionRef.current.refetch();
+
+    if (!conditionRef.current.satisfied) {
+      showError(conditionRef.current.message || 'شرایط تکمیل این مرحله هنوز تکمیل نشده است.');
       return;
     }
 
@@ -114,8 +122,6 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
     activeRoadmap.roadmap,
     stepWithProgress,
     enqueueReward,
-    isConditionSatisfied,
-    condition.message,
   ]);
 
   const conditionMessage = useMemo(() => {
@@ -170,7 +176,10 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
               onComplete={handleComplete}
               nextStep={Math.min(step.id + 1, activeRoadmap.roadmap?.totalSteps ?? step.id + 1)}
               isLastStep={step.id >= (activeRoadmap.roadmap?.totalSteps ?? 0)}
-              isRoadmapComplete={(activeRoadmap.roadmap?.completedSteps ?? 0) >= (activeRoadmap.roadmap?.totalSteps ?? 0)}
+              isRoadmapComplete={
+                (activeRoadmap.roadmap?.completedSteps ?? 0) >=
+                (activeRoadmap.roadmap?.totalSteps ?? 0)
+              }
             />
           </div>
         </article>
@@ -479,11 +488,15 @@ function CompleteFooter({
   return (
     <footer className="fixed inset-x-0 bottom-0 z-80 mt-auto shrink-0 border-t border-[rgba(255,98,0,.08)] bg-black/95 px-3.5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:static sm:inset-auto sm:z-20 sm:px-5 lg:flex lg:items-center lg:justify-between lg:px-6 lg:pb-4">
       <p className="text-ink-3 mb-4 text-center text-[12px] leading-6 lg:order-1 lg:mb-0 lg:text-right">
-        {isRoadmapComplete
-          ? 'نقشه راه تکمیل شده است'
-          : `با تکمیل این مرحله
-            <b className="text-gold mx-1"> ${formatPersianNumber(xp) + ' آتش '} </b>
-            دریافت می‌کنی`}
+        {isRoadmapComplete ? (
+          'نقشه راه تکمیل شده است'
+        ) : (
+          <>
+            با تکمیل این مرحله{' '}
+            <b className="text-gold mx-1">{formatPersianNumber(xp)} آتش </b>
+            دریافت می‌کنی
+          </>
+        )}
       </p>
       <motion.div
         className="lg:order-2 lg:w-40"

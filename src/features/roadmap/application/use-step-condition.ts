@@ -8,12 +8,12 @@ import { userRepo } from '@/features/dashboard/infrastructure/repository-factory
 import { useUser } from '@/features/dashboard/application/use-user';
 import { getForumUser } from '@/core/api/forum.api';
 
-export function useStepCondition(step: StaticRoadmapStep | null | undefined) {
+export function useStepCondition(step: StaticRoadmapStep | null | undefined, enabled = false) {
   const { user } = useUser(userRepo);
   const condition = step?.condition;
 
   const postsQuery = useQuery({
-    enabled: Boolean(step && condition?.type === 'posts'),
+    enabled: enabled && Boolean(step && condition?.type === 'posts'),
     queryKey: ['roadmap-step-condition', 'posts', step.id],
     queryFn: async (): Promise<StepConditionResult> => {
       if (!step || !condition || condition.type !== 'posts') {
@@ -34,7 +34,7 @@ export function useStepCondition(step: StaticRoadmapStep | null | undefined) {
   });
 
   const engagementQuery = useQuery({
-    enabled: Boolean(step && condition?.type === 'engagement'),
+    enabled: enabled && Boolean(step && condition?.type === 'engagement'),
     queryKey: ['roadmap-step-condition', 'engagement', step.id],
     queryFn: async (): Promise<StepConditionResult> => {
       if (!step || !condition || condition.type !== 'engagement') {
@@ -57,7 +57,7 @@ export function useStepCondition(step: StaticRoadmapStep | null | undefined) {
   });
 
   const followsQuery = useQuery({
-    enabled: Boolean(step && condition?.type === 'follows' && user?.id),
+    enabled: enabled && Boolean(step && condition?.type === 'follows' && user?.id),
     queryKey: ['roadmap-step-condition', 'follows', step.id, user?.id],
     queryFn: async (): Promise<StepConditionResult> => {
       if (!step || !condition || condition.type !== 'follows' || !user?.id) {
@@ -86,7 +86,7 @@ export function useStepCondition(step: StaticRoadmapStep | null | undefined) {
   });
 
   const timerQuery = useQuery({
-    enabled: Boolean(step && condition?.type === 'timer'),
+    enabled: enabled && Boolean(step && condition?.type === 'timer'),
     queryKey: ['roadmap-step-condition', 'timer', step.id],
     queryFn: async (): Promise<StepConditionResult> => {
       if (!step || !condition || condition.type !== 'timer') {
@@ -109,7 +109,7 @@ export function useStepCondition(step: StaticRoadmapStep | null | undefined) {
   });
 
   const checklistQuery = useQuery({
-    enabled: Boolean(step && condition?.type === 'checklist'),
+    enabled: enabled && Boolean(step && condition?.type === 'checklist'),
     queryKey: ['roadmap-step-condition', 'checklist', step.id],
     queryFn: async (): Promise<StepConditionResult> => {
       if (!step || !condition || condition.type !== 'checklist') {
