@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useUser } from '@/features/dashboard/application/use-user';
 import { useInfiniteFeed } from '@/features/social/application/use-infinite-feed';
 import { useSocialData } from '@/features/social/application/use-social-data';
 import { userRepo } from '@/features/dashboard/infrastructure/repository-factory';
 import { useProfile } from '@/features/profile/application/use-profile';
 import { profileRepo } from '@/features/profile/infrastructure/repository-factory';
+import { useDebounce } from '@/shared/hooks/use-debounce';
 import { adminRepo, socialRepo } from '@/features/social/infrastructure/repository-factory';
 import { SocialTab } from '@/features/social/presentation/sections/social-tab';
 import { DashboardPageShell, MotionPage } from '@/shared/ui';
@@ -17,7 +18,7 @@ export function SocialPage() {
   const { user } = useUser(userRepo);
   const [feed, setFeed] = useState<Feed>('for-you');
   const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const feedFilters = useMemo(
     () => ({
       ...parseSocialSearch(debouncedSearch),
@@ -28,11 +29,6 @@ export function SocialPage() {
   const feedQuery = useInfiniteFeed(socialRepo, feedFilters);
   const social = useSocialData(socialRepo);
   const profile = useProfile(profileRepo);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setDebouncedSearch(search.trim()), 350);
-    return () => window.clearTimeout(timeoutId);
-  }, [search]);
 
   return (
     <MotionPage>

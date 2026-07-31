@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/core/lib/cn';
 import { formatPersianNumber, toPersianDigits } from '@/core/lib/persian';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
+import { useDebounce } from '@/shared/hooks/use-debounce';
 import { profileRepo } from '../../infrastructure/repository-factory';
 import { useProfile } from '../../application/use-profile';
 import { useXpHistory } from '../../application/use-xp-history';
@@ -36,9 +37,10 @@ const SOURCE_LABELS: Record<string, string> = {
 
 export function FireHistoryPage() {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const shouldReduceMotion = useReducedMotion();
   const profile = useProfile(profileRepo);
-  const history = useXpHistory(profileRepo, search);
+  const history = useXpHistory(profileRepo, debouncedSearch);
   const items = useMemo(
     () => history.data?.pages.flatMap((page) => page.items) ?? [],
     [history.data],

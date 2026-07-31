@@ -11,13 +11,13 @@ export interface SocialFeedFilters {
 }
 
 export interface ISocialRepository {
-  getFeed(limit?: number, offset?: number, filters?: SocialFeedFilters): Promise<Post[]>;
-  getPost(postId: string): Promise<Post>;
-  getPostComments(postId: string, limit?: number, offset?: number): Promise<PostComment[]>;
-  getTrendingTags(): Promise<string[]>;
-  getActiveUsers(): Promise<ActiveUser[]>;
+  getFeed(limit?: number, offset?: number, filters?: SocialFeedFilters, options?: { signal?: AbortSignal }): Promise<Post[]>;
+  getPost(postId: string, options?: { signal?: AbortSignal }): Promise<Post>;
+  getPostComments(postId: string, limit?: number, offset?: number, options?: { signal?: AbortSignal }): Promise<PostComment[]>;
+  getTrendingTags(options?: { signal?: AbortSignal }): Promise<string[]>;
+  getActiveUsers(options?: { signal?: AbortSignal }): Promise<ActiveUser[]>;
   createPost(text: string, imageFile?: File | null, achievement?: AchievementCard | null): Promise<Post>;
-  addComment(postId: string, text: string): Promise<PostComment>;
+  addComment(postId: string, text: string): Promise<Post>;
   likePost(postId: string): Promise<Post>;
   unlikePost(postId: string): Promise<Post>;
   followUser(userId: string): Promise<ActiveUser>;

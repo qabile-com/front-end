@@ -18,8 +18,8 @@ export const getUserPosts = (userId: string, params?: { limit?: number; offset?:
 
 export const getMyProfile = () => httpClient.get('/api/v1/users/me/profile');
 
-export const getMyXpHistory = (params?: { limit?: number; offset?: number; q?: string }) =>
-  httpClient.get('/api/v1/users/me/xp-history', { params });
+export const getMyXpHistory = (params?: { limit?: number; offset?: number; q?: string }, options?: { signal?: AbortSignal }) =>
+  httpClient.get('/api/v1/users/me/xp-history', { params, signal: options?.signal });
 
 export const updateMyOnboarding = (isCompleteOnboarding: boolean) =>
   httpClient.patch('/api/v1/users/me/onboarding', { isCompleteOnboarding });

@@ -444,6 +444,14 @@ export function SessionContent({
 
       <div className="fixed inset-x-0 bottom-0 z-80 border-t border-[var(--session-border)] bg-[#070302]/95 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] backdrop-blur-xl md:hidden">
         <div className="mx-auto flex max-w-[920px] min-w-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            className="text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)]"
+            aria-label="بازگشت به دوره‌ها"
+          >
+            <Icon name="arrow-right" size={22} />
+          </button>
           {requiresPurchase ? (
             <LockedCourseAction
               price={coursePrice}
@@ -454,14 +462,6 @@ export function SessionContent({
           ) : (
             <ContinueButton hasNext={hasNext} onNextSession={onNextSession} />
           )}
-          <button
-            type="button"
-            onClick={onBack}
-            className="text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)]"
-            aria-label="بازگشت به دوره‌ها"
-          >
-            <Icon name="arrow-right" size={22} />
-          </button>
         </div>
       </div>
     </motion.div>

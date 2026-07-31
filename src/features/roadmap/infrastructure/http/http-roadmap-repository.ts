@@ -20,24 +20,24 @@ import { STATIC_ROADMAP_STEPS } from '../../domain/static-roadmap-steps';
 const DEFAULT_LIMIT = 10;
 
 export class HttpRoadmapRepository implements IRoadmapRepository {
-  async getActiveRoadmap(): Promise<ActiveRoadmap> {
+  async getActiveRoadmap(options?: { signal?: AbortSignal }): Promise<ActiveRoadmap> {
     try {
-      const res = await getActiveRoadmap();
+      const res = await getActiveRoadmap(options);
       return normalizeActiveRoadmap(res.data);
     } catch (error) {
       if (!shouldUseLegacyRoadmapFallback(error)) throw error;
-      const res = await getRoadmap({ limit: STATIC_ROADMAP_STEPS.length, offset: 0 });
+      const res = await getRoadmap({ limit: STATIC_ROADMAP_STEPS.length, offset: 0 }, options);
       return normalizeLegacyActiveRoadmap(res.data);
     }
   }
 
-  async getRoadmaps(params?: { limit?: number; offset?: number; q?: string }): Promise<RoadmapListResult> {
+  async getRoadmaps(params?: { limit?: number; offset?: number; q?: string }, options?: { signal?: AbortSignal }): Promise<RoadmapListResult> {
     try {
-      const res = await getRoadmaps(params);
+      const res = await getRoadmaps(params, options);
       return normalizeRoadmapList(res.data, params);
     } catch (error) {
       if (!shouldUseLegacyRoadmapFallback(error)) throw error;
-      const res = await getRoadmap(params);
+      const res = await getRoadmap(params, options);
       const active = normalizeLegacyActiveRoadmap(res.data);
       return {
         roadmaps: [active],

@@ -23,7 +23,7 @@ const FALLBACK_AVATAR = 'linear-gradient(135deg,#cc4308,#ff6200,#f3ba63)';
 export class HttpSocialRepository implements ISocialRepository {
   private feedExtras: { tags: string[]; activeUsers: ActiveUser[] } = { tags: [], activeUsers: [] };
 
-  async getFeed(limit = 10, offset = 0, filters: SocialFeedFilters = {}): Promise<Post[]> {
+  async getFeed(limit = 10, offset = 0, filters: SocialFeedFilters = {}, options?: { signal?: AbortSignal }): Promise<Post[]> {
     const res = await getForumFeed({
       limit,
       offset,
@@ -32,7 +32,7 @@ export class HttpSocialRepository implements ISocialRepository {
       authorId: filters.authorId,
       author: filters.author,
       followingOnly: filters.followingOnly,
-    });
+    }, options);
 
     this.feedExtras = {
       tags: normalizeTags(res.data.trendingTags),
@@ -42,31 +42,31 @@ export class HttpSocialRepository implements ISocialRepository {
     return res.data.data.map(apiForumPostToDomain);
   }
 
-  async getPost(postId: string): Promise<Post> {
-    const res = await getForumPost(postId);
+  async getPost(postId: string, options?: { signal?: AbortSignal }): Promise<Post> {
+    const res = await getForumPost(postId, options);
     const data = res.data as ForumPostDto | { data: ForumPostDto };
     return apiForumPostToDomain('data' in data ? data.data : data);
   }
 
-  async getPostComments(postId: string, limit = 30, offset = 0): Promise<PostComment[]> {
-    const res = await getForumComments(postId, { limit, offset });
+  async getPostComments(postId: string, limit = 30, offset = 0, options?: { signal?: AbortSignal }): Promise<PostComment[]> {
+    const res = await getForumComments(postId, { limit, offset }, options);
     const payload = res.data;
     return (payload.data ?? []).map(apiCommentToDomain);
   }
 
-  async getTrendingTags(): Promise<string[]> {
+  async getTrendingTags(options?: { signal?: AbortSignal }): Promise<string[]> {
     if (this.feedExtras.tags.length) return this.feedExtras.tags;
 
-    const res = await getForumFeed({ limit: 1, offset: 0 });
+    const res = await getForumFeed({ limit: 1, offset: 0 }, options);
     this.feedExtras.tags = normalizeTags(res.data.trendingTags);
     this.feedExtras.activeUsers = (res.data.activeUsers ?? []).map(apiUserToDomain);
     return this.feedExtras.tags;
   }
 
-  async getActiveUsers(): Promise<ActiveUser[]> {
+  async getActiveUsers(options?: { signal?: AbortSignal }): Promise<ActiveUser[]> {
     if (this.feedExtras.activeUsers.length) return this.feedExtras.activeUsers;
 
-    const res = await getForumFeed({ limit: 1, offset: 0 });
+    const res = await getForumFeed({ limit: 1, offset: 0 }, options);
     this.feedExtras.tags = normalizeTags(res.data.trendingTags);
     this.feedExtras.activeUsers = (res.data.activeUsers ?? []).map(apiUserToDomain);
     return this.feedExtras.activeUsers;

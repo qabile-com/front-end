@@ -335,7 +335,7 @@ function FeaturedCourse({
             <img
               src={course.imageUrl}
               alt={course.title}
-              className="relative z-[1] max-h-full max-w-full select-none object-contain transition-[filter,transform] duration-500 group-hover:scale-[1.015] group-hover:brightness-110"
+              className="relative z-[1] max-h-full max-w-full object-contain transition-[filter,transform] duration-500 select-none group-hover:scale-[1.015] group-hover:brightness-110"
               loading="lazy"
               draggable={false}
             />

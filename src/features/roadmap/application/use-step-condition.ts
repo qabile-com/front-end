@@ -67,8 +67,9 @@ export function useStepCondition(step: StaticRoadmapStep | null | undefined) {
       let followingCount = 0;
       try {
         const res = await getForumUser(user.id);
-        const data = res.data as { stats?: { followingCount?: number } } | undefined;
-        followingCount = data?.stats?.followingCount ?? 0;
+        const payload = res.data as typeof res.data | { data?: typeof res.data };
+        const userData = 'data' in payload && payload.data ? payload.data : res.data;
+        followingCount = userData?.stats?.followingCount ?? 0;
       } catch {
         followingCount = 0;
       }

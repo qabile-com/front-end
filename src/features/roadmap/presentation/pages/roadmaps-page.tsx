@@ -2,9 +2,18 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { DashboardPageShell, ErrorState, Icon, MotionItem, MotionList, MotionPage, Skeleton } from '@/shared/ui';
+import {
+  DashboardPageShell,
+  ErrorState,
+  Icon,
+  MotionItem,
+  MotionList,
+  MotionPage,
+  Skeleton,
+} from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { formatPersianNumber, toPersianDigits } from '@/core/lib/persian';
+import { useDebounce } from '@/shared/hooks/use-debounce';
 import { useRoadmaps } from '../../application/use-roadmaps';
 import { roadmapRepo } from '../../infrastructure/repository-factory';
 import type { RoadmapSummary } from '../../domain/roadmap.types';
@@ -17,7 +26,11 @@ const STATUS_LABEL: Record<NonNullable<RoadmapSummary['status']>, string> = {
 
 export function RoadmapsPage() {
   const [search, setSearch] = useState('');
-  const queryParams = useMemo(() => ({ limit: 20, offset: 0, q: search.trim() || undefined }), [search]);
+  const debouncedSearch = useDebounce(search, 300);
+  const queryParams = useMemo(
+    () => ({ limit: 20, offset: 0, q: debouncedSearch.trim() || undefined }),
+    [debouncedSearch],
+  );
   const { roadmaps, loading, error, refetch } = useRoadmaps(roadmapRepo, queryParams);
 
   return (
@@ -31,18 +44,23 @@ export function RoadmapsPage() {
               </span>
               <h1 className="text-2xl font-black text-white sm:text-3xl">نقشه راه‌ها</h1>
               <p className="text-ink-3 mt-2 max-w-2xl text-sm leading-7">
-                مسیر فعالت را ادامه بده یا بقیه نقشه‌راه‌ها را ببین. پیشرفت هر مسیر از بک‌اند خوانده می‌شود.
+                مسیر فعالت را ادامه بده یا بقیه نقشه‌راه‌ها را ببین. پیشرفت هر مسیر از بک‌اند خوانده
+                می‌شود.
               </p>
             </div>
 
             <label className="relative block w-full lg:w-72">
               <span className="sr-only">جستجوی نقشه راه</span>
-              <Icon name="search" size={18} className="text-ink-4 absolute top-1/2 right-3 -translate-y-1/2" />
+              <Icon
+                name="search"
+                size={18}
+                className="text-ink-4 absolute top-1/2 right-3 -translate-y-1/2"
+              />
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="جستجوی نقشه راه..."
-                className="border-hair focus:border-ember h-12 w-full rounded-2xl border bg-black/30 pr-10 pl-4 text-base outline-none transition-colors placeholder:text-ink-4"
+                className="border-hair focus:border-ember placeholder:text-ink-4 h-12 w-full rounded-2xl border bg-black/30 pr-10 pl-4 text-base transition-colors outline-none"
               />
             </label>
           </header>
@@ -61,7 +79,11 @@ export function RoadmapsPage() {
             <ErrorState
               title="نقشه راهی پیدا نشد"
               message="فعلاً نقشه راهی با این جستجو وجود ندارد."
-              action={search ? { label: 'پاک کردن جستجو', onClick: () => setSearch(''), icon: 'x' } : undefined}
+              action={
+                search
+                  ? { label: 'پاک کردن جستجو', onClick: () => setSearch(''), icon: 'x' }
+                  : undefined
+              }
             />
           )}
 
@@ -81,12 +103,11 @@ export function RoadmapsPage() {
 }
 
 function RoadmapCard({ roadmap }: { roadmap: RoadmapSummary }) {
-  const percent = roadmap.totalSteps ? Math.round((roadmap.completedSteps / roadmap.totalSteps) * 100) : 0;
-  const currentStep =
-    roadmap.steps?.find((step) => step.status === 'current') ??
-    roadmap.steps?.find((step) => step.status !== 'done') ??
-    roadmap.steps?.[0];
-  const href = currentStep ? `/roadmap/steps/${currentStep.num}` : '/roadmap';
+  const percent = roadmap.totalSteps
+    ? Math.round((roadmap.completedSteps / roadmap.totalSteps) * 100)
+    : 0;
+  const currentStep = roadmap.completedSteps + 1;
+  const href = currentStep ? `/roadmap/steps/${currentStep}` : '/roadmap';
 
   return (
     <article
@@ -129,7 +150,10 @@ function RoadmapCard({ roadmap }: { roadmap: RoadmapSummary }) {
           <span className="text-gold">{toPersianDigits(percent)}٪</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-[rgba(255,255,255,.08)]">
-          <div className="h-full rounded-full [background:var(--fire-grad)]" style={{ width: `${percent}%` }} />
+          <div
+            className="h-full rounded-full [background:var(--fire-grad)]"
+            style={{ width: `${percent}%` }}
+          />
         </div>
       </div>
 
@@ -138,8 +162,8 @@ function RoadmapCard({ roadmap }: { roadmap: RoadmapSummary }) {
         className={cn(
           'inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-black transition-[transform,border-color,box-shadow,opacity] duration-300 hover:-translate-y-0.5',
           roadmap.isActive
-            ? 'text-[#1a0a00] [background:var(--fire-grad)] shadow-[0_8px_28px_-12px_var(--glow)]'
-            : 'border-hair border [background:var(--glass-2)] hover:border-hair-2',
+            ? 'text-[#1a0a00] shadow-[0_8px_28px_-12px_var(--glow)] [background:var(--fire-grad)]'
+            : 'border-hair hover:border-hair-2 border [background:var(--glass-2)]',
         )}
       >
         {roadmap.isActive ? 'ادامه مسیر' : 'مشاهده مسیر'}
@@ -153,7 +177,10 @@ function RoadmapGridSkeleton() {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {Array.from({ length: 4 }).map((_, index) => (
-        <div key={index} className="rounded-[24px] border border-[rgba(255,98,0,.14)] bg-black/20 p-5">
+        <div
+          key={index}
+          className="rounded-[24px] border border-[rgba(255,98,0,.14)] bg-black/20 p-5"
+        >
           <Skeleton className="mb-4 h-6 w-32" />
           <Skeleton className="mb-3 h-5 w-52" />
           <Skeleton className="mb-6 h-4 w-full" />

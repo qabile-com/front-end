@@ -10,7 +10,7 @@ export function useRoadmaps(
 ) {
   const query = useQuery({
     queryKey: roadmapKeys.list(params),
-    queryFn: () => repo.getRoadmaps(params),
+    queryFn: ({ signal }) => repo.getRoadmaps(params, { signal }),
     staleTime: 60_000,
     retry: 1,
   });

@@ -76,7 +76,7 @@ export interface PaginatedXpHistory {
 
 export interface IProfileRepository {
   getMyProfile(): Promise<MyProfile>;
-  getXpHistory(params?: { limit?: number; offset?: number; q?: string }): Promise<PaginatedXpHistory>;
+  getXpHistory(params?: { limit?: number; offset?: number; q?: string }, options?: { signal?: AbortSignal }): Promise<PaginatedXpHistory>;
   updateMyProfile(input: UpdateProfileInput): Promise<MyProfile>;
   updateProfileAvatar(file: File): Promise<MyProfile>;
   requestEmailVerification(email: string): Promise<void>;

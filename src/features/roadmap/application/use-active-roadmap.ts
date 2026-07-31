@@ -7,7 +7,7 @@ import { roadmapKeys } from './roadmap-query-keys';
 export function useActiveRoadmap(repo: IRoadmapRepository) {
   const query = useQuery({
     queryKey: roadmapKeys.active(),
-    queryFn: () => repo.getActiveRoadmap(),
+    queryFn: ({ signal }) => repo.getActiveRoadmap({ signal }),
     staleTime: 60_000,
     retry: 1,
   });

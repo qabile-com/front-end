@@ -223,53 +223,54 @@ export function SocialTab({
           <div className="flex flex-col gap-3">
             {activeUsers.map((u) => {
               const isFollowingUser = Boolean(u.isFollowedByMe ?? u.followedByMe);
-              const isUserToggling = followToggle.isPending && followToggle.variables?.userId === u.id;
+              const isUserToggling =
+                followToggle.isPending && followToggle.variables?.userId === u.id;
 
               return (
-              <div key={u.id} className="flex items-center gap-2.5">
-                <Link
-                  href={`/social/users/${u.id}`}
-                  className="group flex min-w-0 flex-1 items-center gap-2.5 rounded-xl text-start transition-colors hover:bg-white/[.03] focus-visible:ring-2 focus-visible:ring-ember focus-visible:outline-none"
-                >
-                  {u.isAdam ? (
-                    <AdamAvatar className="size-9" />
-                  ) : (
-                    <span
-                      className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-white"
-                      style={{ background: u.avatar }}
-                    >
-                      {getAvatarInitial(u.name)}
-                    </span>
-                  )}
-                  <span className="min-w-0 flex-1 leading-tight">
-                    <b className="block truncate text-[13px] font-bold transition-colors group-hover:text-gold">
-                      {u.name}
-                    </b>
-                    <small className="text-ink-3 text-[11px]">{u.role}</small>
-                  </span>
-                </Link>
-                {u.canFollow && (
-                  <button
-                    type="button"
-                    disabled={isUserToggling}
-                    onClick={() =>
-                      followToggle.mutate({
-                        userId: u.id,
-                        isFollowedByMe: isFollowingUser,
-                      })
-                    }
-                    className={cn(
-                      'inline-flex min-h-8 min-w-22 items-center justify-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-extrabold transition-[border-color,background,color,opacity] disabled:opacity-80',
-                      isFollowingUser
-                        ? 'border-gold/40 bg-white/5 text-gold'
-                        : 'text-[#1a0a00] [background:var(--fire-grad)] border-transparent',
-                    )}
+                <div key={u.id} className="flex items-center gap-2.5">
+                  <Link
+                    href={`/social/users/${u.id}`}
+                    className="group focus-visible:ring-ember flex min-w-0 flex-1 items-center gap-2.5 rounded-xl text-start transition-colors hover:bg-white/[.03] focus-visible:ring-2 focus-visible:outline-none"
                   >
-                    {isUserToggling && <InlineSpinner className="size-3" />}
-                    {isFollowingUser ? 'هم‌پرواز' : 'هم پرواز شدن'}
-                  </button>
-                )}
-              </div>
+                    {u.isAdam ? (
+                      <AdamAvatar className="size-9" />
+                    ) : (
+                      <span
+                        className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-white"
+                        style={{ background: u.avatar }}
+                      >
+                        {getAvatarInitial(u.name)}
+                      </span>
+                    )}
+                    <span className="min-w-0 flex-1 leading-tight">
+                      <b className="group-hover:text-gold block truncate text-[13px] font-bold transition-colors">
+                        {u.name}
+                      </b>
+                      <small className="text-ink-3 text-[11px]">{u.role}</small>
+                    </span>
+                  </Link>
+                  {u.canFollow && (
+                    <button
+                      type="button"
+                      disabled={isUserToggling}
+                      onClick={() =>
+                        followToggle.mutate({
+                          userId: u.id,
+                          isFollowedByMe: isFollowingUser,
+                        })
+                      }
+                      className={cn(
+                        'inline-flex min-h-8 min-w-22 items-center justify-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-extrabold transition-[border-color,background,color,opacity] disabled:opacity-80',
+                        isFollowingUser
+                          ? 'border-gold/40 text-gold bg-white/5'
+                          : 'border-transparent text-[#1a0a00] [background:var(--fire-grad)]',
+                      )}
+                    >
+                      {isUserToggling && <InlineSpinner className="size-3" />}
+                      {isFollowingUser ? 'هم‌پرواز' : 'هم پرواز شدن'}
+                    </button>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -588,7 +589,7 @@ function PostCard({
     >
       {post.isPinned && (
         <div className="text-gold absolute top-2 right-2 text-xs font-bold">
-          <Icon name="star" size={16} /> پین شده
+          <Icon name="star" size={16} />
         </div>
       )}
       {post.isAdam && <FounderBanner />}
@@ -599,7 +600,7 @@ function PostCard({
           {/* Admin actions */}
           <button
             type="button"
-            className="shrink-0 rounded-full focus-visible:ring-2 focus-visible:ring-ember focus-visible:outline-none"
+            className="focus-visible:ring-ember shrink-0 rounded-full focus-visible:ring-2 focus-visible:outline-none"
             onClick={(e) => {
               e.stopPropagation();
               onAuthorClick(post.authorId);
@@ -660,8 +661,8 @@ function PostCard({
                 className={cn(
                   'inline-flex min-h-8 min-w-22 items-center justify-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-extrabold transition-[border-color,background,color,opacity] disabled:opacity-80',
                   isFollowingAuthor
-                    ? 'border-gold/40 bg-white/5 text-gold'
-                    : 'text-[#1a0a00] [background:var(--fire-grad)] border-transparent',
+                    ? 'border-gold/40 text-gold bg-white/5'
+                    : 'border-transparent text-[#1a0a00] [background:var(--fire-grad)]',
                 )}
               >
                 {isCurrentAuthorToggling && <InlineSpinner className="size-3" />}

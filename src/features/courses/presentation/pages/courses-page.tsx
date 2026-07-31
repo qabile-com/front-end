@@ -1,17 +1,18 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useCourses } from '@/features/courses/application/use-courses';
 import { useUser } from '@/features/dashboard/application/use-user';
 import { coursesRepo } from '@/features/courses/infrastructure/repository-factory';
 import { userRepo } from '@/features/dashboard/infrastructure/repository-factory';
+import { useDebounce } from '@/shared/hooks/use-debounce';
 import { TabError } from '@/features/dashboard/presentation/components/dashboard-loading';
 import { CoursesTab } from '@/features/courses/presentation/sections/courses-tab';
 import { CoursesPageSkeleton, DashboardPageShell, MotionPage } from '@/shared/ui';
 
 export function CoursesPage() {
   const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const filters = useMemo(
     () => ({
       limit: 30,
@@ -22,11 +23,6 @@ export function CoursesPage() {
   );
   const courses = useCourses(coursesRepo, filters);
   const { user, loading: userLoading } = useUser(userRepo);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setDebouncedSearch(search.trim()), 350);
-    return () => window.clearTimeout(timeoutId);
-  }, [search]);
 
   if (courses.loading || userLoading) {
     return (

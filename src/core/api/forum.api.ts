@@ -104,27 +104,30 @@ export const getForumFeed = (params?: {
   authorId?: string;
   author?: string;
   followingOnly?: boolean;
-}) => httpClient.get<ForumFeedResponse>('/api/v1/forum/feed', { params });
+}, options?: { signal?: AbortSignal }) => httpClient.get<ForumFeedResponse>('/api/v1/forum/feed', { params, signal: options?.signal });
 
 export const getForumUserPosts = (
   userId: string,
   params?: { limit?: number; offset?: number; q?: string; hashtag?: string; author?: string },
-) => httpClient.get<ForumFeedResponse>(`/api/v1/forum/users/${userId}/posts`, { params });
+  options?: { signal?: AbortSignal },
+) => httpClient.get<ForumFeedResponse>(`/api/v1/forum/users/${userId}/posts`, { params, signal: options?.signal });
 
-export const getForumUser = (userId: string) =>
-  httpClient.get<ForumUserProfileDto>(`/api/v1/forum/users/${userId}`);
+export const getForumUser = (userId: string, options?: { signal?: AbortSignal }) =>
+  httpClient.get<ForumUserProfileDto>(`/api/v1/forum/users/${userId}`, { signal: options?.signal });
 
-export const getForumPost = (postId: string) =>
-  httpClient.get<ForumPostDto>(`/api/v1/forum/posts/${postId}`);
+export const getForumPost = (postId: string, options?: { signal?: AbortSignal }) =>
+  httpClient.get<ForumPostDto>(`/api/v1/forum/posts/${postId}`, { signal: options?.signal });
 
-export const getForumTrendingTags = () =>
+export const getForumTrendingTags = (options?: { signal?: AbortSignal }) =>
   httpClient.get<{ data: Array<string | ForumTagDto> } | Array<string | ForumTagDto>>(
     '/api/v1/forum/trending-tags',
+    { signal: options?.signal },
   );
 
-export const getForumActiveUsers = (params?: { limit?: number }) =>
+export const getForumActiveUsers = (params?: { limit?: number }, options?: { signal?: AbortSignal }) =>
   httpClient.get<{ data: ForumUserDto[] } | ForumUserDto[]>('/api/v1/forum/active-users', {
     params,
+    signal: options?.signal,
   });
 
 export const createForumPost = (body: { text: string; image?: File | null; tags?: string[]; achievement?: { title: string; sub: string; icon: string } }) => {
@@ -155,8 +158,8 @@ export const deleteForumPost = (postId: string) =>
 export const addForumComment = (postId: string, body: { text: string }) =>
   httpClient.post<ForumPostDto>(`/api/v1/forum/posts/${postId}/comments`, body);
 
-export const getForumComments = (postId: string, params?: { limit?: number; offset?: number }) =>
-  httpClient.get<ForumCommentsResponse>(`/api/v1/forum/posts/${postId}/comments`, { params });
+export const getForumComments = (postId: string, params?: { limit?: number; offset?: number }, options?: { signal?: AbortSignal }) =>
+  httpClient.get<ForumCommentsResponse>(`/api/v1/forum/posts/${postId}/comments`, { params, signal: options?.signal });
 
 export const deleteForumComment = (commentId: string) =>
   httpClient.delete<{ success: boolean }>(`/api/v1/forum/comments/${commentId}`);

@@ -47,15 +47,17 @@ export interface ILeaderboardRepository {
  * Courses data.
  */
 export interface ICoursesRepository {
-  getCourses(filters?: { limit?: number; offset?: number; q?: string }): Promise<Course[]>;
-  purchaseCourse(courseId: string): Promise<CoursePurchaseResult>;
+  getCourses(filters?: { limit?: number; offset?: number; q?: string }, options?: { signal?: AbortSignal }): Promise<Course[]>;
+  purchaseCourse(courseId: string, options?: { signal?: AbortSignal }): Promise<CoursePurchaseResult>;
   updateSectionProgress(
     sectionId: string,
     body: { status: string; progress?: number },
+    options?: { signal?: AbortSignal },
   ): Promise<ActionRewardResult>;
   reportSectionWatchProgress(
     sectionId: string,
     body: SectionWatchProgressInput,
+    options?: { signal?: AbortSignal },
   ): Promise<SectionWatchProgressResult>;
 }
 

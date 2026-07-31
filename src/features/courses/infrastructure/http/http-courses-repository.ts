@@ -58,8 +58,8 @@ type PurchaseCourseDto = {
 };
 
 export class HttpCoursesRepository implements ICoursesRepository {
-  async getCourses(filters?: { limit?: number; offset?: number; q?: string }): Promise<Course[]> {
-    const res = await getCourses(filters);
+  async getCourses(filters?: { limit?: number; offset?: number; q?: string }, options?: { signal?: AbortSignal }): Promise<Course[]> {
+    const res = await getCourses(filters, options);
     const courses = (res.data.data ?? res.data) as CourseDto[];
     return courses.map((course) =>
       withCourseSectionNavigation({
@@ -80,8 +80,8 @@ export class HttpCoursesRepository implements ICoursesRepository {
     );
   }
 
-  async purchaseCourse(courseId: string) {
-    const res = await purchaseCourse(courseId);
+  async purchaseCourse(courseId: string, options?: { signal?: AbortSignal }) {
+    const res = await purchaseCourse(courseId, options);
     const data = (res.data.data ?? res.data) as PurchaseCourseDto;
     const course = data.course;
 
@@ -113,16 +113,18 @@ export class HttpCoursesRepository implements ICoursesRepository {
   async updateSectionProgress(
     sectionId: string,
     body: { status: string; progress?: number },
+    options?: { signal?: AbortSignal },
   ): Promise<ActionRewardResult> {
-    const res = await updateSectionProgress(sectionId, body);
+    const res = await updateSectionProgress(sectionId, body, options);
     return (res.data.data ?? res.data ?? {}) as ActionRewardResult;
   }
 
   async reportSectionWatchProgress(
     sectionId: string,
     body: SectionWatchProgressInput,
+    options?: { signal?: AbortSignal },
   ): Promise<SectionWatchProgressResult> {
-    const res = await reportSectionWatchProgress(sectionId, body);
+    const res = await reportSectionWatchProgress(sectionId, body, options);
     return (res.data.data ?? res.data) as SectionWatchProgressResult;
   }
 }

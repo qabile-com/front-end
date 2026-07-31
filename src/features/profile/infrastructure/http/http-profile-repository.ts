@@ -84,8 +84,8 @@ export class HttpProfileRepository implements IProfileRepository {
     limit?: number;
     offset?: number;
     q?: string;
-  }): Promise<PaginatedXpHistory> {
-    const res = await getMyXpHistory(params);
+  }, options?: { signal?: AbortSignal }): Promise<PaginatedXpHistory> {
+    const res = await getMyXpHistory(params, options);
     const payload = (res.data ?? {}) as PaginatedXpHistoryDto | XpHistoryDto[];
     const items = Array.isArray(payload) ? payload : (payload.data ?? []);
     const meta = Array.isArray(payload) ? undefined : payload.meta;

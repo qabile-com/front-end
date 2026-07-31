@@ -89,11 +89,7 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
 
   const isLocked = stepWithProgress.status === 'next';
 
-  const canComplete =
-    !completeStep.isPending &&
-    !activeRoadmap.loading &&
-    !isDone &&
-    !isLocked;
+  const canComplete = !completeStep.isPending && !activeRoadmap.loading && !isDone && !isLocked;
 
   const handleComplete = useCallback(async () => {
     if (!canComplete) return;
@@ -111,7 +107,15 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
     enqueueReward(reward, {
       xpDescription: `آتش مرحله ${toPersianDigits(stepWithProgress.id)} به حساب قبیله‌ات اضافه شد.`,
     });
-  }, [canComplete, completeStep, activeRoadmap.roadmap, stepWithProgress, enqueueReward, isConditionSatisfied, condition.message]);
+  }, [
+    canComplete,
+    completeStep,
+    activeRoadmap.roadmap,
+    stepWithProgress,
+    enqueueReward,
+    isConditionSatisfied,
+    condition.message,
+  ]);
 
   const conditionMessage = useMemo(() => {
     if (isDone) return null;
@@ -163,6 +167,7 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
               canComplete={canComplete}
               isLocked={isLocked}
               onComplete={handleComplete}
+              nextStep={step.id + 1}
             />
           </div>
         </article>
@@ -450,6 +455,7 @@ function CompleteFooter({
   canComplete,
   isLocked,
   onComplete,
+  nextStep,
 }: {
   xp: number;
   status: StaticRoadmapStep['status'];
@@ -457,6 +463,7 @@ function CompleteFooter({
   isLoadingProgress: boolean;
   canComplete: boolean;
   isLocked: boolean;
+  nextStep: number;
   onComplete: () => void;
 }) {
   const reduceMotion = useReducedMotion();
@@ -473,23 +480,33 @@ function CompleteFooter({
         className="lg:order-2 lg:w-40"
         whileTap={reduceMotion ? undefined : { scale: 0.98 }}
       >
-        <Button
-          type="button"
-          variant="primary"
-          block
-          disabled={isCompleting || isLoadingProgress || isDone || isLocked || !canComplete}
-          onClick={onComplete}
-          className="rounded-full text-white"
-        >
-          {isCompleting
-            ? 'در حال بررسی...'
-            : isDone
-              ? 'قبلاً تکمیل شده'
-              : isLocked
-                ? 'مرحله قفل است'
-                : 'تکمیل کردن'}
-          <Icon name="check" size={18} />
-        </Button>
+        <div className="mx-auto flex max-w-[920px] min-w-0 items-center gap-3">
+          <Button
+            type="button"
+            variant="primary"
+            block
+            disabled={isCompleting || isLoadingProgress || isDone || isLocked || !canComplete}
+            onClick={onComplete}
+            className="rounded-full text-white"
+          >
+            {isCompleting
+              ? 'در حال بررسی...'
+              : isDone
+                ? 'قبلاً تکمیل شده'
+                : isLocked
+                  ? 'مرحله قفل است'
+                  : 'تکمیل کردن'}
+            <Icon name="check" size={18} />
+          </Button>
+          <button
+            type="button"
+            onClick={nextStep}
+            className="text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)]"
+            aria-label="بازگشت به دوره‌ها"
+          >
+            <Icon name="arrow-left" size={22} />
+          </button>
+        </div>
       </motion.div>
     </footer>
   );

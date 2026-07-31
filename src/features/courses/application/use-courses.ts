@@ -14,7 +14,7 @@ export interface CourseListFilters {
 export function useCourses(repo: ICoursesRepository, filters: CourseListFilters = {}) {
   const query = useQuery({
     queryKey: ['dashboard', 'courses', filters],
-    queryFn: () => repo.getCourses(filters),
+    queryFn: ({ signal }) => repo.getCourses(filters, { signal }),
     placeholderData: (previous) => previous,
     staleTime: 5 * 60 * 1000,
   });

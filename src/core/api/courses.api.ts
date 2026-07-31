@@ -1,19 +1,20 @@
 import { httpClient } from './http-client';
 import type { SectionWatchProgressInput } from '@/features/dashboard/domain/dashboard.types';
 
-export const getCourses = (params?: { limit?: number; offset?: number; q?: string }) =>
-  httpClient.get('/api/v1/courses', { params });
+export const getCourses = (params?: { limit?: number; offset?: number; q?: string }, options?: { signal?: AbortSignal }) =>
+  httpClient.get('/api/v1/courses', { params, signal: options?.signal });
 
-export const getCourseSection = (courseId: string, sectionId: string) =>
-  httpClient.get(`/api/v1/courses/${courseId}/episodes/${sectionId}`);
+export const getCourseSection = (courseId: string, sectionId: string, options?: { signal?: AbortSignal }) =>
+  httpClient.get(`/api/v1/courses/${courseId}/episodes/${sectionId}`, { signal: options?.signal });
 
-export const purchaseCourse = (courseId: string) =>
-  httpClient.post(`/api/v1/courses/${courseId}/purchase`);
+export const purchaseCourse = (courseId: string, options?: { signal?: AbortSignal }) =>
+  httpClient.post(`/api/v1/courses/${courseId}/purchase`, undefined, { signal: options?.signal });
 
 export const updateSectionProgress = (
   sectionId: string,
   body: { status: string; progress?: number },
-) => httpClient.patch(`/api/v1/courses/episodes/${sectionId}/progress`, body);
+  options?: { signal?: AbortSignal },
+) => httpClient.patch(`/api/v1/courses/episodes/${sectionId}/progress`, body, { signal: options?.signal });
 
-export const reportSectionWatchProgress = (sectionId: string, body: SectionWatchProgressInput) =>
-  httpClient.patch(`/api/v1/courses/episodes/${sectionId}/watch-progress`, body);
+export const reportSectionWatchProgress = (sectionId: string, body: SectionWatchProgressInput, options?: { signal?: AbortSignal }) =>
+  httpClient.patch(`/api/v1/courses/episodes/${sectionId}/watch-progress`, body, { signal: options?.signal });
