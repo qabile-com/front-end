@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useCallback, useState } from 'react';
 import { Icon, MotionItem, MotionList, Panel } from '@/shared/ui';
 import { ComingSoonModal } from '../components/coming-soon-modal';
 import type { IconName } from '@/shared/ui';
@@ -100,6 +100,7 @@ function HeroCarousel({ user }: { user: CurrentUser }) {
   const reduceMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
   const [carouselResetKey, setCarouselResetKey] = useState(0);
+  const [dragX, setDragX] = useState(0);
   const active = HERO_SLIDES[activeIndex]!;
   const heroFrameClass =
     'group border-hair focus-visible:ring-ember relative block h-[140px] overflow-hidden rounded-[20px] border bg-black shadow-[0_24px_80px_-46px_var(--glow)] outline-none focus-visible:ring-2 sm:h-[210px] sm:rounded-[24px] lg:h-[262px]';
@@ -108,9 +109,28 @@ function HeroCarousel({ user }: { user: CurrentUser }) {
     if (reduceMotion) return;
     const timer = window.setInterval(() => {
       setActiveIndex((index) => (index + 1) % HERO_SLIDES.length);
+      setDragX(0);
     }, 5500);
     return () => window.clearInterval(timer);
   }, [carouselResetKey, reduceMotion]);
+
+  const handleDragEnd = useCallback(
+    (event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number }; velocity: { x: number } }) => {
+      const swipeThreshold = 60;
+      const velocityThreshold = 300;
+      const offset = info.offset.x;
+      const velocity = info.velocity.x;
+
+      if (offset < -swipeThreshold || velocity < -velocityThreshold) {
+        setActiveIndex((index) => (index + 1) % HERO_SLIDES.length);
+      } else if (offset > swipeThreshold || velocity > velocityThreshold) {
+        setActiveIndex((index) => (index - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+      }
+      setDragX(0);
+      setCarouselResetKey((key) => key + 1);
+    },
+    [],
+  );
 
   const heroImage = (
     <AnimatePresence mode="wait">
@@ -121,6 +141,12 @@ function HeroCarousel({ user }: { user: CurrentUser }) {
         animate={{ opacity: 1, scale: 1 }}
         exit={reduceMotion ? undefined : { opacity: 0, scale: 0.985 }}
         transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.15}
+        onDrag={(event, info) => setDragX(info.offset.x)}
+        onDragEnd={handleDragEnd}
+        style={{ x: dragX }}
       >
         <img
           src={active.imageSrc}
@@ -130,6 +156,7 @@ function HeroCarousel({ user }: { user: CurrentUser }) {
             'imageClassName' in active ? active.imageClassName : undefined,
           )}
           loading={activeIndex === 0 ? 'eager' : 'lazy'}
+          draggable={false}
         />
       </motion.div>
     </AnimatePresence>
