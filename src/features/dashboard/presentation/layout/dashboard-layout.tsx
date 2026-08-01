@@ -92,7 +92,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       const reward = JSON.parse(rewardStr) as { xpGranted?: number; xp?: number };
       const xp = reward.xpGranted ?? reward.xp ?? null;
       sessionStorage.removeItem('signupReward');
-      const shouldShowInstallPrompt = sessionStorage.getItem('showInstallAfterFirstLoginReward') === '1';
+      const shouldShowInstallPrompt =
+        sessionStorage.getItem('showInstallAfterFirstLoginReward') === '1';
       sessionStorage.removeItem('showInstallAfterFirstLoginReward');
       if (shouldShowInstallPrompt && canShowFirstLoginInstallPrompt(user.id)) {
         queueMicrotask(() => setShouldShowInstallAfterSignupXp(true));
@@ -118,23 +119,23 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [shouldShowInstallAfterSignupXp, signupAchievements?.length, signupXp]);
 
   const isHomePage = pathname === '/home';
-
-  if (userLoading && !isHomePage) return <DashboardLoader />;
-  if (userError && !isHomePage) return <DashboardError error={userError} onRetry={() => void refetchUser()} />;
-  if (!user && !isHomePage) return <DashboardLoader />;
-
-  const isHomePage = pathname === '/home';
   const showChrome = !isHomePage || (!userLoading && user);
 
   if (userLoading && !isHomePage) return <DashboardLoader />;
-  if (userError && !isHomePage) return <DashboardError error={userError} onRetry={() => void refetchUser()} />;
+  if (userError && !isHomePage)
+    return <DashboardError error={userError} onRetry={() => void refetchUser()} />;
   if (!user && !isHomePage) return <DashboardLoader />;
 
   return (
     <div className="dashboard-scope min-h-screen max-w-full overflow-x-clip [background:var(--color-bg)]">
       {showChrome && <DashboardSidebar activeHref={activeHref} user={user} nav={NAV} />}
 
-      <main className={cn('flex min-h-screen max-w-full min-w-0 flex-col overflow-x-clip', showChrome ? 'lg:ms-65' : '')}>
+      <main
+        className={cn(
+          'flex min-h-screen max-w-full min-w-0 flex-col overflow-x-clip',
+          showChrome ? 'lg:ms-65' : '',
+        )}
+      >
         {showChrome && (
           <header className="border-hair sticky top-0 z-40 hidden h-16 items-center justify-between border-b px-8 pt-[env(safe-area-inset-top)] [backdrop-filter:blur(20px)] [background:rgba(5,3,2,.85)] lg:flex">
             <h1 className="text-lg font-black">{title}</h1>
@@ -160,7 +161,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </header>
         )}
 
-        {showChrome && <MobileHeader title={title} user={user} showAiChatAction={showAiChatAction} />}
+        {showChrome && (
+          <MobileHeader title={title} user={user} showAiChatAction={showAiChatAction} />
+        )}
 
         <div className="min-w-0 flex-1 overflow-x-clip">
           <div className="overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
@@ -177,12 +180,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </main>
 
       <MobileNav activeHref={activeHref} />
-      <MobileOnboarding
-        isComplete={user.isCompleteOnboarding}
-        onComplete={async () => {
-          await completeOnboarding.mutateAsync();
-        }}
-      />
+      {showChrome && (
+        <MobileOnboarding
+          isComplete={user.isCompleteOnboarding}
+          onComplete={async () => {
+            await completeOnboarding.mutateAsync();
+          }}
+        />
+      )}
 
       {signupXp !== null && (
         <XpEarnedModal
