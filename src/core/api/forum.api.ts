@@ -96,22 +96,18 @@ export interface ForumCommentsResponse {
   meta?: { limit: number; offset: number; totalItems: number; totalPages: number };
 }
 
-export interface ForumLikeHistoryItem {
-  id: string;
-  postId: string;
-  postText: string;
-  attachment?: {
-    id: string;
-    kind: string;
-    url: string;
-  };
-  likedAt: string;
+export interface ForumUserStatsDto {
+  postsCount: number;
+  totalLikesReceived: number;
+  totalCommentsReceived: number;
+  givenLikesCount: number;
+  givenCommentsCount: number;
+  followersCount: number;
+  followingCount: number;
 }
 
-export interface ForumLikeHistoryResponse {
-  data: ForumLikeHistoryItem[];
-  meta: { limit: number; offset: number; totalItems: number; totalPages: number };
-}
+export const getForumUserStats = (userId: string, options?: { signal?: AbortSignal }) =>
+  httpClient.get<ForumUserStatsDto>(`/api/v1/forum/users/${userId}/stats`, { signal: options?.signal });
 
 export const getForumFeed = (params?: {
   limit?: number;
@@ -146,15 +142,6 @@ export const getForumActiveUsers = (params?: { limit?: number }, options?: { sig
     params,
     signal: options?.signal,
   });
-
-export const getForumLikeHistory = (params?: { limit?: number; offset?: number; q?: string }, options?: { signal?: AbortSignal }) =>
-  httpClient.get<ForumLikeHistoryResponse>('/api/v1/users/me/forum-like-history', { params, signal: options?.signal });
-
-export const getForumCommentHistory = (params?: { limit?: number; offset?: number; q?: string }, options?: { signal?: AbortSignal }) =>
-  httpClient.get<{ data: ForumCommentDto[]; meta?: { limit: number; offset: number; totalItems: number; totalPages: number } }>(
-    '/api/v1/users/me/forum-comment-history',
-    { params, signal: options?.signal },
-  );
 
 export const createForumPost = (body: { text: string; image?: File | null; tags?: string[]; achievement?: { title: string; sub: string; icon: string } }) => {
   if (body.image) {
@@ -216,3 +203,4 @@ export const adminDeletePost = (postId: string) =>
 
 export const adminDeleteComment = (commentId: string) =>
   httpClient.delete<{ success: boolean }>(`/api/v1/admin/forum/comments/${commentId}`);
+
