@@ -26,10 +26,11 @@ export function GlassToaster() {
       gutter={10}
       containerStyle={{ top: 'calc(18px + env(safe-area-inset-top))', zIndex: 120 }}
       toastOptions={{
-        duration: 4200,
+        duration: 3000,
         className: toastClassName,
         style: toastStyle,
         success: {
+          duration: 3000,
           className: successToastClassName,
           style: toastStyle,
           iconTheme: {
@@ -38,7 +39,7 @@ export function GlassToaster() {
           },
         },
         error: {
-          duration: 5600,
+          duration: 3000,
           className: errorToastClassName,
           style: toastStyle,
           iconTheme: {
@@ -47,6 +48,7 @@ export function GlassToaster() {
           },
         },
         loading: {
+          duration: 3000,
           className: successToastClassName,
           style: toastStyle,
           iconTheme: {
