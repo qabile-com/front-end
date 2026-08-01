@@ -1,8 +1,9 @@
 // src/features/dashboard/application/use-social-data.ts
 'use client';
 
-import { useMutation, useQuery, useQueryClient, useState } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ISocialRepository } from '../domain/social-repository';
+import { useState } from 'react';
 
 export function useSocialData(repo: ISocialRepository) {
   const queryClient = useQueryClient();
@@ -24,13 +25,8 @@ export function useSocialData(repo: ISocialRepository) {
   const [newPostIds, setNewPostIds] = useState<Set<string>>(() => new Set());
 
   const publishPostMutation = useMutation({
-    mutationFn: ({
-      text,
-      imageFile,
-    }: {
-      text: string;
-      imageFile?: File | null;
-    }) => repo.createPost(text, imageFile),
+    mutationFn: ({ text, imageFile }: { text: string; imageFile?: File | null }) =>
+      repo.createPost(text, imageFile),
     onSuccess: (newPost) => {
       setNewPostIds((prev) => {
         const next = new Set(prev);
