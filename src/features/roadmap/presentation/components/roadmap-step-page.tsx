@@ -494,7 +494,7 @@ function CompleteFooter({
         )}
       </p>
       <motion.div
-        className="lg:order-2 lg:w-40"
+        className="lg:order-2 lg:w-auto"
         whileTap={reduceMotion ? undefined : { scale: 0.98 }}
       >
         <div className="mx-auto flex max-w-[920px] min-w-0 items-center gap-3">
@@ -529,7 +529,7 @@ function CompleteFooter({
                 <Link
                   href={`/roadmap/steps/${nextStep}`}
                   className={cn(
-                    'text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)] lg:min-h-18 lg:w-18',
+                    'text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)] lg:h-18 lg:w-18',
                   )}
                 >
                   <Icon name="arrow-left" size={22} />
