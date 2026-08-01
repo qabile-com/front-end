@@ -97,6 +97,11 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
     enqueueReward(reward, {
       xpDescription: `آتش مرحله ${toPersianDigits(stepWithProgress.id)} به حساب قبیله‌ات اضافه شد.`,
     });
+
+    const isLastStep = stepWithProgress.id >= (activeRoadmap.roadmap?.totalSteps ?? 0);
+    if (!isLastStep) {
+      router.push(`/roadmap/steps/${stepWithProgress.id + 1}`);
+    }
   }, [
     canComplete,
     completeStep,
@@ -105,6 +110,7 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
     enqueueReward,
     checkedItems,
     condition,
+    router,
   ]);
 
   const conditionMessage = useMemo(() => {
@@ -486,43 +492,45 @@ function CompleteFooter({
         whileTap={reduceMotion ? undefined : { scale: 0.98 }}
       >
         <div className="mx-auto flex max-w-[920px] min-w-0 items-center gap-3">
-          <Button
-            type="button"
-            variant="primary"
-            block
-            disabled={isCompleting || isLoadingProgress || isDone || isLocked || !canComplete}
-            onClick={onComplete}
-            className="rounded-full text-white"
-          >
-            {isCompleting
-              ? 'در حال بررسی...'
-              : isDone
-                ? 'قبلاً تکمیل شده'
-                : isLocked
-                  ? 'مرحله قفل است'
-                  : isRoadmapComplete
-                    ? 'نقشه راه تکمیل شده است'
-                    : 'تکمیل کردن'}
-            <Icon name="check" size={18} />
-          </Button>
-          {!isLastStep && (
+          {isRoadmapComplete && isLastStep ? (
             <Link
-              href={`/roadmap/steps/${nextStep}`}
-              className={cn(
-                'text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)]',
-              )}
+              href="/roadmap"
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-black transition-[transform,border-color,box-shadow,opacity] duration-300 hover:-translate-y-0.5 border-success/40 text-success bg-success/10 hover:border-success/60"
             >
-              <Icon name="arrow-left" size={22} />
+              بازگشت به خانه
+              <Icon name="arrow-left" size={18} />
             </Link>
+          ) : (
+            <>
+              <Button
+                type="button"
+                variant="primary"
+                block
+                disabled={isCompleting || isLoadingProgress || isDone || isLocked || !canComplete}
+                onClick={onComplete}
+                className="rounded-full text-white"
+              >
+                {isCompleting
+                  ? 'در حال بررسی...'
+                  : isDone
+                    ? 'قبلاً تکمیل شده'
+                    : isLocked
+                      ? 'مرحله قفل است'
+                      : 'تکمیل کردن'}
+                <Icon name="check" size={18} />
+              </Button>
+              {!isLastStep && (
+                <Link
+                  href={`/roadmap/steps/${nextStep}`}
+                  className={cn(
+                    'text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)]',
+                  )}
+                >
+                  <Icon name="arrow-left" size={22} />
+                </Link>
+              )}
+            </>
           )}
-          {/* <button
-            type="button"
-            onClick={nextStep}
-            className="text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)]"
-            aria-label="بازگشت به دوره‌ها"
-          >
-            <Icon name="arrow-left" size={22} />
-          </button> */}
         </div>
       </motion.div>
     </footer>
