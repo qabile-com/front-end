@@ -529,7 +529,7 @@ function CompleteFooter({
                 <Link
                   href={`/roadmap/steps/${nextStep}`}
                   className={cn(
-                    'text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)]',
+                    'text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)] lg:min-h-18 lg:w-18',
                   )}
                 >
                   <Icon name="arrow-left" size={22} />
