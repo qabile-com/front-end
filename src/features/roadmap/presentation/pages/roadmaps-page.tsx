@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   DashboardPageShell,
   ErrorState,
@@ -25,6 +26,7 @@ const STATUS_LABEL: Record<NonNullable<RoadmapSummary['status']>, string> = {
 };
 
 export function RoadmapsPage() {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const queryParams = useMemo(
@@ -37,8 +39,17 @@ export function RoadmapsPage() {
     <MotionPage>
       <DashboardPageShell>
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
-          <header className="flex flex-col gap-4 rounded-[26px] border border-[rgba(255,98,0,.22)] bg-[radial-gradient(circle_at_80%_20%,rgba(255,98,0,.16),transparent_42%),rgba(18,9,6,.82)] p-5 sm:p-6 lg:flex-row lg:items-end lg:justify-between">
-            <div>
+          <header className="relative flex flex-col gap-4 rounded-[26px] border border-[rgba(255,98,0,.22)] bg-[radial-gradient(circle_at_80%_20%,rgba(255,98,0,.16),transparent_42%),rgba(18,9,6,.82)] p-5 sm:p-6 lg:flex-row lg:items-end lg:justify-between">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="text-ink-3 hover:text-ember absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full transition-colors lg:hidden"
+              aria-label="بازگشت"
+            >
+              <Icon name="arrow-right" size={20} />
+            </button>
+
+            <div className="pr-10 lg:pr-0">
               <span className="text-ember mb-2 inline-flex rounded-full border border-[rgba(255,98,0,.25)] bg-black/25 px-3 py-1 text-xs font-black">
                 مسیر رشد
               </span>
@@ -168,11 +179,9 @@ function RoadmapCard({ roadmap }: { roadmap: RoadmapSummary }) {
         href={href}
         className={cn(
           'inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-black transition-[transform,border-color,box-shadow,opacity] duration-300 hover:-translate-y-0.5',
-          isComplete
-            ? 'border-success/40 text-success bg-success/10 hover:border-success/60'
-            : roadmap.isActive
-              ? 'text-[#1a0a00] shadow-[0_8px_28px_-12px_var(--glow)] [background:var(--fire-grad)]'
-              : 'border-hair hover:border-hair-2 border [background:var(--glass-2)]',
+          roadmap.isActive
+            ? 'text-[#1a0a00] shadow-[0_8px_28px_-12px_var(--glow)] [background:var(--fire-grad)]'
+            : 'border-hair hover:border-hair-2 border [background:var(--glass-2)]',
         )}
       >
         {isComplete ? 'تکمیل شده است' : roadmap.isActive ? 'ادامه مسیر' : 'مشاهده مسیر'}
