@@ -202,7 +202,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <InstallAppModal
         isOpen={installPromptOpen}
         markFirstLoginPromptAsSeen
-        currentUserId={user.id}
+        currentUserId={user?.id}
         onClose={() => setInstallPromptOpen(false)}
       />
 

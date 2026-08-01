@@ -8,7 +8,7 @@ export function useActiveRoadmap(repo: IRoadmapRepository) {
   const query = useQuery({
     queryKey: roadmapKeys.active(),
     queryFn: ({ signal }) => repo.getActiveRoadmap({ signal }),
-    staleTime: 60_000,
+    staleTime: 0,
     retry: 1,
   });
 
