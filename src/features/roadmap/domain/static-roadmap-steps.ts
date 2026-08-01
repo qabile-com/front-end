@@ -138,7 +138,7 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
     type: 'مقاله',
     status: 'next',
     kind: 'article',
-    condition: { type: 'timer', seconds: 10 },
+    condition: { type: 'timer', seconds: 5 },
     content: [
       `انگیزه فقط اراده نیست؛ تغذیه چگونه روی انرژی، تمرکز، خلق‌وخو و پشتکار تو اثر می‌گذارد؟
 خیلی از ما وقتی انگیزه کافی برای انجام کارها نداریم، خودمان را سرزنش می‌کنیم. فکر می‌کنیم مشکل از اراده ضعیف یا تنبلی است. اما واقعیت این است که مغز و بدن ما قبل از هر چیز به سوخت مناسب نیاز دارند.
