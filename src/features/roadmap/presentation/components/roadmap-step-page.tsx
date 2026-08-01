@@ -41,7 +41,12 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
   const intervalRef = useRef<number | null>(null);
   const [elapsedForCheck, setElapsedForCheck] = useState(0);
 
-  const condition = useStepCondition(stepWithProgress, shouldCheckCondition, checkedItems, elapsedForCheck);
+  const condition = useStepCondition(
+    stepWithProgress,
+    shouldCheckCondition,
+    checkedItems,
+    elapsedForCheck,
+  );
 
   const isDone = stepWithProgress.status === 'done';
   const conditionType = stepWithProgress.condition?.type;
@@ -84,7 +89,9 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
       const fresh = await condition.refetch();
 
       if (!fresh?.satisfied) {
-        showError(fresh?.message || condition.message || 'شرایط تکمیل این مرحله هنوز تکمیل نشده است.');
+        showError(
+          fresh?.message || condition.message || 'شرایط تکمیل این مرحله هنوز تکمیل نشده است.',
+        );
         return;
       }
     }
@@ -481,8 +488,7 @@ function CompleteFooter({
           'نقشه راه تکمیل شده است'
         ) : (
           <>
-            با تکمیل این مرحله{' '}
-            <b className="text-gold mx-1">{formatPersianNumber(xp)} آتش </b>
+            با تکمیل این مرحله <b className="text-gold mx-1">{formatPersianNumber(xp)} آتش </b>
             دریافت می‌کنی
           </>
         )}
@@ -495,7 +501,7 @@ function CompleteFooter({
           {isRoadmapComplete && isLastStep ? (
             <Link
               href="/roadmap"
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-black transition-[transform,border-color,box-shadow,opacity] duration-300 hover:-translate-y-0.5 border-success/40 text-success bg-success/10 hover:border-success/60"
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-[rgba(255,98,0,.18)] bg-[rgba(255,98,0,.13)] text-sm font-black transition-[transform,border-color,box-shadow,opacity] duration-300 hover:-translate-y-0.5 hover:border-[rgba(255,98,0,0.48)]"
             >
               بازگشت به خانه
               <Icon name="arrow-left" size={18} />
