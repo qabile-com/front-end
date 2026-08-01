@@ -120,6 +120,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const isHomePage = pathname === '/home';
   const showChrome = !isHomePage || (!userLoading && user);
+  const isUserNotFound = useMemo(
+    () => Boolean(userError && /not found|یافت نشد/i.test(userError)),
+    [userError],
+  );
+
+  useEffect(() => {
+    if (!isUserNotFound) return;
+    clearAuthSession();
+    router.replace('/auth');
+  }, [isUserNotFound, router]);
+
+  if (isUserNotFound) return null;
 
   if (userLoading && !isHomePage) return <DashboardLoader />;
   if (userError && !isHomePage)
