@@ -181,8 +181,8 @@ export const STATIC_ROADMAP_STEPS: StaticRoadmapStep[] = [
     kind: 'social-follow',
     condition: { type: 'timer', seconds: 10 },
     socialLinks: [
-      { label: 'qabileh.app', value: 'https://instagram.com/qabileh.app' },
-      { label: 'adam.ai', value: 'https://instagram.com/adan.ai' },
+      { label: 'tt49', value: 'https://instagram.com/tt49' },
+      { label: 'trade.adam', value: 'https://instagram.com/trade.adam' },
     ],
     imageSlots: [{ src: ROADMAP_ASSET_PATHS.step6, alt: 'راهنمای دنبال کردن صفحه اینستاگرام' }],
   },
