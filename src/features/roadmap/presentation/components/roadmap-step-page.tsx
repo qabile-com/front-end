@@ -104,11 +104,6 @@ export function RoadmapStepPage({ step }: RoadmapStepPageProps) {
     enqueueReward(reward, {
       xpDescription: `آتش مرحله ${toPersianDigits(stepWithProgress.id)} به حساب قبیله‌ات اضافه شد.`,
     });
-
-    const isLastStep = stepWithProgress.id >= (activeRoadmap.roadmap?.totalSteps ?? 0);
-    if (!isLastStep) {
-      router.push(`/roadmap/steps/${stepWithProgress.id + 1}`);
-    }
   }, [
     canComplete,
     completeStep,
@@ -529,7 +524,7 @@ function CompleteFooter({
                 <Link
                   href={`/roadmap/steps/${nextStep}`}
                   className={cn(
-                    'text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)] lg:h-18 lg:w-18',
+                    'text-gold grid min-h-13 w-14 place-items-center rounded-[14px] border border-[var(--session-border)] bg-[var(--session-surface-2)] transition-colors hover:border-[var(--session-border-strong)] lg:h-14 lg:w-18',
                   )}
                 >
                   <Icon name="arrow-left" size={22} />
