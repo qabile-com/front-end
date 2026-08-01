@@ -170,38 +170,36 @@ export function SocialTab({
             نتیجه‌ای پیدا نشد
           </div>
         )}
-        <AnimatePresence mode="popLayout">
-          {allPosts.map((post) => {
-            const isNew = newPostIds?.has(post.id);
-            return (
-              <motion.div
-                key={post.id}
-                initial={isNew ? { opacity: 0, y: -20, scale: 0.98 } : false}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 260,
-                  damping: 22,
-                  mass: 0.8,
-                }}
-              >
-                <PostCard
-                  post={post}
-                  onClick={() => router.push(`/social/${post.id}`)}
-                  onShare={() => void handleShare(post)}
-                  onAuthorClick={(authorId) => router.push(`/social/users/${authorId}`)}
-                  onToggleAuthorFollow={(authorId, isFollowedByMe) =>
-                    followToggle.mutate({ userId: authorId, isFollowedByMe })
-                  }
-                  isTogglingAuthorFollow={followToggle.isPending}
-                  togglingAuthorId={followToggle.variables?.userId}
-                  currentUserRole={currentUserRole}
-                  adminRepo={adminRepo}
-                />
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+        {allPosts.map((post) => {
+          const isNew = newPostIds?.has(post.id);
+          return (
+            <motion.div
+              key={post.id}
+              initial={isNew ? { opacity: 0, y: -20, scale: 0.98 } : false}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{
+                type: 'spring',
+                stiffness: 260,
+                damping: 22,
+                mass: 0.8,
+              }}
+            >
+              <PostCard
+                post={post}
+                onClick={() => router.push(`/social/${post.id}`)}
+                onShare={() => void handleShare(post)}
+                onAuthorClick={(authorId) => router.push(`/social/users/${authorId}`)}
+                onToggleAuthorFollow={(authorId, isFollowedByMe) =>
+                  followToggle.mutate({ userId: authorId, isFollowedByMe })
+                }
+                isTogglingAuthorFollow={followToggle.isPending}
+                togglingAuthorId={followToggle.variables?.userId}
+                currentUserRole={currentUserRole}
+                adminRepo={adminRepo}
+              />
+            </motion.div>
+          );
+        })}
 
         {/* Load more pagination */}
         {feedQuery.hasNextPage && !feedQuery.isFetchingNextPage && (
