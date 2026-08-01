@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Button, CopyButton, DashboardPageShell, Icon, MotionPage } from '@/shared/ui';
+import { Button, DashboardPageShell, Icon, MotionPage } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { formatPersianNumber, toPersianDigits } from '@/core/lib/persian';
 import { useActiveRoadmap } from '../../application/use-active-roadmap';
@@ -276,22 +276,20 @@ function SocialFollowStep({ step }: { step: StaticRoadmapStep }) {
     <section className="space-y-3 rounded-[18px] border border-[rgba(255,98,0,.16)] bg-[rgba(36,13,5,.72)] p-3 sm:p-4">
       <div className="grid gap-3 sm:grid-cols-2">
         {socialLinks.map((link, index) => (
-          <div
+          <a
             key={`${link.label}-${index}`}
-            className="flex items-center gap-3 rounded-[12px] border border-[rgba(255,98,0,.22)] bg-black/25 px-3 py-2.5"
+            href={link.value}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 rounded-[12px] border border-[rgba(255,98,0,.22)] bg-black/25 px-3 py-2.5 transition hover:border-[rgba(255,98,0,.42)] hover:bg-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(255,98,0,.65)]"
+            aria-label={`Open Instagram ${link.label}`}
           >
-            <CopyButton
-              value={link.value}
-              idleLabel={null}
-              aria-label={`کپی ${link.label}`}
-              className="hover:text-gold text-white/80"
-            />
             <span className="min-w-0 flex-1 truncate text-left text-sm font-bold text-white">
               {link.label}
             </span>
             <span className="h-6 border-s border-[rgba(255,98,0,.35)]" />
             <Icon name="ig" size={18} className="text-white" />
-          </div>
+          </a>
         ))}
       </div>
       {step.imageSlots?.[0] && <RoadmapImage slot={step.imageSlots[0]} index={0} wide />}
