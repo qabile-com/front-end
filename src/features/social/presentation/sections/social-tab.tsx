@@ -644,6 +644,15 @@ function PostCard({
           >
             <div className="mb-1 flex items-center gap-1.5">
               <b className="truncate text-sm font-extrabold">{post.author}</b>
+              {post.verified && (
+                <img
+                  src="/assets/verified-user.webp"
+                  alt="verified"
+                  width={24}
+                  height={24}
+                  className="inline-block size-6 shrink-0"
+                />
+              )}
               {post.isAdam && (
                 <span className="text-gold rounded-xs border border-[rgba(255,98,0,.18)] px-2 py-1 text-[10px] font-extrabold shadow-[0_4px_16px_-8px_rgba(255,98,0,.25)] [background:linear-gradient(135deg,rgba(255,98,0,.16),rgba(243,186,99,.08))]">
                   موسس
