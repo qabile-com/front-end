@@ -56,13 +56,12 @@ export function useStepCondition(
 
       try {
         const stats = await getForumUserStats(user.id);
-        likesCount = stats.data.totalLikesReceived ?? 0;
-        commentsCount = stats.data.totalCommentsReceived ?? 0;
+        likesCount = stats.data.givenLikesCount ?? 0;
+        commentsCount = stats.data.givenCommentsCount ?? 0;
       } catch {
         likesCount = 0;
         commentsCount = 0;
       }
-
       const satisfied = likesCount >= condition.minLikes && commentsCount >= condition.minComments;
 
       return {
