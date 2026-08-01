@@ -27,24 +27,19 @@ export async function resolveAuthEntryTarget(): Promise<AuthEntryTarget> {
         refreshToken: response.data.refreshToken,
         expiresAt: response.data.expiresAt,
       });
-      return '/home';
     } catch {
       clearAuthSession();
       return '/auth';
     }
   }
 
-  if (!session.user) {
-    try {
-      await getMe();
-      return '/home';
-    } catch {
-      clearAuthSession();
-      return '/auth';
-    }
+  try {
+    await getMe();
+    return '/home';
+  } catch {
+    clearAuthSession();
+    return '/auth';
   }
-
-  return '/home';
 }
 
 function shouldRefresh(session: StoredAuthSession) {
