@@ -1,7 +1,7 @@
 // src/features/dashboard/application/use-social-data.ts
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, useState } from '@tanstack/react-query';
 import type { ISocialRepository } from '../domain/social-repository';
 
 export function useSocialData(repo: ISocialRepository) {
@@ -21,7 +21,7 @@ export function useSocialData(repo: ISocialRepository) {
     retry: 1,
   });
 
-  const newPostIdsRef = { current: new Set<string>() };
+  const [newPostIds, setNewPostIds] = useState<Set<string>>(() => new Set());
 
   const publishPostMutation = useMutation({
     mutationFn: ({
@@ -32,7 +32,11 @@ export function useSocialData(repo: ISocialRepository) {
       imageFile?: File | null;
     }) => repo.createPost(text, imageFile),
     onSuccess: (newPost) => {
-      newPostIdsRef.current.add(newPost.id);
+      setNewPostIds((prev) => {
+        const next = new Set(prev);
+        next.add(newPost.id);
+        return next;
+      });
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
     },
   });
@@ -70,6 +74,6 @@ export function useSocialData(repo: ISocialRepository) {
     addComment,
     refetchTags: tagsQuery.refetch,
     refetchActiveUsers: activeUsersQuery.refetch,
-    newPostIds: newPostIdsRef.current,
+    newPostIds,
   };
 }
