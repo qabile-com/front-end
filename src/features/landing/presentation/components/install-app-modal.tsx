@@ -1,12 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BaseModal, Button, Icon, OptionalImage } from '@/shared/ui';
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
-}
+import { BaseModal, OptionalImage } from '@/shared/ui';
 
 const DISMISS_KEY = 'qabile-install-modal-dismissed-at';
 export const DISMISS_USER_KEY = 'qabile-install-modal-dismissed-user-id';
@@ -53,8 +48,6 @@ export function InstallAppModal({
   currentUserId,
 }: InstallAppModalProps) {
   const [internalOpen, setInternalOpen] = useState(false);
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [hint, setHint] = useState<string | null>(null);
   const isOpen = controlledOpen ?? internalOpen;
   const platform = useMemo(() => getInstallPlatform(), []);
   const isAndroid = platform === 'android';
@@ -88,16 +81,6 @@ export function InstallAppModal({
     return () => window.clearTimeout(timer);
   }, [shouldShow]);
 
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      setInstallPrompt(event as BeforeInstallPromptEvent);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  }, []);
-
   const closeModal = useCallback(() => {
     window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
     if (currentUserId) {
@@ -109,28 +92,6 @@ export function InstallAppModal({
     setInternalOpen(false);
     onClose?.();
   }, [currentUserId, markFirstLoginPromptAsSeen, onClose]);
-
-  const handleInstall = useCallback(async () => {
-    if (!installPrompt) {
-      setHint('اگر پنجره نصب باز نشد، راهنمای پایین صفحه را دنبال کن.');
-      return;
-    }
-
-    await installPrompt.prompt();
-    const choice = await installPrompt.userChoice;
-    if (choice.outcome === 'accepted') {
-      window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
-      if (currentUserId) {
-        window.localStorage.setItem(DISMISS_USER_KEY, currentUserId);
-      }
-      if (markFirstLoginPromptAsSeen) {
-        window.localStorage.setItem(FIRST_LOGIN_INSTALL_PROMPT_SEEN_KEY, '1');
-      }
-      setInternalOpen(false);
-      onClose?.();
-    }
-    setInstallPrompt(null);
-  }, [installPrompt, currentUserId, markFirstLoginPromptAsSeen, onClose]);
 
   return (
     <BaseModal
@@ -186,20 +147,6 @@ export function InstallAppModal({
             ))}
           </ol>
         )}
-
-        {hint && <p className="text-gold mt-3 text-[12px] leading-6">{hint}</p>}
-
-        <Button
-          type="button"
-          variant="primary"
-          size="lg"
-          block
-          onClick={() => void handleInstall()}
-          className="mt-5 min-h-13 rounded-[14px] text-[16px]"
-        >
-          <Icon name="download" size={18} />
-          دانلود اپلیکیشن
-        </Button>
       </div>
     </BaseModal>
   );
