@@ -3,6 +3,7 @@ import {
   clearAuthSession,
   getAccessToken,
   getRefreshToken,
+  getStoredAuthSession,
   updateStoredTokens,
 } from '@/core/auth/token';
 
@@ -11,6 +12,7 @@ export class ApiError extends Error {
   error?: string;
   path?: string;
   requestId?: string;
+  isAuthSessionInvalid?: boolean;
 
   constructor(message: string, details: Partial<ApiError> = {}) {
     super(message);
@@ -19,8 +21,10 @@ export class ApiError extends Error {
   }
 }
 
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+
 const httpClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001',
+  baseURL: apiBaseUrl,
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -44,7 +48,7 @@ httpClient.interceptors.response.use(
           try {
             originalRequest._retry = true;
             const response = await axios.post(
-              `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'}/api/v1/auth/refresh`,
+              `${apiBaseUrl}/api/v1/auth/refresh`,
               { refreshToken },
               { headers: { 'Content-Type': 'application/json' } },
             );
@@ -67,17 +71,27 @@ httpClient.interceptors.response.use(
         }
       }
 
-      if (error.response.status === 401) {
+      const data = error.response.data;
+      const message = Array.isArray(data?.message)
+        ? data.message.join('، ')
+        : data?.message || error.message;
+      const sessionInvalid = isInvalidAuthSessionResponse(
+        error.response.status,
+        message,
+        data?.path,
+      );
+
+      if (error.response.status === 401 || sessionInvalid) {
         clearAuthSession();
       }
-      const data = error.response.data;
-      const message = Array.isArray(data?.message) ? data.message.join('، ') : data?.message || error.message;
+
       return Promise.reject(
-        new ApiError(message, {
-          statusCode: data?.statusCode ?? error.response.status,
+        new ApiError(sessionInvalid ? 'نشست تو معتبر نیست. لطفاً دوباره وارد شو.' : message, {
+          statusCode: sessionInvalid ? 401 : data?.statusCode ?? error.response.status,
           error: data?.error,
           path: data?.path,
           requestId: data?.requestId,
+          isAuthSessionInvalid: sessionInvalid,
         }),
       );
     }
@@ -86,3 +100,22 @@ httpClient.interceptors.response.use(
 );
 
 export { httpClient };
+
+function isInvalidAuthSessionResponse(statusCode: number, message?: string, path?: string) {
+  if (statusCode === 401) return true;
+  if (statusCode !== 404) return false;
+
+  const normalizedMessage = (message ?? '').toLowerCase();
+  const normalizedPath = path ?? '';
+  const isCurrentUserEndpoint =
+    normalizedPath.includes('/auth/me') ||
+    normalizedPath.includes('/users/me') ||
+    normalizedPath.includes('/dashboard');
+
+  if (isCurrentUserEndpoint) return true;
+
+  const storedUserId = getStoredAuthSession()?.user?.id;
+  if (!storedUserId) return false;
+
+  return normalizedMessage.includes(storedUserId.toLowerCase());
+}

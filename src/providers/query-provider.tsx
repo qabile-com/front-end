@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { AUTH_SESSION_EVENT } from '@/core/auth/token';
+import { AUTH_SESSION_EVENT, getAccessToken } from '@/core/auth/token';
 
 let globalQueryClient: QueryClient | null = null;
 
@@ -35,7 +35,9 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const handler = () => {
-      resetAllQueries();
+      if (!getAccessToken()) {
+        resetAllQueries();
+      }
     };
     window.addEventListener(AUTH_SESSION_EVENT, handler);
     window.addEventListener('storage', handler);

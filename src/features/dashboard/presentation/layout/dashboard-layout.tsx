@@ -9,6 +9,7 @@ import { cn } from '@/core/lib/cn';
 import { formatPersianNumber, toPersianDigits } from '@/core/lib/persian';
 import { clearAuthSession } from '@/core/auth/token';
 import { createAuthRedirectHref } from '@/core/auth/redirect';
+import { ApiError } from '@/core/api/http-client';
 import { useAuthGuard } from '@/features/auth/application/use-auth-guard';
 import { showError } from '@/shared/lib/toast';
 import { NAV, TAB_TITLES } from '../../domain/dashboard.data';
@@ -53,11 +54,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [signupAchievements, setSignupAchievements] = useState<Achievement[] | null>(null);
   const [shouldShowInstallAfterSignupXp, setShouldShowInstallAfterSignupXp] = useState(false);
   const [installPromptOpen, setInstallPromptOpen] = useState(false);
-  const { user, loading: userLoading, error: userError, refetch: refetchUser } = useUser(userRepo);
+  const {
+    user,
+    loading: userLoading,
+    error: userError,
+    rawError: userRawError,
+    refetch: refetchUser,
+  } = useUser(userRepo);
   const completeOnboarding = useMutation({
     mutationFn: () => userRepo.updateOnboardingCompletion(true),
     onSuccess: (updatedUser) => {
       queryClient.setQueryData(['dashboard', 'user', 'current'], updatedUser);
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] });
     },
   });
 
@@ -74,7 +82,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   useEffect(() => {
     if (!userError) return;
 
-    const statusCode = (userError as { statusCode?: number })?.statusCode;
+    const statusCode = userRawError instanceof ApiError ? userRawError.statusCode : undefined;
     if (statusCode === 401) {
       clearAuthSession();
       const currentPath = `${window.location.pathname}${window.location.search}`;
@@ -82,7 +90,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     } else {
       showError('خطا در اتصال به سرور. لطفا دوباره تلاش کنید.');
     }
-  }, [router, userError]);
+  }, [router, userError, userRawError]);
 
   useEffect(() => {
     if (!user) return;
@@ -121,8 +129,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const isHomePage = pathname === '/home';
   const showChrome = !isHomePage || (!userLoading && user);
   const isUserNotFound = useMemo(
-    () => Boolean(userError && /not found|یافت نشد/i.test(userError)),
-    [userError],
+    () =>
+      Boolean(
+        userRawError instanceof ApiError
+          ? userRawError.isAuthSessionInvalid
+          : userError && /not found|یافت نشد/i.test(userError),
+      ),
+    [userError, userRawError],
   );
 
   useEffect(() => {

@@ -7,7 +7,7 @@ export function useUser(repo: IUserRepository) {
   const query = useQuery({
     queryKey: ['dashboard', 'user', 'current'],
     queryFn: () => repo.getCurrentUser(),
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 
@@ -15,6 +15,7 @@ export function useUser(repo: IUserRepository) {
     user: query.data ?? null,
     loading: query.isPending,
     error: query.error instanceof Error ? query.error.message : null,
+    rawError: query.error,
     refetch: query.refetch,
   };
 }
