@@ -48,7 +48,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
   const queryClient = useQueryClient();
-  useAuthGuard();
+  const authGuard = useAuthGuard();
 
   const [signupXp, setSignupXp] = useState<number | null>(null);
   const [signupAchievements, setSignupAchievements] = useState<Achievement[] | null>(null);
@@ -60,7 +60,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     error: userError,
     rawError: userRawError,
     refetch: refetchUser,
-  } = useUser(userRepo);
+  } = useUser(userRepo, { enabled: authGuard.isReady && authGuard.isLoggedIn });
   const completeOnboarding = useMutation({
     mutationFn: () => userRepo.updateOnboardingCompletion(true),
     onSuccess: (updatedUser) => {
@@ -145,6 +145,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [isUserNotFound, router]);
 
   if (isUserNotFound) return null;
+  if (authGuard.isReady && !authGuard.isLoggedIn) return null;
 
   if (userLoading && !isHomePage) return <DashboardLoader />;
   if (userError && !isHomePage)
