@@ -14,6 +14,7 @@ export { PhoenixArt } from './phoenix-art';
 export { LandingPhoenix } from './landing-phoenix';
 export { OptionalImage } from './optional-image';
 export { Panel } from './panel';
+export { PullToRefresh } from './pull-to-refresh';
 export { Reveal } from './reveal';
 export { CountUp } from './count-up';
 export { EmberCanvas } from './ember-canvas';

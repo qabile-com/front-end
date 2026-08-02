@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { PullToRefresh } from '@/shared/ui';
 import { PWASplashScreen } from '@/shared/ui/pwa-splash-screen';
 
 export function RootLayoutClient({ children }: { children: React.ReactNode }) {
@@ -26,8 +27,12 @@ export function RootLayoutClient({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const handleRefresh = useCallback(() => {
+    window.location.reload();
+  }, []);
+
   if (!showSplash) {
-    return <>{children}</>;
+    return <PullToRefresh onRefresh={handleRefresh}>{children}</PullToRefresh>;
   }
 
   return (
