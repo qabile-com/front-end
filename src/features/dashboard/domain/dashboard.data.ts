@@ -28,7 +28,7 @@ export const USER: CurrentUser = {
 
 export const NAV: NavItem[] = [
   { id: 'home', label: 'خانه', icon: 'home-m', href: '/home' },
-  { id: 'social', label: 'انجمن', icon: 'community', href: '/social' },
+  { id: 'social', label: 'محفل', icon: 'community', href: '/social' },
   { id: 'courses', label: 'تالار دانش', icon: 'social', href: '/courses' },
   { id: 'profile', label: 'پروفایل', icon: 'profile', href: '/profile' },
 ];
@@ -36,7 +36,7 @@ export const NAV: NavItem[] = [
 export const TAB_TITLES: Record<string, string> = {
   home: 'خانه',
   lb: 'پرچم داران',
-  social: 'انجمن',
+  social: 'محفل',
   courses: 'تالار دانش',
   profile: 'پروفایل',
 };

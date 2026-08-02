@@ -68,7 +68,7 @@ export function SocialPostPage() {
               ? { label: 'ورود', href: createAuthRedirectHref(currentPath), icon: 'lock' }
               : { label: 'تلاش دوباره', onClick: () => void refetch(), icon: 'bolt' }
           }
-          secondaryAction={{ label: 'بازگشت به انجمن', href: '/social', icon: 'arrow-right' }}
+          secondaryAction={{ label: 'بازگشت به محفل', href: '/social', icon: 'arrow-right' }}
         />
       </div>
     );
@@ -82,7 +82,7 @@ export function SocialPostPage() {
         className="text-ink-3 hover:text-gold mb-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--color-hair)] bg-black/20 px-3 text-sm font-black transition-colors"
       >
         <Icon name="arrow-right" size={17} />
-        بازگشت به انجمن
+        بازگشت به محفل
       </button>
 
       <SocialPostDetail

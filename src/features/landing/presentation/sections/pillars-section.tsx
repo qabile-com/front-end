@@ -16,7 +16,7 @@ export function PillarsSection({ pillarFeatures }: PillarsSectionProps) {
             یک اکوسیستم کامل برای <span className="text-gradient-fire">رشدِ تو</span>
           </>
         }
-        sub="یادگیری، انگیزه و انجمن در یک‌جا. قبیله ققنوس همه‌ی چیزهایی را که برای ساختن نسخه‌ی بهتری از خودت لازم داری، در یک تجربه‌ی یکپارچه کنار هم می‌گذارد."
+        sub="یادگیری، انگیزه و محفل در یک‌جا. قبیله ققنوس همه‌ی چیزهایی را که برای ساختن نسخه‌ی بهتری از خودت لازم داری، در یک تجربه‌ی یکپارچه کنار هم می‌گذارد."
       />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4 lg:grid-cols-6">
@@ -86,7 +86,7 @@ export function PillarsSection({ pillarFeatures }: PillarsSectionProps) {
           </BentoCell>
         </Reveal>
         <Reveal as="div" delay={4} className="md:col-span-4">
-          <BentoCell icon="users" title="انجمن و رشد جمعی">
+          <BentoCell icon="users" title="محفل و رشد جمعی">
             تنها رشد نکن. در چالش‌های گروهی شرکت کن، تجربه به اشتراک بگذار و در دلِ یک قبیله‌ی واقعی
             پیش برو.
           </BentoCell>

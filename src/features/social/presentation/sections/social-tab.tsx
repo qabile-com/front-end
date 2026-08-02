@@ -154,7 +154,7 @@ export function SocialTab({
             <ErrorState
               compact
               title="پست‌ها دریافت نشد"
-              message="ارتباط با انجمن برقرار نشد. دوباره تلاش کن."
+              message="ارتباط با محفل برقرار نشد. دوباره تلاش کن."
               action={{
                 label: 'تلاش دوباره',
                 onClick: () => void feedQuery.refetch(),
@@ -317,7 +317,7 @@ export function SocialTab({
                 displayName,
                 username,
               });
-              showSuccess('پروفایل انجمن کامل شد.');
+              showSuccess('پروفایل محفل کامل شد.');
               setIsCompleteProfileOpen(false);
               setIsCreatePostOpen(true);
             } catch (error) {

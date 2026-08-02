@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'قبیله ققنوس',
     short_name: 'قبیله',
-    description: 'اکوسیستم رشد، یادگیری، نقشه راه، دوره‌ها و انجمن قبیله ققنوس.',
+    description: 'اکوسیستم رشد، یادگیری، نقشه راه، دوره‌ها و محفل قبیله ققنوس.',
     start_url: '/home',
     scope: '/',
     display: 'standalone',

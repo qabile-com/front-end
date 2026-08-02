@@ -11,7 +11,7 @@ interface MobileNavProps {
 
 const ITEMS: { id: DashboardTab; label: string; icon: IconName; href: string }[] = [
   { id: 'home', label: 'خانه', icon: 'home-m', href: '/home' },
-  { id: 'social', label: 'انجمن', icon: 'community', href: '/social' },
+  { id: 'social', label: 'محفل', icon: 'community', href: '/social' },
   { id: 'courses', label: 'تالار دانش', icon: 'social', href: '/courses' },
   { id: 'profile', label: 'پروفایل', icon: 'profile', href: '/profile' },
 ];

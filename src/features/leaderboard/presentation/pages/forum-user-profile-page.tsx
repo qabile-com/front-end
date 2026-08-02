@@ -60,7 +60,7 @@ export function ForumUserProfilePage() {
               ? { label: 'ورود', href: createAuthRedirectHref(currentPath), icon: 'lock' }
               : { label: 'تلاش دوباره', onClick: () => void profile.refetch(), icon: 'bolt' }
           }
-          secondaryAction={{ label: 'بازگشت به انجمن', href: '/social', icon: 'arrow-right' }}
+          secondaryAction={{ label: 'بازگشت به محفل', href: '/social', icon: 'arrow-right' }}
         />
       </DashboardPageShell>
     );
@@ -104,7 +104,7 @@ export function ForumUserProfilePage() {
                     </span>
                   )}
                   {blocked && (
-                    <span className="text-danger rounded-full border border-danger/30 px-2 py-1 text-[11px] font-black">
+                    <span className="text-danger border-danger/30 rounded-full border px-2 py-1 text-[11px] font-black">
                       بلاک شده
                     </span>
                   )}
@@ -122,7 +122,7 @@ export function ForumUserProfilePage() {
                     onClick={() => follow.toggle()}
                     className={cn(
                       'min-w-31 gap-1.5 transition-[border-color,background,color,opacity]',
-                      followed && 'border-gold/50 bg-white/5 text-gold border',
+                      followed && 'border-gold/50 text-gold border bg-white/5',
                     )}
                   >
                     {follow.isToggling && <InlineSpinner className="size-3.5" />}
@@ -131,15 +131,18 @@ export function ForumUserProfilePage() {
                 )}
                 {canBlock && (
                   <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={block.isPending}
-                  onClick={() => block.mutate(blocked)}
-                  className={cn('gap-1.5 border border-danger text-danger', blocked && 'border-gold text-gold')}
-                >
-                  {block.isPending && <InlineSpinner className="size-3.5" />}
-                  {blocked ? 'رفع بلاک' : 'بلاک'}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={block.isPending}
+                    onClick={() => block.mutate(blocked)}
+                    className={cn(
+                      'border-danger text-danger gap-1.5 border',
+                      blocked && 'border-gold text-gold',
+                    )}
+                  >
+                    {block.isPending && <InlineSpinner className="size-3.5" />}
+                    {blocked ? 'رفع بلاک' : 'بلاک'}
                   </Button>
                 )}
               </div>

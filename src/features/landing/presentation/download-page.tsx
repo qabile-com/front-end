@@ -21,7 +21,7 @@ const DOWNLOAD_ASSETS = {
 const FAQS = [
   {
     q: 'قبیله ققنوس دقیقاً چه چیزی است؟',
-    a: 'یک اکوسیستم یادگیری گیمیفای‌شده برای رشد فردی و توسعه مهارت است؛ جایی که با نقشه‌راه‌ها، تمرین‌ها، انجمن، آتش، دستاوردها و منتور هوشمند مسیر رشدت را منظم‌تر جلو می‌بری.',
+    a: 'یک اکوسیستم یادگیری گیمیفای‌شده برای رشد فردی و توسعه مهارت است؛ جایی که با نقشه‌راه‌ها، تمرین‌ها، محفل، آتش، دستاوردها و منتور هوشمند مسیر رشدت را منظم‌تر جلو می‌بری.',
   },
   {
     q: 'آیا برای شروع باید هزینه‌ای بپردازم؟',
@@ -271,7 +271,7 @@ function InstallCard({
           </div>
 
           <ol className="relative space-y-3">
-            <span className="absolute top-4 bottom-4 right-[15px] w-px bg-[linear-gradient(180deg,rgba(255,98,0,.65),rgba(255,98,0,.08))]" />
+            <span className="absolute top-4 right-[15px] bottom-4 w-px bg-[linear-gradient(180deg,rgba(255,98,0,.65),rgba(255,98,0,.08))]" />
             {steps.map((step, index) => (
               <li
                 key={step}

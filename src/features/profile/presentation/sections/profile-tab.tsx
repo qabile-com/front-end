@@ -257,7 +257,11 @@ export function ProfileTab({
           zIndexClassName="z-[1000]"
           panelClassName="w-full max-w-md"
         >
-          <ProfileSettingsPanel profile={profile} repo={profileRepo} onClose={() => setIsSettingsOpen(false)} />
+          <ProfileSettingsPanel
+            profile={profile}
+            repo={profileRepo}
+            onClose={() => setIsSettingsOpen(false)}
+          />
         </BaseModal>
       )}
 
@@ -269,7 +273,11 @@ export function ProfileTab({
           zIndexClassName="z-[1000]"
           panelClassName="w-full max-w-md"
         >
-          <EditProfileModal profile={profile} repo={profileRepo} onClose={() => setIsEditProfileOpen(false)} />
+          <EditProfileModal
+            profile={profile}
+            repo={profileRepo}
+            onClose={() => setIsEditProfileOpen(false)}
+          />
         </BaseModal>
       )}
     </>
@@ -435,7 +443,7 @@ const ACHIEVEMENT_RULES: Record<
   'ghalb-ghabile': {
     description:
       'نام تو با احترام برده می‌شود. همراهی، حمایت و انرژی تو، قبیله را گرم‌تر و متحدتر کرده است.',
-    condition: 'رسیدن به ۳۰ فالور یا ثبت ۳۰ پیام در انجمن',
+    condition: 'رسیدن به ۳۰ فالور یا ثبت ۳۰ پیام در محفل',
   },
 };
 
