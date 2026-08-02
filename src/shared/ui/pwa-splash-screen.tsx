@@ -3,6 +3,11 @@
 import { useEffect, useState } from 'react';
 import { cn } from '@/core/lib/cn';
 
+const SPLASH_INITIAL_DELAY_MS = 250;
+const SPLASH_SHRINK_DELAY_MS = 500;
+const SPLASH_PULSE_DELAY_MS = 750;
+const SPLASH_EXIT_MS = 220;
+
 interface PWASplashScreenProps {
   onReady: () => void;
 }
@@ -12,30 +17,32 @@ export function PWASplashScreen({ onReady }: PWASplashScreenProps) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    if (isReady) return;
+
     const timer1 = setTimeout(() => {
       setPhase('show-icon');
-    }, 1200);
+    }, SPLASH_INITIAL_DELAY_MS);
 
     const timer2 = setTimeout(() => {
       setPhase('shrink');
-    }, 1500);
+    }, SPLASH_SHRINK_DELAY_MS);
 
     const timer3 = setTimeout(() => {
       setPhase('pulse');
-    }, 1800);
+    }, SPLASH_PULSE_DELAY_MS);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
     };
-  }, []);
+  }, [isReady]);
 
   useEffect(() => {
     if (phase === 'fade-out') {
       const timer = setTimeout(() => {
         onReady();
-      }, 300);
+      }, SPLASH_EXIT_MS);
       return () => clearTimeout(timer);
     }
   }, [phase, onReady]);
@@ -93,7 +100,7 @@ export function PWASplashProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleLoad = () => {
       setIsAppReady(true);
-      setTimeout(() => setShowSplash(false), 300);
+      setTimeout(() => setShowSplash(false), SPLASH_EXIT_MS);
     };
 
     if (document.readyState === 'complete') {

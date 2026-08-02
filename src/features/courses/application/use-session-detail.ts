@@ -12,6 +12,6 @@ export function useSessionDetail(
     queryKey: ['dashboard', 'session', courseId, sectionId],
     queryFn: () => repo.getSessionDetail(courseId!, sectionId!),
     enabled: !!courseId && !!sectionId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
   });
 }

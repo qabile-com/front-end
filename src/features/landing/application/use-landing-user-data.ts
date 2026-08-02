@@ -7,6 +7,6 @@ export function useLandingUserData(repo: ILandingUserRepository) {
   return useQuery({
     queryKey: ['landing-user'],
     queryFn: () => repo.getPersonalisedData(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
   });
 }

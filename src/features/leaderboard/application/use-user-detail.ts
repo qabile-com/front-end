@@ -9,7 +9,7 @@ export function useUserDetail(repo: IUserProfileRepository, userId: string | nul
     queryKey: ['dashboard', 'profile', userId],
     queryFn: () => repo.getUserProfile(userId!),
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
   });
 
   return {

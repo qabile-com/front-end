@@ -11,7 +11,7 @@ export function useSocialData(repo: ISocialRepository) {
   const tagsQuery = useQuery({
     queryKey: ['social', 'trending-tags'],
     queryFn: () => repo.getTrendingTags(),
-    staleTime: 5 * 60_000,
+    staleTime: 2 * 60_000,
     retry: 1,
   });
 

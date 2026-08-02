@@ -8,7 +8,7 @@ export function useUser(repo: IUserRepository, options: { enabled?: boolean } = 
     queryKey: ['dashboard', 'user', 'current'],
     queryFn: () => repo.getCurrentUser(),
     enabled: options.enabled ?? true,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
     retry: 1,
   });
 

@@ -8,7 +8,7 @@ export function useProfile(repo: IProfileRepository) {
   const query = useQuery({
     queryKey: ['dashboard', 'profile', 'me'],
     queryFn: () => repo.getMyProfile(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
   });
 
   return {
