@@ -187,7 +187,7 @@ export default function SessionPage() {
           <div className="min-w-0">
             {session && (
               <SessionContent
-                key={session.id}
+                key={`${session.id}-${isCourseUnlocked ? 'unlocked' : 'locked'}`}
                 session={session}
                 course={course}
                 currentSectionId={sectionId}

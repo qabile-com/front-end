@@ -80,7 +80,6 @@ export function SessionContent({
   const reportProgressRef = useRef(onWatchProgress);
   const [watchProgressBySession, setWatchProgressBySession] = useState<Record<string, number>>({});
   const [commentText, setCommentText] = useState('');
-  const [showVideo, setShowVideo] = useState(false);
   const [activeTab, setActiveTab] = useState<SessionTab>('about');
   const displayCourse: Course = course ?? {
     id: session.courseId ?? 'current-course',
@@ -102,6 +101,8 @@ export function SessionContent({
   const requiresPurchase = Boolean(session.requiresPurchase || !isCourseUnlocked);
   const hasEnoughFire = fireBalance >= coursePrice;
   const canTrackWatch = !requiresPurchase && Boolean(videoUrl);
+  const shouldAutoStartVideo = canTrackWatch;
+  const [showVideo, setShowVideo] = useState(shouldAutoStartVideo);
 
   useEffect(() => {
     reportProgressRef.current = onWatchProgress;
