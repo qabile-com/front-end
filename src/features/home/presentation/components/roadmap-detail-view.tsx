@@ -59,18 +59,18 @@ export function RoadmapDetailView({ isOpen, onClose, user, roadmap }: Props) {
           </div>
           <div>
             <div className="text-ink text-lg font-bold">۱۲۰</div>
-            <div className="text-ink-3 mt-1 text-[10px]">هم پرواز</div>
+            <div className="text-ink-3 mt-1 text-[10px]">فالور</div>
           </div>
           <div>
             <div className="text-ink text-lg font-bold">۸۵</div>
-            <div className="text-ink-3 mt-1 text-[10px]">هم پرواز شده</div>
+            <div className="text-ink-3 mt-1 text-[10px]">فالویینگ</div>
           </div>
         </div>
 
         {/* Actions */}
         <div className="flex justify-center gap-3 p-4">
           <Button variant="primary" size="sm">
-            هم پرواز شدن
+            فالو کردن
           </Button>
           <Button variant="ghost" size="sm" className="border-danger text-danger border">
             بلاک

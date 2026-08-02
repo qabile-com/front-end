@@ -284,7 +284,7 @@ export function SocialTab({
                       )}
                     >
                       {isUserToggling && <InlineSpinner className="size-3" />}
-                      {isFollowingUser ? 'هم‌پرواز' : 'هم پرواز شدن'}
+                      {isFollowingUser ? 'فالو شده' : 'فالو کردن'}
                     </button>
                   )}
                 </div>
@@ -678,7 +678,7 @@ function PostCard({
                 )}
               >
                 {isCurrentAuthorToggling && <InlineSpinner className="size-3" />}
-                {isFollowingAuthor ? 'هم‌پرواز' : 'هم پرواز شدن'}
+                {isFollowingAuthor ? 'فالو شده' : 'فالو کردن'}
               </button>
             )}
           </div>

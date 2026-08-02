@@ -100,7 +100,7 @@ function updateUserProfileFollow(
       peersFollowed: followersCount,
     },
     profileStats: profile.profileStats.map((stat) =>
-      stat.label.includes('هم‌پرواز') || stat.label.includes('هم پرواز')
+      stat.label.includes('فالور')
         ? { ...stat, value: String(followersCount) }
         : stat,
     ),

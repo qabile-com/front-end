@@ -126,7 +126,7 @@ export function ForumUserProfilePage() {
                     )}
                   >
                     {follow.isToggling && <InlineSpinner className="size-3.5" />}
-                    {followed ? 'هم‌پرواز هستید' : 'هم پرواز شدن'}
+                    {followed ? 'فالو شده' : 'فالو کردن'}
                   </Button>
                 )}
                 {canBlock && (
@@ -148,8 +148,8 @@ export function ForumUserProfilePage() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <ProfileStat label="پست" value={user.stats.streak} />
               <ProfileStat label="لایک" value={user.stats.xp} />
-              <ProfileStat label="هم‌پروازان" value={user.stats.peersFollowed} />
-              <ProfileStat label="هم‌پرواز شده" value={user.stats.peersFollowing} />
+              <ProfileStat label="فالورها" value={user.stats.peersFollowed} />
+              <ProfileStat label="فالویینگ‌ها" value={user.stats.peersFollowing} />
             </div>
           </div>
 

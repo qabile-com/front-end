@@ -51,7 +51,7 @@ export class HttpUserProfileRepository implements IUserProfileRepository {
         { value: String(postsCount), label: 'پست' },
         { value: String(likesReceived), label: 'لایک' },
         { value: String(commentsReceived), label: 'کامنت' },
-        { value: String(followersCount), label: 'هم‌پرواز' },
+        { value: String(followersCount), label: 'فالور' },
       ],
       achievements: [],
       posts: [],

@@ -86,13 +86,13 @@ export function UserProfileModal({
                   <div className="text-ink text-lg font-bold">
                     {toPersianDigits(user.stats.peersFollowing)}
                   </div>
-                  <div className="text-ink-3 mt-1 text-xs">هم پرواز</div>
+                  <div className="text-ink-3 mt-1 text-xs">فالور</div>
                 </div>{' '}
                 <div>
                   <div className="text-ink text-lg font-bold">
                     {toPersianDigits(user.stats.peersFollowed)}
                   </div>
-                  <div className="text-ink-3 mt-1 text-xs">هم پرواز شده</div>
+                  <div className="text-ink-3 mt-1 text-xs">فالویینگ</div>
                 </div>
                 <div>
                   <div className="text-ink text-lg font-bold">
@@ -115,7 +115,7 @@ export function UserProfileModal({
                   className={cn('gap-1.5', followed && 'border-gold text-gold border')}
                 >
                   {isToggling && <InlineSpinner className="size-3.5" />}
-                  {followed ? 'هم پرواز هستید' : 'هم پرواز شدن'}
+                  {followed ? 'فالو شده' : 'فالو کردن'}
                 </Button>
                 {/* <Button
                   variant={isFollowed ? 'ghost' : 'primary'}
