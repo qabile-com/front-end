@@ -50,6 +50,9 @@ export function useAddPostComment(repo: ISocialRepository) {
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       queryClient.invalidateQueries({ queryKey: socialPostQueryKey(variables.postId) });
       queryClient.invalidateQueries({ queryKey: socialPostCommentsQueryKey(variables.postId) });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'xp-history'] });
+      queryClient.invalidateQueries({ queryKey: ['roadmap-step-condition'] });
     },
   });
 }

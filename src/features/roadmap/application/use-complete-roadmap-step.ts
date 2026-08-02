@@ -15,6 +15,7 @@ export function useCompleteRoadmapStep(repo: IRoadmapRepository) {
         queryClient.invalidateQueries({ queryKey: roadmapKeys.all }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'home'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'xp-history'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] }),
       ]);
     },

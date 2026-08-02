@@ -34,6 +34,10 @@ export function useSocialData(repo: ISocialRepository) {
         return next;
       });
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['social', 'active-users'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'xp-history'] });
+      queryClient.invalidateQueries({ queryKey: ['roadmap-step-condition'] });
     },
   });
 
@@ -43,6 +47,9 @@ export function useSocialData(repo: ISocialRepository) {
     onSuccess: (_newComment, variables) => {
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       queryClient.invalidateQueries({ queryKey: ['social-post', variables.postId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'xp-history'] });
+      queryClient.invalidateQueries({ queryKey: ['roadmap-step-condition'] });
     },
   });
 

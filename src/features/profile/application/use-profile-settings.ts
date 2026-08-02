@@ -17,6 +17,7 @@ export function useUpdateProfileSetting(repo: IProfileRepository) {
       queryClient.setQueryData<MyProfile | null>(['dashboard', 'profile', 'me'], (profile) =>
         profile ? { ...profile, securitySettings } : profile,
       );
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
     },
   });
 }
@@ -48,6 +49,7 @@ export function useConfirmPhoneChange(repo: IProfileRepository) {
     }) => repo.confirmPhoneChange(newPhone, verificationToken),
     onSuccess: (profile) => {
       queryClient.setQueryData(['dashboard', 'profile', 'me'], profile);
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] });
     },
   });

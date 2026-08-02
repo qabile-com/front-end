@@ -9,6 +9,7 @@ export function useAdminPinPost(repo: IAdminRepository) {
     onSuccess: (post) => {
       queryClient.setQueryData(['social-post', post.id], post);
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
     },
   });
 }
@@ -20,6 +21,10 @@ export function useAdminDeletePost(repo: IAdminRepository) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       queryClient.invalidateQueries({ queryKey: ['social-post'] });
+      queryClient.invalidateQueries({ queryKey: ['social', 'active-users'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile'] });
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['roadmap-step-condition'] });
     },
   });
 }
@@ -31,6 +36,9 @@ export function useAdminDeleteComment(repo: IAdminRepository) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       queryClient.invalidateQueries({ queryKey: ['social-post'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile'] });
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['roadmap-step-condition'] });
     },
   });
 }

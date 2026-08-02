@@ -45,7 +45,10 @@ export function useBlockToggle(repo: IUserProfileRepository, userId: string) {
       showSuccess(blocked ? 'User blocked.' : 'User unblocked.');
     },
     onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', userId] });
+      queryClient.invalidateQueries({ queryKey: ['follow-status', userId] });
+      queryClient.invalidateQueries({ queryKey: ['user-profile', userId, 'posts'] });
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       queryClient.invalidateQueries({ queryKey: ['social', 'active-users'] });
     },

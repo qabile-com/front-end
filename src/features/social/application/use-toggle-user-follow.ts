@@ -108,9 +108,11 @@ export function useToggleUserFollow(repo: ISocialRepository) {
     onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       queryClient.invalidateQueries({ queryKey: ['social', 'active-users'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', variables.userId] });
       queryClient.invalidateQueries({ queryKey: ['user-profile', variables.userId, 'posts'] });
       queryClient.invalidateQueries({ queryKey: ['follow-status', variables.userId] });
+      queryClient.invalidateQueries({ queryKey: ['roadmap-step-condition'] });
     },
   });
 }

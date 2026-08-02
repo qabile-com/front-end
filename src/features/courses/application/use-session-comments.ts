@@ -44,6 +44,9 @@ export function useAddSessionComment(repo: ICommentsRepository) {
       await queryClient.invalidateQueries({
         queryKey: ['dashboard', 'comments', variables.courseId, variables.sectionId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ['dashboard', 'session', variables.courseId, variables.sectionId],
+      });
     },
   });
 }

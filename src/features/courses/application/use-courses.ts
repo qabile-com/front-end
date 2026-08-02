@@ -16,7 +16,7 @@ export function useCourses(repo: ICoursesRepository, filters: CourseListFilters 
     queryKey: ['dashboard', 'courses', filters],
     queryFn: ({ signal }) => repo.getCourses(filters, { signal }),
     placeholderData: (previous) => previous,
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
   });
 
   return {
@@ -43,8 +43,10 @@ export function useUpdateSectionProgress(repo: ICoursesRepository) {
     onSuccess: async (_data, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'courses'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'home'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'session'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'xp-history'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'comments'] }),
       ]);
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'section', variables.sectionId] });
@@ -57,11 +59,14 @@ export function usePurchaseCourse(repo: ICoursesRepository) {
 
   return useMutation({
     mutationFn: (courseId: string) => repo.purchaseCourse(courseId),
-    onSuccess: async () => {
+    onSuccess: async (_data, courseId) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'courses'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'home'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'session'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'session', courseId] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'xp-history'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] }),
       ]);
     },
@@ -84,8 +89,10 @@ export function useReportSectionWatchProgress(repo: ICoursesRepository) {
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'courses'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'home'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'session'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'xp-history'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] }),
       ]);
     },

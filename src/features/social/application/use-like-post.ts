@@ -30,6 +30,11 @@ export function useLikePost(repo: ISocialRepository) {
     onError: (err, variables, context) => {
       context?.previousData.forEach(([queryKey, data]) => queryClient.setQueryData(queryKey, data));
     },
+    onSettled: (_data, _error, postId) => {
+      queryClient.invalidateQueries({ queryKey: ['social-post', postId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['roadmap-step-condition'] });
+    },
   });
 
   const unlikeMutation = useMutation({
@@ -53,6 +58,11 @@ export function useLikePost(repo: ISocialRepository) {
     },
     onError: (err, variables, context) => {
       context?.previousData.forEach(([queryKey, data]) => queryClient.setQueryData(queryKey, data));
+    },
+    onSettled: (_data, _error, postId) => {
+      queryClient.invalidateQueries({ queryKey: ['social-post', postId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['roadmap-step-condition'] });
     },
   });
 

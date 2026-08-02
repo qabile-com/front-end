@@ -64,9 +64,11 @@ export function useFollowToggle(repo: IFollowRepository, userId: string | null) 
     onSettled: () => {
       if (!userId) return;
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', userId] });
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       queryClient.invalidateQueries({ queryKey: ['social', 'active-users'] });
+      queryClient.invalidateQueries({ queryKey: ['roadmap-step-condition'] });
     },
   });
 

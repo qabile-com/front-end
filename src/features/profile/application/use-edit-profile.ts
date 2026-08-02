@@ -14,6 +14,7 @@ export function useUpdateMyProfile(repo: IProfileRepository) {
     mutationFn: (input: UpdateProfileInput) => repo.updateMyProfile(input),
     onSuccess: (profile) => {
       queryClient.setQueryData(['dashboard', 'profile', 'me'], profile);
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] });
     },
   });
@@ -26,6 +27,7 @@ export function useUpdateProfileAvatar(repo: IProfileRepository) {
     mutationFn: (file: File) => repo.updateProfileAvatar(file),
     onSuccess: (profile) => {
       queryClient.setQueryData(['dashboard', 'profile', 'me'], profile);
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] });
     },
   });
@@ -44,6 +46,8 @@ export function useDeleteMyAccount(repo: IProfileRepository) {
     mutationFn: () => repo.deleteMyAccount(),
     onSuccess: () => {
       queryClient.setQueryData<MyProfile | null>(['dashboard', 'profile', 'me'], null);
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] });
     },
   });
 }
