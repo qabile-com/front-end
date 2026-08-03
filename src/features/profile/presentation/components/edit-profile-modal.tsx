@@ -13,6 +13,7 @@ import {
 import { removeAccessToken } from '@/core/auth/token';
 import { useRouter } from 'next/navigation';
 import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
+import { getApiErrorMessage } from '@/core/api/api-error-message';
 
 interface EditProfileModalProps {
   profile: MyProfile;
@@ -52,8 +53,8 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
       });
       showSuccess('پروفایل ذخیره شد');
       onClose();
-    } catch {
-      showError('ذخیره پروفایل انجام نشد');
+    } catch (error) {
+      showError(getApiErrorMessage(error, 'ذخیره پروفایل انجام نشد'));
     }
   };
 
@@ -62,8 +63,8 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
     try {
       await updateAvatar.mutateAsync(file);
       showSuccess('عکس پروفایل تغییر کرد');
-    } catch {
-      showError('تغییر عکس انجام نشد');
+    } catch (error) {
+      showError(getApiErrorMessage(error, 'تغییر عکس انجام نشد'));
     }
   };
 
@@ -77,8 +78,8 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
       removeAccessToken();
       router.replace('/');
       onClose();
-    } catch {
-      showError('حذف حساب انجام نشد');
+    } catch (error) {
+      showError(getApiErrorMessage(error, 'حذف حساب انجام نشد'));
     }
   };
 

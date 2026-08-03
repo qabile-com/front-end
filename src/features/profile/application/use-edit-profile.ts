@@ -16,6 +16,7 @@ export function useUpdateMyProfile(
 
   return useMutation({
     mutationFn: (input: UpdateProfileInput) => repo.updateMyProfile(input),
+    meta: { skipGlobalErrorToast: true },
     onSuccess: (profile) => {
       onReward?.(profile.actionReward);
       queryClient.setQueryData(['dashboard', 'profile', 'me'], profile);
@@ -33,6 +34,7 @@ export function useUpdateProfileAvatar(
 
   return useMutation({
     mutationFn: (file: File) => repo.updateProfileAvatar(file),
+    meta: { skipGlobalErrorToast: true },
     onSuccess: (profile) => {
       onReward?.(profile.actionReward);
       queryClient.setQueryData(['dashboard', 'profile', 'me'], profile);
@@ -53,6 +55,7 @@ export function useDeleteMyAccount(repo: IProfileRepository) {
 
   return useMutation({
     mutationFn: () => repo.deleteMyAccount(),
+    meta: { skipGlobalErrorToast: true },
     onSuccess: () => {
       queryClient.setQueryData<MyProfile | null>(['dashboard', 'profile', 'me'], null);
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });

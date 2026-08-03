@@ -115,7 +115,6 @@ export function AchievementEarnedModal({ achievement, onClose }: AchievementEarn
               icon: achievement.icon,
             }}
             onPublish={handlePublishPost}
-            onPublished={() => setIsSharePostOpen(false)}
           />
         </BaseModal>
       )}

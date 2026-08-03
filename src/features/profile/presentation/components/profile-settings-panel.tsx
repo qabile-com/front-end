@@ -25,6 +25,7 @@ import {
   useUpdateProfileSetting,
   useVerifyPasswordChangeCode,
 } from '../../application/use-profile-settings';
+import { getApiErrorMessage } from '@/core/api/api-error-message';
 
 type SettingsScreen = 'settings' | 'password-email' | 'password-code' | 'password-new';
 
@@ -92,8 +93,8 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
     try {
       await updateSetting.mutateAsync({ field, value });
       showSuccess('تنظیمات ذخیره شد');
-    } catch {
-      showError('ذخیره تنظیمات انجام نشد');
+    } catch (error) {
+      showError(getApiErrorMessage(error, 'ذخیره تنظیمات انجام نشد'));
     }
   };
 
@@ -105,8 +106,8 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
     try {
       await requestPasswordCode.mutateAsync({ email: passwordEmail.trim() });
       setScreen('password-code');
-    } catch {
-      showError('ارسال رمز یکبار مصرف انجام نشد');
+    } catch (error) {
+      showError(getApiErrorMessage(error, 'ارسال رمز یکبار مصرف انجام نشد'));
     }
   };
 
@@ -123,9 +124,9 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
       });
       setPasswordVerificationToken(result.verificationToken);
       setScreen('password-new');
-    } catch {
+    } catch (error) {
       lastSubmittedPasswordCode.current = '';
-      showError('رمز وارد شده درست نیست');
+      showError(getApiErrorMessage(error, 'رمز وارد شده درست نیست'));
     }
   }, [passwordCode, passwordEmail, verifyPasswordCode]);
 
@@ -146,8 +147,8 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
       });
       showSuccess('رمز عبور تغییر کرد');
       onClose();
-    } catch {
-      showError('تغییر رمز عبور انجام نشد');
+    } catch (error) {
+      showError(getApiErrorMessage(error, 'تغییر رمز عبور انجام نشد'));
     }
   };
 

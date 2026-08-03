@@ -1,8 +1,10 @@
 'use client';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { AUTH_SESSION_EVENT, getAccessToken } from '@/core/auth/token';
+import { getApiErrorMessage } from '@/core/api/api-error-message';
+import { showError } from '@/shared/lib/toast';
 
 let globalQueryClient: QueryClient | null = null;
 
@@ -20,6 +22,12 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
+        mutationCache: new MutationCache({
+          onError: (error, _variables, _context, mutation) => {
+            if (mutation.options.meta?.skipGlobalErrorToast) return;
+            showError(getApiErrorMessage(error, 'درخواست انجام نشد. دوباره تلاش کن.'));
+          },
+        }),
         defaultOptions: {
           queries: {
             staleTime: 2 * 60 * 1000,
