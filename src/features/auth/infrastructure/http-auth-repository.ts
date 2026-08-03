@@ -5,6 +5,7 @@ import type {
 } from '../domain/auth-repository';
 import * as authApi from '@/core/api/auth.api';
 import type { OtpVerifyResponse } from '@/core/api/auth.api';
+import { normalizeAchievements } from '@/features/dashboard/domain/achievement-normalizer';
 
 export class HttpAuthRepository implements IAuthRepository {
   async login(email: string, password: string): Promise<VerifyOtpResult> {
@@ -62,7 +63,7 @@ function mapAuthSession(response: OtpVerifyResponse): VerifyOtpResult {
     isNewUser: response.isNewUser,
     signupReward: response.signupReward,
     firstLoginReward: response.firstLoginReward,
-    unlockedAchievements: normalizeUnlockedAchievements(response.unlockedAchievements),
+    unlockedAchievements: normalizeAchievements(response.unlockedAchievements),
   };
 }
 
@@ -88,7 +89,7 @@ function mapAuthUser(user: OtpVerifyResponse['user']): AuthUser {
   };
 }
 
-function normalizeUnlockedAchievements(items: unknown[] | undefined) {
+export function normalizeUnlockedAchievements(items: unknown[] | undefined) {
   if (!Array.isArray(items)) return [];
 
   return items.map((item, index) => {

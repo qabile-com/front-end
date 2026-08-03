@@ -69,6 +69,7 @@ export interface CoursePurchaseResult {
   };
   spentFire: number;
   isUnlocked: boolean;
+  reward?: ActionRewardResult | null;
 }
 
 export type { IProfileRepository };

@@ -2,6 +2,7 @@
 
 import type { ISocialRepository, SocialFeedFilters } from '../../domain/social-repository';
 import type { Post, ActiveUser, PostComment } from '../../domain/social.data';
+import type { WithActionReward } from '@/features/dashboard/domain/achievement-normalizer';
 import { POSTS, TRENDING_TAGS, ACTIVE_USERS } from '../../domain/social.data';
 import { mockFollowedUsers } from '@/features/leaderboard/infrastructure/mock/mock-follow-repository';
 
@@ -62,12 +63,12 @@ export class MockSocialRepository implements ISocialRepository {
     }));
   }
 
-  async likePost(postId: string): Promise<Post> {
+  async likePost(postId: string): Promise<WithActionReward<Post>> {
     const post = this.posts.find((p) => p.id === postId);
     if (!post) throw new Error('Post not found');
     post.likedByMe = true;
     post.likes += 1;
-    return { ...post };
+    return { data: { ...post } };
   }
   async unlikePost(postId: string): Promise<Post> {
     const post = this.posts.find((p) => p.id === postId);
@@ -77,7 +78,7 @@ export class MockSocialRepository implements ISocialRepository {
     return { ...post };
   }
 
-  async createPost(text: string, imageFile?: File | null): Promise<Post> {
+  async createPost(text: string, imageFile?: File | null): Promise<WithActionReward<Post>> {
     await delay(300);
 
     let imageUrl: string | undefined;
@@ -102,10 +103,10 @@ export class MockSocialRepository implements ISocialRepository {
       hasImage: !!imageUrl,
     };
     this.posts.unshift(newPost);
-    return newPost;
+    return { data: newPost };
   }
 
-  async addComment(postId: string, text: string): Promise<PostComment> {
+  async addComment(postId: string, text: string): Promise<WithActionReward<PostComment>> {
     await delay(200);
     const post = this.posts.find((p) => p.id === postId);
     if (!post) throw new Error('Post not found');
@@ -116,13 +117,13 @@ export class MockSocialRepository implements ISocialRepository {
     };
     post.comments.push(newComment);
     post.commentsCount = (post.commentsCount ?? post.comments.length - 1) + 1;
-    return newComment;
+    return { data: newComment };
   }
 
-  async followUser(userId: string): Promise<ActiveUser> {
+  async followUser(userId: string): Promise<WithActionReward<ActiveUser>> {
     await delay(150);
     mockFollowedUsers.add(userId);
-    return this.getMockActiveUser(userId, true);
+    return { data: this.getMockActiveUser(userId, true) };
   }
 
   async unfollowUser(userId: string): Promise<ActiveUser> {

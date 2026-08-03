@@ -8,6 +8,8 @@ import type { IFollowRepository } from '../../domain/follow-repository';
 import { BaseModal, ErrorState, ModalSkeleton } from '@/shared/ui';
 import { UserProfileModal } from './user-profile-modal';
 import { followRepo } from '@/features/leaderboard/infrastructure/repository-factory';
+import { useActionRewardQueue } from '@/features/dashboard/application/use-action-reward-queue';
+import { ActionRewardModals } from '@/features/dashboard/presentation/components/action-reward-modals';
 
 interface Props {
   userId: string | null;
@@ -43,7 +45,8 @@ function ProfileLoader({
   const router = useRouter();
   const { data: profile, loading, error } = useUserProfile(repository, userId);
   const postsQuery = useUserPosts(repository, userId);
-  const { isFollowed, toggle, isToggling } = useFollowToggle(followRepo, userId);
+  const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
+  const { isFollowed, toggle, isToggling } = useFollowToggle(followRepo, userId, enqueueReward);
   const block = useBlockToggle(repository, userId);
 
   if (loading) {
@@ -68,20 +71,23 @@ function ProfileLoader({
   }
 
   return (
-    <UserProfileModal
-      isOpen
-      onClose={onClose}
-      user={profile}
-      isFollowed={isFollowed}
-      onToggleFollow={toggle}
-      isToggling={isToggling}
-      onToggleBlock={() => block.mutate(Boolean(profile.blockedByMe))}
-      isBlocking={block.isPending}
-      postsQuery={postsQuery}
-      onPostClick={(postId) => {
-        onClose();
-        router.push(`/social/${postId}`);
-      }}
-    />
+    <>
+      <UserProfileModal
+        isOpen
+        onClose={onClose}
+        user={profile}
+        isFollowed={isFollowed}
+        onToggleFollow={toggle}
+        isToggling={isToggling}
+        onToggleBlock={() => block.mutate(Boolean(profile.blockedByMe))}
+        isBlocking={block.isPending}
+        postsQuery={postsQuery}
+        onPostClick={(postId) => {
+          onClose();
+          router.push(`/social/${postId}`);
+        }}
+      />
+      <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
+    </>
   );
 }

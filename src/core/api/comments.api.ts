@@ -1,5 +1,6 @@
 import { httpClient } from './http-client';
 import type { ForumUserDto } from './forum.api';
+import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
 
 export interface CourseCommentDto {
   id: string;
@@ -33,7 +34,7 @@ export const getSessionComments = (courseId: string, sectionId: string, limit = 
   });
 
 export const addSessionComment = (courseId: string, sectionId: string, text: string) =>
-  httpClient.post<{ data: CourseCommentDto }>(
+  httpClient.post<{ data: CourseCommentDto; reward?: ActionRewardResult | null; unlockedAchievements?: ActionRewardResult['unlockedAchievements'] }>(
     `/api/v1/courses/${courseId}/episodes/${sectionId}/comments`,
     { text },
   );

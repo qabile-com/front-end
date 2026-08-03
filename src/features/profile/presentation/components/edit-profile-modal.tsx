@@ -12,6 +12,8 @@ import {
 } from '../../application/use-edit-profile';
 import { removeAccessToken } from '@/core/auth/token';
 import { useRouter } from 'next/navigation';
+import { useActionRewardQueue } from '@/features/dashboard/application/use-action-reward-queue';
+import { ActionRewardModals } from '@/features/dashboard/presentation/components/action-reward-modals';
 
 interface EditProfileModalProps {
   profile: MyProfile;
@@ -25,9 +27,10 @@ export function EditProfileModal({ profile, repo, onClose }: EditProfileModalPro
   const [lastName, setLastName] = useState(profile.lastName);
   const [username, setUsername] = useState(profile.username ?? '');
   const fileRef = useRef<HTMLInputElement>(null);
+  const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
 
-  const updateProfile = useUpdateMyProfile(repo);
-  const updateAvatar = useUpdateProfileAvatar(repo);
+  const updateProfile = useUpdateMyProfile(repo, enqueueReward);
+  const updateAvatar = useUpdateProfileAvatar(repo, enqueueReward);
   const deleteAccount = useDeleteMyAccount(repo);
 
   const isBusy = updateProfile.isPending || updateAvatar.isPending || deleteAccount.isPending;
@@ -196,6 +199,7 @@ export function EditProfileModal({ profile, repo, onClose }: EditProfileModalPro
             </button>
           </EditSection>
         </div>
+      <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
     </BaseModal>
   );
 }

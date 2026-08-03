@@ -37,6 +37,7 @@ import { useLikePost } from '../../application/use-like-post';
 import { useToggleUserFollow } from '../../application/use-toggle-user-follow';
 import { shareUrl } from '@/shared/lib/native-share';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
 
 type Feed = 'for-you' | 'following';
 
@@ -55,6 +56,7 @@ interface SocialTabProps {
   profileRepo: IProfileRepository;
   adminRepo?: IAdminRepository;
   newPostIds?: Set<string>;
+  onReward?: (reward?: ActionRewardResult | null) => void;
 }
 
 export function SocialTab({
@@ -71,9 +73,10 @@ export function SocialTab({
   isCurrentProfileLoading,
   profileRepo,
   newPostIds,
+  onReward,
 }: SocialTabProps) {
   const router = useRouter();
-  const followToggle = useToggleUserFollow(socialRepo);
+  const followToggle = useToggleUserFollow(socialRepo, onReward);
   const updateProfile = useUpdateMyProfile(profileRepo);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [isCompleteProfileOpen, setIsCompleteProfileOpen] = useState(false);
@@ -196,6 +199,7 @@ export function SocialTab({
                 togglingAuthorId={followToggle.variables?.userId}
                 currentUserRole={currentUserRole}
                 adminRepo={adminRepo}
+                onReward={onReward}
               />
             </motion.div>
           );
@@ -535,6 +539,7 @@ function PostCard({
   togglingAuthorId,
   currentUserRole,
   adminRepo,
+  onReward,
 }: {
   post: Post;
   onClick: () => void;
@@ -545,8 +550,9 @@ function PostCard({
   togglingAuthorId?: string;
   currentUserRole?: string;
   adminRepo?: IAdminRepository;
+  onReward?: (reward?: ActionRewardResult | null) => void;
 }) {
-  const { like, unlike } = useLikePost(socialRepo); // need to get socialRepo from context or prop – for now we can use the same repository factory, but we'll inject it through props too. Actually, we can import `socialRepo` directly from the factory in this component (since it's a singleton) to avoid prop drilling. We'll do that.
+  const { like, unlike } = useLikePost(socialRepo, onReward); // need to get socialRepo from context or prop – for now we can use the same repository factory, but we'll inject it through props too. Actually, we can import `socialRepo` directly from the factory in this component (since it's a singleton) to avoid prop drilling. We'll do that.
 
   const handleCommentClick = (e: React.MouseEvent) => {
     e.stopPropagation();

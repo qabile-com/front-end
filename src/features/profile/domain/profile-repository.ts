@@ -1,4 +1,8 @@
-import type { Achievement, SettingItem } from '@/features/dashboard/domain/dashboard.types';
+import type {
+  Achievement,
+  ActionRewardResult,
+  SettingItem,
+} from '@/features/dashboard/domain/dashboard.types';
 
 export type ProfileSettingField = 'dailyReminder' | 'autoLogout' | 'weeklySummary';
 
@@ -43,6 +47,7 @@ export interface MyProfile {
     commentsCount: number;
     time: string;
   }[];
+  actionReward?: ActionRewardResult | null;
 }
 
 export interface UpdateProfileInput {

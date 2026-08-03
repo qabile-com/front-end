@@ -40,7 +40,7 @@ export function useAddSessionComment(repo: ICommentsRepository) {
       sectionId: string;
       text: string;
     }) => repo.addComment(courseId, sectionId, text),
-    onSuccess: async (_comment, variables) => {
+    onSuccess: async (_result, variables) => {
       await queryClient.invalidateQueries({
         queryKey: ['dashboard', 'comments', variables.courseId, variables.sectionId],
       });

@@ -28,6 +28,8 @@ import {
   FIRST_LOGIN_INSTALL_PROMPT_SEEN_KEY,
   InstallAppModal,
 } from '@/features/landing/presentation/components/install-app-modal';
+import { useActionRewardQueue } from '../../application/use-action-reward-queue';
+import { ActionRewardModals } from '../components/action-reward-modals';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -54,6 +56,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [signupAchievements, setSignupAchievements] = useState<Achievement[] | null>(null);
   const [shouldShowInstallAfterSignupXp, setShouldShowInstallAfterSignupXp] = useState(false);
   const [installPromptOpen, setInstallPromptOpen] = useState(false);
+  const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
   const {
     user,
     loading: userLoading,
@@ -64,6 +67,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const completeOnboarding = useMutation({
     mutationFn: () => userRepo.updateOnboardingCompletion(true),
     onSuccess: (updatedUser) => {
+      enqueueReward(updatedUser.actionReward);
       queryClient.setQueryData(['dashboard', 'user', 'current'], updatedUser);
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] });
     },
@@ -240,6 +244,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           }
         />
       )}
+      <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
     </div>
   );
 }

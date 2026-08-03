@@ -1,4 +1,5 @@
 import { httpClient } from './http-client';
+import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
 
 export interface ForumUserDto {
   id: string;
@@ -106,6 +107,14 @@ export interface ForumUserStatsDto {
   followingCount: number;
 }
 
+export interface ActionResponse<T> {
+  data?: T;
+  reward?: ActionRewardResult | null;
+  unlockedAchievements?: ActionRewardResult['unlockedAchievements'];
+  achievements?: ActionRewardResult['achievements'];
+  xpGranted?: number;
+}
+
 export const getForumUserStats = (userId: string, options?: { signal?: AbortSignal }) =>
   httpClient.get<ForumUserStatsDto>(`/api/v1/forum/users/${userId}/stats`, { signal: options?.signal });
 
@@ -155,10 +164,10 @@ export const createForumPost = (body: { text: string; image?: File | null; tags?
       formData.append('achievementIcon', body.achievement.icon);
     }
 
-    return httpClient.post<ForumPostDto>('/api/v1/forum/posts', formData);
+    return httpClient.post<ActionResponse<ForumPostDto> | ForumPostDto>('/api/v1/forum/posts', formData);
   }
 
-  return httpClient.post<ForumPostDto>('/api/v1/forum/posts', {
+  return httpClient.post<ActionResponse<ForumPostDto> | ForumPostDto>('/api/v1/forum/posts', {
     text: body.text,
     tags: body.tags,
     achievement: body.achievement,
@@ -169,7 +178,7 @@ export const deleteForumPost = (postId: string) =>
   httpClient.delete<{ success: boolean }>(`/api/v1/forum/posts/${postId}`);
 
 export const addForumComment = (postId: string, body: { text: string }) =>
-  httpClient.post<ForumPostDto>(`/api/v1/forum/posts/${postId}/comments`, body);
+  httpClient.post<ActionResponse<ForumPostDto> | ForumPostDto>(`/api/v1/forum/posts/${postId}/comments`, body);
 
 export const getForumComments = (postId: string, params?: { limit?: number; offset?: number }, options?: { signal?: AbortSignal }) =>
   httpClient.get<ForumCommentsResponse>(`/api/v1/forum/posts/${postId}/comments`, { params, signal: options?.signal });
@@ -178,13 +187,13 @@ export const deleteForumComment = (commentId: string) =>
   httpClient.delete<{ success: boolean }>(`/api/v1/forum/comments/${commentId}`);
 
 export const likePost = (postId: string) =>
-  httpClient.post<ForumPostDto>(`/api/v1/forum/posts/${postId}/like`);
+  httpClient.post<ActionResponse<ForumPostDto> | ForumPostDto>(`/api/v1/forum/posts/${postId}/like`);
 
 export const unlikePost = (postId: string) =>
   httpClient.delete<ForumPostDto>(`/api/v1/forum/posts/${postId}/like`);
 
 export const followForumUser = (userId: string) =>
-  httpClient.post<ForumUserDto>(`/api/v1/forum/users/${userId}/follow`);
+  httpClient.post<ActionResponse<ForumUserDto> | ForumUserDto>(`/api/v1/forum/users/${userId}/follow`);
 
 export const unfollowForumUser = (userId: string) =>
   httpClient.delete<ForumUserDto>(`/api/v1/forum/users/${userId}/follow`);

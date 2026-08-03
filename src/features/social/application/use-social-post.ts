@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ISocialRepository } from '../domain/social-repository';
 import type { Post, PostComment } from '../domain/social.data';
+import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
 
 export const socialPostQueryKey = (postId: string) => ['social-post', postId] as const;
 export const socialPostCommentsQueryKey = (postId: string) =>
@@ -26,13 +27,18 @@ export function useSocialPostComments(repo: ISocialRepository, postId: string) {
   });
 }
 
-export function useAddPostComment(repo: ISocialRepository) {
+export function useAddPostComment(
+  repo: ISocialRepository,
+  onReward?: (reward?: ActionRewardResult | null) => void,
+) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ postId, text }: { postId: string; text: string }) =>
       repo.addComment(postId, text),
-    onSuccess: (comment, variables) => {
+    onSuccess: (result, variables) => {
+      const comment = result.data;
+      onReward?.(result.reward);
       queryClient.setQueryData<PostComment[]>(
         socialPostCommentsQueryKey(variables.postId),
         (current) => [...(current ?? []), comment],

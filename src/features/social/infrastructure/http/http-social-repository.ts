@@ -17,22 +17,34 @@ import {
 import type { ISocialRepository } from '../../domain/social-repository';
 import type { SocialFeedFilters } from '../../domain/social-repository';
 import type { ActiveUser, AchievementCard, Post, PostComment } from '../../domain/social.data';
+import {
+  unwrapActionResponse,
+  type WithActionReward,
+} from '@/features/dashboard/domain/achievement-normalizer';
 
 const FALLBACK_AVATAR = 'linear-gradient(135deg,#cc4308,#ff6200,#f3ba63)';
 
 export class HttpSocialRepository implements ISocialRepository {
   private feedExtras: { tags: string[]; activeUsers: ActiveUser[] } = { tags: [], activeUsers: [] };
 
-  async getFeed(limit = 10, offset = 0, filters: SocialFeedFilters = {}, options?: { signal?: AbortSignal }): Promise<Post[]> {
-    const res = await getForumFeed({
-      limit,
-      offset,
-      q: filters.q,
-      hashtag: filters.hashtag,
-      authorId: filters.authorId,
-      author: filters.author,
-      followingOnly: filters.followingOnly,
-    }, options);
+  async getFeed(
+    limit = 10,
+    offset = 0,
+    filters: SocialFeedFilters = {},
+    options?: { signal?: AbortSignal },
+  ): Promise<Post[]> {
+    const res = await getForumFeed(
+      {
+        limit,
+        offset,
+        q: filters.q,
+        hashtag: filters.hashtag,
+        authorId: filters.authorId,
+        author: filters.author,
+        followingOnly: filters.followingOnly,
+      },
+      options,
+    );
 
     this.feedExtras = {
       tags: normalizeTags(res.data.trendingTags),
@@ -48,7 +60,12 @@ export class HttpSocialRepository implements ISocialRepository {
     return apiForumPostToDomain('data' in data ? data.data : data);
   }
 
-  async getPostComments(postId: string, limit = 30, offset = 0, options?: { signal?: AbortSignal }): Promise<PostComment[]> {
+  async getPostComments(
+    postId: string,
+    limit = 30,
+    offset = 0,
+    options?: { signal?: AbortSignal },
+  ): Promise<PostComment[]> {
     const res = await getForumComments(postId, { limit, offset }, options);
     const payload = res.data;
     return (payload.data ?? []).map(apiCommentToDomain);
@@ -72,20 +89,27 @@ export class HttpSocialRepository implements ISocialRepository {
     return this.feedExtras.activeUsers;
   }
 
-async createPost(text: string, imageFile?: File | null, achievement?: AchievementCard | null): Promise<Post> {
+  async createPost(
+    text: string,
+    imageFile?: File | null,
+    achievement?: AchievementCard | null,
+  ): Promise<WithActionReward<Post>> {
     const res = await createForumPost({ text, image: imageFile, achievement });
-    return apiForumPostToDomain(res.data);
+    return unwrapActionResponse(res.data, apiForumPostToDomain);
   }
 
-  async addComment(postId: string, text: string): Promise<PostComment> {
+  async addComment(postId: string, text: string): Promise<WithActionReward<PostComment>> {
     const res = await addForumComment(postId, { text });
-    const post = apiForumPostToDomain(res.data);
-    return post.comments.at(-1) ?? { name: '', text, time: new Date().toISOString() };
+    const result = unwrapActionResponse(res.data, apiForumPostToDomain);
+    return {
+      data: result.data.comments.at(-1) ?? { name: '', text, time: new Date().toISOString() },
+      reward: result.reward,
+    };
   }
 
-  async likePost(postId: string): Promise<Post> {
+  async likePost(postId: string): Promise<WithActionReward<Post>> {
     const res = await likePost(postId);
-    return apiForumPostToDomain(res.data);
+    return unwrapActionResponse(res.data, apiForumPostToDomain);
   }
 
   async unlikePost(postId: string): Promise<Post> {
@@ -93,18 +117,19 @@ async createPost(text: string, imageFile?: File | null, achievement?: Achievemen
     return apiForumPostToDomain(res.data);
   }
 
-  async followUser(userId: string): Promise<ActiveUser> {
+  async followUser(userId: string): Promise<WithActionReward<ActiveUser>> {
     const res = await followForumUser(userId);
-    const payload = res.data as ForumUserDto | { data?: ForumUserDto };
-    const user = apiUserToDomain(('data' in payload && payload.data ? payload.data : res.data) as ForumUserDto);
-    this.syncFollowedUser(userId, user);
-    return user;
+    const result = unwrapActionResponse(res.data, apiUserToDomain);
+    this.syncFollowedUser(userId, result.data);
+    return result;
   }
 
   async unfollowUser(userId: string): Promise<ActiveUser> {
     const res = await unfollowForumUser(userId);
     const payload = res.data as ForumUserDto | { data?: ForumUserDto };
-    const user = apiUserToDomain(('data' in payload && payload.data ? payload.data : res.data) as ForumUserDto);
+    const user = apiUserToDomain(
+      ('data' in payload && payload.data ? payload.data : res.data) as ForumUserDto,
+    );
     this.syncFollowedUser(userId, user);
     return user;
   }
@@ -231,4 +256,3 @@ function normalizeName(user: ForumUserDto) {
 function normalizeTags(tags: Array<string | ForumTagDto> | undefined) {
   return (tags ?? []).map((item) => (typeof item === 'string' ? item : item.tag));
 }
-

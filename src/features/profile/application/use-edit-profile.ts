@@ -6,13 +6,18 @@ import type {
   MyProfile,
   UpdateProfileInput,
 } from '../domain/profile-repository';
+import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
 
-export function useUpdateMyProfile(repo: IProfileRepository) {
+export function useUpdateMyProfile(
+  repo: IProfileRepository,
+  onReward?: (reward?: ActionRewardResult | null) => void,
+) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (input: UpdateProfileInput) => repo.updateMyProfile(input),
     onSuccess: (profile) => {
+      onReward?.(profile.actionReward);
       queryClient.setQueryData(['dashboard', 'profile', 'me'], profile);
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] });
@@ -20,12 +25,16 @@ export function useUpdateMyProfile(repo: IProfileRepository) {
   });
 }
 
-export function useUpdateProfileAvatar(repo: IProfileRepository) {
+export function useUpdateProfileAvatar(
+  repo: IProfileRepository,
+  onReward?: (reward?: ActionRewardResult | null) => void,
+) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (file: File) => repo.updateProfileAvatar(file),
     onSuccess: (profile) => {
+      onReward?.(profile.actionReward);
       queryClient.setQueryData(['dashboard', 'profile', 'me'], profile);
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] });

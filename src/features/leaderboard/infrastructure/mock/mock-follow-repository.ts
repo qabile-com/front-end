@@ -1,15 +1,16 @@
 import type { IFollowRepository } from '../../domain/follow-repository';
 import type { ActiveUser } from '@/features/social/domain/social.data';
+import type { WithActionReward } from '@/features/dashboard/domain/achievement-normalizer';
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export const mockFollowedUsers = new Set<string>();
 
 export class MockFollowRepository implements IFollowRepository {
-  async followUser(userId: string): Promise<ActiveUser> {
+  async followUser(userId: string): Promise<WithActionReward<ActiveUser>> {
     await delay(200);
     mockFollowedUsers.add(userId);
-    return mockFollowUser(userId, true);
+    return { data: mockFollowUser(userId, true) };
   }
 
   async unfollowUser(userId: string): Promise<ActiveUser> {

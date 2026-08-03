@@ -1,6 +1,7 @@
 // src/features/dashboard/domain/social-repository.ts
 
 import type { Post, ActiveUser, PostComment, AchievementCard } from './social.data';
+import type { WithActionReward } from '@/features/dashboard/domain/achievement-normalizer';
 
 export interface SocialFeedFilters {
   q?: string;
@@ -16,11 +17,11 @@ export interface ISocialRepository {
   getPostComments(postId: string, limit?: number, offset?: number, options?: { signal?: AbortSignal }): Promise<PostComment[]>;
   getTrendingTags(options?: { signal?: AbortSignal }): Promise<string[]>;
   getActiveUsers(options?: { signal?: AbortSignal }): Promise<ActiveUser[]>;
-  createPost(text: string, imageFile?: File | null, achievement?: AchievementCard | null): Promise<Post>;
-  addComment(postId: string, text: string): Promise<Post>;
-  likePost(postId: string): Promise<Post>;
+  createPost(text: string, imageFile?: File | null, achievement?: AchievementCard | null): Promise<WithActionReward<Post>>;
+  addComment(postId: string, text: string): Promise<WithActionReward<PostComment>>;
+  likePost(postId: string): Promise<WithActionReward<Post>>;
   unlikePost(postId: string): Promise<Post>;
-  followUser(userId: string): Promise<ActiveUser>;
+  followUser(userId: string): Promise<WithActionReward<ActiveUser>>;
   unfollowUser(userId: string): Promise<ActiveUser>;
   getFollowStatus(userId: string): Promise<boolean>;
 }

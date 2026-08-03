@@ -24,6 +24,10 @@ import type {
   XpHistoryItem,
 } from '../../domain/profile-repository';
 import { DEFAULT_AVATAR_GRADIENT } from '@/features/dashboard/domain/dashboard.types';
+import {
+  normalizeAchievements,
+  normalizeActionRewardResult,
+} from '@/features/dashboard/domain/achievement-normalizer';
 
 const DEFAULT_SECURITY_SETTINGS: ProfileSecuritySettings = {
   dailyReminder: true,
@@ -202,11 +206,7 @@ export class HttpProfileRepository implements IProfileRepository {
       isCompleteOnboarding: p.isCompleteOnboarding ?? false,
       securitySettings: { ...DEFAULT_SECURITY_SETTINGS, ...p.securitySettings },
       profileStats: p.profileStats ?? [],
-      achievements: (p.achievements ?? []).map((achievement) => ({
-        ...achievement,
-        count: achievement.count ?? achievement.timesAchieved ?? achievement.earnedCount,
-        isShareable: achievement.isShareable ?? achievement.shareable,
-      })),
+      achievements: normalizeAchievements(p.achievements),
       settings: p.settings ?? [],
       posts: (p.posts ?? []).map((post) => ({
         id: post.id,
@@ -215,6 +215,7 @@ export class HttpProfileRepository implements IProfileRepository {
         commentsCount: post.commentsCount ?? post.comments?.length ?? 0,
         time: post.time ?? post.createdAt ?? '',
       })),
+      actionReward: normalizeActionRewardResult(p),
     };
   }
 }

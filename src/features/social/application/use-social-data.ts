@@ -4,8 +4,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ISocialRepository } from '../domain/social-repository';
 import { useState } from 'react';
+import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
 
-export function useSocialData(repo: ISocialRepository) {
+export function useSocialData(
+  repo: ISocialRepository,
+  onReward?: (reward?: ActionRewardResult | null) => void,
+) {
   const queryClient = useQueryClient();
 
   const tagsQuery = useQuery({
@@ -27,12 +31,13 @@ export function useSocialData(repo: ISocialRepository) {
   const publishPostMutation = useMutation({
     mutationFn: ({ text, imageFile }: { text: string; imageFile?: File | null }) =>
       repo.createPost(text, imageFile),
-    onSuccess: (newPost) => {
+    onSuccess: (result) => {
       setNewPostIds((prev) => {
         const next = new Set(prev);
-        next.add(newPost.id);
+        next.add(result.data.id);
         return next;
       });
+      onReward?.(result.reward);
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       queryClient.invalidateQueries({ queryKey: ['social', 'active-users'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
@@ -44,7 +49,8 @@ export function useSocialData(repo: ISocialRepository) {
   const addCommentMutation = useMutation({
     mutationFn: ({ postId, text }: { postId: string; text: string }) =>
       repo.addComment(postId, text),
-    onSuccess: (_newComment, variables) => {
+    onSuccess: (result, variables) => {
+      onReward?.(result.reward);
       queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       queryClient.invalidateQueries({ queryKey: ['social-post', variables.postId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });

@@ -41,7 +41,7 @@ export class MockCommentsRepository implements ICommentsRepository {
       time: 'همین حالا',
     };
     this.commentsBySection.set(sectionId, [comment, ...this.getSectionComments(sectionId)]);
-    return comment;
+    return { comment };
   }
 
   private getSectionComments(sectionId: string) {

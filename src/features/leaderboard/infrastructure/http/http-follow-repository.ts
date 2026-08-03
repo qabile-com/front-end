@@ -6,12 +6,15 @@ import {
   type ForumUserDto,
 } from '@/core/api/forum.api';
 import type { ActiveUser } from '@/features/social/domain/social.data';
+import {
+  unwrapActionResponse,
+  type WithActionReward,
+} from '@/features/dashboard/domain/achievement-normalizer';
 
 export class HttpFollowRepository implements IFollowRepository {
-  async followUser(userId: string): Promise<ActiveUser> {
+  async followUser(userId: string): Promise<WithActionReward<ActiveUser>> {
     const res = await followForumUser(userId);
-    const payload = res.data as ForumUserDto | { data?: ForumUserDto };
-    return forumUserToActiveUser(('data' in payload && payload.data ? payload.data : res.data) as ForumUserDto);
+    return unwrapActionResponse(res.data, forumUserToActiveUser);
   }
 
   async unfollowUser(userId: string): Promise<ActiveUser> {

@@ -14,6 +14,7 @@ import type {
   SectionWatchProgressInput,
   SectionWatchProgressResult,
 } from '@/features/dashboard/domain/dashboard.types';
+import { normalizeActionRewardResult } from '@/features/dashboard/domain/achievement-normalizer';
 
 type CoursePartDto = CoursePartMediaDto & {
   previousId?: string | null;
@@ -55,6 +56,8 @@ type PurchaseCourseDto = {
     xp?: number;
   };
   isUnlocked?: boolean;
+  reward?: ActionRewardResult | null;
+  unlockedAchievements?: ActionRewardResult['unlockedAchievements'];
 };
 
 export class HttpCoursesRepository implements ICoursesRepository {
@@ -107,6 +110,7 @@ export class HttpCoursesRepository implements ICoursesRepository {
       },
       spentFire: data.spentFire ?? data.xpSpent ?? data.priceInFire ?? 0,
       isUnlocked: data.isUnlocked ?? true,
+      reward: normalizeActionRewardResult(data),
     };
   }
 
@@ -116,7 +120,7 @@ export class HttpCoursesRepository implements ICoursesRepository {
     options?: { signal?: AbortSignal },
   ): Promise<ActionRewardResult> {
     const res = await updateSectionProgress(sectionId, body, options);
-    return (res.data.data ?? res.data ?? {}) as ActionRewardResult;
+    return normalizeActionRewardResult(res.data.data ?? res.data) ?? {};
   }
 
   async reportSectionWatchProgress(
@@ -125,7 +129,11 @@ export class HttpCoursesRepository implements ICoursesRepository {
     options?: { signal?: AbortSignal },
   ): Promise<SectionWatchProgressResult> {
     const res = await reportSectionWatchProgress(sectionId, body, options);
-    return (res.data.data ?? res.data) as SectionWatchProgressResult;
+    const data = (res.data.data ?? res.data) as SectionWatchProgressResult;
+    return {
+      ...data,
+      reward: normalizeActionRewardResult(data.reward ?? data),
+    };
   }
 }
 

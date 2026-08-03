@@ -22,6 +22,8 @@ import { cn } from '@/core/lib/cn';
 import { getApiErrorView } from '@/core/api/api-error-view';
 import { createAuthRedirectHref } from '@/core/auth/redirect';
 import { useAuthSession } from '@/providers/auth-provider';
+import { useActionRewardQueue } from '@/features/dashboard/application/use-action-reward-queue';
+import { ActionRewardModals } from '@/features/dashboard/presentation/components/action-reward-modals';
 
 export function ForumUserProfilePage() {
   const params = useParams<{ userId: string }>();
@@ -31,7 +33,8 @@ export function ForumUserProfilePage() {
   const currentPath = `/social/users/${userId}`;
   const profile = useUserProfile(userProfileRepo, userId);
   const postsQuery = useUserPosts(userProfileRepo, userId);
-  const follow = useFollowToggle(followRepo, userId);
+  const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
+  const follow = useFollowToggle(followRepo, userId, enqueueReward);
   const block = useBlockToggle(userProfileRepo, userId);
 
   if (profile.loading) {
@@ -207,6 +210,7 @@ export function ForumUserProfilePage() {
             </div>
           </div>
         </section>
+        <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
       </DashboardPageShell>
     </MotionPage>
   );

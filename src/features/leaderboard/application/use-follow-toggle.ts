@@ -4,8 +4,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { IFollowRepository } from '../domain/follow-repository';
 import type { UserProfileData } from '../domain/user-profile-repository';
 import type { ActiveUser, Post } from '@/features/social/domain/social.data';
+import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
+import type { WithActionReward } from '@/features/dashboard/domain/achievement-normalizer';
 
-export function useFollowToggle(repo: IFollowRepository, userId: string | null) {
+export function useFollowToggle(
+  repo: IFollowRepository,
+  userId: string | null,
+  onReward?: (reward?: ActionRewardResult | null) => void,
+) {
   const queryClient = useQueryClient();
   const queryKey = ['follow-status', userId];
 
@@ -52,9 +58,14 @@ export function useFollowToggle(repo: IFollowRepository, userId: string | null) 
         queryClient.setQueryData(['dashboard', 'profile', userId], context?.previousProfile);
       }
     },
-    onSuccess: (updatedUser, _vars, context) => {
+    onSuccess: (result, _vars, context) => {
       if (!userId) return;
       const followed = context?.followed ?? !Boolean(isFollowed);
+      const wrappedResult = isActionResult(result) ? result : null;
+      const updatedUser: ActiveUser | undefined = wrappedResult
+        ? wrappedResult.data
+        : (result as ActiveUser | undefined);
+      if (followed) onReward?.(wrappedResult?.reward);
       queryClient.setQueryData(queryKey, followed);
       queryClient.setQueryData<UserProfileData>(['dashboard', 'profile', userId], (current) =>
         updateUserProfileFollow(current, followed, updatedUser),
@@ -78,6 +89,12 @@ export function useFollowToggle(repo: IFollowRepository, userId: string | null) 
     toggle: toggleMutation.mutate,
     isToggling: toggleMutation.isPending,
   };
+}
+
+function isActionResult(
+  result: ActiveUser | WithActionReward<ActiveUser> | undefined,
+): result is WithActionReward<ActiveUser> {
+  return Boolean(result && 'data' in result);
 }
 
 function updateUserProfileFollow(

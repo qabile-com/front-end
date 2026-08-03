@@ -53,7 +53,11 @@ export function useActionRewardQueue() {
       });
     }
 
-    reward.achievements?.forEach((achievement) => {
+    const achievements = reward.unlockedAchievements?.length
+      ? reward.unlockedAchievements
+      : reward.achievements;
+
+    achievements?.forEach((achievement) => {
       nextItems.push({
         kind: 'achievement',
         achievement,

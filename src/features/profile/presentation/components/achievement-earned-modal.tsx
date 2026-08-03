@@ -4,6 +4,10 @@ import { BaseModal, Button, Icon, OptionalImage } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type { Achievement } from '@/features/dashboard/domain/dashboard.types';
+import {
+  DEFAULT_ACHIEVEMENT_IMAGE,
+  getAchievementAssetUrl,
+} from '@/features/dashboard/domain/achievement-normalizer';
 
 interface AchievementEarnedModalProps {
   achievement: Achievement | null;
@@ -42,6 +46,7 @@ export function AchievementEarnedModal({ achievement, onClose }: AchievementEarn
           src={getAchievementImage(achievement)}
           alt={achievement.label}
           className="object-cover"
+          fallbackSrc={DEFAULT_ACHIEVEMENT_IMAGE}
           loading="lazy"
         />
         {count > 1 && (
@@ -88,45 +93,6 @@ export function AchievementEarnedModal({ achievement, onClose }: AchievementEarn
 }
 
 function getAchievementImage(achievement: Achievement) {
-  const slug = normalizeAchievementSlug(achievement.slug);
-  return slug ? `/assets/achievements/${slug}.webp` : '/assets/achievements/atash-afrooz.webp';
+  return getAchievementAssetUrl(achievement);
 }
 
-function normalizeAchievementSlug(slug?: string) {
-  if (!slug) return undefined;
-  return ACHIEVEMENT_SLUG_ALIASES[slug.trim()] ?? slug.trim();
-}
-
-const ACHIEVEMENT_SLUG_ALIASES: Record<string, string> = {
-  atashafrooz: 'atash-afrooz',
-  'atash-afrooz': 'atash-afrooz',
-  'fire-starter': 'atash-afrooz',
-  star: 'setare',
-  setareh: 'setare',
-  setare: 'setare',
-  'farzand-ghabile': 'farzand-ghabile',
-  'farzand-qabile': 'farzand-ghabile',
-  'child-of-tribe': 'farzand-ghabile',
-  tizbal: 'tizbaal',
-  tizbaal: 'tizbaal',
-  hero: 'gahreman',
-  ghahreman: 'gahreman',
-  gahreman: 'gahreman',
-  'safir-ghabile': 'safir-ghabile',
-  'safir-qabile': 'safir-ghabile',
-  ambassador: 'safir-ghabile',
-  'vares-atash': 'vares-ghabile',
-  'vares-ghabile': 'vares-ghabile',
-  'vares-qabile': 'vares-ghabile',
-  'warese-atash': 'vares-ghabile',
-  'heir-of-fire': 'vares-ghabile',
-  'seda-ghabile': 'seda-qabile',
-  'seda-qabile': 'seda-qabile',
-  'seda-ye-ghabile': 'seda-qabile',
-  'sedaye-ghabile': 'seda-qabile',
-  'sedaye-qabile': 'seda-qabile',
-  'voice-of-tribe': 'seda-qabile',
-  'ghalb-ghabile': 'ghalb-ghabile',
-  'ghalb-qabile': 'ghalb-ghabile',
-  'heart-of-tribe': 'ghalb-ghabile',
-};

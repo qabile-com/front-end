@@ -16,6 +16,11 @@ export interface PaginatedComments {
   currentPage: number;
 }
 
+export interface CommentActionResult {
+  comment: Comment;
+  reward?: import('@/features/dashboard/domain/dashboard.types').ActionRewardResult | null;
+}
+
 export interface ICommentsRepository {
   getComments(
     courseId: string,
@@ -23,5 +28,5 @@ export interface ICommentsRepository {
     limit?: number,
     offset?: number,
   ): Promise<PaginatedComments>;
-  addComment(courseId: string, sectionId: string, text: string): Promise<Comment>;
+  addComment(courseId: string, sectionId: string, text: string): Promise<CommentActionResult>;
 }

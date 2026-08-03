@@ -11,6 +11,8 @@ import { useDebounce } from '@/shared/hooks/use-debounce';
 import { adminRepo, socialRepo } from '@/features/social/infrastructure/repository-factory';
 import { SocialTab } from '@/features/social/presentation/sections/social-tab';
 import { DashboardPageShell, MotionPage } from '@/shared/ui';
+import { useActionRewardQueue } from '@/features/dashboard/application/use-action-reward-queue';
+import { ActionRewardModals } from '@/features/dashboard/presentation/components/action-reward-modals';
 
 type Feed = 'for-you' | 'following';
 
@@ -27,7 +29,8 @@ export function SocialPage() {
     [debouncedSearch, feed],
   );
   const feedQuery = useInfiniteFeed(socialRepo, feedFilters);
-  const social = useSocialData(socialRepo);
+  const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
+  const social = useSocialData(socialRepo, enqueueReward);
   const profile = useProfile(profileRepo);
 
   return (
@@ -48,7 +51,9 @@ export function SocialPage() {
         profileRepo={profileRepo}
         adminRepo={adminRepo}
         newPostIds={social.newPostIds}
+        onReward={enqueueReward}
       />
+        <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
       </DashboardPageShell>
     </MotionPage>
   );

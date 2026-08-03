@@ -30,7 +30,7 @@ export function PullToRefresh({
 
   const isAtTop = useCallback((scroller: HTMLElement | Window | null) => {
     if (!scroller || scroller === window) return window.scrollY <= 1;
-    return scroller.scrollTop <= 1;
+    return (scroller as HTMLElement).scrollTop <= 1;
   }, []);
 
   const handleTouchStart = useCallback(

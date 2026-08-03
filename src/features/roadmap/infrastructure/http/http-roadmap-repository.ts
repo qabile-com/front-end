@@ -16,6 +16,7 @@ import type {
   RoadmapStepProgress,
 } from '../../domain/roadmap.types';
 import { STATIC_ROADMAP_STEPS } from '../../domain/static-roadmap-steps';
+import { normalizeActionRewardResult } from '@/features/dashboard/domain/achievement-normalizer';
 
 const DEFAULT_LIMIT = 10;
 
@@ -149,9 +150,11 @@ function normalizeStep(payload: unknown, index: number): RoadmapStepProgress {
 function normalizeCompleteResult(payload: unknown): CompleteRoadmapStepResult {
   const raw = unwrapData(payload) as Record<string, unknown>;
   const reward = (raw.reward ?? raw) as CompleteRoadmapStepResult;
+  const normalizedReward = normalizeActionRewardResult(reward);
 
   return {
     ...reward,
+    ...normalizedReward,
     roadmap: raw.roadmap ? normalizeActiveRoadmap(raw.roadmap) : undefined,
     step: raw.step ? normalizeStep(raw.step, 0) : undefined,
   };

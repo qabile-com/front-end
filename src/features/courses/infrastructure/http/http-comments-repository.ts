@@ -1,6 +1,7 @@
 import type { Comment, ICommentsRepository, PaginatedComments } from '../../domain/comments-repository';
 import type { CourseCommentDto } from '@/core/api/comments.api';
 import { addSessionComment, getSessionComments } from '@/core/api/comments.api';
+import { normalizeActionRewardResult } from '@/features/dashboard/domain/achievement-normalizer';
 
 export class HttpCommentsRepository implements ICommentsRepository {
   async getComments(
@@ -21,7 +22,10 @@ export class HttpCommentsRepository implements ICommentsRepository {
 
   async addComment(courseId: string, sectionId: string, text: string) {
     const res = await addSessionComment(courseId, sectionId, text);
-    return apiCommentToDomain(res.data.data);
+    return {
+      comment: apiCommentToDomain(res.data.data),
+      reward: normalizeActionRewardResult(res.data),
+    };
   }
 }
 

@@ -91,9 +91,14 @@ export default function SessionPage() {
         showError('برای ثبت نظر، ابتدا کورس را خریداری کن.');
         return;
       }
-      addComment.mutate({ courseId, sectionId, text });
+      addComment.mutate(
+        { courseId, sectionId, text },
+        {
+          onSuccess: (result) => enqueueReward(result.reward),
+        },
+      );
     },
-    [addComment, courseId, isCourseUnlocked, sectionId],
+    [addComment, courseId, enqueueReward, isCourseUnlocked, sectionId],
   );
 
   const handleNextSession = useCallback(() => {
@@ -109,7 +114,8 @@ export default function SessionPage() {
     if (!course) return;
 
     try {
-      await purchaseCourse.mutateAsync(course.id);
+      const result = await purchaseCourse.mutateAsync(course.id);
+      enqueueReward(result.reward);
       showSuccess('کورس با موفقیت باز شد.');
       await Promise.all([coursesQuery.refetch(), refetchSession(), refetchUser()]);
       setCourseToPurchase(null);
@@ -117,7 +123,7 @@ export default function SessionPage() {
     } catch (error) {
       showError(error instanceof Error ? error.message : 'خرید دوره انجام نشد.');
     }
-  }, [course, coursesQuery, purchaseCourse, refetchSession, refetchUser, router]);
+  }, [course, coursesQuery, enqueueReward, purchaseCourse, refetchSession, refetchUser, router]);
 
   if (coursesLoading || sessionFetching) {
     return <SessionSkeleton />;

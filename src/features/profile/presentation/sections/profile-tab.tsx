@@ -11,9 +11,12 @@ import type {
   Achievement,
   AchievementCondition,
 } from '@/features/dashboard/domain/dashboard.types';
+import {
+  DEFAULT_ACHIEVEMENT_IMAGE,
+  getAchievementAssetUrl,
+} from '@/features/dashboard/domain/achievement-normalizer';
 import type { IProfileRepository, MyProfile } from '../../domain/profile-repository';
 import { CreatePost } from '@/features/social/presentation/sections/create-post';
-import { BaseModal as PostBaseModal } from '@/shared/ui';
 import { socialRepo } from '@/features/social/infrastructure/repository-factory';
 import type { AchievementCard } from '@/features/social/domain/social.data';
 
@@ -50,7 +53,7 @@ export function ProfileTab({
       showSuccess('پست با موفقیت منتشر شد!');
       setIsSharePostOpen(false);
       setSelectedAchievement(null);
-    } catch (error) {
+    } catch {
       showError('خطا در انتشار پست');
     }
   };
@@ -190,6 +193,7 @@ export function ProfileTab({
                     src={getAchievementImage(achievement)}
                     alt={achievement.label}
                     className="object-cover"
+                    fallbackSrc={DEFAULT_ACHIEVEMENT_IMAGE}
                     loading="lazy"
                   />
                   {getAchievementCount(achievement) > 1 && (
@@ -241,7 +245,7 @@ export function ProfileTab({
             achievement={{
               title: selectedAchievement.label,
               sub: getAchievementDescription(selectedAchievement),
-              icon: getAchievementIcon(selectedAchievement),
+              icon: getAchievementIcon(),
             }}
             onPublish={handlePublishPost}
             onPublished={() => setIsSharePostOpen(false)}
@@ -347,6 +351,7 @@ function AchievementModal({
               src={getAchievementImage(achievement)}
               alt={achievement.label}
               className="object-cover"
+              fallbackSrc={DEFAULT_ACHIEVEMENT_IMAGE}
               loading="lazy"
             />
           </div>
@@ -401,138 +406,26 @@ function AchievementModal({
   );
 }
 
-const ACHIEVEMENT_RULES: Record<
-  string,
-  {
-    description: string;
-    condition: string;
-  }
-> = {
-  'atash-afrooz': {
-    description: 'امروز اولین آتش را روشن کردی. از این لحظه، مسیر رشد تو آغاز شده است.',
-    condition: 'انجام اولین تمرین',
-  },
-  setare: {
-    description: 'نور تو راه را برای دیگران روشن می‌کند.',
-    condition: 'قرار گرفتن در رتبه‌های برتر لیدربورد هفتگی',
-  },
-  'farzand-ghabile': {
-    description: 'تو دیگر رهگذر نیستی؛ مسیر، خانه‌ی تو شده است.',
-    condition: 'ارتقا در هر ۵ سطح',
-  },
-  tizbaal: {
-    description: 'سرعت تو فقط در دیدن ویدیوها نیست؛ در رشد کردن است.',
-    condition: 'تکمیل سه درس در مدت زمان کوتاه',
-  },
-  gahreman: {
-    description: 'بزرگ‌ترین نبرد، نبرد با خودت بود... و تو پیروز شدی.',
-    condition: 'دریافت هر ۱۰۰۰ آتش XP',
-  },
-  'safir-ghabile': {
-    description: 'امروز فقط عضوی از قبیله نیستی؛ بخشی از آینده‌ی آن هستی.',
-    condition: 'دعوت موفق از ۳ کاربر یا کمک به سایر کاربران',
-  },
-  'vares-ghabile': {
-    description: 'هر روز حضورت، یک قدم دیگر به آینده‌ای است که می‌خواهی.',
-    condition: 'هر ۳۰ روز ورود متوالی',
-  },
-  'seda-qabile': {
-    description: 'تو باعث شدی آشیانه ققنوس پرجنب‌وجوش‌تر از همیشه باقی بماند.',
-    condition: 'هر ۳۰ فعالیت اجتماعی مثل پیام، لایک، کامنت و اشتراک‌گذاری',
-  },
-  'ghalb-ghabile': {
-    description:
-      'نام تو با احترام برده می‌شود. همراهی، حمایت و انرژی تو، قبیله را گرم‌تر و متحدتر کرده است.',
-    condition: 'رسیدن به ۳۰ فالور یا ثبت ۳۰ پیام در محفل',
-  },
-};
-
-const ACHIEVEMENT_SLUG_BY_LABEL: Record<string, string> = {
-  آتش‌افروز: 'atash-afrooz',
-  ستاره: 'setare',
-  'فرزند قبیله': 'farzand-ghabile',
-  تیزبال: 'tizbaal',
-  قهرمان: 'gahreman',
-  'سفیر قبیله': 'safir-ghabile',
-  'وارث آتش': 'vares-ghabile',
-  'صدای قبیله': 'seda-qabile',
-  'قلب قبیله': 'ghalb-ghabile',
-};
-
-const ACHIEVEMENT_IMAGE_BY_LABEL: Record<string, string> = {
-  آتش‌افروز: '/assets/achievements/atash-afrooz.webp',
-  'وارث آتش': '/assets/achievements/vares-ghabile.webp',
-  قهرمان: '/assets/achievements/gahreman.webp',
-  'سفیر قبیله': '/assets/achievements/safir-ghabile.webp',
-  تیزبال: '/assets/achievements/tizbaal.webp',
-  'فرزند قبیله': '/assets/achievements/farzand-ghabile.webp',
-  ستاره: '/assets/achievements/setare.webp',
-  'قلب قبیله': '/assets/achievements/ghalb-ghabile.webp',
-  'صدای قبیله': '/assets/achievements/seda-qabile.webp',
-};
-
-const ACHIEVEMENT_SLUG_ALIASES: Record<string, string> = {
-  atashafrooz: 'atash-afrooz',
-  'atash-afrooz': 'atash-afrooz',
-  'fire-starter': 'atash-afrooz',
-  star: 'setare',
-  setareh: 'setare',
-  setare: 'setare',
-  'farzand-ghabile': 'farzand-ghabile',
-  'farzand-qabile': 'farzand-ghabile',
-  'child-of-tribe': 'farzand-ghabile',
-  tizbal: 'tizbaal',
-  tizbaal: 'tizbaal',
-  hero: 'gahreman',
-  ghahreman: 'gahreman',
-  gahreman: 'gahreman',
-  'safir-ghabile': 'safir-ghabile',
-  'safir-qabile': 'safir-ghabile',
-  ambassador: 'safir-ghabile',
-  'vares-atash': 'vares-ghabile',
-  'vares-ghabile': 'vares-ghabile',
-  'vares-qabile': 'vares-ghabile',
-  'warese-atash': 'vares-ghabile',
-  'heir-of-fire': 'vares-ghabile',
-  'seda-ghabile': 'seda-qabile',
-  'seda-qabile': 'seda-qabile',
-  'seda-ye-ghabile': 'seda-qabile',
-  'sedaye-ghabile': 'seda-qabile',
-  'sedaye-qabile': 'seda-qabile',
-  'voice-of-tribe': 'seda-qabile',
-  'ghalb-ghabile': 'ghalb-ghabile',
-  'ghalb-qabile': 'ghalb-ghabile',
-  'heart-of-tribe': 'ghalb-ghabile',
-};
-
 function getAchievementCount(achievement: Achievement) {
   return achievement.count ?? 1;
 }
 
 function getAchievementImage(achievement: Achievement) {
-  const slug = getAchievementSlug(achievement);
-  return slug
-    ? `/assets/achievements/${slug}.webp`
-    : (ACHIEVEMENT_IMAGE_BY_LABEL[achievement.label] ?? '/assets/achievements/atash-afrooz.webp');
+  return getAchievementAssetUrl(achievement);
 }
 
 function getAchievementSlug(achievement: Achievement) {
-  const rawSlug = achievement.slug?.trim();
-  return (
-    (rawSlug ? (ACHIEVEMENT_SLUG_ALIASES[rawSlug] ?? rawSlug) : undefined) ??
-    ACHIEVEMENT_SLUG_BY_LABEL[achievement.label]
-  );
+  return achievement.slug?.trim();
 }
 
 function getAchievementDescription(achievement: Achievement) {
-  const slug = getAchievementSlug(achievement);
   return (
-    (slug ? ACHIEVEMENT_RULES[slug]?.description : undefined) ??
+    achievement.description ??
     'این دستاورد با تکمیل شرط مشخص‌شده برای کاربر ثبت می‌شود.'
   );
 }
 
-function getAchievementIcon(achievement: Achievement): IconName {
+function getAchievementIcon(): IconName {
   return 'flame';
 }
 
@@ -540,12 +433,11 @@ function getAchievementConditions(achievement: Achievement): AchievementConditio
   if (achievement.conditions?.length) return achievement.conditions;
 
   const slug = getAchievementSlug(achievement);
-  const rule = slug ? ACHIEVEMENT_RULES[slug] : undefined;
 
   return [
     {
       id: `${slug ?? achievement.label}-main-condition`,
-      label: rule?.condition ?? 'تکمیل شرط تعیین‌شده برای این دستاورد',
+      label: achievement.description ?? 'تکمیل شرط تعیین‌شده برای این دستاورد',
       passed: achievement.unlocked,
     },
   ];
@@ -554,3 +446,4 @@ function getAchievementConditions(achievement: Achievement): AchievementConditio
 function sortAchievementsByUnlocked(achievements: Achievement[]) {
   return [...achievements].sort((a, b) => Number(b.unlocked) - Number(a.unlocked));
 }
+

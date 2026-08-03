@@ -4,8 +4,12 @@ import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-
 import type { ISocialRepository } from '../domain/social-repository';
 import type { ActiveUser, Post } from '../domain/social.data';
 import type { UserProfileData } from '@/features/leaderboard/domain/user-profile-repository';
+import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
 
-export function useToggleUserFollow(repo: ISocialRepository) {
+export function useToggleUserFollow(
+  repo: ISocialRepository,
+  onReward?: (reward?: ActionRewardResult | null) => void,
+) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -79,8 +83,10 @@ export function useToggleUserFollow(repo: ISocialRepository) {
       queryClient.setQueryData(['dashboard', 'profile', variables.userId], context?.previousProfile);
       queryClient.setQueryData(['follow-status', variables.userId], variables.isFollowedByMe);
     },
-    onSuccess: (updatedUser, variables, context) => {
+    onSuccess: (result, variables, context) => {
+      const updatedUser = 'data' in result ? result.data : result;
       const followed = context?.intendedFollowed ?? !variables.isFollowedByMe;
+      if (!variables.isFollowedByMe && 'reward' in result) onReward?.(result.reward);
 
       queryClient.setQueryData<ActiveUser[]>(['social', 'active-users'], (current) =>
         current?.map((user) =>

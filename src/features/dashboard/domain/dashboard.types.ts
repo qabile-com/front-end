@@ -16,6 +16,7 @@ export interface CurrentUser {
   avatar: string;
   achievements?: Achievement[];
   isCompleteOnboarding?: boolean;
+  actionReward?: ActionRewardResult | null;
 }
 
 export interface NavItem {
@@ -65,6 +66,16 @@ export interface Achievement {
   label: string;
   unlocked: boolean;
   slug?: string;
+  title?: string;
+  description?: string;
+  imageUrl?: string | null;
+  xpEarned?: number;
+  repeatIndex?: number;
+  triggerType?: string;
+  earnedAt?: string | null;
+  threshold?: number;
+  isRepeatable?: boolean;
+  lastEarnedAt?: string | null;
   count?: number;
   conditions?: AchievementCondition[];
   isShareable?: boolean;
@@ -91,6 +102,7 @@ export interface ActionRewardResult {
   xpGranted?: number;
   streak?: StreakReward | null;
   achievements?: Achievement[];
+  unlockedAchievements?: Achievement[];
 }
 
 export type SectionWatchEvent = 'timeupdate' | 'pause' | 'close' | 'ended' | 'threshold';

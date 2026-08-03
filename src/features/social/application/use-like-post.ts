@@ -2,8 +2,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ISocialRepository } from '../domain/social-repository';
 import type { InfiniteData } from '@tanstack/react-query';
 import type { Post } from '../domain/social.data';
+import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
 
-export function useLikePost(repo: ISocialRepository) {
+export function useLikePost(
+  repo: ISocialRepository,
+  onReward?: (reward?: ActionRewardResult | null) => void,
+) {
   const queryClient = useQueryClient();
 
   const likeMutation = useMutation({
@@ -29,6 +33,9 @@ export function useLikePost(repo: ISocialRepository) {
     },
     onError: (err, variables, context) => {
       context?.previousData.forEach(([queryKey, data]) => queryClient.setQueryData(queryKey, data));
+    },
+    onSuccess: (result) => {
+      onReward?.(result.reward);
     },
     onSettled: (_data, _error, postId) => {
       queryClient.invalidateQueries({ queryKey: ['social-post', postId] });

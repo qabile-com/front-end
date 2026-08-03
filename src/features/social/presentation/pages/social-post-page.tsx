@@ -18,6 +18,8 @@ import { showError, showSuccess } from '@/shared/lib/toast';
 import { shareUrl } from '@/shared/lib/native-share';
 import { getApiErrorView } from '@/core/api/api-error-view';
 import { createAuthRedirectHref } from '@/core/auth/redirect';
+import { useActionRewardQueue } from '@/features/dashboard/application/use-action-reward-queue';
+import { ActionRewardModals } from '@/features/dashboard/presentation/components/action-reward-modals';
 
 export function SocialPostPage() {
   const params = useParams<{ postId: string }>();
@@ -27,9 +29,10 @@ export function SocialPostPage() {
 
   const { data: post, isLoading, error, refetch } = useSocialPost(socialRepo, postId);
   const comments = useSocialPostComments(socialRepo, postId);
-  const addComment = useAddPostComment(socialRepo);
+  const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
+  const addComment = useAddPostComment(socialRepo, enqueueReward);
   const deleteComment = useAdminDeleteComment(adminRepo);
-  const { like, unlike } = useLikePost(socialRepo);
+  const { like, unlike } = useLikePost(socialRepo, enqueueReward);
   const { user } = useUser(userRepo);
   const role = getStoredAuthSession()?.user?.role;
   const canManageComments = role === 'admin' || role === 'super_admin';
@@ -108,6 +111,7 @@ export function SocialPostPage() {
         isAddingComment={addComment.isPending}
         currentUserName={user?.name}
       />
+      <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
     </div>
   );
 }
