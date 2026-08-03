@@ -1,16 +1,15 @@
 'use client';
 
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   BaseModal,
   Button,
   ErrorState,
   Icon,
   Input,
-  InlineSkeleton,
   InlineSpinner,
   SocialSkeleton,
   type IconName,
@@ -80,8 +79,35 @@ export function SocialTab({
   const updateProfile = useUpdateMyProfile(profileRepo, onReward);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [isCompleteProfileOpen, setIsCompleteProfileOpen] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const allPosts = useMemo(() => feedQuery.data?.pages.flat() ?? [], [feedQuery.data]);
+  const hasNextPage = Boolean(feedQuery.hasNextPage);
+  const isFetchingNextPage = feedQuery.isFetchingNextPage;
+  const fetchNextPage = feedQuery.fetchNextPage;
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || !hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting || isFetchingNextPage) return;
+        void fetchNextPage();
+      },
+      {
+        root: null,
+        rootMargin: '420px 0px',
+        threshold: 0.01,
+      },
+    );
+
+    observer.observe(target);
+
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
   const handleShare = async (post: Post) => {
     try {
       await shareUrl({
@@ -205,18 +231,22 @@ export function SocialTab({
           );
         })}
 
-        {/* Load more pagination */}
-        {feedQuery.hasNextPage && !feedQuery.isFetchingNextPage && (
-          <button
-            onClick={() => feedQuery.fetchNextPage()}
-            className="text-gold hover:text-ember mt-4 w-full text-center text-sm font-bold transition-colors"
+        {feedQuery.isSuccess && allPosts.length > 0 && (
+          <div
+            ref={loadMoreRef}
+            aria-live="polite"
+            className="flex min-h-16 items-center justify-center py-3"
           >
-            نمایش بیشتر
-          </button>
-        )}
-        {feedQuery.isFetchingNextPage && (
-          <div className="flex justify-center py-3">
-            <InlineSkeleton className="h-4 w-32" />
+            {isFetchingNextPage ? (
+              <div className="border-hair text-ink-2 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[12.5px] font-bold [background:var(--glass-2)]">
+                <InlineSpinner className="text-ember size-4" />
+                <span>در حال دریافت پست‌ها</span>
+              </div>
+            ) : hasNextPage ? (
+              <span className="sr-only">دریافت خودکار پست‌های بیشتر</span>
+            ) : (
+              <span className="text-ink-4 text-xs font-bold">همه پست‌ها نمایش داده شد</span>
+            )}
           </div>
         )}
       </div>
