@@ -172,7 +172,13 @@ export function apiForumPostToDomain(api: ForumPostDto): Post {
     verified: author.verified ?? api.verified,
     time: api.createdAt,
     text: api.text,
-    achievement: api.achievement as Post['achievement'],
+    achievement: api.achievement
+      ? {
+          title: api.achievement.title,
+          sub: api.achievement.sub,
+          icon: api.achievement.icon || 'flame',
+        }
+      : undefined,
     hasImage: api.hasImage ?? Boolean(api.attachment || api.image),
     attachment: api.attachment
       ? {

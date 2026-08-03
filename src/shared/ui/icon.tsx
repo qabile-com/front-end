@@ -464,12 +464,13 @@ const ICONS = {
 export type IconName = keyof typeof ICONS;
 
 interface IconProps extends SVGProps<SVGSVGElement> {
-  name: IconName;
+  name: IconName | string | null | undefined;
 
   size?: number;
 }
 
 export function Icon({ name, size = 24, ...props }: IconProps) {
-  const Render = ICONS[name];
-  return <Render width={size} height={size} aria-hidden {...props} />;
+  const Render = name ? ICONS[name as IconName] : undefined;
+  const SafeRender = Render ?? ICONS.flame;
+  return <SafeRender width={size} height={size} aria-hidden {...props} />;
 }
