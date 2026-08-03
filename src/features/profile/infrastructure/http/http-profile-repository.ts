@@ -37,7 +37,14 @@ const DEFAULT_SECURITY_SETTINGS: ProfileSecuritySettings = {
 
 type MyProfileDto = Omit<
   MyProfile,
-  'name' | 'firstName' | 'lastName' | 'displayName' | 'initial' | 'avatar' | 'posts' | 'achievements'
+  | 'name'
+  | 'firstName'
+  | 'lastName'
+  | 'displayName'
+  | 'initial'
+  | 'avatar'
+  | 'posts'
+  | 'achievements'
 > & {
   name?: string;
   firstName?: string | null;
@@ -81,14 +88,17 @@ export class HttpProfileRepository implements IProfileRepository {
   async getMyProfile(): Promise<MyProfile> {
     const res = await getMyProfile();
     const p = (res.data.data ?? res.data) as MyProfileDto;
-    return this.normalizeProfile(p);
+    return this.normalizeProfile(p, res.data);
   }
 
-  async getXpHistory(params?: {
-    limit?: number;
-    offset?: number;
-    q?: string;
-  }, options?: { signal?: AbortSignal }): Promise<PaginatedXpHistory> {
+  async getXpHistory(
+    params?: {
+      limit?: number;
+      offset?: number;
+      q?: string;
+    },
+    options?: { signal?: AbortSignal },
+  ): Promise<PaginatedXpHistory> {
     const res = await getMyXpHistory(params, options);
     const payload = (res.data ?? {}) as PaginatedXpHistoryDto | XpHistoryDto[];
     const items = Array.isArray(payload) ? payload : (payload.data ?? []);
@@ -109,7 +119,8 @@ export class HttpProfileRepository implements IProfileRepository {
   async updateMyProfile(input: UpdateProfileInput): Promise<MyProfile> {
     const firstName = input.firstName?.trim();
     const lastName = input.lastName?.trim();
-    const displayName = input.displayName?.trim() || [firstName, lastName].filter(Boolean).join(' ');
+    const displayName =
+      input.displayName?.trim() || [firstName, lastName].filter(Boolean).join(' ');
 
     const res = await updateMyProfile({
       firstName,
@@ -148,10 +159,7 @@ export class HttpProfileRepository implements IProfileRepository {
     await requestPhoneChangeCode(currentPhone);
   }
 
-  async verifyPhoneChangeCode(
-    currentPhone: string,
-    code: string,
-  ): Promise<VerificationResult> {
+  async verifyPhoneChangeCode(currentPhone: string, code: string): Promise<VerificationResult> {
     const res = await verifyPhoneChangeCode(currentPhone, code);
     return res.data.data ?? res.data;
   }

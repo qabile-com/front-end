@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BaseModal, Button, Icon, type IconName, OptionalImage } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
@@ -38,8 +38,24 @@ export function ProfileTab({
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(initialEditProfileOpen);
   const [isSharePostOpen, setIsSharePostOpen] = useState(false);
   const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
+  const enqueuedRewardKeysRef = useRef(new Set<string>());
   const logout = useLogout();
   const sortedAchievements = sortAchievementsByUnlocked(profile.achievements);
+
+  useEffect(() => {
+    if (!profile.actionReward?.unlockedAchievements?.length) return;
+
+    const rewardKey = profile.actionReward.unlockedAchievements
+      .map(
+        (achievement) =>
+          `${achievement.id}:${achievement.earnedAt ?? achievement.repeatIndex ?? ''}`,
+      )
+      .join('|');
+    if (!rewardKey || enqueuedRewardKeysRef.current.has(rewardKey)) return;
+
+    enqueuedRewardKeysRef.current.add(rewardKey);
+    queueMicrotask(() => enqueueReward(profile.actionReward));
+  }, [enqueueReward, profile.actionReward]);
 
   const handleAchievementShare = (achievement: Achievement) => {
     setSelectedAchievement(achievement);
@@ -426,10 +442,7 @@ function getAchievementSlug(achievement: Achievement) {
 }
 
 function getAchievementDescription(achievement: Achievement) {
-  return (
-    achievement.description ??
-    'این دستاورد با تکمیل شرط مشخص‌شده برای کاربر ثبت می‌شود.'
-  );
+  return achievement.description ?? 'این دستاورد با تکمیل شرط مشخص‌شده برای کاربر ثبت می‌شود.';
 }
 
 function getAchievementIcon(): IconName {
@@ -453,4 +466,3 @@ function getAchievementConditions(achievement: Achievement): AchievementConditio
 function sortAchievementsByUnlocked(achievements: Achievement[]) {
   return [...achievements].sort((a, b) => Number(b.unlocked) - Number(a.unlocked));
 }
-

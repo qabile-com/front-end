@@ -21,6 +21,8 @@ import type { Course } from '../../domain/courses.data';
 import { formatDuration } from '@/core/lib/format-duration';
 import { usePurchaseCourse } from '../../application/use-courses';
 import { coursesRepo } from '../../infrastructure/repository-factory';
+import { useActionRewardQueue } from '@/features/dashboard/application/use-action-reward-queue';
+import { ActionRewardModals } from '@/features/dashboard/presentation/components/action-reward-modals';
 
 type AccessFilter = 'all' | 'continue' | 'owned' | 'free' | 'locked';
 
@@ -56,6 +58,7 @@ export function CoursesTab({
   const [accessFilter, setAccessFilter] = useState<AccessFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const purchaseCourse = usePurchaseCourse(coursesRepo);
+  const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
 
   const categories = useMemo(
     () => Array.from(new Set(courses.map((course) => course.category).filter(Boolean))),
@@ -106,6 +109,7 @@ export function CoursesTab({
     if (!selectedCourse) return;
     try {
       const result = await purchaseCourse.mutateAsync(selectedCourse.id);
+      enqueueReward(result.reward);
       const firstSectionId = result.course?.episodes[0]?.id ?? selectedCourse.episodes[0]?.id;
       setSelectedCourse(null);
       showSuccess('کورس با موفقیت باز شد.');
@@ -118,8 +122,9 @@ export function CoursesTab({
   };
 
   return (
-    <div className="space-y-6">
-      {/* <CoursesHero
+    <>
+      <div className="space-y-6">
+        {/* <CoursesHero
         coursesCount={courses.length}
         ownedCount={stats.owned}
         lockedCount={stats.locked}
@@ -127,114 +132,116 @@ export function CoursesTab({
         fireBalance={fireBalance}
       /> */}
 
-      <section className="border-hair overflow-hidden rounded-[26px] border [background:linear-gradient(135deg,rgba(255,98,0,.09),rgba(20,9,4,.84))]">
-        <div className="grid gap-4 p-4 sm:p-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
-          <label className="relative block min-w-0">
-            <span className="sr-only">جستجوی کورس</span>
-            <Icon
-              name="search"
-              size={19}
-              className="text-ember absolute top-1/2 right-4 -translate-y-1/2"
-            />
-            <input
-              value={search}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="جستجوی کورس، موضوع یا مهارت..."
-              className="border-hair focus:border-ember placeholder:text-ink-4 h-13 w-full rounded-[18px] border bg-black/28 pr-12 pl-12 text-base font-bold transition-colors outline-none"
-            />
-            {isSearching && (
-              <InlineSpinner className="text-ember absolute top-1/2 left-4 size-4 -translate-y-1/2" />
-            )}
-          </label>
-
-          <div className="flex min-w-0 [scrollbar-width:none] gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
-            {ACCESS_FILTERS.map((filter) => (
-              <button
-                key={filter.id}
-                type="button"
-                onClick={() => setAccessFilter(filter.id)}
-                className={cn(
-                  'inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border px-3.5 text-[12.5px] font-black transition-[transform,border-color,background,color] duration-300 active:scale-95',
-                  accessFilter === filter.id
-                    ? 'border-transparent text-[#1a0a00] [background:var(--fire-grad)]'
-                    : 'border-hair text-ink-2 hover:text-gold bg-black/20 hover:border-[rgba(255,98,0,.38)]',
-                )}
-              >
-                <Icon name={filter.icon} size={15} />
-                {filter.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {categories.length > 0 && (
-          <div className="border-hair flex [scrollbar-width:none] gap-2 overflow-x-auto border-t px-4 py-3 sm:px-5 [&::-webkit-scrollbar]:hidden">
-            <CategoryChip
-              active={categoryFilter === 'all'}
-              onClick={() => setCategoryFilter('all')}
-            >
-              همه دسته‌ها
-            </CategoryChip>
-            {categories.map((category) => (
-              <CategoryChip
-                key={category}
-                active={categoryFilter === category}
-                onClick={() => setCategoryFilter(category)}
-              >
-                {category}
-              </CategoryChip>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {featuredCourse && (
-        <FeaturedCourse
-          course={featuredCourse}
-          fireBalance={fireBalance}
-          onOpen={() => openCourse(featuredCourse)}
-          onBuy={() => setSelectedCourse(featuredCourse)}
-        />
-      )}
-
-      {visibleCourses.length === 0 ? (
-        <ErrorState
-          title="کورسی پیدا نشد"
-          message="جستجو یا فیلترها را تغییر بده تا کورس‌های بیشتری ببینی."
-          icon="search"
-          action={{
-            label: 'پاک کردن فیلترها',
-            onClick: () => {
-              onSearchChange('');
-              setAccessFilter('all');
-              setCategoryFilter('all');
-            },
-            icon: 'x',
-          }}
-        />
-      ) : (
-        <MotionList className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:gap-5">
-          {visibleCourses.map((course) => (
-            <MotionItem key={course.id}>
-              <CourseCard
-                course={course}
-                fireBalance={fireBalance}
-                onOpen={() => openCourse(course)}
-                onBuy={() => setSelectedCourse(course)}
+        <section className="border-hair overflow-hidden rounded-[26px] border [background:linear-gradient(135deg,rgba(255,98,0,.09),rgba(20,9,4,.84))]">
+          <div className="grid gap-4 p-4 sm:p-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+            <label className="relative block min-w-0">
+              <span className="sr-only">جستجوی کورس</span>
+              <Icon
+                name="search"
+                size={19}
+                className="text-ember absolute top-1/2 right-4 -translate-y-1/2"
               />
-            </MotionItem>
-          ))}
-        </MotionList>
-      )}
+              <input
+                value={search}
+                onChange={(event) => onSearchChange(event.target.value)}
+                placeholder="جستجوی کورس، موضوع یا مهارت..."
+                className="border-hair focus:border-ember placeholder:text-ink-4 h-13 w-full rounded-[18px] border bg-black/28 pr-12 pl-12 text-base font-bold transition-colors outline-none"
+              />
+              {isSearching && (
+                <InlineSpinner className="text-ember absolute top-1/2 left-4 size-4 -translate-y-1/2" />
+              )}
+            </label>
 
-      <PurchaseCourseModal
-        course={selectedCourse}
-        fireBalance={fireBalance}
-        isPurchasing={purchaseCourse.isPending}
-        onClose={() => setSelectedCourse(null)}
-        onConfirm={() => void handlePurchase()}
-      />
-    </div>
+            <div className="flex min-w-0 [scrollbar-width:none] gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
+              {ACCESS_FILTERS.map((filter) => (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={() => setAccessFilter(filter.id)}
+                  className={cn(
+                    'inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border px-3.5 text-[12.5px] font-black transition-[transform,border-color,background,color] duration-300 active:scale-95',
+                    accessFilter === filter.id
+                      ? 'border-transparent text-[#1a0a00] [background:var(--fire-grad)]'
+                      : 'border-hair text-ink-2 hover:text-gold bg-black/20 hover:border-[rgba(255,98,0,.38)]',
+                  )}
+                >
+                  <Icon name={filter.icon} size={15} />
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {categories.length > 0 && (
+            <div className="border-hair flex [scrollbar-width:none] gap-2 overflow-x-auto border-t px-4 py-3 sm:px-5 [&::-webkit-scrollbar]:hidden">
+              <CategoryChip
+                active={categoryFilter === 'all'}
+                onClick={() => setCategoryFilter('all')}
+              >
+                همه دسته‌ها
+              </CategoryChip>
+              {categories.map((category) => (
+                <CategoryChip
+                  key={category}
+                  active={categoryFilter === category}
+                  onClick={() => setCategoryFilter(category)}
+                >
+                  {category}
+                </CategoryChip>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {featuredCourse && (
+          <FeaturedCourse
+            course={featuredCourse}
+            fireBalance={fireBalance}
+            onOpen={() => openCourse(featuredCourse)}
+            onBuy={() => setSelectedCourse(featuredCourse)}
+          />
+        )}
+
+        {visibleCourses.length === 0 ? (
+          <ErrorState
+            title="کورسی پیدا نشد"
+            message="جستجو یا فیلترها را تغییر بده تا کورس‌های بیشتری ببینی."
+            icon="search"
+            action={{
+              label: 'پاک کردن فیلترها',
+              onClick: () => {
+                onSearchChange('');
+                setAccessFilter('all');
+                setCategoryFilter('all');
+              },
+              icon: 'x',
+            }}
+          />
+        ) : (
+          <MotionList className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:gap-5">
+            {visibleCourses.map((course) => (
+              <MotionItem key={course.id}>
+                <CourseCard
+                  course={course}
+                  fireBalance={fireBalance}
+                  onOpen={() => openCourse(course)}
+                  onBuy={() => setSelectedCourse(course)}
+                />
+              </MotionItem>
+            ))}
+          </MotionList>
+        )}
+
+        <PurchaseCourseModal
+          course={selectedCourse}
+          fireBalance={fireBalance}
+          isPurchasing={purchaseCourse.isPending}
+          onClose={() => setSelectedCourse(null)}
+          onConfirm={() => void handlePurchase()}
+        />
+      </div>
+      <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
+    </>
   );
 }
 
