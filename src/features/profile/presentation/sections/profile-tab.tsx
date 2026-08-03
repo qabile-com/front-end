@@ -19,6 +19,8 @@ import type { IProfileRepository, MyProfile } from '../../domain/profile-reposit
 import { CreatePost } from '@/features/social/presentation/sections/create-post';
 import { socialRepo } from '@/features/social/infrastructure/repository-factory';
 import type { AchievementCard } from '@/features/social/domain/social.data';
+import { useActionRewardQueue } from '@/features/dashboard/application/use-action-reward-queue';
+import { ActionRewardModals } from '@/features/dashboard/presentation/components/action-reward-modals';
 
 interface ProfileTabProps {
   profile: MyProfile;
@@ -35,6 +37,7 @@ export function ProfileTab({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(initialEditProfileOpen);
   const [isSharePostOpen, setIsSharePostOpen] = useState(false);
+  const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
   const logout = useLogout();
   const sortedAchievements = sortAchievementsByUnlocked(profile.achievements);
 
@@ -281,9 +284,11 @@ export function ProfileTab({
             profile={profile}
             repo={profileRepo}
             onClose={() => setIsEditProfileOpen(false)}
+            onReward={enqueueReward}
           />
         </BaseModal>
       )}
+      <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
     </>
   );
 }

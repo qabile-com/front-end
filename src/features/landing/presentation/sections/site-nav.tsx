@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, type MouseEvent } from 'react';
-import { Button, Container, Icon } from '@/shared/ui';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
+import { Button, Container } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { BrandMark } from '../components/brand-mark';
 import { AuthEntryLink } from '../components/auth-entry-link';
@@ -18,6 +18,7 @@ const NAV_LINKS = [
 export function SiteNav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const navRef = useRef<HTMLElement | null>(null);
 
   const handleSectionClick = (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
     const isLandingHash = href.startsWith('/#');
@@ -52,8 +53,23 @@ export function SiteNav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (navRef.current?.contains(target)) return;
+      setMenuOpen(false);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [menuOpen]);
+
   return (
     <header
+      ref={navRef}
       className={cn(
         'fixed inset-x-0 top-0 z-[100] transition-[background,border-color,backdrop-filter] duration-300 pt-[env(safe-area-inset-top)]',
         scrolled
@@ -66,10 +82,30 @@ export function SiteNav() {
           <button
             type="button"
             aria-label="منو"
+            aria-expanded={menuOpen}
             onClick={() => setMenuOpen((value) => !value)}
-            className="border-hair text-ink grid size-10 place-items-center rounded-xl border [background:var(--glass-2)] lg:hidden"
+            className={cn("border-hair text-ink group grid size-10 place-items-center rounded-xl border transition-[border-color,background,transform] duration-300 hover:border-[rgba(255,180,90,.42)] active:scale-95 lg:hidden", menuOpen ? "border-[rgba(255,180,90,.48)] [background:rgba(255,98,0,.16)]" : "[background:var(--glass-2)]")}
           >
-            <Icon name="menu" size={18} />
+            <span className="relative block size-5" aria-hidden="true">
+              <span
+                className={cn(
+                  'bg-ink absolute start-0 top-[4px] h-0.5 w-5 origin-center rounded-full transition-transform duration-300 ease-[var(--ease-out-soft)] will-change-transform',
+                  menuOpen && 'translate-y-[6px] rotate-45',
+                )}
+              />
+              <span
+                className={cn(
+                  'bg-ink absolute start-0 top-[10px] h-0.5 w-5 origin-center rounded-full transition-[opacity,transform] duration-200 ease-[var(--ease-out-soft)] will-change-transform',
+                  menuOpen && 'scale-x-0 opacity-0',
+                )}
+              />
+              <span
+                className={cn(
+                  'bg-ink absolute start-0 top-[16px] h-0.5 w-5 origin-center rounded-full transition-transform duration-300 ease-[var(--ease-out-soft)] will-change-transform',
+                  menuOpen && '-translate-y-[6px] -rotate-45',
+                )}
+              />
+            </span>
           </button>
           <BrandMark />
         </div>
@@ -102,9 +138,16 @@ export function SiteNav() {
         </div>
       </Container>
 
-      {menuOpen && (
-        <div className="overflow-hidden lg:hidden">
-          <div className="border-hair [background:rgba(5,3,2,.88)] backdrop-blur-xl">
+      <div
+        className={cn(
+          'grid overflow-hidden transition-[grid-template-rows,opacity,transform] duration-300 ease-[var(--ease-out-soft)] lg:hidden',
+          menuOpen
+            ? 'grid-rows-[1fr] translate-y-0 opacity-100'
+            : 'pointer-events-none grid-rows-[0fr] -translate-y-2 opacity-0',
+        )}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="border-hair border-t [background:rgba(5,3,2,.88)] backdrop-blur-xl">
             <nav className="flex flex-col gap-1 px-5 py-4">
               {NAV_LINKS.map((link) => (
                 <a
@@ -122,7 +165,8 @@ export function SiteNav() {
             </nav>
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 }
+

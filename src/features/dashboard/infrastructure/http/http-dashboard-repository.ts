@@ -10,13 +10,13 @@ import { normalizeAchievements, normalizeActionRewardResult } from '../../domain
 export class HttpUserRepository implements IUserRepository {
   async getCurrentUser(): Promise<CurrentUser> {
     const res = await getDashboardBundle();
-    return normalizeCurrentUser(res.data.user);
+    return normalizeCurrentUser(res.data.user, res.data);
   }
 
   async updateOnboardingCompletion(isCompleteOnboarding: boolean): Promise<CurrentUser> {
     const res = await updateMyOnboarding(isCompleteOnboarding);
     const payload = res.data.data ?? res.data;
-    return normalizeCurrentUser(payload);
+    return normalizeCurrentUser(payload, res.data);
   }
 }
 
@@ -26,7 +26,7 @@ type CurrentUserDto = Omit<Partial<CurrentUser>, 'role'> & {
   firstName?: string | null;
 };
 
-function normalizeCurrentUser(user: CurrentUserDto): CurrentUser {
+function normalizeCurrentUser(user: CurrentUserDto, rewardPayload?: unknown): CurrentUser {
   const displayName = user.displayName?.trim();
   const name = displayName || user.name?.trim() || [user.firstName, user.lastName].filter(Boolean).join(' ') || '';
   return {
@@ -43,7 +43,7 @@ function normalizeCurrentUser(user: CurrentUserDto): CurrentUser {
     avatar: user.avatar ?? DEFAULT_AVATAR_GRADIENT,
     achievements: normalizeAchievements(user.achievements),
     isCompleteOnboarding: user.isCompleteOnboarding ?? false,
-    actionReward: normalizeActionRewardResult(user),
+    actionReward: normalizeActionRewardResult(rewardPayload ?? user),
   };
 }
 

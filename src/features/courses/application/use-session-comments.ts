@@ -2,6 +2,7 @@
 
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ICommentsRepository } from '../domain/comments-repository';
+import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
 
 const PAGE_SIZE = 5;
 
@@ -27,7 +28,10 @@ export function useSessionComments(
   });
 }
 
-export function useAddSessionComment(repo: ICommentsRepository) {
+export function useAddSessionComment(
+  repo: ICommentsRepository,
+  onReward?: (reward?: ActionRewardResult | null) => void,
+) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -40,7 +44,8 @@ export function useAddSessionComment(repo: ICommentsRepository) {
       sectionId: string;
       text: string;
     }) => repo.addComment(courseId, sectionId, text),
-    onSuccess: async (_result, variables) => {
+    onSuccess: async (result, variables) => {
+      onReward?.(result.reward);
       await queryClient.invalidateQueries({
         queryKey: ['dashboard', 'comments', variables.courseId, variables.sectionId],
       });

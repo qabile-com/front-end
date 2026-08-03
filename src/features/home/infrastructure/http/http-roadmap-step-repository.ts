@@ -3,6 +3,7 @@ import { completeRoadmapStep, getRoadmapStep } from '@/core/api/roadmap.api';
 import type { IRoadmapStepRepository } from '../../domain/roadmap-repository';
 import type { RoadmapStepDetail } from '../../domain/roadmap.types';
 import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
+import { normalizeActionRewardResult } from '@/features/dashboard/domain/achievement-normalizer';
 
 export class HttpRoadmapStepRepository implements IRoadmapStepRepository {
   async getStepDetail(stepId: number): Promise<RoadmapStepDetail> {
@@ -12,6 +13,6 @@ export class HttpRoadmapStepRepository implements IRoadmapStepRepository {
 
   async completeStep(stepId: number): Promise<ActionRewardResult> {
     const res = await completeRoadmapStep(stepId);
-    return (res.data.data ?? res.data ?? {}) as ActionRewardResult;
+    return normalizeActionRewardResult(res.data) ?? {};
   }
 }

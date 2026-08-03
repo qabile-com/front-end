@@ -62,6 +62,7 @@ export interface LbRow {
 }
 
 export interface Achievement {
+  id?: string;
   icon: IconKey;
   label: string;
   unlocked: boolean;

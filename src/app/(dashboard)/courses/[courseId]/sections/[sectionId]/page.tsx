@@ -64,10 +64,10 @@ export default function SessionPage() {
   const session = sessionDetail?.part ?? null;
 
   const commentsQuery = useSessionComments(commentsRepo, courseId, sectionId, isCourseUnlocked);
-  const addComment = useAddSessionComment(commentsRepo);
+  const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
+  const addComment = useAddSessionComment(commentsRepo, enqueueReward);
   const reportWatchProgress = useReportSectionWatchProgress(coursesRepo);
   const purchaseCourse = usePurchaseCourse(coursesRepo);
-  const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
 
   const handleWatchProgress = useCallback(
     (body: SectionWatchProgressInput) => {
@@ -91,14 +91,9 @@ export default function SessionPage() {
         showError('برای ثبت نظر، ابتدا کورس را خریداری کن.');
         return;
       }
-      addComment.mutate(
-        { courseId, sectionId, text },
-        {
-          onSuccess: (result) => enqueueReward(result.reward),
-        },
-      );
+      addComment.mutate({ courseId, sectionId, text });
     },
-    [addComment, courseId, enqueueReward, isCourseUnlocked, sectionId],
+    [addComment, courseId, isCourseUnlocked, sectionId],
   );
 
   const handleNextSession = useCallback(() => {
@@ -380,13 +375,3 @@ function PartRow({
   );
 }
 
-function DetailEmpty() {
-  return (
-    <div className="text-ink-3 grid min-h-75 place-items-center p-8 text-center">
-      <div>
-        <Icon name="book" size={40} className="mx-auto mb-3 opacity-50" />
-        یک بخش رو انتخاب کن تا شروع کنی
-      </div>
-    </div>
-  );
-}

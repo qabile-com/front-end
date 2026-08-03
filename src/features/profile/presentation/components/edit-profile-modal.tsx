@@ -12,25 +12,24 @@ import {
 } from '../../application/use-edit-profile';
 import { removeAccessToken } from '@/core/auth/token';
 import { useRouter } from 'next/navigation';
-import { useActionRewardQueue } from '@/features/dashboard/application/use-action-reward-queue';
-import { ActionRewardModals } from '@/features/dashboard/presentation/components/action-reward-modals';
+import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
 
 interface EditProfileModalProps {
   profile: MyProfile;
   repo: IProfileRepository;
   onClose: () => void;
+  onReward?: (reward?: ActionRewardResult | null) => void;
 }
 
-export function EditProfileModal({ profile, repo, onClose }: EditProfileModalProps) {
+export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfileModalProps) {
   const router = useRouter();
   const [firstName, setFirstName] = useState(profile.firstName || profile.name);
   const [lastName, setLastName] = useState(profile.lastName);
   const [username, setUsername] = useState(profile.username ?? '');
   const fileRef = useRef<HTMLInputElement>(null);
-  const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
 
-  const updateProfile = useUpdateMyProfile(repo, enqueueReward);
-  const updateAvatar = useUpdateProfileAvatar(repo, enqueueReward);
+  const updateProfile = useUpdateMyProfile(repo, onReward);
+  const updateAvatar = useUpdateProfileAvatar(repo, onReward);
   const deleteAccount = useDeleteMyAccount(repo);
 
   const isBusy = updateProfile.isPending || updateAvatar.isPending || deleteAccount.isPending;
@@ -199,7 +198,6 @@ export function EditProfileModal({ profile, repo, onClose }: EditProfileModalPro
             </button>
           </EditSection>
         </div>
-      <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
     </BaseModal>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -56,6 +56,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [signupAchievements, setSignupAchievements] = useState<Achievement[] | null>(null);
   const [shouldShowInstallAfterSignupXp, setShouldShowInstallAfterSignupXp] = useState(false);
   const [installPromptOpen, setInstallPromptOpen] = useState(false);
+  const enqueuedRewardKeysRef = useRef(new Set<string>());
   const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
   const {
     user,
@@ -120,6 +121,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       queueMicrotask(() => setSignupAchievements(achievements));
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!user?.actionReward?.unlockedAchievements?.length) return;
+
+    const rewardKey = user.actionReward.unlockedAchievements
+      .map((achievement) => `${achievement.id}:${achievement.earnedAt ?? achievement.repeatIndex ?? ''}`)
+      .join('|');
+    if (!rewardKey || enqueuedRewardKeysRef.current.has(rewardKey)) return;
+
+    enqueuedRewardKeysRef.current.add(rewardKey);
+    queueMicrotask(() => enqueueReward(user.actionReward));
+  }, [enqueueReward, user?.actionReward]);
 
   useEffect(() => {
     if (!shouldShowInstallAfterSignupXp || signupXp !== null || signupAchievements?.length) return;

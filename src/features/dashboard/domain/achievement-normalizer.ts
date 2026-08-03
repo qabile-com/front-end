@@ -87,12 +87,14 @@ export function normalizeActionRewardResult(payload?: unknown): ActionRewardResu
   );
   const legacyAchievements = normalizeAchievements(reward.achievements ?? source.achievements);
   const achievements = unlockedAchievements.length ? unlockedAchievements : legacyAchievements;
-  const streak = typeof reward.streak === 'object' ? reward.streak : null;
+  const xpGranted = reward.xpGranted ?? source.xpGranted;
+  const streakSource = reward.streak ?? source.streak;
+  const streak = typeof streakSource === 'object' ? streakSource : null;
 
-  if (!reward.xpGranted && !streak && achievements.length === 0) return null;
+  if (!xpGranted && !streak && achievements.length === 0) return null;
 
   return {
-    xpGranted: reward.xpGranted,
+    xpGranted,
     streak,
     achievements,
     unlockedAchievements,

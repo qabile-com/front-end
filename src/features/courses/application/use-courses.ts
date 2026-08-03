@@ -3,7 +3,10 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ICoursesRepository } from '@/features/dashboard/domain/dashboard-repository';
-import type { SectionWatchProgressInput } from '@/features/dashboard/domain/dashboard.types';
+import type {
+  ActionRewardResult,
+  SectionWatchProgressInput,
+} from '@/features/dashboard/domain/dashboard.types';
 
 export interface CourseListFilters {
   limit?: number;
@@ -29,7 +32,10 @@ export function useCourses(repo: ICoursesRepository, filters: CourseListFilters 
   };
 }
 
-export function useUpdateSectionProgress(repo: ICoursesRepository) {
+export function useUpdateSectionProgress(
+  repo: ICoursesRepository,
+  onReward?: (reward?: ActionRewardResult | null) => void,
+) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -40,7 +46,8 @@ export function useUpdateSectionProgress(repo: ICoursesRepository) {
       sectionId: string;
       body: { status: string; progress?: number };
     }) => repo.updateSectionProgress(sectionId, body),
-    onSuccess: async (_data, variables) => {
+    onSuccess: async (result, variables) => {
+      onReward?.(result);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'courses'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'home'] }),

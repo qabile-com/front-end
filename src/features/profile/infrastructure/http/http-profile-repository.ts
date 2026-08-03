@@ -118,13 +118,13 @@ export class HttpProfileRepository implements IProfileRepository {
       username: input.username?.trim() || null,
     });
     const data = res.data.data ?? res.data;
-    return this.normalizeProfile(data as MyProfileDto);
+    return this.normalizeProfile(data as MyProfileDto, res.data);
   }
 
   async updateProfileAvatar(file: File): Promise<MyProfile> {
     const res = await updateMyProfileAvatar(file);
     const data = res.data.data ?? res.data;
-    return this.normalizeProfile(data as MyProfileDto);
+    return this.normalizeProfile(data as MyProfileDto, res.data);
   }
 
   async requestEmailVerification(email: string): Promise<void> {
@@ -178,7 +178,7 @@ export class HttpProfileRepository implements IProfileRepository {
     await confirmPasswordChange(password, passwordConfirmation, verificationToken);
   }
 
-  private normalizeProfile(p: MyProfileDto): MyProfile {
+  private normalizeProfile(p: MyProfileDto, rewardPayload?: unknown): MyProfile {
     const firstName = p.firstName ?? '';
     const lastName = p.lastName ?? '';
     const displayName = p.displayName ?? [firstName, lastName].filter(Boolean).join(' ');
@@ -215,7 +215,7 @@ export class HttpProfileRepository implements IProfileRepository {
         commentsCount: post.commentsCount ?? post.comments?.length ?? 0,
         time: post.time ?? post.createdAt ?? '',
       })),
-      actionReward: normalizeActionRewardResult(p),
+      actionReward: normalizeActionRewardResult(rewardPayload ?? p),
     };
   }
 }
