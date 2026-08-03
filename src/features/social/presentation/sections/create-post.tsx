@@ -6,7 +6,11 @@ import { Icon } from '@/shared/ui';
 import type { AchievementCard } from '../../domain/social.data';
 
 interface Props {
-  onPublish: (text: string, imageFile?: File | null, achievement?: AchievementCard | null) => void;
+  onPublish: (
+    text: string,
+    imageFile?: File | null,
+    achievement?: AchievementCard | null,
+  ) => void | Promise<void>;
   onPublished?: () => void;
   achievement?: AchievementCard | null;
 }
@@ -14,12 +18,19 @@ interface Props {
 export function CreatePost({ onPublish, onPublished, achievement }: Props) {
   const hasAchievement = Boolean(achievement?.title);
   const [text, setText] = useState(hasAchievement ? `من دستاورد ${achievement?.title} را در قبیله ققنوس دریافت کردم. 🎉` : '');
+  const [isPublishing, setIsPublishing] = useState(false);
 
-  const publish = () => {
-    if (!text.trim() && !hasAchievement) return;
-    onPublish(text.trim(), null, hasAchievement ? achievement : null);
-    setText('');
-    onPublished?.();
+  const publish = async () => {
+    if (isPublishing || (!text.trim() && !hasAchievement)) return;
+
+    setIsPublishing(true);
+    try {
+      await onPublish(text.trim(), null, hasAchievement ? achievement : null);
+      setText('');
+      onPublished?.();
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return (
@@ -28,7 +39,7 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
         <div className="border-hair mb-3 rounded-2xl border bg-[#120904] p-4">
           <div className="flex items-start gap-3">
             <span className="border-hair text-gold mt-0.5 inline-flex size-11 shrink-0 items-center justify-center rounded-xl border bg-[rgba(255,98,0,.1)]">
-              <Icon name={achievement.icon as any} size={22} />
+              <Icon name={achievement.icon} size={22} />
             </span>
             <div className="min-w-0 flex-1 text-right">
               <p className="text-gold text-[13px] font-extrabold">
@@ -77,8 +88,9 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
 
         <button
           type="button"
-          onClick={publish}
-          className="rounded-md px-5 py-2 font-bold text-[#1a0a00] transition-opacity [background:var(--fire-grad)] hover:opacity-90"
+          disabled={isPublishing}
+          onClick={() => void publish()}
+          className="rounded-md px-5 py-2 font-bold text-[#1a0a00] transition-opacity [background:var(--fire-grad)] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
         >
           انتشار
         </button>

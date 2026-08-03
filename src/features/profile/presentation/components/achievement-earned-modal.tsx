@@ -33,10 +33,9 @@ export function AchievementEarnedModal({ achievement, onClose }: AchievementEarn
     try {
       await socialRepo.createPost(text, imageFile, achievementCard);
       showSuccess('پست با موفقیت منتشر شد!');
-      setIsSharePostOpen(false);
-      onClose();
     } catch {
       showError('خطا در انتشار پست');
+      throw new Error('Achievement post publish failed');
     }
   };
 
@@ -116,6 +115,7 @@ export function AchievementEarnedModal({ achievement, onClose }: AchievementEarn
               icon: achievement.icon,
             }}
             onPublish={handlePublishPost}
+            onPublished={onClose}
           />
         </BaseModal>
       )}

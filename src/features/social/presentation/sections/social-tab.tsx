@@ -49,7 +49,7 @@ interface SocialTabProps {
   activeUsers: ActiveUser[];
   search: string;
   onSearchChange: (value: string) => void;
-  onPublish: (text: string, imageFile?: File | null) => void;
+  onPublish: (text: string, imageFile?: File | null) => void | Promise<void>;
   currentUserRole?: string;
   currentProfile?: MyProfile | null;
   isCurrentProfileLoading?: boolean;
@@ -77,7 +77,7 @@ export function SocialTab({
 }: SocialTabProps) {
   const router = useRouter();
   const followToggle = useToggleUserFollow(socialRepo, onReward);
-  const updateProfile = useUpdateMyProfile(profileRepo);
+  const updateProfile = useUpdateMyProfile(profileRepo, onReward);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [isCompleteProfileOpen, setIsCompleteProfileOpen] = useState(false);
 

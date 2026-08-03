@@ -59,8 +59,8 @@ export function useSocialData(
     },
   });
 
-  const publishPost = (text: string, imageFile?: File | null) => {
-    publishPostMutation.mutate({ text, imageFile });
+  const publishPost = async (text: string, imageFile?: File | null) => {
+    await publishPostMutation.mutateAsync({ text, imageFile });
   };
 
   const addComment = (postId: string, text: string) => {

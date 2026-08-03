@@ -101,7 +101,7 @@ export function GlassToaster() {
     <Toaster
       position="top-center"
       gutter={10}
-      containerStyle={{ top: 'calc(18px + env(safe-area-inset-top))', zIndex: 120 }}
+      containerStyle={{ top: 'calc(18px + env(safe-area-inset-top))', zIndex: 2000 }}
       toastOptions={{
         duration: 3000,
         className: toastClassName,

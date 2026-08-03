@@ -58,6 +58,7 @@ export function ProfileTab({
       setSelectedAchievement(null);
     } catch {
       showError('خطا در انتشار پست');
+      throw new Error('Achievement post publish failed');
     }
   };
 
