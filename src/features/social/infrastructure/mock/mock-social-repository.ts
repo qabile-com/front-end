@@ -1,7 +1,7 @@
 // src/features/dashboard/infrastructure/mock-social-repository.ts
 
 import type { ISocialRepository, SocialFeedFilters } from '../../domain/social-repository';
-import type { Post, ActiveUser, PostComment } from '../../domain/social.data';
+import type { Post, ActiveUser, PostComment, AchievementCard } from '../../domain/social.data';
 import type { WithActionReward } from '@/features/dashboard/domain/achievement-normalizer';
 import { POSTS, TRENDING_TAGS, ACTIVE_USERS } from '../../domain/social.data';
 import { mockFollowedUsers } from '@/features/leaderboard/infrastructure/mock/mock-follow-repository';
@@ -78,7 +78,11 @@ export class MockSocialRepository implements ISocialRepository {
     return { ...post };
   }
 
-  async createPost(text: string, imageFile?: File | null): Promise<WithActionReward<Post>> {
+  async createPost(
+    text: string,
+    imageFile?: File | null,
+    achievement?: AchievementCard | null,
+  ): Promise<WithActionReward<Post>> {
     await delay(300);
 
     let imageUrl: string | undefined;
@@ -101,6 +105,9 @@ export class MockSocialRepository implements ISocialRepository {
       commentsCount: 0,
       image: imageUrl,
       hasImage: !!imageUrl,
+      achievement: achievement
+        ? { title: achievement.title, sub: achievement.sub, icon: achievement.icon }
+        : undefined,
     };
     this.posts.unshift(newPost);
     return { data: newPost };

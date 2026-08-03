@@ -110,6 +110,7 @@ export function AchievementEarnedModal({ achievement, onClose }: AchievementEarn
         >
           <CreatePost
             achievement={{
+              id: achievement.id,
               title: achievement.label,
               sub: achievement.description ?? '',
               icon: achievement.icon,

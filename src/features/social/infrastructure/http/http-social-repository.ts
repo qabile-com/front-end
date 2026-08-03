@@ -94,7 +94,7 @@ export class HttpSocialRepository implements ISocialRepository {
     imageFile?: File | null,
     achievement?: AchievementCard | null,
   ): Promise<WithActionReward<Post>> {
-    const res = await createForumPost({ text, image: imageFile, achievement });
+    const res = await createForumPost({ text, image: imageFile, achievementId: achievement?.id });
     return unwrapActionResponse(res.data, apiForumPostToDomain);
   }
 

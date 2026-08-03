@@ -9,6 +9,7 @@ export interface PostComment {
 }
 
 export interface AchievementCard {
+  id?: string;
   title: string;
   sub: string;
   icon: IconKey;

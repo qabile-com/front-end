@@ -246,6 +246,7 @@ export function ProfileTab({
         >
           <CreatePost
             achievement={{
+              id: selectedAchievement.id,
               title: selectedAchievement.label,
               sub: getAchievementDescription(selectedAchievement),
               icon: getAchievementIcon(),
