@@ -26,7 +26,7 @@ export function BaseModal({
   className,
   panelClassName,
   contentClassName,
-  zIndexClassName = 'z-50',
+  zIndexClassName = 'z-[1000]',
   closeOnOutsideClick = true,
   closeOnEscape = true,
 }: BaseModalProps) {
