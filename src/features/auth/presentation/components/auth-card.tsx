@@ -541,6 +541,7 @@ function useOtpSubmit({
   onSubmit: (code: string) => Promise<boolean>;
 }) {
   const submittedCode = useRef('');
+  const autoSubmittedCode = useRef('');
   const onSubmitRef = useLatestRef(onSubmit);
 
   const submit = useCallback(() => {
@@ -554,8 +555,12 @@ function useOtpSubmit({
   }, [code, enabled, loading, onSubmitRef]);
 
   useEffect(() => {
+    if (!enabled || loading || !isCompleteOtp(code)) return;
+    if (autoSubmittedCode.current === code) return;
+
+    autoSubmittedCode.current = code;
     submit();
-  }, [submit]);
+  }, [code, enabled, loading, submit]);
 
   return submit;
 }
