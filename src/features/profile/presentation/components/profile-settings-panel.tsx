@@ -125,7 +125,6 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
       setPasswordVerificationToken(result.verificationToken);
       setScreen('password-new');
     } catch (error) {
-      lastSubmittedPasswordCode.current = '';
       showError(getApiErrorMessage(error, 'رمز وارد شده درست نیست'));
     }
   }, [passwordCode, passwordEmail, verifyPasswordCode]);
