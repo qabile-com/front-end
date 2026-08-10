@@ -6,6 +6,8 @@ import type { PostComment } from '@/features/social/domain/social.data';
 export interface UserProfileData {
   id: string;
   name: string;
+  username?: string | null;
+  bio?: string | null;
   avatar: string;
   title: string;
   level: number;
@@ -48,6 +50,7 @@ export interface UserProfilePost {
   time: string;
   image?: string;
   hasImage?: boolean;
+  isPinned?: boolean;
 }
 
 export interface IUserProfileRepository {

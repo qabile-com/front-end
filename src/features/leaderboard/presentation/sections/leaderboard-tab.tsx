@@ -1,6 +1,6 @@
 'use client';
 
-import { Icon } from '@/shared/ui';
+import { Icon, UserAvatar } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 
 import { toPersianDigits } from '@/core/lib/persian';
@@ -87,10 +87,7 @@ export function LeaderboardTab({
                   >
                     {toPersianDigits(p.rank)}
                   </span>
-                  <span
-                    className="border-hair-2 mx-auto block size-17.5 rounded-full border-2"
-                    style={{ background: p.avatar }}
-                  />
+                  <UserAvatar name={p.name} avatar={p.avatar} className="border-hair-2 mx-auto size-17.5 border-2 text-lg" />
                   <p className="mt-3 text-[15px] font-extrabold">{p.name}</p>
                   <p className="text-gold text-[22px] font-black">{p.points}</p>
                 </div>
@@ -133,10 +130,7 @@ export function LeaderboardTab({
                     </td>
                     <td className="px-2 py-3">
                       <div className="flex items-center gap-2.5">
-                        <span
-                          className="size-9.5 shrink-0 rounded-full"
-                          style={{ background: row.avatar }}
-                        />
+                        <UserAvatar name={row.name} avatar={row.avatar} className="size-9.5 text-xs" />
                         <b className="text-sm font-bold">{row.name}</b>
                       </div>
                     </td>

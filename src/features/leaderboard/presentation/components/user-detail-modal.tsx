@@ -1,10 +1,11 @@
 // src/features/dashboard/presentation/components/user-detail-modal.tsx
 'use client';
 
-import { BaseModal, ErrorState, Icon, ModalSkeleton } from '@/shared/ui';
+import { BaseModal, ErrorState, Icon, ModalSkeleton, UserAvatar } from '@/shared/ui';
 import { useUserDetail } from '../../application/use-user-detail';
 import type { IUserProfileRepository } from '../../domain/user-profile-repository';
 import { toPersianDigits } from '@/core/lib/persian';
+import { formatUsername } from '@/features/social/presentation/lib/format-username';
 
 interface UserDetailModalProps {
   userId: string;
@@ -41,11 +42,13 @@ export function UserDetailModal({ userId, repo, onClose }: UserDetailModalProps)
         )}
         {detail && (
           <div className="flex flex-col items-center">
-            <span
-              className="border-hair-2 size-24 rounded-full border-2"
-              style={{ background: detail.avatar }}
-            />
+            <UserAvatar name={detail.name} avatar={detail.avatar} className="border-hair-2 size-24 border-2 text-2xl" />
             <h3 className="mt-3 text-xl font-extrabold">{detail.name}</h3>
+            {formatUsername(detail.username) && (
+              <p className="text-ink-3 mt-1 text-sm font-bold">
+                {formatUsername(detail.username)}
+              </p>
+            )}
             <p className="text-gold">{detail.title}</p>
             <div className="mt-6 grid w-full grid-cols-2 gap-4">
               <div className="border-hair rounded-xl p-3 text-center [background:var(--glass-2)]">

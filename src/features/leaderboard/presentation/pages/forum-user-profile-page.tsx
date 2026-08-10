@@ -1,12 +1,12 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useFollowToggle } from '../../application/use-follow-toggle';
 import { useBlockToggle } from '../../application/use-block-toggle';
 import { useUserPosts } from '../../application/use-user-posts';
 import { useUserProfile } from '../../application/use-user-profile';
 import { followRepo, userProfileRepo } from '../../infrastructure/repository-factory';
-import { getAvatarInitial } from '@/core/lib/avatar';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
 import { toPersianDigits } from '@/core/lib/persian';
 import {
@@ -17,6 +17,7 @@ import {
   InlineSpinner,
   MotionPage,
   Skeleton,
+  UserAvatar,
 } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { getApiErrorView } from '@/core/api/api-error-view';
@@ -24,18 +25,35 @@ import { createAuthRedirectHref } from '@/core/auth/redirect';
 import { useAuthSession } from '@/providers/auth-provider';
 import { useActionRewardQueue } from '@/features/dashboard/application/use-action-reward-queue';
 import { ActionRewardModals } from '@/features/dashboard/presentation/components/action-reward-modals';
+import { LoginRequiredModal } from '@/features/social/presentation/components/login-required-modal';
+import { formatUsername } from '@/features/social/presentation/lib/format-username';
+import { useDeleteOwnPost } from '@/features/social/application/use-delete-own-post';
+import { socialRepo } from '@/features/social/infrastructure/repository-factory';
+import { showError, showSuccess } from '@/shared/lib/toast';
+import { DeletePostConfirmModal } from '@/features/social/presentation/components/delete-post-confirm-modal';
 
 export function ForumUserProfilePage() {
   const params = useParams<{ userId: string }>();
   const router = useRouter();
-  const { user: currentUser } = useAuthSession();
+  const searchParams = useSearchParams();
+  const { user: currentUser, isLoggedIn } = useAuthSession();
   const userId = params.userId;
   const currentPath = `/social/users/${userId}`;
+  const from = searchParams.get('from');
+  const fromPostId = searchParams.get('postId');
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const profile = useUserProfile(userProfileRepo, userId);
   const postsQuery = useUserPosts(userProfileRepo, userId);
   const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
   const follow = useFollowToggle(followRepo, userId, enqueueReward);
   const block = useBlockToggle(userProfileRepo, userId);
+  const deleteOwnPost = useDeleteOwnPost(socialRepo);
+  const requireLogin = () => {
+    if (isLoggedIn) return true;
+    setLoginPromptOpen(true);
+    return false;
+  };
 
   if (profile.loading) {
     return (
@@ -73,30 +91,44 @@ export function ForumUserProfilePage() {
   const isOwnProfile = Boolean(currentUser?.id && user.id === currentUser.id);
   const followed = follow.isLoading ? Boolean(user.followedByMe) : follow.isFollowed;
   const blocked = Boolean(user.blockedByMe);
-  const canFollow = Boolean(user.canFollow) && !blocked && !isOwnProfile;
+  const canFollow = (Boolean(user.canFollow) || !isLoggedIn) && !blocked && !isOwnProfile;
   const canBlock = !user.isAdam && !isOwnProfile;
+  const userPosts = sortPinnedFirst(postsQuery.data?.pages.flat() ?? []);
+  const backTarget = from === 'post' && fromPostId ? `/social/${encodeURIComponent(fromPostId)}` : '/social';
+  const backLabel = from === 'post' && fromPostId ? 'بازگشت به پست' : 'بازگشت به محفل';
+
+  const handleDeletePost = async () => {
+    if (!requireLogin()) return;
+    if (!postToDelete) return;
+
+    try {
+      await deleteOwnPost.mutateAsync(postToDelete);
+      setPostToDelete(null);
+      showSuccess('پست حذف شد.');
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'حذف پست انجام نشد.');
+    }
+  };
 
   return (
     <MotionPage>
       <DashboardPageShell size="narrow" className="pb-24">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => {
+            if (!requireLogin()) return;
+            router.push(backTarget);
+          }}
           className="text-ink-3 hover:text-gold mb-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--color-hair)] bg-black/20 px-3 text-sm font-black transition-colors"
         >
           <Icon name="arrow-right" size={17} />
-          بازگشت
+          {backLabel}
         </button>
 
         <section className="border-hair overflow-hidden rounded-[28px] border bg-[var(--color-panel)] shadow-[0_30px_90px_-54px_var(--glow)]">
           <div className="border-hair flex flex-col gap-5 border-b p-5 sm:p-6">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div
-                className="grid size-24 shrink-0 place-items-center rounded-full text-3xl font-black text-white"
-                style={{ background: user.avatar }}
-              >
-                {getAvatarInitial(user.name)}
-              </div>
+              <UserAvatar name={user.name} avatar={user.avatar} className="size-24 text-3xl" />
 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -112,7 +144,15 @@ export function ForumUserProfilePage() {
                     </span>
                   )}
                 </div>
+                {formatUsername(user.username) && (
+                  <p className="text-ink-3 mt-1 text-sm font-bold">
+                    {formatUsername(user.username)}
+                  </p>
+                )}
                 <p className="text-gold mt-1 text-sm font-bold">{user.title || user.role}</p>
+                {user.bio?.trim() && (
+                  <p className="text-ink-3 mt-3 max-w-xl text-sm leading-7">{user.bio.trim()}</p>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -122,7 +162,10 @@ export function ForumUserProfilePage() {
                     variant={followed ? 'ghost' : 'primary'}
                     size="sm"
                     disabled={follow.isToggling}
-                    onClick={() => follow.toggle()}
+                    onClick={() => {
+                      if (!requireLogin()) return;
+                      follow.toggle();
+                    }}
                     className={cn(
                       'min-w-31 gap-1.5 transition-[border-color,background,color,opacity]',
                       followed && 'border-gold/50 text-gold border bg-white/5',
@@ -138,7 +181,10 @@ export function ForumUserProfilePage() {
                     variant="ghost"
                     size="sm"
                     disabled={block.isPending}
-                    onClick={() => block.mutate(blocked)}
+                    onClick={() => {
+                      if (!requireLogin()) return;
+                      block.mutate(blocked);
+                    }}
                     className={cn(
                       'border-danger text-danger gap-1.5 border',
                       blocked && 'border-gold text-gold',
@@ -168,33 +214,63 @@ export function ForumUserProfilePage() {
                   <PostSkeleton />
                 </>
               )}
-              {!postsQuery.isLoading && postsQuery.data?.pages.flat().length === 0 && (
+              {!postsQuery.isLoading && userPosts.length === 0 && (
                 <p className="text-ink-3 rounded-2xl border border-[var(--color-hair)] bg-black/20 p-5 text-center text-sm">
                   هنوز پستی ثبت نشده است.
                 </p>
               )}
-              {postsQuery.data?.pages.flat().map((post) => (
-                <button
+              {userPosts.map((post) => (
+                <article
                   key={post.id}
-                  type="button"
-                  onClick={() => router.push(`/social/${post.id}`)}
-                  className="border-hair block w-full rounded-2xl border bg-black/20 p-4 text-start transition-colors hover:border-[var(--color-hair-2)]"
+                  className={cn(
+                    'relative rounded-2xl border bg-black/20 p-4 transition-colors',
+                    post.isPinned
+                      ? 'border-gold/45 hover:border-gold/60'
+                      : 'border-hair hover:border-[var(--color-hair-2)]',
+                  )}
                 >
-                  <p className="text-ink-2 line-clamp-3 text-sm leading-7">{post.text}</p>
-                  <div className="text-ink-4 mt-3 flex items-center justify-between gap-3 text-xs">
-                    <span className="flex items-center gap-3">
-                      <span className="inline-flex items-center gap-1">
-                        <Icon name="heart" size={15} />
-                        {toPersianDigits(post.likes)}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Icon name="msg" size={15} />
-                        {toPersianDigits(post.comments.length)}
-                      </span>
+                  {post.isPinned && (
+                    <span className="text-gold absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full border border-gold/25 bg-gold/10 px-2 py-1 text-[10px] font-black">
+                      <Icon name="star" size={11} />
+                      سنجاق شده
                     </span>
-                    <time>{formatRelativeTime(post.time)}</time>
-                  </div>
-                </button>
+                  )}
+                  {isOwnProfile && (
+                    <button
+                      type="button"
+                      disabled={deleteOwnPost.isPending}
+                      onClick={() => setPostToDelete(post.id)}
+                      className="text-danger hover:text-red-400 absolute top-3 left-3 z-10 rounded-lg p-1 disabled:opacity-60"
+                      aria-label="حذف پست"
+                    >
+                      <Icon name="trash" size={16} />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/social/${post.id}?from=user-profile&userId=${encodeURIComponent(user.id)}`)}
+                    className={cn(
+                      'block w-full text-start',
+                      isOwnProfile && 'ps-8',
+                      post.isPinned && 'pt-8',
+                    )}
+                  >
+                    <p className="text-ink-2 line-clamp-3 text-sm leading-7">{post.text}</p>
+                    <div className="text-ink-4 mt-3 flex items-center justify-between gap-3 text-xs">
+                      <span className="flex items-center gap-3">
+                        <span className="inline-flex items-center gap-1">
+                          <Icon name="heart" size={15} />
+                          {toPersianDigits(post.likes)}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Icon name="msg" size={15} />
+                          {toPersianDigits(post.comments.length)}
+                        </span>
+                      </span>
+                      <time>{formatRelativeTime(post.time)}</time>
+                    </div>
+                  </button>
+                </article>
               ))}
               {postsQuery.hasNextPage && (
                 <Button
@@ -210,10 +286,25 @@ export function ForumUserProfilePage() {
             </div>
           </div>
         </section>
+        <LoginRequiredModal
+          isOpen={loginPromptOpen}
+          currentPath={currentPath}
+          onClose={() => setLoginPromptOpen(false)}
+        />
+        <DeletePostConfirmModal
+          isOpen={Boolean(postToDelete)}
+          isDeleting={deleteOwnPost.isPending}
+          onClose={() => setPostToDelete(null)}
+          onConfirm={() => void handleDeletePost()}
+        />
         <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
       </DashboardPageShell>
     </MotionPage>
   );
+}
+
+function sortPinnedFirst<T extends { isPinned?: boolean }>(posts: T[]) {
+  return [...posts].sort((a, b) => Number(Boolean(b.isPinned)) - Number(Boolean(a.isPinned)));
 }
 
 function ProfileStat({ label, value }: { label: string; value: number }) {

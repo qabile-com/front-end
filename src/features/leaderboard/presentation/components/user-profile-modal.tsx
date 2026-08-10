@@ -2,10 +2,10 @@
 'use client';
 
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
-import { getAvatarInitial } from '@/core/lib/avatar';
 import { toPersianDigits } from '@/core/lib/persian';
-import { BaseModal, GlassCard, Button, Icon, IconName, InlineSpinner } from '@/shared/ui';
+import { BaseModal, GlassCard, Button, Icon, IconName, InlineSpinner, UserAvatar } from '@/shared/ui';
 import type { UserProfileData, UserProfilePost } from '../../domain/user-profile-repository';
+import { formatUsername } from '@/features/social/presentation/lib/format-username';
 import { cn } from '@/core/lib/cn';
 import { useAuthSession } from '@/providers/auth-provider';
 
@@ -35,7 +35,7 @@ export function UserProfileModal({
   onPostClick,
 }: Props) {
   const { user: currentUser } = useAuthSession();
-  const posts = postsQuery.data?.pages.flat() ?? [];
+  const posts = sortPinnedFirst(postsQuery.data?.pages.flat() ?? []);
   const isOwnProfile = Boolean(currentUser?.id && user.id === currentUser.id);
   const followed = Boolean(isFollowed ?? user.followedByMe);
   const blocked = Boolean(user.blockedByMe);
@@ -69,17 +69,20 @@ export function UserProfileModal({
         {/* Profile Info */}
         <div className="flex flex-col items-start px-6 pt-6">
           <div className="flex w-full items-baseline justify-start gap-4">
-            <div
-              className="flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold text-white"
-              style={{ background: user.avatar }}
-            >
-              {getAvatarInitial(user.name)}
-            </div>
+            <UserAvatar name={user.name} avatar={user.avatar} className="size-20 text-2xl" />
             <div className="text-right">
               <h2 className="text-ink text-2xl font-bold">{user.name}</h2>
+              {formatUsername(user.username) && (
+                <p className="text-ink-3 mt-1 text-sm font-bold">
+                  {formatUsername(user.username)}
+                </p>
+              )}
               <p className="text-gold mt-1 text-sm">
                 {user.title} ، سطح {toPersianDigits(user.level)}
               </p>
+              {user.bio?.trim() && (
+                <p className="text-ink-3 mt-3 max-w-md text-sm leading-7">{user.bio.trim()}</p>
+              )}
               {/* Stats Grid */}
               <div className="grid grid-cols-4 gap-4 py-4 pl-6 text-start">
                 <div>
@@ -189,8 +192,19 @@ export function UserProfileModal({
                 key={post.id}
                 type="button"
                 onClick={() => onPostClick(post.id)}
-                className="border-hair block w-full rounded-lg border bg-(--glass) p-4 text-right transition-colors hover:border-[var(--color-hair-2)]"
+                className={cn(
+                  'block w-full rounded-lg border bg-(--glass) p-4 text-right transition-colors',
+                  post.isPinned
+                    ? 'border-gold/45 hover:border-gold/60'
+                    : 'border-hair hover:border-[var(--color-hair-2)]',
+                )}
               >
+                {post.isPinned && (
+                  <span className="text-gold mb-3 inline-flex items-center gap-1 rounded-full border border-gold/25 bg-gold/10 px-2 py-1 text-[10px] font-black">
+                    <Icon name="star" size={11} />
+                    سنجاق شده
+                  </span>
+                )}
                 <p className="text-ink-2 text-right text-sm leading-relaxed">{post.text}</p>
                 {(post.image || post.hasImage) && (
                   <div className="border-hair mt-3 overflow-hidden rounded-lg border bg-black/20">
@@ -230,6 +244,10 @@ export function UserProfileModal({
       </GlassCard>
     </BaseModal>
   );
+}
+
+function sortPinnedFirst<T extends { isPinned?: boolean }>(posts: T[]) {
+  return [...posts].sort((a, b) => Number(Boolean(b.isPinned)) - Number(Boolean(a.isPinned)));
 }
 
 function PostPreviewSkeleton() {

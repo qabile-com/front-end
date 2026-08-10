@@ -29,6 +29,8 @@ export class HttpUserProfileRepository implements IUserProfileRepository {
     return {
       id: data.id,
       name,
+      username: data.username,
+      bio: data.bio ?? null,
       avatar: data.avatar ?? DEFAULT_AVATAR_GRADIENT,
       title: data.title ?? data.role ?? '',
       level: 0,
@@ -68,12 +70,14 @@ export class HttpUserProfileRepository implements IUserProfileRepository {
       likes: post.likes,
       comments: (post.comments ?? []).map((comment) => ({
         name: comment.name ?? normalizeForumUserName(comment.author),
+        username: comment.author?.username,
         text: comment.text,
         time: comment.createdAt ?? '',
       })),
       time: post.createdAt ?? '',
       image: post.image ?? post.attachment?.url,
       hasImage: post.hasImage ?? Boolean(post.attachment),
+      isPinned: post.isPinned ?? false,
     }));
   }
 

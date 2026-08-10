@@ -69,6 +69,7 @@ export class MockUserProfileRepository implements IUserProfileRepository {
     return {
       id: userId,
       name,
+      username: userId.toLowerCase().replace(/\s+/g, '_'),
       avatar,
       title,
       level,
@@ -92,6 +93,7 @@ export class MockUserProfileRepository implements IUserProfileRepository {
     const authorId = userId === CURRENT_USER.name ? 'arash' : userId;
 
     return POSTS.filter((post) => post.authorId === authorId)
+      .sort((a, b) => Number(Boolean(b.isPinned)) - Number(Boolean(a.isPinned)))
       .slice(offset, offset + limit)
       .map((post) => ({
         id: post.id,
@@ -101,6 +103,7 @@ export class MockUserProfileRepository implements IUserProfileRepository {
         time: post.time,
         image: post.image,
         hasImage: post.hasImage,
+        isPinned: post.isPinned,
       }));
   }
 
