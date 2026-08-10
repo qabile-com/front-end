@@ -1,6 +1,44 @@
 const CACHE_NAME = 'qabile-pwa-v1';
 const OFFLINE_URL = '/offline';
 const STATIC_ASSETS = [OFFLINE_URL, '/icons/icon-192.png', '/icons/icon-512.png'];
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaS...',
+  authDomain: 'qabile.firebaseapp.com',
+  projectId: 'qabile',
+  storageBucket: 'qabile.firebasestorage.app',
+  messagingSenderId: '633527158445',
+  appId: '1:633527158445:web:9fe7ff6a983a7f6444a824',
+};
+
+try {
+  importScripts('https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js');
+  importScripts('https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging-compat.js');
+
+  if (self.firebase?.apps?.length === 0) {
+    self.firebase.initializeApp(FIREBASE_CONFIG);
+  } else if (self.firebase && !self.firebase.apps.length) {
+    self.firebase.initializeApp(FIREBASE_CONFIG);
+  }
+
+  const messaging = self.firebase?.messaging?.();
+  messaging?.onBackgroundMessage?.((payload) => {
+    const notification = payload.notification || {};
+    const data = payload.data || {};
+    const title = notification.title || data.title || 'قبیله';
+    const options = {
+      body: notification.body || data.body,
+      icon: notification.icon || '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      data: {
+        url: data.url || payload.fcmOptions?.link || '/',
+      },
+    };
+
+    self.registration.showNotification(title, options);
+  });
+} catch (error) {
+  console.warn('[sw] Firebase messaging failed to initialize', error);
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -61,4 +99,25 @@ self.addEventListener('fetch', (event) => {
       }),
     );
   }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if ('focus' in client) {
+            client.navigate(targetUrl);
+            return client.focus();
+          }
+        }
+
+        if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+        return undefined;
+      }),
+  );
 });
