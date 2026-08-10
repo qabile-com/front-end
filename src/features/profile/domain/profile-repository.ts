@@ -12,6 +12,16 @@ export interface ProfileSecuritySettings {
   weeklySummary: boolean;
 }
 
+export interface ProfileStats {
+  xp: number;
+  streak: number;
+  followersCount: number;
+  followingCount: number;
+  forumLikesCount: number;
+  forumCommentsCount: number;
+  postsCount: number;
+}
+
 export interface VerificationResult {
   verificationToken: string;
 }
@@ -23,6 +33,7 @@ export interface MyProfile {
   lastName: string;
   displayName: string;
   username?: string | null;
+  bio?: string | null;
   initial: string;
   avatar: string;
   title: string;
@@ -37,6 +48,7 @@ export interface MyProfile {
   role?: string;
   isCompleteOnboarding?: boolean;
   securitySettings: ProfileSecuritySettings;
+  stats: ProfileStats;
   profileStats: { value: string; label: string }[];
   achievements: Achievement[];
   settings: SettingItem[];
@@ -46,6 +58,7 @@ export interface MyProfile {
     likes: number;
     commentsCount: number;
     time: string;
+    isPinned?: boolean;
   }[];
   actionReward?: ActionRewardResult | null;
 }
@@ -55,6 +68,7 @@ export interface UpdateProfileInput {
   lastName?: string;
   displayName?: string;
   username?: string | null;
+  bio?: string | null;
   email?: string | null;
 }
 

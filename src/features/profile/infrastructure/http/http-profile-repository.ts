@@ -17,6 +17,7 @@ import type {
   IProfileRepository,
   MyProfile,
   PaginatedXpHistory,
+  ProfileStats,
   ProfileSecuritySettings,
   ProfileSettingField,
   UpdateProfileInput,
@@ -58,6 +59,7 @@ type MyProfileDto = Omit<
     earnedCount?: number;
     shareable?: boolean;
   })[];
+  stats?: Partial<ProfileStats>;
   posts?: {
     id: string;
     text: string;
@@ -66,6 +68,7 @@ type MyProfileDto = Omit<
     comments?: unknown[];
     time?: string;
     createdAt?: string;
+    isPinned?: boolean;
   }[];
 };
 
@@ -127,6 +130,7 @@ export class HttpProfileRepository implements IProfileRepository {
       lastName,
       displayName,
       username: input.username?.trim() || null,
+      bio: input.bio?.trim() || null,
     });
     const data = res.data.data ?? res.data;
     return this.normalizeProfile(data as MyProfileDto, res.data);
@@ -199,6 +203,7 @@ export class HttpProfileRepository implements IProfileRepository {
       lastName,
       displayName,
       username: p.username,
+      bio: p.bio ?? null,
       initial: p.initial ?? name[0] ?? '?',
       avatar: p.avatar ?? DEFAULT_AVATAR_GRADIENT,
       title: p.title,
@@ -213,6 +218,7 @@ export class HttpProfileRepository implements IProfileRepository {
       role: p.role,
       isCompleteOnboarding: p.isCompleteOnboarding ?? false,
       securitySettings: { ...DEFAULT_SECURITY_SETTINGS, ...p.securitySettings },
+      stats: normalizeProfileStats(p),
       profileStats: p.profileStats ?? [],
       achievements: normalizeAchievements(p.achievements),
       settings: p.settings ?? [],
@@ -222,8 +228,21 @@ export class HttpProfileRepository implements IProfileRepository {
         likes: post.likes,
         commentsCount: post.commentsCount ?? post.comments?.length ?? 0,
         time: post.time ?? post.createdAt ?? '',
+        isPinned: post.isPinned ?? false,
       })),
       actionReward: normalizeActionRewardResult(rewardPayload ?? p),
     };
   }
+}
+
+function normalizeProfileStats(profile: MyProfileDto): ProfileStats {
+  return {
+    xp: profile.stats?.xp ?? profile.xp ?? 0,
+    streak: profile.stats?.streak ?? profile.streak ?? 0,
+    followersCount: profile.stats?.followersCount ?? 0,
+    followingCount: profile.stats?.followingCount ?? 0,
+    forumLikesCount: profile.stats?.forumLikesCount ?? 0,
+    forumCommentsCount: profile.stats?.forumCommentsCount ?? 0,
+    postsCount: profile.stats?.postsCount ?? profile.posts?.length ?? 0,
+  };
 }

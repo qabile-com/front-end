@@ -68,7 +68,9 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
   const [passwordVerificationToken, setPasswordVerificationToken] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [passwordCodeErrorFocusSignal, setPasswordCodeErrorFocusSignal] = useState(0);
   const lastSubmittedPasswordCode = useRef('');
+  const autoSubmittedPasswordCode = useRef('');
 
   const updateSetting = useUpdateProfileSetting(repo);
   const requestPasswordCode = useRequestPasswordChangeCode(repo);
@@ -117,6 +119,9 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
       showError('رمز یکبار مصرف را کامل وارد کنید');
       return;
     }
+    if (lastSubmittedPasswordCode.current === code) return;
+
+    lastSubmittedPasswordCode.current = code;
     try {
       const result = await verifyPasswordCode.mutateAsync({
         email: passwordEmail.trim(),
@@ -125,6 +130,8 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
       setPasswordVerificationToken(result.verificationToken);
       setScreen('password-new');
     } catch (error) {
+      lastSubmittedPasswordCode.current = '';
+      setPasswordCodeErrorFocusSignal((current) => current + 1);
       showError(getApiErrorMessage(error, 'رمز وارد شده درست نیست'));
     }
   }, [passwordCode, passwordEmail, verifyPasswordCode]);
@@ -154,11 +161,17 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
   useEffect(() => {
     const code = normalizeDigits(passwordCode);
     if (screen !== 'password-code' || isBusy || code.length !== 6) return;
-    if (lastSubmittedPasswordCode.current === code) return;
+    if (autoSubmittedPasswordCode.current === code) return;
 
-    lastSubmittedPasswordCode.current = code;
+    autoSubmittedPasswordCode.current = code;
     void handleVerifyPasswordCode();
   }, [passwordCode, screen, isBusy, handleVerifyPasswordCode]);
+
+  useEffect(() => {
+    if (normalizeDigits(passwordCode).length < 6) {
+      autoSubmittedPasswordCode.current = '';
+    }
+  }, [passwordCode]);
 
   return (
     <BaseModal
@@ -206,6 +219,7 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
             code={passwordCode}
             setCode={setPasswordCode}
             disabled={isBusy}
+            errorFocusSignal={passwordCodeErrorFocusSignal}
             onSubmit={handleVerifyPasswordCode}
           />
         )}
@@ -450,6 +464,7 @@ function OtpStep({
   code,
   setCode,
   disabled,
+  errorFocusSignal,
   onSubmit,
 }: {
   title: string;
@@ -457,12 +472,18 @@ function OtpStep({
   code: string;
   setCode: (value: string) => void;
   disabled: boolean;
+  errorFocusSignal: number;
   onSubmit: () => void;
 }) {
   return (
     <StepShell title={title} description={description}>
       <StepForm onSubmit={onSubmit}>
-        <SixDigitOtpInput value={code} onChange={setCode} disabled={disabled} />
+        <SixDigitOtpInput
+          value={code}
+          onChange={setCode}
+          disabled={disabled}
+          errorFocusSignal={errorFocusSignal}
+        />
         <PrimaryAction type="submit" disabled={disabled || normalizeDigits(code).length < 6}>
       
         ادامه
@@ -476,17 +497,33 @@ function SixDigitOtpInput({
   value,
   onChange,
   disabled,
+  errorFocusSignal,
 }: {
   value: string;
   onChange: (value: string) => void;
   disabled: boolean;
+  errorFocusSignal: number;
 }) {
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const valueRef = useRef(value);
   const digits = Array.from({ length: 6 }, (_, index) => normalizeDigits(value)[index] ?? '');
 
   useEffect(() => {
-    if (!disabled) inputRefs.current[0]?.focus();
+    valueRef.current = value;
+  }, [value]);
+
+  useEffect(() => {
+    if (disabled) return;
+    const codeLength = normalizeDigits(valueRef.current).length;
+    const index = codeLength ? Math.min(codeLength - 1, 5) : 0;
+    inputRefs.current[index]?.focus();
   }, [disabled]);
+
+  useEffect(() => {
+    if (disabled || errorFocusSignal === 0) return;
+    const codeLength = normalizeDigits(value).length;
+    inputRefs.current[Math.min(Math.max(codeLength - 1, 0), 5)]?.focus();
+  }, [disabled, errorFocusSignal, value]);
 
   const updateDigit = (index: number, digit: string) => {
     const next = digits.slice();
@@ -496,15 +533,16 @@ function SixDigitOtpInput({
 
   const handleChange = (index: number, event: ChangeEvent<HTMLInputElement>) => {
     const raw = normalizeDigits(event.target.value);
-    if (raw.length > 1) {
+    if (raw.length > 1 && !digits[index]) {
       const next = raw.slice(0, 6);
       onChange(next);
       inputRefs.current[Math.min(next.length, 5)]?.focus();
       return;
     }
 
-    updateDigit(index, raw);
-    if (raw && index < 5) inputRefs.current[index + 1]?.focus();
+    const digit = raw ? raw[raw.length - 1]! : '';
+    updateDigit(index, digit);
+    if (digit && index < 5) inputRefs.current[index + 1]?.focus();
   };
 
   const handleKeyDown = (index: number, event: KeyboardEvent<HTMLInputElement>) => {
