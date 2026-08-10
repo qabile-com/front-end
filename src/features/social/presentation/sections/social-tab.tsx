@@ -12,11 +12,11 @@ import {
   Input,
   InlineSpinner,
   SocialSkeleton,
+  UserAvatar,
   type IconName,
 } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
-import { getAvatarInitial } from '@/core/lib/avatar';
 import { toPersianDigits } from '@/core/lib/persian';
 import { useIsLargeScreen } from '@/core/lib/use-is-large-screen';
 import type { Post, ActiveUser } from '../../domain/social.data';
@@ -33,7 +33,11 @@ import {
 } from '@tanstack/react-query';
 import { IAdminRepository } from '../../domain/admin-repository';
 import { useLikePost } from '../../application/use-like-post';
+import { formatUsername } from '../lib/format-username';
 import { useToggleUserFollow } from '../../application/use-toggle-user-follow';
+import { useDeleteOwnPost } from '../../application/use-delete-own-post';
+import { usePinOwnPost } from '../../application/use-pin-own-post';
+import { DeletePostConfirmModal } from '../components/delete-post-confirm-modal';
 import { shareUrl } from '@/shared/lib/native-share';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
@@ -224,6 +228,7 @@ export function SocialTab({
                 isTogglingAuthorFollow={followToggle.isPending}
                 togglingAuthorId={followToggle.variables?.userId}
                 currentUserRole={currentUserRole}
+                currentUserId={currentProfile?.id}
                 adminRepo={adminRepo}
                 onReward={onReward}
               />
@@ -286,17 +291,17 @@ export function SocialTab({
                     {u.isAdam ? (
                       <AdamAvatar className="size-9" />
                     ) : (
-                      <span
-                        className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-white"
-                        style={{ background: u.avatar }}
-                      >
-                        {getAvatarInitial(u.name)}
-                      </span>
+                      <UserAvatar name={u.name} avatar={u.avatar} className="size-9 text-xs" />
                     )}
                     <span className="min-w-0 flex-1 leading-tight">
                       <b className="group-hover:text-gold block truncate text-[13px] font-bold transition-colors">
                         {u.name}
                       </b>
+                      {formatUsername(u.username) && (
+                        <small className="text-ink-4 block truncate text-[11px] font-bold">
+                          {formatUsername(u.username)}
+                        </small>
+                      )}
                       <small className="text-ink-3 text-[11px]">{u.role}</small>
                     </span>
                   </Link>
@@ -568,6 +573,7 @@ function PostCard({
   isTogglingAuthorFollow,
   togglingAuthorId,
   currentUserRole,
+  currentUserId,
   adminRepo,
   onReward,
 }: {
@@ -579,11 +585,14 @@ function PostCard({
   isTogglingAuthorFollow: boolean;
   togglingAuthorId?: string;
   currentUserRole?: string;
+  currentUserId?: string;
   adminRepo?: IAdminRepository;
   onReward?: (reward?: ActionRewardResult | null) => void;
 }) {
-  const { like, unlike } = useLikePost(socialRepo, onReward); // need to get socialRepo from context or prop – for now we can use the same repository factory, but we'll inject it through props too. Actually, we can import `socialRepo` directly from the factory in this component (since it's a singleton) to avoid prop drilling. We'll do that.
-
+  const { like, unlike } = useLikePost(socialRepo, onReward);
+  const deleteOwnPost = useDeleteOwnPost(socialRepo);
+  const pinOwnPost = usePinOwnPost(socialRepo);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const handleCommentClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onClick();
@@ -605,16 +614,23 @@ function PostCard({
     }
   };
 
-  const handleDeletePost = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!adminRepo) return;
-    const confirmed = window.confirm('آیا از حذف این پست مطمئن هستید؟');
-    if (confirmed) {
-      adminRepo.deletePost(post.id).then(() => {
-        // Invalidate feed
-        queryClient.invalidateQueries({ queryKey: ['social-feed'] });
-      });
+  const handleDeletePost = async () => {
+    const request =
+      isAdmin && adminRepo ? adminRepo.deletePost(post.id) : deleteOwnPost.mutateAsync(post.id);
+
+    try {
+      await request;
+      queryClient.invalidateQueries({ queryKey: ['social-feed'] });
+      setDeleteModalOpen(false);
+      showSuccess('پست حذف شد.');
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'حذف پست انجام نشد.');
     }
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeleteModalOpen(true);
   };
 
   const handlePinToggle = (e: React.MouseEvent) => {
@@ -625,12 +641,26 @@ function PostCard({
     });
   };
 
+  const handleOwnPinToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    pinOwnPost.mutate(
+      { postId: post.id, isPinned: !post.isPinned },
+      {
+        onSuccess: () => showSuccess(post.isPinned ? 'پست از حالت سنجاق خارج شد.' : 'پست سنجاق شد.'),
+        onError: (error) =>
+          showError(error instanceof Error ? error.message : 'تغییر وضعیت سنجاق انجام نشد.'),
+      },
+    );
+  };
+
   const isAdmin = currentUserRole === 'admin' || currentUserRole === 'super_admin';
+  const isOwnPost = Boolean(currentUserId && post.authorId === currentUserId);
   const canFollowAuthor = Boolean(post.canFollowAuthor);
   const isFollowingAuthor = Boolean(post.isAuthorFollowedByMe);
   const isCurrentAuthorToggling = isTogglingAuthorFollow && togglingAuthorId === post.authorId;
 
   return (
+    <>
     <article
       className={cn(
         'relative cursor-pointer overflow-hidden transition-all',
@@ -649,7 +679,7 @@ function PostCard({
       <div className="p-5">
         {/* Author area */}
         <div className="flex items-center gap-3">
-          {/* ... author avatar and name (unchanged) ... */}
+          {/*  author avatar and name  */}
           {/* Admin actions */}
           <button
             type="button"
@@ -663,12 +693,7 @@ function PostCard({
             {post.isAdam ? (
               <AdamAvatar className="size-11" />
             ) : (
-              <span
-                className="grid size-11 shrink-0 place-items-center rounded-full text-sm font-black text-white"
-                style={{ background: post.avatar }}
-              >
-                {getAvatarInitial(post.author)}
-              </span>
+              <UserAvatar name={post.author} avatar={post.avatar} className="size-11 text-sm" />
             )}
           </button>
           <div
@@ -695,6 +720,14 @@ function PostCard({
                 </span>
               )}
             </div>
+            {(() => {
+              const username = formatUsername(post.authorUsername);
+              return username ? (
+                <small className="text-ink-4 mb-1 block truncate text-[11px] font-bold">
+                  {username}
+                </small>
+              ) : null;
+            })()}
             <small className={`${post.isAdam ? 'text-gold' : 'text-ink-3'} text-[12px]`}>
               {post.isAdam ? 'ققنوس' : post.badge}
             </small>
@@ -726,7 +759,29 @@ function PostCard({
                 <button onClick={handlePinToggle} className="text-gold hover:text-ember">
                   <Icon name={post.isPinned ? 'star' : 'star-line'} size={18} />
                 </button>
-                <button onClick={handleDeletePost} className="text-danger hover:text-red-400">
+                <button onClick={handleDeleteClick} className="text-danger hover:text-red-400">
+                  <Icon name="trash" size={18} />
+                </button>
+              </>
+            )}
+            {!isAdmin && isOwnPost && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleOwnPinToggle}
+                  disabled={pinOwnPost.isPending}
+                  className="text-gold hover:text-ember disabled:opacity-60"
+                  aria-label={post.isPinned ? 'برداشتن سنجاق پست' : 'سنجاق کردن پست'}
+                >
+                  <Icon name={post.isPinned ? 'star' : 'star-line'} size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteClick}
+                  disabled={deleteOwnPost.isPending}
+                  className="text-danger hover:text-red-400 disabled:opacity-60"
+                  aria-label="حذف پست"
+                >
                   <Icon name="trash" size={18} />
                 </button>
               </>
@@ -795,6 +850,13 @@ function PostCard({
         </div>
       </div>
     </article>
+    <DeletePostConfirmModal
+      isOpen={deleteModalOpen}
+      isDeleting={deleteOwnPost.isPending}
+      onClose={() => setDeleteModalOpen(false)}
+      onConfirm={() => void handleDeletePost()}
+    />
+    </>
   );
 }
 

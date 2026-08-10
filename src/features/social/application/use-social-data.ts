@@ -5,6 +5,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ISocialRepository } from '../domain/social-repository';
 import { useState } from 'react';
 import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
+import { showError } from '@/shared/lib/toast';
+import { getPostPublishErrorMessage } from './social-error-message';
+import { invalidateSocialPostCreation } from './social-cache';
 
 export function useSocialData(
   repo: ISocialRepository,
@@ -38,11 +41,10 @@ export function useSocialData(
         return next;
       });
       onReward?.(result.reward);
-      queryClient.invalidateQueries({ queryKey: ['social-feed'] });
-      queryClient.invalidateQueries({ queryKey: ['social', 'active-users'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'xp-history'] });
-      queryClient.invalidateQueries({ queryKey: ['roadmap-step-condition'] });
+      invalidateSocialPostCreation(queryClient);
+    },
+    onError: (error) => {
+      showError(getPostPublishErrorMessage(error));
     },
   });
 

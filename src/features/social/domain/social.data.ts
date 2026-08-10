@@ -4,6 +4,7 @@ export interface PostComment {
   id?: string;
   authorId?: string;
   name: string;
+  username?: string | null;
   text: string;
   time: string;
 }
@@ -19,6 +20,7 @@ export interface Post {
   id: string;
   author: string;
   authorId: string;
+  authorUsername?: string | null;
   avatar: string;
   badge?: string;
   isAdam?: boolean;
@@ -53,6 +55,7 @@ export interface Post {
 export interface ActiveUser {
   id: string;
   name: string;
+  username?: string | null;
   role: string;
   avatar: string;
   isAdam?: boolean;

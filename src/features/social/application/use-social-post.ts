@@ -62,3 +62,35 @@ export function useAddPostComment(
     },
   });
 }
+
+export function useDeletePostComment(repo: ISocialRepository, postId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (commentId: string) => repo.deleteComment(postId, commentId),
+    onSuccess: (_, commentId) => {
+      queryClient.setQueryData<PostComment[]>(
+        socialPostCommentsQueryKey(postId),
+        (current) => (current ?? []).filter((comment) => comment.id !== commentId),
+      );
+      queryClient.setQueryData<Post>(socialPostQueryKey(postId), (current) =>
+        current
+          ? {
+              ...current,
+              comments: current.comments.filter((comment) => comment.id !== commentId),
+              commentsCount: Math.max(
+                0,
+                (current.commentsCount ?? current.comments.length) - 1,
+              ),
+            }
+          : current,
+      );
+      queryClient.invalidateQueries({ queryKey: ['social-feed'] });
+      queryClient.invalidateQueries({ queryKey: socialPostQueryKey(postId) });
+      queryClient.invalidateQueries({ queryKey: socialPostCommentsQueryKey(postId) });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['roadmap-step-condition'] });
+    },
+  });
+}

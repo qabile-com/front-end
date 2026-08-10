@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
 import { getAvatarInitial } from '@/core/lib/avatar';
 import { toPersianDigits } from '@/core/lib/persian';
-import { Button, Icon, Input, type IconName } from '@/shared/ui';
+import { Button, Icon, Input, UserAvatar, type IconName } from '@/shared/ui';
 import { AdamAvatar } from '@/features/dashboard/presentation/sections/dashboard-sidebar';
 import type { Post } from '../../domain/social.data';
+import { formatUsername } from '../lib/format-username';
 
 interface SocialPostDetailProps {
   post: Post;
@@ -15,6 +16,7 @@ interface SocialPostDetailProps {
   onLike?: () => void;
   onUnlike?: () => void;
   onAuthorClick?: (authorId: string) => void;
+  onCommentAuthorClick?: (authorId: string) => void;
   onDeleteComment?: (commentId: string) => void;
   canManageComments?: boolean;
   isAddingComment?: boolean;
@@ -28,6 +30,7 @@ export function SocialPostDetail({
   onLike,
   onUnlike,
   onAuthorClick,
+  onCommentAuthorClick,
   onDeleteComment,
   canManageComments = false,
   isAddingComment = false,
@@ -63,12 +66,7 @@ export function SocialPostDetail({
           {post.isAdam ? (
             <AdamAvatar className="size-11" />
           ) : (
-            <div
-              className="flex size-11 shrink-0 items-center justify-center rounded-full text-sm font-black text-white"
-              style={{ background: post.avatar }}
-            >
-              {getAvatarInitial(post.author)}
-            </div>
+            <UserAvatar name={post.author} avatar={post.avatar} className="size-11 text-sm" />
           )}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -81,6 +79,11 @@ export function SocialPostDetail({
                 </span>
               )}
             </div>
+            {formatUsername(post.authorUsername) && (
+              <p className="text-ink-4 mt-1 truncate text-xs font-bold">
+                {formatUsername(post.authorUsername)}
+              </p>
+            )}
             <p className="text-ink-3 mt-1 text-xs">{post.badge || 'عضو قبیله'}</p>
           </div>
           <span className="text-ink-4 text-xs">{formatRelativeTime(post.time)}</span>
@@ -169,12 +172,32 @@ export function SocialPostDetail({
                   key={`${comment.name}-${comment.time}-${index}`}
                   className="flex items-start gap-3"
                 >
-                  <div className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] [background:var(--fire-grad)]">
+                  <button
+                    type="button"
+                    disabled={!comment.authorId}
+                    onClick={() => comment.authorId && onCommentAuthorClick?.(comment.authorId)}
+                    className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] [background:var(--fire-grad)] disabled:cursor-default"
+                    aria-label={`مشاهده پروفایل ${comment.name}`}
+                  >
                     {getAvatarInitial(comment.name)}
-                  </div>
+                  </button>
                   <div className="min-w-0 flex-1 rounded-[16px] bg-black/20 p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-ink text-sm font-black">{comment.name}</span>
+                      <span className="min-w-0">
+                        <button
+                          type="button"
+                          disabled={!comment.authorId}
+                          onClick={() => comment.authorId && onCommentAuthorClick?.(comment.authorId)}
+                          className="text-ink hover:text-gold block max-w-full truncate text-sm font-black disabled:cursor-default disabled:hover:text-ink"
+                        >
+                          {comment.name}
+                        </button>
+                        {formatUsername(comment.username) && (
+                          <span className="text-ink-4 block truncate text-[11px] font-bold">
+                            {formatUsername(comment.username)}
+                          </span>
+                        )}
+                      </span>
                       <span className="flex items-center gap-2">
                         <span className="text-ink-4 text-xs">
                           {formatRelativeTime(comment.time)}

@@ -5,8 +5,9 @@ import { useState, useRef, useEffect } from 'react';
 import { getAvatarInitial } from '@/core/lib/avatar';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
 import { toPersianDigits } from '@/core/lib/persian';
-import { BaseModal, Button, Icon, Input } from '@/shared/ui';
+import { BaseModal, Button, Icon, Input, UserAvatar } from '@/shared/ui';
 import type { Post } from '../../domain/social.data';
+import { formatUsername } from '../lib/format-username';
 
 interface Props {
   isOpen: boolean;
@@ -65,14 +66,14 @@ export function SocialPostDetailModal({
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 pb-0">
             <div className="mb-4 flex items-center gap-3">
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-full font-bold text-white"
-                style={{ background: post.avatar }}
-              >
-                {getAvatarInitial(post.author)}
-              </div>
+              <UserAvatar name={post.author} avatar={post.avatar} className="size-10 text-sm" />
               <div className="flex-1 text-right">
                 <div className="text-ink text-sm font-bold">{post.author}</div>
+                {formatUsername(post.authorUsername) && (
+                  <div className="text-ink-4 text-[11px] font-bold">
+                    {formatUsername(post.authorUsername)}
+                  </div>
+                )}
                 <div className="text-ink-4 text-xs">{post.badge || 'عضو'}</div>
               </div>
             </div>
@@ -133,7 +134,16 @@ export function SocialPostDetailModal({
                     </div>
                     <div className="flex-1 text-right">
                       <div className="flex items-center justify-between">
-                        <span className="text-ink text-sm font-bold">{comment.name}</span>
+                        <span className="min-w-0 text-start">
+                          <span className="text-ink block truncate text-sm font-bold">
+                            {comment.name}
+                          </span>
+                          {formatUsername(comment.username) && (
+                            <span className="text-ink-4 block truncate text-[11px] font-bold">
+                              {formatUsername(comment.username)}
+                            </span>
+                          )}
+                        </span>
                         <span className="text-ink-4 text-xs">{formatRelativeTime(comment.time)}</span>
                       </div>
                       <p className="text-ink-2 mt-1 text-sm">{comment.text}</p>
