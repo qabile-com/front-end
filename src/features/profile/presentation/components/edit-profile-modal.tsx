@@ -14,6 +14,7 @@ import { removeAccessToken } from '@/core/auth/token';
 import { useRouter } from 'next/navigation';
 import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
 import { getApiErrorMessage } from '@/core/api/api-error-message';
+import { moderateAvatarImage } from '../../application/avatar-content-moderation';
 
 interface EditProfileModalProps {
   profile: MyProfile;
@@ -27,13 +28,16 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
   const [firstName, setFirstName] = useState(profile.firstName || profile.name);
   const [lastName, setLastName] = useState(profile.lastName);
   const [username, setUsername] = useState(profile.username ?? '');
+  const [bio, setBio] = useState(profile.bio ?? '');
+  const [isCheckingAvatar, setIsCheckingAvatar] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const updateProfile = useUpdateMyProfile(repo, onReward);
   const updateAvatar = useUpdateProfileAvatar(repo, onReward);
   const deleteAccount = useDeleteMyAccount(repo);
 
-  const isBusy = updateProfile.isPending || updateAvatar.isPending || deleteAccount.isPending;
+  const isBusy =
+    updateProfile.isPending || updateAvatar.isPending || deleteAccount.isPending || isCheckingAvatar;
 
   const handleSave = async () => {
     if (!firstName.trim()) {
@@ -50,6 +54,7 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
         lastName: nextLastName,
         displayName: [nextFirstName, nextLastName].filter(Boolean).join(' '),
         username: username.trim() || null,
+        bio: bio.trim() || null,
       });
       showSuccess('پروفایل ذخیره شد');
       onClose();
@@ -60,11 +65,22 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
 
   const handleAvatarChange = async (file?: File) => {
     if (!file) return;
+
+    setIsCheckingAvatar(true);
     try {
+      const moderation = await moderateAvatarImage(file);
+      if (!moderation.allowed) {
+        showError(moderation.message ?? 'این تصویر برای عکس پروفایل مناسب نیست.');
+        return;
+      }
+
       await updateAvatar.mutateAsync(file);
       showSuccess('عکس پروفایل تغییر کرد');
     } catch (error) {
       showError(getApiErrorMessage(error, 'تغییر عکس انجام نشد'));
+    } finally {
+      setIsCheckingAvatar(false);
+      if (fileRef.current) fileRef.current.value = '';
     }
   };
 
@@ -128,7 +144,7 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
               className="hidden"
               onChange={(event) => void handleAvatarChange(event.target.files?.[0])}
             />
-            {/* <Button
+            <Button
               type="button"
               variant="primary"
               size="sm"
@@ -137,8 +153,8 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
               className="mx-auto mt-4 h-9 w-full max-w-[294px] rounded-[7px]"
             >
               <Icon name="paperclip" size={15} />
-              تغییر عکس
-            </Button> */}
+              {isCheckingAvatar ? 'در حال بررسی تصویر...' : 'تغییر عکس'}
+            </Button>
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -167,6 +183,13 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
                 placeholder="Sample"
                 disabled={isBusy}
                 ltr
+              />
+              <EditTextarea
+                label="بیو"
+                value={bio}
+                onChange={setBio}
+                placeholder="چند جمله کوتاه درباره خودت"
+                disabled={isBusy}
               />
             </EditSection>
 
@@ -284,6 +307,38 @@ function EditField({
           </span>
         )}
         {action}
+      </span>
+    </label>
+  );
+}
+
+function EditTextarea({
+  label,
+  value,
+  onChange,
+  placeholder,
+  disabled,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  disabled?: boolean;
+}) {
+  return (
+    <label className="block text-right">
+      <span className="mb-1.5 block text-[11px] font-bold">{label}</span>
+      <span className="flex min-w-0 gap-2 rounded-[8px] border border-[rgba(255,98,0,.14)] bg-[rgba(255,98,0,.1)] px-2.5 py-2">
+        <Icon name="adam-chat" size={17} className="text-ember mt-1 shrink-0" />
+        <textarea
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          rows={4}
+          maxLength={220}
+          className="placeholder:text-ink-4 min-h-24 flex-1 resize-none bg-transparent text-right text-sm leading-7 outline-none disabled:opacity-60"
+        />
       </span>
     </label>
   );
