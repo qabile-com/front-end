@@ -26,7 +26,7 @@ export interface NavItem {
   href: string;
 }
 
-export type DashboardTab = 'home' | 'lb' | 'social' | 'courses' | 'profile';
+export type DashboardTab = 'home' | 'lb' | 'social' | 'courses' | 'friends' | 'profile';
 
 export interface StatCard {
   icon: IconKey;

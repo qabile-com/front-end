@@ -18,6 +18,19 @@ export const getUserPosts = (userId: string, params?: { limit?: number; offset?:
 
 export const getMyProfile = () => httpClient.get('/api/v1/users/me/profile');
 
+export const getMyReferral = (options?: { signal?: AbortSignal }) =>
+  httpClient.get('/api/v1/users/me/referral', { signal: options?.signal });
+
+export const submitMyExchangeReferral = (body: {
+  exchangeReferralUrl: string;
+  identity: string;
+}) => httpClient.post('/api/v1/users/me/referral/exchange', body);
+
+export const getMyFriends = (
+  params?: { limit?: number; offset?: number; q?: string },
+  options?: { signal?: AbortSignal },
+) => httpClient.get('/api/v1/users/me/friends', { params, signal: options?.signal });
+
 export const getMyXpHistory = (params?: { limit?: number; offset?: number; q?: string }, options?: { signal?: AbortSignal }) =>
   httpClient.get('/api/v1/users/me/xp-history', { params, signal: options?.signal });
 
@@ -29,6 +42,7 @@ export const updateMyProfile = (body: {
   username?: string | null;
   lastName?: string;
   displayName?: string;
+  bio?: string | null;
 }) => httpClient.patch('/api/v1/users/me/profile', body);
 
 export const updateMyProfileAvatar = (file: File) => {

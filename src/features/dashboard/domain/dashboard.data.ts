@@ -38,6 +38,7 @@ export const TAB_TITLES: Record<string, string> = {
   lb: 'پرچم داران',
   social: 'محفل',
   courses: 'تالار دانش',
+  friends: 'دوستان',
   profile: 'پروفایل',
 };
 
