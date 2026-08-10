@@ -2,6 +2,7 @@ import {
   confirmPasswordChange,
   confirmPhoneChange,
   deleteMyAccount,
+  deleteMyProfileAvatar,
   getMyProfile,
   getMyXpHistory,
   requestPasswordChangeCode,
@@ -68,6 +69,8 @@ type MyProfileDto = Omit<
     comments?: unknown[];
     time?: string;
     createdAt?: string;
+    image?: string;
+    hasImage?: boolean;
     isPinned?: boolean;
   }[];
 };
@@ -138,6 +141,12 @@ export class HttpProfileRepository implements IProfileRepository {
 
   async updateProfileAvatar(file: File): Promise<MyProfile> {
     const res = await updateMyProfileAvatar(file);
+    const data = res.data.data ?? res.data;
+    return this.normalizeProfile(data as MyProfileDto, res.data);
+  }
+
+  async deleteProfileAvatar(): Promise<MyProfile> {
+    const res = await deleteMyProfileAvatar();
     const data = res.data.data ?? res.data;
     return this.normalizeProfile(data as MyProfileDto, res.data);
   }
@@ -228,6 +237,8 @@ export class HttpProfileRepository implements IProfileRepository {
         likes: post.likes,
         commentsCount: post.commentsCount ?? post.comments?.length ?? 0,
         time: post.time ?? post.createdAt ?? '',
+        image: post.image,
+        hasImage: post.hasImage,
         isPinned: post.isPinned ?? false,
       })),
       actionReward: normalizeActionRewardResult(rewardPayload ?? p),

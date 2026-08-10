@@ -6,6 +6,7 @@ import { cn } from '@/core/lib/cn';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type { IProfileRepository, MyProfile } from '../../domain/profile-repository';
 import {
+  useDeleteProfileAvatar,
   useDeleteMyAccount,
   useUpdateMyProfile,
   useUpdateProfileAvatar,
@@ -15,6 +16,11 @@ import { useRouter } from 'next/navigation';
 import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
 import { getApiErrorMessage } from '@/core/api/api-error-message';
 import { moderateAvatarImage } from '../../application/avatar-content-moderation';
+import {
+  isValidUsername,
+  normalizeUsernameInput,
+  USERNAME_VALIDATION_MESSAGE,
+} from '../../domain/username-validation';
 
 interface EditProfileModalProps {
   profile: MyProfile;
@@ -34,10 +40,15 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
 
   const updateProfile = useUpdateMyProfile(repo, onReward);
   const updateAvatar = useUpdateProfileAvatar(repo, onReward);
+  const deleteAvatar = useDeleteProfileAvatar(repo, onReward);
   const deleteAccount = useDeleteMyAccount(repo);
 
   const isBusy =
-    updateProfile.isPending || updateAvatar.isPending || deleteAccount.isPending || isCheckingAvatar;
+    updateProfile.isPending ||
+    updateAvatar.isPending ||
+    deleteAvatar.isPending ||
+    deleteAccount.isPending ||
+    isCheckingAvatar;
 
   const handleSave = async () => {
     if (!firstName.trim()) {
@@ -48,12 +59,18 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
     try {
       const nextFirstName = firstName.trim();
       const nextLastName = lastName.trim();
+      const nextUsername = normalizeUsernameInput(username);
+
+      if (nextUsername && !isValidUsername(nextUsername)) {
+        showError(USERNAME_VALIDATION_MESSAGE);
+        return;
+      }
 
       await updateProfile.mutateAsync({
         firstName: nextFirstName,
         lastName: nextLastName,
         displayName: [nextFirstName, nextLastName].filter(Boolean).join(' '),
-        username: username.trim() || null,
+        username: nextUsername || null,
         bio: bio.trim() || null,
       });
       showSuccess('پروفایل ذخیره شد');
@@ -81,6 +98,15 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
     } finally {
       setIsCheckingAvatar(false);
       if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  const handleDeleteAvatar = async () => {
+    try {
+      await deleteAvatar.mutateAsync();
+      showSuccess('عکس پروفایل حذف شد');
+    } catch (error) {
+      showError(getApiErrorMessage(error, 'حذف عکس انجام نشد'));
     }
   };
 
@@ -155,6 +181,15 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
               <Icon name="paperclip" size={15} />
               {isCheckingAvatar ? 'در حال بررسی تصویر...' : 'تغییر عکس'}
             </Button>
+            <button
+              type="button"
+              disabled={isBusy}
+              onClick={() => void handleDeleteAvatar()}
+              className="border-hair text-ink mx-auto mt-2 flex h-9 w-full max-w-[294px] items-center justify-center gap-1.5 rounded-[7px] border bg-black/30 text-[12px] font-black transition-colors hover:border-red-500/60 hover:text-red-400 disabled:opacity-50"
+            >
+              <Icon name="plus" size={14} className="rotate-45" />
+              حذف عکس
+            </button>
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">

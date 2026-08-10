@@ -58,6 +58,8 @@ export interface MyProfile {
     likes: number;
     commentsCount: number;
     time: string;
+    image?: string;
+    hasImage?: boolean;
     isPinned?: boolean;
   }[];
   actionReward?: ActionRewardResult | null;
@@ -98,6 +100,7 @@ export interface IProfileRepository {
   getXpHistory(params?: { limit?: number; offset?: number; q?: string }, options?: { signal?: AbortSignal }): Promise<PaginatedXpHistory>;
   updateMyProfile(input: UpdateProfileInput): Promise<MyProfile>;
   updateProfileAvatar(file: File): Promise<MyProfile>;
+  deleteProfileAvatar(): Promise<MyProfile>;
   requestEmailVerification(email: string): Promise<void>;
   deleteMyAccount(): Promise<void>;
   updateSecuritySetting(

@@ -32,6 +32,7 @@ import { getPostPublishErrorMessage } from '@/features/social/application/social
 import { invalidateSocialPostCreation } from '@/features/social/application/social-cache';
 import { useUserPosts } from '@/features/leaderboard/application/use-user-posts';
 import { userProfileRepo } from '@/features/leaderboard/infrastructure/repository-factory';
+import { shareUrl } from '@/shared/lib/native-share';
 
 interface ProfileTabProps {
   profile: MyProfile;
@@ -124,6 +125,20 @@ export function ProfileTab({
                   {profile.bio.trim()}
                 </p>
               )}
+              <button
+                type="button"
+                onClick={() =>
+                  void shareUrl({
+                    title: profile.name,
+                    text: 'پروفایل من در قبیله',
+                    path: `/social/users/${profile.id}`,
+                  })
+                }
+                className="text-gold border-hair mx-auto mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border bg-black/25 px-3 text-xs font-black transition-colors hover:border-gold/50 sm:mx-0"
+              >
+                <Icon name="share" size={14} />
+                اشتراک پروفایل
+              </button>
               <div className="mt-5 grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3 sm:mt-4 sm:flex sm:flex-wrap">
                 {summaryStats.map((s) => (
                   <div
@@ -297,6 +312,8 @@ function UserPostsTab({
       likes: post.likes,
       commentsCount: post.comments.length,
       time: post.time,
+      image: post.attachment?.url ?? post.image,
+      hasImage: post.hasImage,
       isPinned: post.isPinned,
     })) ?? posts;
   const visiblePosts = useMemo(
@@ -431,6 +448,17 @@ function UserPostsTab({
             className="focus-visible:ring-ember hover:text-gold block rounded-xl transition-colors focus-visible:ring-2 focus-visible:outline-none"
           >
             <p className="text-ink-2 text-sm leading-7">{post.text}</p>
+            {(post.image || post.hasImage) && (
+              <div className="border-hair relative mt-3 h-36 overflow-hidden rounded-xl border bg-[var(--glass-2)]">
+                {post.image ? (
+                  <OptionalImage src={post.image} alt="" className="object-cover" />
+                ) : (
+                  <div className="text-ink-4 grid h-full place-items-center">
+                    <Icon name="book" size={28} />
+                  </div>
+                )}
+              </div>
+            )}
           </Link>
         </article>
       ))}
