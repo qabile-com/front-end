@@ -1,6 +1,7 @@
 import type {
   IAuthRepository,
   AuthUser,
+  GoogleAuthPayload,
   VerifyOtpResult,
 } from '../domain/auth-repository';
 import * as authApi from '@/core/api/auth.api';
@@ -17,13 +18,22 @@ export class HttpAuthRepository implements IAuthRepository {
     return mapAuthSession(response.data as OtpVerifyResponse);
   }
 
-  async requestOtp(identifier: string): Promise<string | void> {
-    const response = await authApi.requestOtp(identifier);
+  async loginWithGoogle(payload: GoogleAuthPayload): Promise<VerifyOtpResult> {
+    if (!payload.accessToken) {
+      throw new Error('Google access token is missing');
+    }
+
+    const response = await authApi.loginWithGoogle(payload);
+    return mapAuthSession(response.data);
+  }
+
+  async requestOtp(identifier: string, referralCode?: string): Promise<string | void> {
+    const response = await authApi.requestOtp(identifier, referralCode);
     return response.data.message;
   }
 
-  async verifyOtp(identifier: string, code: string): Promise<VerifyOtpResult> {
-    const response = await authApi.verifyOtp(identifier, code);
+  async verifyOtp(identifier: string, code: string, referralCode?: string): Promise<VerifyOtpResult> {
+    const response = await authApi.verifyOtp(identifier, code, referralCode);
     return mapAuthSession(response.data);
   }
 

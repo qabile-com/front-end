@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import {
   EmberCanvas,
   GradText,
@@ -22,9 +23,19 @@ import { getSafeRedirectPath } from '@/core/auth/redirect';
 import { authRepo } from '../infrastructure/repository-factory';
 import { AuthCard } from './components/auth-card';
 
+const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'missing-google-client-id';
+const shouldMockGoogleAuth =
+  process.env.NEXT_PUBLIC_MOCK_GOOGLE_AUTH === 'true' ||
+  !process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
 export function AuthPage() {
   const router = useRouter();
   const [authCheckPending, setAuthCheckPending] = useState(true);
+  const [initialReferralCode] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    const params = new URLSearchParams(window.location.search);
+    return params.get('ref') ?? params.get('referralCode') ?? '';
+  });
   const { stats } = useLandingPublicData(landingPublicRepo);
   const totalMembers = stats.data?.totalMembers ?? 52000;
   const rating = stats.data?.rating ?? 4.9;
@@ -110,7 +121,15 @@ export function AuthPage() {
 
         <div className="relative flex min-h-screen flex-1 flex-col items-center justify-center px-5 py-10 lg:px-5 lg:pb-10">
           <MotionItem className="w-full max-w-[420px]">
-            <AuthCard repository={authRepo} getRedirectTo={getRedirectTo} />
+            <GoogleOAuthProvider clientId={googleClientId}>
+              <AuthCard
+                repository={authRepo}
+                getRedirectTo={getRedirectTo}
+                googleEnabled={Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID)}
+                googleMockEnabled={shouldMockGoogleAuth}
+                initialReferralCode={initialReferralCode}
+              />
+            </GoogleOAuthProvider>
           </MotionItem>
 
           <Link

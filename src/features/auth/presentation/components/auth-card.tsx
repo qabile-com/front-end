@@ -1,10 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { Icon } from '@/shared/ui';
+import { useGoogleLogin, type TokenResponse } from '@react-oauth/google';
+import { BaseModal, Icon } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
+import { showError } from '@/shared/lib/toast';
 import { isCompleteOtp, isNonEmpty, isValidEmail } from '@/features/auth/domain/validation';
-import type { IAuthRepository } from '../../domain/auth-repository';
+import type { GoogleAuthPayload, IAuthRepository } from '../../domain/auth-repository';
 import { useAuth } from '../../application/use-auth';
 import { AuthButton } from './auth-button';
 import { AuthTabs } from './auth-tabs';
@@ -20,9 +22,18 @@ const RESEND_SECONDS = 120;
 interface AuthCardProps {
   repository: IAuthRepository;
   getRedirectTo?: () => string;
+  googleEnabled?: boolean;
+  googleMockEnabled?: boolean;
+  initialReferralCode?: string;
 }
 
-export function AuthCard({ repository, getRedirectTo }: AuthCardProps) {
+export function AuthCard({
+  repository,
+  getRedirectTo,
+  googleEnabled = true,
+  googleMockEnabled = false,
+  initialReferralCode = '',
+}: AuthCardProps) {
   const [view, setView] = useState<View>('login');
   const auth = useAuth(repository, getRedirectTo);
 
@@ -37,6 +48,10 @@ export function AuthCard({ repository, getRedirectTo }: AuthCardProps) {
           onForgot={() => setView('forgot')}
           loading={auth.loading}
           loginWithPassword={auth.loginWithPassword}
+          loginWithGoogle={auth.loginWithGoogle}
+          googleEnabled={googleEnabled}
+          googleMockEnabled={googleMockEnabled}
+          initialReferralCode={initialReferralCode}
           requestOtp={auth.requestOtp}
           verifyOtp={auth.verifyOtp}
         />
@@ -69,17 +84,81 @@ function CardHeader({ title, sub }: { title: string; sub: ReactNode }) {
 function LoginView({
   onForgot,
   loginWithPassword,
+  loginWithGoogle,
   requestOtp,
   verifyOtp,
   loading,
+  googleEnabled,
+  googleMockEnabled,
+  initialReferralCode,
 }: {
   onForgot: () => void;
   loginWithPassword: (email: string, password: string) => Promise<boolean>;
-  requestOtp: (email: string) => Promise<boolean>;
-  verifyOtp: (email: string, code: string) => Promise<boolean>;
+  loginWithGoogle: (payload: GoogleAuthPayload) => Promise<boolean>;
+  requestOtp: (email: string, referralCode?: string) => Promise<boolean>;
+  verifyOtp: (email: string, code: string, referralCode?: string) => Promise<boolean>;
   loading: boolean;
+  googleEnabled: boolean;
+  googleMockEnabled: boolean;
+  initialReferralCode?: string;
 }) {
   const [tab, setTab] = useState<LoginTab>('otp');
+  const [isMockGoogleOpen, setIsMockGoogleOpen] = useState(false);
+  const [referralCode, setReferralCode] = useState(initialReferralCode ?? '');
+  const cleanReferralCode = referralCode.trim();
+
+  useEffect(() => {
+    queueMicrotask(() => setReferralCode((current) => current || initialReferralCode || ''));
+  }, [initialReferralCode]);
+  const googleLogin = useGoogleLogin({
+    flow: 'implicit',
+    scope: 'openid email profile',
+    onSuccess: (response) => {
+      void loginWithGoogle(toGoogleAuthPayload(response, cleanReferralCode));
+    },
+    onError: (error) => {
+      showError(error.error_description || 'ورود با گوگل شروع نشد. تنظیمات Google OAuth را بررسی کن.');
+    },
+    onNonOAuthError: (error) => {
+      const message =
+        error.type === 'popup_closed'
+          ? 'پنجره گوگل بسته شد.'
+          : error.type === 'popup_failed_to_open'
+            ? 'مرورگر اجازه باز شدن پنجره گوگل را نداد.'
+            : 'پنجره ورود گوگل باز نشد.';
+      showError(message);
+    },
+  });
+  const canUseGoogle = googleEnabled || googleMockEnabled;
+
+  const handleGoogleLogin = () => {
+    if (googleMockEnabled) {
+      setIsMockGoogleOpen(true);
+      return;
+    }
+
+    if (!googleEnabled) {
+      showError('Google Client ID در برنامه فعال نیست. dev server را بعد از تغییر env ری‌استارت کن.');
+      return;
+    }
+
+    googleLogin();
+  };
+
+  const handleSelectMockGoogleAccount = (account: MockGoogleAccount) => {
+    setIsMockGoogleOpen(false);
+    void loginWithGoogle({
+      mock: true,
+      mockEmail: account.email,
+      mockName: account.name,
+      accessToken: 'mock-google-access-token',
+      referralCode: cleanReferralCode || undefined,
+      refreshToken: 'mock-google-refresh-token',
+      tokenType: 'Bearer',
+      expiresIn: 3600,
+      scope: 'openid email profile',
+    });
+  };
 
   return (
     <>
@@ -104,8 +183,20 @@ function LoginView({
           loading={loading}
           requestOtp={requestOtp}
           verifyOtp={verifyOtp}
+          referralCode={cleanReferralCode}
         />
       )}
+      <ReferralCodeField value={referralCode} onChange={setReferralCode} disabled={loading} />
+      <GoogleLoginSection
+        onClick={handleGoogleLogin}
+        disabled={loading || !canUseGoogle}
+        mockEnabled={googleMockEnabled}
+      />
+      <MockGoogleAccountChooser
+        isOpen={isMockGoogleOpen}
+        onClose={() => setIsMockGoogleOpen(false)}
+        onSelect={handleSelectMockGoogleAccount}
+      />
     </>
   );
 }
@@ -221,14 +312,39 @@ function PasswordForm({
   );
 }
 
+function ReferralCodeField({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  disabled: boolean;
+}) {
+  return (
+    <Field
+      label="کد رفرال"
+      type="text"
+      inputMode="text"
+      placeholder="اختیاری"
+      value={value}
+      onChange={(event) => onChange(event.target.value.trimStart())}
+      disabled={disabled}
+      autoComplete="off"
+    />
+  );
+}
+
 function OtpLoginForm({
   requestOtp,
   verifyOtp,
   loading,
+  referralCode,
 }: {
-  requestOtp: (email: string) => Promise<boolean>;
-  verifyOtp: (email: string, code: string) => Promise<boolean>;
+  requestOtp: (email: string, referralCode?: string) => Promise<boolean>;
+  verifyOtp: (email: string, code: string, referralCode?: string) => Promise<boolean>;
   loading: boolean;
+  referralCode?: string;
 }) {
   const isLargeScreen = useIsLargeScreen();
   const [email, setEmail] = useState('');
@@ -242,7 +358,7 @@ function OtpLoginForm({
       setError('ایمیل معتبر نیست');
       return;
     }
-    const ok = await requestOtp(email);
+    const ok = await requestOtp(email, referralCode);
     if (ok) {
       setSent(true);
       start(RESEND_SECONDS);
@@ -253,7 +369,7 @@ function OtpLoginForm({
     code,
     enabled: sent,
     loading,
-    onSubmit: (nextCode) => verifyOtp(email, nextCode),
+    onSubmit: (nextCode) => verifyOtp(email, nextCode, referralCode),
   });
 
   if (!sent) {
@@ -475,6 +591,138 @@ function BottomLink({ children, className }: { children: ReactNode; className?: 
   );
 }
 
+function GoogleLoginSection({
+  onClick,
+  disabled,
+  mockEnabled,
+}: {
+  onClick: () => void;
+  disabled: boolean;
+  mockEnabled: boolean;
+}) {
+  return (
+    <>
+      <Divider />
+      <AuthButton
+        type="button"
+        variant="alt"
+        className="border-[rgba(255,98,0,.24)] text-ink shadow-[0_18px_42px_-34px_var(--glow),inset_0_1px_0_rgba(255,255,255,.08)] [background:linear-gradient(135deg,rgba(255,98,0,.13),rgba(243,186,99,.05),rgba(255,255,255,.035))]"
+        onClick={onClick}
+        disabled={disabled}
+      >
+        <span className="grid size-7 place-items-center rounded-[10px] border border-[rgba(243,186,99,.26)] bg-black/24 text-[14px] font-black text-gold shadow-[inset_0_1px_0_rgba(255,255,255,.08)]">
+          G
+        </span>
+        <span className="inline-flex min-w-0 flex-col items-start leading-none">
+          <span className="text-[14px] font-black">ادامه با Gmail</span>
+          {mockEnabled && <span className="text-ink-4 mt-1 text-[10px] font-bold">حالت آزمایشی</span>}
+        </span>
+      </AuthButton>
+    </>
+  );
+}
+
+interface MockGoogleAccount {
+  name: string;
+  email: string;
+  initial: string;
+  accent: string;
+}
+
+const MOCK_GOOGLE_ACCOUNTS: MockGoogleAccount[] = [
+  {
+    name: 'کاربر Gmail',
+    email: 'gmail-user@qabile.local',
+    initial: 'G',
+    accent: 'bg-[#1a73e8]',
+  },
+  {
+    name: 'علی تست',
+    email: 'ali.test@qabile.local',
+    initial: 'A',
+    accent: 'bg-[#188038]',
+  },
+];
+
+function MockGoogleAccountChooser({
+  isOpen,
+  onClose,
+  onSelect,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelect: (account: MockGoogleAccount) => void;
+}) {
+  return (
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="انتخاب حساب Google"
+      panelClassName="w-full max-w-[420px] overflow-hidden rounded-[22px] bg-white text-[#202124] shadow-[0_30px_90px_-38px_rgba(0,0,0,.75)]"
+      contentClassName="max-h-[calc(100dvh-2rem)]"
+    >
+      <div dir="ltr" className="text-left">
+        <div className="border-b border-[#dadce0] px-6 py-5">
+          <div className="mb-7 flex items-center gap-2.5">
+            <span className="text-[20px] font-medium text-[#4285f4]">G</span>
+            <span className="text-[20px] font-medium text-[#ea4335]">o</span>
+            <span className="text-[20px] font-medium text-[#fbbc04]">o</span>
+            <span className="text-[20px] font-medium text-[#4285f4]">g</span>
+            <span className="text-[20px] font-medium text-[#34a853]">l</span>
+            <span className="text-[20px] font-medium text-[#ea4335]">e</span>
+          </div>
+          <h2 className="text-[24px] leading-8 font-normal">Choose an account</h2>
+          <p className="mt-1 text-sm text-[#5f6368]">to continue to Qabile</p>
+        </div>
+
+        <div className="py-2">
+          {MOCK_GOOGLE_ACCOUNTS.map((account) => (
+            <button
+              key={account.email}
+              type="button"
+              onClick={() => onSelect(account)}
+              className="flex min-h-17 w-full items-center gap-4 px-6 py-3 text-left transition-colors hover:bg-[#f8fafd] focus-visible:bg-[#f8fafd] focus-visible:outline-none"
+            >
+              <span
+                className={cn(
+                  'grid size-10 shrink-0 place-items-center rounded-full text-base font-medium text-white',
+                  account.accent,
+                )}
+              >
+                {account.initial}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-medium text-[#202124]">
+                  {account.name}
+                </span>
+                <span className="mt-0.5 block truncate text-sm text-[#5f6368]">
+                  {account.email}
+                </span>
+              </span>
+            </button>
+          ))}
+
+          <button
+            type="button"
+            className="flex min-h-15 w-full items-center gap-4 px-6 py-3 text-left text-sm font-medium text-[#3c4043] transition-colors hover:bg-[#f8fafd]"
+            onClick={() => onSelect(MOCK_GOOGLE_ACCOUNTS[0]!)}
+          >
+            <span className="grid size-10 shrink-0 place-items-center rounded-full border border-[#dadce0] text-[#5f6368]">
+              +
+            </span>
+            Use another account
+          </button>
+        </div>
+
+        <div className="border-t border-[#dadce0] px-6 py-4 text-xs leading-5 text-[#5f6368]">
+          This is a temporary mocked Google screen. Real Google account selection will appear
+          when mock mode is disabled and a valid OAuth client id is configured.
+        </div>
+      </div>
+    </BaseModal>
+  );
+}
+
 function ResendRow({ cooldown, onResend }: { cooldown: number; onResend: () => void }) {
   return (
     <div className="text-ink-3 mb-[18px] text-center text-[13px]">
@@ -527,6 +775,19 @@ function useLatestRef<T>(value: T) {
   }, [value]);
 
   return ref;
+}
+
+function toGoogleAuthPayload(response: TokenResponse, referralCode?: string): GoogleAuthPayload {
+  const responseWithRefresh = response as TokenResponse & { refresh_token?: string };
+
+  return {
+    accessToken: response.access_token,
+    referralCode: referralCode?.trim() || undefined,
+    refreshToken: responseWithRefresh.refresh_token,
+    tokenType: response.token_type,
+    expiresIn: response.expires_in,
+    scope: response.scope,
+  };
 }
 
 function useOtpSubmit({

@@ -1,4 +1,9 @@
-import type { AuthUser, IAuthRepository, VerifyOtpResult } from '../domain/auth-repository';
+import type {
+  AuthUser,
+  GoogleAuthPayload,
+  IAuthRepository,
+  VerifyOtpResult,
+} from '../domain/auth-repository';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -12,14 +17,24 @@ export class MockAuthRepository implements IAuthRepository {
     return createMockSession(email, 'آرش کریمی');
   }
 
-  async requestOtp(identifier: string): Promise<string> {
+  async loginWithGoogle(payload: GoogleAuthPayload): Promise<VerifyOtpResult> {
+    await delay(700);
+    if (!payload.accessToken && !payload.code) {
+      throw new Error('Google token is missing');
+    }
+
+    return createMockSession('google-user@qabile.local', 'Google User');
+  }
+
+  async requestOtp(identifier: string, referralCode?: string): Promise<string> {
     await delay(800);
-    console.log(`[Mock] OTP sent to ${identifier}`);
+    console.log(`[Mock] OTP sent to ${identifier}`, { referralCode });
     return 'کد تایید برای ایمیل شما ارسال شد';
   }
 
-  async verifyOtp(identifier: string, code: string): Promise<VerifyOtpResult> {
+  async verifyOtp(identifier: string, code: string, referralCode?: string): Promise<VerifyOtpResult> {
     await delay(1000);
+    console.log(`[Mock] OTP verified for ${identifier}`, { referralCode });
     if (code !== '123456') throw new Error('کد تایید اشتباه است');
 
     return {

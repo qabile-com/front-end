@@ -65,9 +65,20 @@ export interface ForgotPasswordVerifyResponse {
   verificationToken: string;
 }
 
-export const requestOtp = (email: string) =>
+export interface GoogleLoginRequest {
+  accessToken?: string;
+  referralCode?: string;
+  refreshToken?: string;
+  code?: string;
+  tokenType?: string;
+  expiresIn?: number;
+  scope?: string;
+}
+
+export const requestOtp = (email: string, referralCode?: string) =>
   httpClient.post<OtpRequestResponse>('/api/v1/auth/otp/request', {
     email,
+    ...(referralCode?.trim() ? { referralCode: referralCode.trim() } : {}),
   });
 
 export const login = (email: string, password?: string) =>
@@ -76,10 +87,20 @@ export const login = (email: string, password?: string) =>
     ...(password ? { password } : {}),
   });
 
-export const verifyOtp = (email: string, code: string) =>
+export const loginWithGoogle = (payload: GoogleLoginRequest) =>
+  httpClient.post<OtpVerifyResponse>(
+    process.env.NEXT_PUBLIC_GOOGLE_AUTH_EXCHANGE_ENDPOINT || '/api/v1/auth/google',
+    {
+      accessToken: payload.accessToken,
+      ...(payload.referralCode?.trim() ? { referralCode: payload.referralCode.trim() } : {}),
+    },
+  );
+
+export const verifyOtp = (email: string, code: string, referralCode?: string) =>
   httpClient.post<OtpVerifyResponse>('/api/v1/auth/otp/verify', {
     email,
     code,
+    ...(referralCode?.trim() ? { referralCode: referralCode.trim() } : {}),
   });
 
 export const getMe = () => httpClient.get<OtpVerifyResponse>('/api/v1/auth/me');

@@ -5,8 +5,13 @@ import { useRouter } from 'next/navigation';
 import { saveAuthSession } from '@/core/auth/token';
 import { useAuthSession } from '@/providers/auth-provider';
 import { showError, showSuccess } from '@/shared/lib/toast';
-import type { IAuthRepository, VerifyOtpResult } from '../domain/auth-repository';
+import type {
+  GoogleAuthPayload,
+  IAuthRepository,
+  VerifyOtpResult,
+} from '../domain/auth-repository';
 import { getAuthErrorMessage } from './auth-error-message';
+import { createMockGoogleAuthSession } from './mock-google-auth';
 
 function resolveUserName(user: VerifyOtpResult['user']): string {
   if (user.displayName?.trim()) return user.displayName.trim();
@@ -67,10 +72,10 @@ export function useAuth(repo: IAuthRepository, getRedirectTo: () => string = () 
   );
 
   const requestOtp = useCallback(
-    async (identifier: string) => {
+    async (identifier: string, referralCode?: string) => {
       setLoading(true);
       try {
-        const message = await repo.requestOtp(identifier);
+        const message = await repo.requestOtp(identifier, referralCode);
         if (message) showSuccess(message);
         return true;
       } catch (error: unknown) {
@@ -84,10 +89,10 @@ export function useAuth(repo: IAuthRepository, getRedirectTo: () => string = () 
   );
 
   const verifyOtp = useCallback(
-    async (identifier: string, code: string) => {
+    async (identifier: string, code: string, referralCode?: string) => {
       setLoading(true);
       try {
-        const session = await repo.verifyOtp(identifier, code);
+        const session = await repo.verifyOtp(identifier, code, referralCode);
         completeLogin(session);
         return true;
       } catch (error: unknown) {
@@ -149,10 +154,30 @@ export function useAuth(repo: IAuthRepository, getRedirectTo: () => string = () 
     [repo],
   );
 
+  const loginWithGoogle = useCallback(
+    async (payload: GoogleAuthPayload) => {
+      setLoading(true);
+      try {
+        const session = payload.mock
+          ? createMockGoogleAuthSession(payload)
+          : await repo.loginWithGoogle(payload);
+        completeLogin(session);
+        return true;
+      } catch (error: unknown) {
+        showError(getAuthErrorMessage(error, 'ورود با گوگل انجام نشد.'));
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [completeLogin, repo],
+  );
+
   return {
     loading,
     success,
     loginWithPassword,
+    loginWithGoogle,
     requestOtp,
     verifyOtp,
     requestForgotPassword,

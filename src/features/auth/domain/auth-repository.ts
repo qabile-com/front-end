@@ -46,10 +46,24 @@ export interface VerifyOtpResult {
   unlockedAchievements?: unknown[];
 }
 
+export interface GoogleAuthPayload {
+  accessToken?: string;
+  referralCode?: string;
+  refreshToken?: string;
+  code?: string;
+  tokenType?: string;
+  expiresIn?: number;
+  scope?: string;
+  mock?: boolean;
+  mockEmail?: string;
+  mockName?: string;
+}
+
 export interface IAuthRepository {
   login(email: string, password: string): Promise<VerifyOtpResult>;
-  requestOtp(identifier: string): Promise<string | void>;
-  verifyOtp(identifier: string, code: string): Promise<VerifyOtpResult>;
+  loginWithGoogle(payload: GoogleAuthPayload): Promise<VerifyOtpResult>;
+  requestOtp(identifier: string, referralCode?: string): Promise<string | void>;
+  verifyOtp(identifier: string, code: string, referralCode?: string): Promise<VerifyOtpResult>;
   requestForgotPassword(email: string): Promise<string | void>;
   verifyForgotPassword(email: string, code: string): Promise<{ verificationToken: string }>;
   resetPassword(
