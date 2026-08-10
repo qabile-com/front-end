@@ -42,8 +42,13 @@ const ROUTE_TO_TAB: Array<{ prefix: string; tab: DashboardTab }> = [
   { prefix: '/leaderboard', tab: 'lb' },
   { prefix: '/social', tab: 'social' },
   { prefix: '/courses', tab: 'courses' },
+  { prefix: '/friends', tab: 'friends' },
   { prefix: '/profile', tab: 'profile' },
 ];
+
+function isPublicSocialSharePath(pathname: string) {
+  return /^\/social\/users\/[^/]+\/?$/.test(pathname) || /^\/social\/[^/]+\/?$/.test(pathname);
+}
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
@@ -77,6 +82,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const activeTab = useMemo(() => {
     return ROUTE_TO_TAB.find((route) => pathname.startsWith(route.prefix))?.tab ?? 'courses';
   }, [pathname]);
+  const isPublicSocialRoute = useMemo(() => isPublicSocialSharePath(pathname), [pathname]);
 
   const activeHref =
     activeTab === 'lb' ? '/leaderboard' : activeTab === 'home' ? '/home' : `/${activeTab}`;
@@ -144,7 +150,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [shouldShowInstallAfterSignupXp, signupAchievements?.length, signupXp]);
 
   const isHomePage = pathname === '/home';
-  const showChrome = !isHomePage || (!userLoading && user);
+  const showChrome = !isPublicSocialRoute && (!isHomePage || (!userLoading && user));
   const isUserNotFound = useMemo(
     () =>
       Boolean(
@@ -162,12 +168,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [isUserNotFound, router]);
 
   if (isUserNotFound) return null;
-  if (authGuard.isReady && !authGuard.isLoggedIn) return null;
+  if (authGuard.isReady && !authGuard.isLoggedIn && !isPublicSocialRoute) return null;
 
-  if (userLoading && !isHomePage) return <DashboardLoader />;
-  if (userError && !isHomePage)
+  if (userLoading && !isHomePage && !isPublicSocialRoute) return <DashboardLoader />;
+  if (userError && !isHomePage && !isPublicSocialRoute)
     return <DashboardError error={userError} onRetry={() => void refetchUser()} />;
-  if (!user && !isHomePage) return <DashboardLoader />;
+  if (!user && !isHomePage && !isPublicSocialRoute) return <DashboardLoader />;
 
   return (
     <div className="dashboard-scope min-h-screen max-w-full overflow-x-clip [background:var(--color-bg)]">
@@ -222,7 +228,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </main>
 
-      <MobileNav activeHref={activeHref} />
+      {showChrome && <MobileNav activeHref={activeHref} />}
       {showChrome && (
         <MobileOnboarding
           isComplete={user.isCompleteOnboarding}

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Icon } from '@/shared/ui';
+import { Icon, UserAvatar } from '@/shared/ui';
 import { formatPersianNumber, toPersianDigits } from '@/core/lib/persian';
 import type { CurrentUser } from '../../domain/dashboard.types';
 
@@ -12,8 +12,6 @@ interface MobileHeaderProps {
 }
 
 export function MobileHeader({ title, user, showAiChatAction = false }: MobileHeaderProps) {
-  const avatarIsImage = user.avatar.startsWith('/') || user.avatar.startsWith('http');
-
   return (
     <header
       dir="ltr"
@@ -22,14 +20,9 @@ export function MobileHeader({ title, user, showAiChatAction = false }: MobileHe
       <div className="flex min-w-0 items-center gap-2.5">
         <Link
           href="/profile"
-          className="border-hair grid size-12 shrink-0 place-items-center overflow-hidden rounded-full border text-base font-black text-white shadow-[0_12px_34px_-18px_var(--glow)] [background:var(--fire-grad)]"
-          style={{ background: avatarIsImage ? undefined : user.avatar }}
+          className="border-hair block size-12 shrink-0 overflow-hidden rounded-full border shadow-[0_12px_34px_-18px_var(--glow)]"
         >
-          {avatarIsImage ? (
-            <img src={user.avatar} alt="" className="size-full object-cover" />
-          ) : (
-            user.initial
-          )}
+          <UserAvatar name={user.name} avatar={user.avatar} className="size-full text-base" />
         </Link>
 
         <span

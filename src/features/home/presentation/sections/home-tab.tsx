@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useMemo, useCallback, useState } from 'react';
 import { Icon, MotionItem, MotionList, Panel } from '@/shared/ui';
-import { ComingSoonModal } from '../components/coming-soon-modal';
 import type { IconName } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { formatPersianNumber, toPersianDigits } from '@/core/lib/persian';
@@ -56,7 +55,7 @@ const HERO_SLIDES = [
 const QUICK_ACTIONS = [
   { label: 'نوشتن پیام', icon: 'quick-write', href: '/social' },
   { label: 'آخرین دوره ها', icon: 'quick-courses', href: '/courses' },
-  { label: 'دعوت دوستان', icon: 'quick-invite', href: '#', invite: true as const },
+  { label: 'دعوت دوستان', icon: 'quick-invite', href: '/friends' },
 ] as const;
 
 const COURSE_FALLBACKS = [
@@ -206,43 +205,26 @@ function HeroCarousel({ user }: { user: CurrentUser }) {
 }
 
 function QuickActions() {
-  const [inviteOpen, setInviteOpen] = useState(false);
-
   return (
-    <>
-      <MotionList className="grid min-w-0 grid-cols-3 gap-3">
-        {QUICK_ACTIONS.map((action, index) => {
-          const isInvite = (action as any).invite === true;
-          return (
-            <MotionItem key={action.label}>
-              <Link
-                href={isInvite ? '#' : action.href}
-                onClick={(event) => {
-                  if (isInvite) {
-                    event.preventDefault();
-                    setInviteOpen(true);
-                  }
-                }}
-                className={cn(
-                  'border-hair group focus-visible:ring-ember flex min-h-24 min-w-0 flex-col items-center justify-center gap-3 rounded-[18px] border px-2 text-center transition-[transform,border-color,box-shadow] duration-300 [background:var(--glass)] hover:-translate-y-1 hover:border-[rgba(255,98,0,.65)] hover:shadow-[0_18px_55px_-36px_var(--glow)] focus-visible:ring-2 focus-visible:outline-none',
-                  index === 0 && 'border-r-3 border-r-[rgba(255,98,0,.85)]',
-                  index === QUICK_ACTIONS.length - 1 &&
-                    'border-l-3 border-l-[rgba(255,98,0,.85)]',
-                )}
-              >
-                <span className="text-gold group-hover:text-ember grid size-9 place-items-center rounded-xl">
-                  <Icon name={action.icon as IconName} size={32} />
-                </span>
-                <b className="truncate text-[13px] font-extrabold sm:text-[14px]">
-                  {action.label}
-                </b>
-              </Link>
-            </MotionItem>
-          );
-        })}
-      </MotionList>
-      <ComingSoonModal isOpen={inviteOpen} onClose={() => setInviteOpen(false)} />
-    </>
+    <MotionList className="grid min-w-0 grid-cols-3 gap-3">
+      {QUICK_ACTIONS.map((action, index) => (
+        <MotionItem key={action.label}>
+          <Link
+            href={action.href}
+            className={cn(
+              'border-hair group focus-visible:ring-ember flex min-h-24 min-w-0 flex-col items-center justify-center gap-3 rounded-[18px] border px-2 text-center transition-[transform,border-color,box-shadow] duration-300 [background:var(--glass)] hover:-translate-y-1 hover:border-[rgba(255,98,0,.65)] hover:shadow-[0_18px_55px_-36px_var(--glow)] focus-visible:ring-2 focus-visible:outline-none',
+              index === 0 && 'border-r-3 border-r-[rgba(255,98,0,.85)]',
+              index === QUICK_ACTIONS.length - 1 && 'border-l-3 border-l-[rgba(255,98,0,.85)]',
+            )}
+          >
+            <span className="text-gold group-hover:text-ember grid size-9 place-items-center rounded-xl">
+              <Icon name={action.icon as IconName} size={32} />
+            </span>
+            <b className="truncate text-[13px] font-extrabold sm:text-[14px]">{action.label}</b>
+          </Link>
+        </MotionItem>
+      ))}
+    </MotionList>
   );
 }
 
