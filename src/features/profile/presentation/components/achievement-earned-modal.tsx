@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { BaseModal, Button, Icon, OptionalImage } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
 import { showError, showSuccess } from '@/shared/lib/toast';
@@ -12,6 +13,8 @@ import {
 import { CreatePost } from '@/features/social/presentation/sections/create-post';
 import { socialRepo } from '@/features/social/infrastructure/repository-factory';
 import type { AchievementCard } from '@/features/social/domain/social.data';
+import { getPostPublishErrorMessage } from '@/features/social/application/social-error-message';
+import { invalidateSocialPostCreation } from '@/features/social/application/social-cache';
 
 interface AchievementEarnedModalProps {
   achievement: Achievement | null;
@@ -19,6 +22,7 @@ interface AchievementEarnedModalProps {
 }
 
 export function AchievementEarnedModal({ achievement, onClose }: AchievementEarnedModalProps) {
+  const queryClient = useQueryClient();
   const [isSharePostOpen, setIsSharePostOpen] = useState(false);
 
   if (!achievement) return null;
@@ -32,9 +36,10 @@ export function AchievementEarnedModal({ achievement, onClose }: AchievementEarn
   ) => {
     try {
       await socialRepo.createPost(text, imageFile, achievementCard);
+      invalidateSocialPostCreation(queryClient);
       showSuccess('پست با موفقیت منتشر شد!');
-    } catch {
-      showError('خطا در انتشار پست');
+    } catch (error) {
+      showError(getPostPublishErrorMessage(error));
       throw new Error('Achievement post publish failed');
     }
   };
