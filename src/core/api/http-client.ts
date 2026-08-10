@@ -21,7 +21,7 @@ export class ApiError extends Error {
   }
 }
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.qabile.com';
 
 const httpClient = axios.create({
   baseURL: apiBaseUrl,
@@ -93,7 +93,7 @@ httpClient.interceptors.response.use(
 
       return Promise.reject(
         new ApiError(sessionInvalid ? 'نشست تو معتبر نیست. لطفاً دوباره وارد شو.' : message, {
-          statusCode: sessionInvalid ? 401 : data?.statusCode ?? error.response.status,
+          statusCode: sessionInvalid ? 401 : (data?.statusCode ?? error.response.status),
           error: data?.error,
           path: data?.path,
           requestId: data?.requestId,
