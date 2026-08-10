@@ -46,6 +46,9 @@ export interface ForumAttachmentDto {
   id: string;
   kind: string;
   url: string;
+  mimeType?: string;
+  originalName?: string;
+  sizeBytes?: number;
 }
 
 export interface ForumTagDto {
@@ -70,6 +73,7 @@ export interface ForumPostDto {
   };
   hasImage?: boolean;
   attachment?: ForumAttachmentDto | null;
+  attachments?: ForumAttachmentDto[];
   likes: number;
   commentsCount?: number;
   likedByMe: boolean;
@@ -91,6 +95,7 @@ export interface ForumFeedResponse {
   trendingTags?: Array<string | ForumTagDto>;
   activeUsers?: ForumUserDto[];
   matchedUsers?: ForumUserDto[];
+  postingStatus?: ForumPostingStatusDto;
 }
 
 export interface ForumCommentsResponse {
@@ -111,7 +116,8 @@ export interface ForumUserStatsDto {
 export interface ForumPostingStatusDto {
   canCreatePost: boolean;
   isLocked: boolean;
-  cooldownHours: number;
+  cooldownHours?: number;
+  cooldownSeconds?: number;
   lastPostAt?: string | null;
   lockedUntil?: string | null;
   remainingSeconds?: number | null;
@@ -170,26 +176,32 @@ export const getForumActiveUsers = (params?: { limit?: number }, options?: { sig
 
 export const createForumPost = (body: {
   text: string;
-  image?: File | null;
   tags?: string[];
   achievementId?: string;
+  attachmentIds?: string[];
 }) => {
-  if (body.image) {
-    const formData = new FormData();
-    formData.append('text', body.text);
-    formData.append('image', body.image);
-    body.tags?.forEach((tag) => formData.append('tags[]', tag));
-    if (body.achievementId) formData.append('achievementId', body.achievementId);
-
-    return httpClient.post<ActionResponse<ForumPostDto> | ForumPostDto>('/api/v1/forum/posts', formData);
-  }
-
   return httpClient.post<ActionResponse<ForumPostDto> | ForumPostDto>('/api/v1/forum/posts', {
     text: body.text,
     tags: body.tags,
     achievementId: body.achievementId,
+    attachmentIds: body.attachmentIds,
   });
 };
+
+export const uploadForumAttachment = (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return httpClient.post<ForumAttachmentDto>('/api/v1/forum/attachments', formData);
+};
+
+export const uploadForumAttachments = (files: File[]) => {
+  const formData = new FormData();
+  files.forEach((file) => formData.append('files', file));
+  return httpClient.post<{ data: ForumAttachmentDto[] }>('/api/v1/forum/attachments/batch', formData);
+};
+
+export const deleteForumAttachment = (attachmentId: string) =>
+  httpClient.delete<{ success: boolean }>(`/api/v1/forum/attachments/${attachmentId}`);
 
 export const deleteForumPost = (postId: string) =>
   httpClient.delete<{ success: boolean }>(`/api/v1/forum/posts/${postId}`);

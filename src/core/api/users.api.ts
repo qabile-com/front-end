@@ -51,6 +51,17 @@ export const updateMyProfileAvatar = (file: File) => {
   return httpClient.post('/api/v1/users/me/avatar', formData);
 };
 
+export const deleteMyProfileAvatar = () => httpClient.delete('/api/v1/users/me/avatar');
+
+export const registerMyPushToken = (body: {
+  token: string;
+  platform: 'web';
+  deviceId: string;
+}) => httpClient.post('/api/v1/users/me/push-tokens', body);
+
+export const deleteMyPushToken = (token: string) =>
+  httpClient.delete('/api/v1/users/me/push-tokens', { data: { token } });
+
 export const requestEmailVerification = (email: string) =>
   httpClient.post('/api/v1/users/me/email/verification/request', { email });
 

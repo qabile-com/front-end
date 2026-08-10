@@ -22,6 +22,7 @@ export interface OtpVerifyResponse {
     lastName?: string | null;
     displayName?: string | null;
     username?: string | null;
+    avatar?: string | null;
     phone?: string | null;
     email?: string | null;
     role: string;
@@ -73,6 +74,7 @@ export interface GoogleLoginRequest {
   tokenType?: string;
   expiresIn?: number;
   scope?: string;
+  googleAvatarUrl?: string;
 }
 
 export const requestOtp = (email: string, referralCode?: string) =>
@@ -94,6 +96,11 @@ export const loginWithGoogle = (payload: GoogleLoginRequest) =>
       accessToken: payload.accessToken,
       ...(payload.referralCode?.trim() ? { referralCode: payload.referralCode.trim() } : {}),
     },
+  );
+
+export const validateReferralCode = (referralCode: string) =>
+  httpClient.get<{ valid: boolean }>(
+    `/api/v1/auth/referral-codes/${encodeURIComponent(referralCode.trim())}/validate`,
   );
 
 export const verifyOtp = (email: string, code: string, referralCode?: string) =>

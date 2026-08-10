@@ -1,13 +1,9 @@
-import { httpClient } from './http-client';
-
 export interface RegisterNotificationDeviceRequest {
   token: string;
   platform: 'web';
-  permission: NotificationPermission;
+  deviceId: string;
 }
 
-export const registerNotificationDevice = (body: RegisterNotificationDeviceRequest) =>
-  httpClient.post('/api/v1/notifications/devices', body);
+export { deleteMyPushToken as deleteNotificationDevice } from './users.api';
 
-export const deleteNotificationDevice = (token: string) =>
-  httpClient.delete('/api/v1/notifications/devices', { data: { token } });
+export { registerMyPushToken as registerNotificationDevice } from './users.api';

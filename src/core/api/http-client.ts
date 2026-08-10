@@ -34,6 +34,12 @@ httpClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  if (isFormData(config.data)) {
+    delete config.headers['Content-Type'];
+    delete config.headers['content-type'];
+  }
+
   return config;
 });
 
@@ -118,4 +124,8 @@ function isInvalidAuthSessionResponse(statusCode: number, message?: string, path
   if (!storedUserId) return false;
 
   return normalizedMessage.includes(storedUserId.toLowerCase());
+}
+
+function isFormData(value: unknown): value is FormData {
+  return typeof FormData !== 'undefined' && value instanceof FormData;
 }
