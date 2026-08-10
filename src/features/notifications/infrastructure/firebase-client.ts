@@ -30,6 +30,10 @@ export function hasFirebaseMessagingConfig() {
   );
 }
 
+export async function isFirebaseMessagingAvailable() {
+  return hasFirebaseMessagingConfig() && (await isSupported());
+}
+
 function getFirebaseApp(): FirebaseApp {
   return getApps().length ? getApp() : initializeApp(firebaseConfig);
 }
