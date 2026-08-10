@@ -21,6 +21,7 @@ import {
   normalizeUsernameInput,
   USERNAME_VALIDATION_MESSAGE,
 } from '../../domain/username-validation';
+import { compressImage } from '../../application/image-compression';
 
 interface EditProfileModalProps {
   profile: MyProfile;
@@ -91,7 +92,14 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
         return;
       }
 
-      await updateAvatar.mutateAsync(file);
+      const compressed = await compressImage(file, {
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 0.8,
+        maxSizeBytes: 512 * 1024,
+      });
+
+      await updateAvatar.mutateAsync(compressed);
       showSuccess('عکس پروفایل تغییر کرد');
     } catch (error) {
       showError(getApiErrorMessage(error, 'تغییر عکس انجام نشد'));

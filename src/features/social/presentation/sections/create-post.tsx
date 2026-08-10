@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Icon, OptionalImage } from '@/shared/ui';
 import type { AchievementCard } from '../../domain/social.data';
 import { moderateAvatarImage } from '@/features/profile/application/avatar-content-moderation';
+import { compressImage } from '@/features/profile/application/image-compression';
 import { showError } from '@/shared/lib/toast';
 import { toPersianDigits } from '@/core/lib/persian';
 import { socialRepo } from '../../infrastructure/repository-factory';
@@ -104,8 +105,14 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
         return;
       }
       clearImage();
-      setImageFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      const compressed = await compressImage(file, {
+        maxWidth: 1200,
+        maxHeight: 1200,
+        quality: 0.85,
+        maxSizeBytes: 2 * 1024 * 1024,
+      });
+      setImageFile(compressed);
+      setPreviewUrl(URL.createObjectURL(compressed));
     } catch {
       showError('بررسی تصویر انجام نشد.');
     } finally {
