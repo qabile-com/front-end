@@ -167,7 +167,7 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
               ref={fileRef}
               type="file"
               accept="image/*"
-              className="hidden"
+              className="sr-only"
               onChange={(event) => void handleAvatarChange(event.target.files?.[0])}
             />
             <Button

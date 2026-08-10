@@ -23,11 +23,31 @@ const BLOCK_MESSAGES: Partial<Record<NsfwClassName, string>> = {
   Sexy: 'این تصویر بیش از حد نامناسب تشخیص داده شد. لطفاً عکس واضح‌تر و مناسب‌تری انتخاب کنید.',
 };
 
-let modelPromise: Promise<NsfwModel> | null = null;
+let nsfwLoadPromise: Promise<NsfwGlobal | null> | null = null;
 
-function getModel() {
-  modelPromise ??= import('nsfwjs').then((nsfw) => nsfw.load()) as Promise<NsfwModel>;
-  return modelPromise;
+interface NsfwGlobal {
+  load: (modelOrUrl?: string, options?: { size?: number }) => Promise<NsfwModel>;
+}
+
+async function loadNsfwjs(): Promise<NsfwGlobal | null> {
+  if (typeof window === 'undefined') return null;
+  if ((window as any).nsfwjs) return (window as any).nsfwjs as NsfwGlobal;
+
+  if (!nsfwLoadPromise) {
+    nsfwLoadPromise = new Promise<NsfwGlobal | null>((resolve) => {
+      const script = document.createElement('script');
+      script.src = '/nsfwjs.min.js';
+      script.async = true;
+      script.onload = () => resolve((window as any).nsfwjs ?? null);
+      script.onerror = () => {
+        nsfwLoadPromise = null;
+        resolve(null);
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  return nsfwLoadPromise;
 }
 
 export async function moderateAvatarImage(file: File): Promise<AvatarModerationResult> {
@@ -35,8 +55,13 @@ export async function moderateAvatarImage(file: File): Promise<AvatarModerationR
     return { allowed: false, message: 'فقط فایل تصویر قابل قبول است.' };
   }
 
+  const nsfw = await loadNsfwjs();
+  if (!nsfw) {
+    return { allowed: true };
+  }
+
   const image = await fileToImage(file);
-  const model = await getModel();
+  const model = await nsfw.load();
   const predictions = await model.classify(image);
   const byClass = new Map(predictions.map((item) => [item.className, item.probability]));
   const porn = byClass.get('Porn') ?? 0;
