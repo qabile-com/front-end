@@ -37,7 +37,18 @@ export interface Post {
     id: string;
     kind: string;
     url: string;
+    mimeType?: string;
+    originalName?: string;
+    sizeBytes?: number;
   };
+  attachments?: {
+    id: string;
+    kind: string;
+    url: string;
+    mimeType?: string;
+    originalName?: string;
+    sizeBytes?: number;
+  }[];
   likes: number;
   likedByMe: boolean;
   commentsCount?: number;

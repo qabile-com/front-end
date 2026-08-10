@@ -1,6 +1,7 @@
 import {
   addForumComment,
   createForumPost,
+  deleteForumAttachment,
   deleteForumPostComment,
   deleteForumPost,
   followForumUser,
@@ -11,6 +12,7 @@ import {
   getForumUser,
   likePost,
   pinForumPost,
+  uploadForumAttachment,
   unlikePost,
   unfollowForumUser,
   type ForumCommentDto,
@@ -113,8 +115,24 @@ export class HttpSocialRepository implements ISocialRepository {
     imageFile?: File | null,
     achievement?: AchievementCard | null,
   ): Promise<WithActionReward<Post>> {
-    const res = await createForumPost({ text, image: imageFile, achievementId: achievement?.id });
-    return unwrapActionResponse(res.data, apiForumPostToDomain);
+    const attachmentIds: string[] = [];
+
+    try {
+      if (imageFile) {
+        const attachment = await uploadForumAttachment(imageFile);
+        attachmentIds.push(attachment.data.id);
+      }
+
+      const res = await createForumPost({
+        text,
+        attachmentIds: attachmentIds.length ? attachmentIds : undefined,
+        achievementId: achievement?.id,
+      });
+      return unwrapActionResponse(res.data, apiForumPostToDomain);
+    } catch (error) {
+      await Promise.allSettled(attachmentIds.map((id) => deleteForumAttachment(id)));
+      throw error;
+    }
   }
 
   async deletePost(postId: string): Promise<void> {
@@ -212,14 +230,9 @@ export function apiForumPostToDomain(api: ForumPostDto): Post {
           icon: api.achievement.icon || 'flame',
         }
       : undefined,
-    hasImage: api.hasImage ?? Boolean(api.attachment || api.image),
-    attachment: api.attachment
-      ? {
-          id: api.attachment.id,
-          kind: api.attachment.kind,
-          url: api.attachment.url,
-        }
-      : undefined,
+    hasImage: api.hasImage ?? Boolean(api.attachments?.length || api.attachment || api.image),
+    attachment: normalizeAttachment(api.attachments?.[0] ?? api.attachment),
+    attachments: api.attachments?.map(normalizeAttachment).filter(Boolean),
     likes: api.likes,
     likedByMe: api.likedByMe,
     commentsCount: api.commentsCount ?? api.comments?.length ?? 0,
@@ -233,6 +246,19 @@ export function apiForumPostToDomain(api: ForumPostDto): Post {
     canFollowAuthor: api.canFollowAuthor ?? author.canFollow,
     isAuthorFollowedByMe:
       api.isAuthorFollowedByMe ?? api.followsAuthor ?? author.followedByMe ?? author.isFollowedByMe,
+  };
+}
+
+function normalizeAttachment(attachment?: ForumPostDto['attachments'][number] | null) {
+  if (!attachment) return undefined;
+
+  return {
+    id: attachment.id,
+    kind: attachment.kind,
+    url: attachment.url,
+    mimeType: attachment.mimeType,
+    originalName: attachment.originalName,
+    sizeBytes: attachment.sizeBytes,
   };
 }
 

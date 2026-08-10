@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { getAvatarInitial } from '@/core/lib/avatar';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
 import { toPersianDigits } from '@/core/lib/persian';
-import { BaseModal, Button, Icon, Input, UserAvatar } from '@/shared/ui';
+import { BaseModal, Button, Icon, Input, OptionalImage, UserAvatar } from '@/shared/ui';
 import type { Post } from '../../domain/social.data';
 import { formatUsername } from '../lib/format-username';
 
@@ -82,14 +82,16 @@ export function SocialPostDetailModal({
               {post.text}
             </div>
 
-            {(post.image || post.hasImage) && (
+            {(post.attachment?.url || post.image || post.hasImage) && (
               <div className="border-hair mt-4 overflow-hidden rounded-xl border bg-[var(--glass-2)]">
-                {post.image ? (
-                  <img
-                    src={post.image}
-                    alt="Post attachment"
-                    className="max-h-[400px] w-full object-cover"
-                  />
+                {post.attachment?.url || post.image ? (
+                  <div className="relative h-64 w-full">
+                    <OptionalImage
+                      src={post.attachment?.url ?? post.image ?? ''}
+                      alt="Post attachment"
+                      className="object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="text-ink-4 flex h-44 items-center justify-center">
                     <Icon name="book" size={32} className="opacity-50" />

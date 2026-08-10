@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
 import { getAvatarInitial } from '@/core/lib/avatar';
 import { toPersianDigits } from '@/core/lib/persian';
-import { Button, Icon, Input, UserAvatar, type IconName } from '@/shared/ui';
+import { Button, Icon, Input, OptionalImage, UserAvatar, type IconName } from '@/shared/ui';
 import { AdamAvatar } from '@/features/dashboard/presentation/sections/dashboard-sidebar';
 import type { Post } from '../../domain/social.data';
 import { formatUsername } from '../lib/format-username';
@@ -107,14 +107,16 @@ export function SocialPostDetail({
           </div>
         )}
 
-        {(post.image || post.hasImage) && (
+        {(post.attachment?.url || post.image || post.hasImage) && (
           <div className="border-hair mt-5 overflow-hidden rounded-[18px] border bg-[var(--glass-2)]">
-            {post.image ? (
-              <img
-                src={post.image}
-                alt="Post attachment"
-                className="max-h-[520px] w-full object-contain"
-              />
+            {post.attachment?.url || post.image ? (
+              <div className="relative h-[min(520px,70vh)] w-full">
+                <OptionalImage
+                  src={post.attachment?.url ?? post.image ?? ''}
+                  alt="Post attachment"
+                  className="object-contain"
+                />
+              </div>
             ) : (
               <div className="text-ink-4 grid h-52 place-items-center">
                 <Icon name="book" size={34} />

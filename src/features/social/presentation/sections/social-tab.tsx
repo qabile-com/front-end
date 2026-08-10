@@ -11,6 +11,7 @@ import {
   Icon,
   Input,
   InlineSpinner,
+  OptionalImage,
   SocialSkeleton,
   UserAvatar,
   type IconName,
@@ -22,6 +23,11 @@ import { useIsLargeScreen } from '@/core/lib/use-is-large-screen';
 import type { Post, ActiveUser } from '../../domain/social.data';
 import type { IProfileRepository, MyProfile } from '@/features/profile/domain/profile-repository';
 import { useUpdateMyProfile } from '@/features/profile/application/use-edit-profile';
+import {
+  isValidUsername,
+  normalizeUsernameInput,
+  USERNAME_VALIDATION_MESSAGE,
+} from '@/features/profile/domain/username-validation';
 import { Panel } from '@/shared/ui';
 import { AdamAvatar } from '@/features/dashboard/presentation/sections/dashboard-sidebar';
 import { CreatePost } from './create-post';
@@ -424,7 +430,7 @@ function CompleteForumProfileModal({
 
     const nextErrors: typeof errors = {};
     const nextDisplayName = displayName.trim().replace(/\s+/g, ' ');
-    const nextUsername = username.trim().replace(/^@+/, '');
+    const nextUsername = normalizeUsernameInput(username);
 
     if (nextDisplayName.length < 2) {
       nextErrors.displayName = 'نام نمایشی باید حداقل ۲ کاراکتر باشد.';
@@ -434,8 +440,8 @@ function CompleteForumProfileModal({
       nextErrors.displayName = 'نام نمایشی نباید بیشتر از ۶۴ کاراکتر باشد.';
     }
 
-    if (!/^[a-zA-Z0-9_]{3,24}$/.test(nextUsername)) {
-      nextErrors.username = 'نام کاربری باید ۳ تا ۲۴ کاراکتر انگلیسی، عدد یا _ باشد.';
+    if (!isValidUsername(nextUsername)) {
+      nextErrors.username = USERNAME_VALIDATION_MESSAGE;
     }
 
     setErrors(nextErrors);
@@ -706,13 +712,13 @@ function PostCard({
             <div className="mb-1 flex items-center gap-1.5">
               <b className="truncate text-sm font-extrabold">{post.author}</b>
               {post.verified && (
-                <img
-                  src="/assets/verified-user.webp"
-                  alt="verified"
-                  width={24}
-                  height={24}
-                  className="inline-block size-6 shrink-0"
-                />
+                <span className="relative inline-block size-6 shrink-0">
+                  <OptionalImage
+                    src="/assets/verified-user.webp"
+                    alt="verified"
+                    className="object-contain"
+                  />
+                </span>
               )}
               {post.isAdam && (
                 <span className="text-gold rounded-xs border border-[rgba(255,98,0,.18)] px-2 py-1 text-[10px] font-extrabold shadow-[0_4px_16px_-8px_rgba(255,98,0,.25)] [background:linear-gradient(135deg,rgba(255,98,0,.16),rgba(243,186,99,.08))]">
@@ -802,10 +808,10 @@ function PostCard({
             </span>
           </div>
         )}
-        {(post.image || post.hasImage) && (
-          <div className="text-ink-4 mt-3 grid h-44 place-items-center overflow-hidden rounded-[14px] [background:var(--glass-2)]">
-            {post.image ? (
-              <img src={post.image} alt="Post attachment" className="h-full w-full object-cover" />
+        {(post.attachment?.url || post.image || post.hasImage) && (
+          <div className="text-ink-4 relative mt-3 grid h-44 place-items-center overflow-hidden rounded-[14px] [background:var(--glass-2)]">
+            {post.attachment?.url || post.image ? (
+              <OptionalImage src={post.attachment?.url ?? post.image ?? ''} alt="Post attachment" className="object-cover" />
             ) : (
               <Icon name="book" size={34} />
             )}
