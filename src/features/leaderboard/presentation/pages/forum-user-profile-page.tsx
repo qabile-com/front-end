@@ -173,7 +173,7 @@ export function ForumUserProfilePage() {
                   className="gap-1.5"
                 >
                   <Icon name="share" size={15} />
-                  اشتراک
+                  اشتراک پروفایل
                 </Button>
                 {canFollow && (
                   <Button
@@ -277,7 +277,7 @@ export function ForumUserProfilePage() {
                       isOwnProfile && 'ps-8',
                       post.isPinned && 'pt-8',
                     )}
-                    >
+                  >
                     <p className="text-ink-2 line-clamp-3 text-sm leading-7">{post.text}</p>
                     {(post.image || post.hasImage) && (
                       <div className="border-hair relative mt-3 h-40 overflow-hidden rounded-xl border bg-[var(--glass-2)]">

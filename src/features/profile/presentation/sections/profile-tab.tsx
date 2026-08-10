@@ -305,7 +305,7 @@ function UserPostsTab({
   const [deletedPostIds, setDeletedPostIds] = useState<Set<string>>(() => new Set());
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const remotePosts = postsQuery.data?.pages.flat();
-  const sourcePosts =
+  const sourcePosts: ProfilePostItem[] =
     remotePosts?.map((post) => ({
       id: post.id,
       text: post.text,
@@ -316,7 +316,7 @@ function UserPostsTab({
       hasImage: post.hasImage,
       isPinned: post.isPinned,
     })) ?? posts;
-  const visiblePosts = useMemo(
+  const visiblePosts = useMemo<ProfilePostItem[]>(
     () =>
       sourcePosts
         .filter((post) => !deletedPostIds.has(post.id))
@@ -471,6 +471,8 @@ function UserPostsTab({
     </div>
   );
 }
+
+type ProfilePostItem = NonNullable<MyProfile['posts']>[number];
 
 function sortPinnedFirst<T extends { isPinned?: boolean }>(posts: T[]) {
   return [...posts].sort((a, b) => Number(Boolean(b.isPinned)) - Number(Boolean(a.isPinned)));

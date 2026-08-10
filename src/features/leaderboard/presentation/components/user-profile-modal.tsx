@@ -83,9 +83,7 @@ export function UserProfileModal({
             <div className="text-right">
               <h2 className="text-ink text-2xl font-bold">{user.name}</h2>
               {formatUsername(user.username) && (
-                <p className="text-ink-3 mt-1 text-sm font-bold">
-                  {formatUsername(user.username)}
-                </p>
+                <p className="text-ink-3 mt-1 text-sm font-bold">{formatUsername(user.username)}</p>
               )}
               <p className="text-gold mt-1 text-sm">
                 {user.title} ، سطح {toPersianDigits(user.level)}
@@ -133,7 +131,7 @@ export function UserProfileModal({
                   className="gap-1.5"
                 >
                   <Icon name="share" size={15} />
-                  اشتراک
+                  اشتراک پروفایل
                 </Button>
                 <Button
                   variant={followed ? 'ghost' : 'primary'}
@@ -161,7 +159,7 @@ export function UserProfileModal({
                     disabled={isBlocking}
                     onClick={onToggleBlock}
                     className={cn(
-                      'gap-1.5 border border-danger text-danger',
+                      'border-danger text-danger gap-1.5 border',
                       blocked && 'border-gold text-gold',
                     )}
                   >
@@ -225,7 +223,7 @@ export function UserProfileModal({
                 )}
               >
                 {post.isPinned && (
-                  <span className="text-gold mb-3 inline-flex items-center gap-1 rounded-full border border-gold/25 bg-gold/10 px-2 py-1 text-[10px] font-black">
+                  <span className="text-gold border-gold/25 bg-gold/10 mb-3 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black">
                     <Icon name="star" size={11} />
                     سنجاق شده
                   </span>
