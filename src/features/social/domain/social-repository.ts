@@ -18,7 +18,10 @@ export interface ISocialRepository {
   getTrendingTags(options?: { signal?: AbortSignal }): Promise<string[]>;
   getActiveUsers(options?: { signal?: AbortSignal }): Promise<ActiveUser[]>;
   createPost(text: string, imageFile?: File | null, achievement?: AchievementCard | null): Promise<WithActionReward<Post>>;
+  deletePost(postId: string): Promise<void>;
+  pinPost(postId: string, isPinned: boolean): Promise<Post>;
   addComment(postId: string, text: string): Promise<WithActionReward<PostComment>>;
+  deleteComment(postId: string, commentId: string): Promise<void>;
   likePost(postId: string): Promise<WithActionReward<Post>>;
   unlikePost(postId: string): Promise<Post>;
   followUser(userId: string): Promise<WithActionReward<ActiveUser>>;

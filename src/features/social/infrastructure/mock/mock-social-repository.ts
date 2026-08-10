@@ -94,6 +94,7 @@ export class MockSocialRepository implements ISocialRepository {
       id: crypto.randomUUID(),
       author: 'شما',
       authorId: 'me',
+      authorUsername: 'me',
       avatar: 'linear-gradient(135deg,#ff8a3d,#cc4308)',
       badge: 'عضو',
       time: 'همین الان',
@@ -113,6 +114,27 @@ export class MockSocialRepository implements ISocialRepository {
     return { data: newPost };
   }
 
+  async deletePost(postId: string): Promise<void> {
+    await delay(180);
+    this.posts = this.posts.filter((post) => post.id !== postId);
+  }
+
+  async pinPost(postId: string, isPinned: boolean): Promise<Post> {
+    await delay(180);
+    const post = this.posts.find((item) => item.id === postId);
+    if (!post) throw new Error('Post not found');
+
+    if (isPinned) {
+      this.posts = this.posts.map((item) =>
+        item.authorId === post.authorId ? { ...item, isPinned: item.id === postId } : item,
+      );
+    } else {
+      post.isPinned = false;
+    }
+
+    return { ...this.posts.find((item) => item.id === postId)! };
+  }
+
   async addComment(postId: string, text: string): Promise<WithActionReward<PostComment>> {
     await delay(200);
     const post = this.posts.find((p) => p.id === postId);
@@ -125,6 +147,20 @@ export class MockSocialRepository implements ISocialRepository {
     post.comments.push(newComment);
     post.commentsCount = (post.commentsCount ?? post.comments.length - 1) + 1;
     return { data: newComment };
+  }
+
+  async deleteComment(postId: string, commentId: string): Promise<void> {
+    await delay(150);
+    this.posts = this.posts.map((post) => {
+      if (post.id !== postId) return post;
+      const nextComments = post.comments.filter((comment) => comment.id !== commentId);
+      if (nextComments.length === post.comments.length) return post;
+      return {
+        ...post,
+        comments: nextComments,
+        commentsCount: Math.max(0, (post.commentsCount ?? post.comments.length) - 1),
+      };
+    });
   }
 
   async followUser(userId: string): Promise<WithActionReward<ActiveUser>> {
@@ -149,6 +185,7 @@ export class MockSocialRepository implements ISocialRepository {
     return {
       id: userId,
       name: user?.name ?? 'کاربر قبیله',
+      username: user?.username ?? userId,
       role: user?.role ?? '',
       avatar: user?.avatar ?? 'linear-gradient(135deg,#cc4308,#ff6200,#f3ba63)',
       isAdam: user?.isAdam,
@@ -162,6 +199,7 @@ export class MockSocialRepository implements ISocialRepository {
 function withFollowState(post: Post): Post {
   return {
     ...post,
+    authorUsername: post.authorUsername ?? post.authorId,
     isAuthorFollowedByMe: mockFollowedUsers.has(post.authorId),
     commentsCount: post.commentsCount ?? post.comments.length,
   };

@@ -1,12 +1,15 @@
 import {
   addForumComment,
   createForumPost,
+  deleteForumPostComment,
+  deleteForumPost,
   followForumUser,
   getForumFeed,
   getForumComments,
   getForumPost,
   getForumUser,
   likePost,
+  pinForumPost,
   unlikePost,
   unfollowForumUser,
   type ForumCommentDto,
@@ -98,6 +101,15 @@ export class HttpSocialRepository implements ISocialRepository {
     return unwrapActionResponse(res.data, apiForumPostToDomain);
   }
 
+  async deletePost(postId: string): Promise<void> {
+    await deleteForumPost(postId);
+  }
+
+  async pinPost(postId: string, isPinned: boolean): Promise<Post> {
+    const response = await pinForumPost(postId, isPinned);
+    return apiForumPostToDomain(response.data);
+  }
+
   async addComment(postId: string, text: string): Promise<WithActionReward<PostComment>> {
     const res = await addForumComment(postId, { text });
     const result = unwrapActionResponse(res.data, apiForumPostToDomain);
@@ -105,6 +117,10 @@ export class HttpSocialRepository implements ISocialRepository {
       data: result.data.comments.at(-1) ?? { name: '', text, time: new Date().toISOString() },
       reward: result.reward,
     };
+  }
+
+  async deleteComment(postId: string, commentId: string): Promise<void> {
+    await deleteForumPostComment(postId, commentId);
   }
 
   async likePost(postId: string): Promise<WithActionReward<Post>> {
@@ -166,6 +182,7 @@ export function apiForumPostToDomain(api: ForumPostDto): Post {
     id: api.id,
     author: author.name,
     authorId: author.id,
+    authorUsername: author.username,
     avatar: author.avatar,
     badge: author.role || api.badge,
     isAdam: author.isAdam ?? api.isAdam,
@@ -210,6 +227,7 @@ function apiCommentToDomain(comment: ForumCommentDto): PostComment {
     id: comment.id,
     authorId: comment.authorId ?? comment.author?.id,
     name: author?.name ?? comment.name ?? 'کاربر قبیله',
+    username: author?.username,
     text: comment.text,
     time: comment.createdAt,
   };
@@ -221,6 +239,7 @@ function apiUserToDomain(api: ForumUserDto): ActiveUser {
   return {
     id: api.id,
     name,
+    username: api.username,
     role: api.title ?? api.role ?? '',
     avatar: api.avatar ?? FALLBACK_AVATAR,
     isAdam: api.isAdam,
@@ -250,13 +269,8 @@ function normalizeAuthor(api: ForumPostDto): ActiveUser {
 }
 
 function normalizeName(user: ForumUserDto) {
-  return (
-    user.displayName ??
-    user.name ??
-    [user.firstName, user.lastName].filter(Boolean).join(' ') ??
-    user.username ??
-    'کاربر قبیله'
-  );
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+  return fullName || user.displayName?.trim() || user.name?.trim() || user.username?.trim() || 'کاربر قبیله';
 }
 
 function normalizeTags(tags: Array<string | ForumTagDto> | undefined) {
