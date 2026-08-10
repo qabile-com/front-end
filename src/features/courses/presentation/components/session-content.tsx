@@ -1,6 +1,14 @@
 ﻿'use client';
 
-import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from 'react';
+import { useRouter } from 'next/navigation';
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/core/lib/cn';
@@ -8,6 +16,7 @@ import { getAvatarInitial } from '@/core/lib/avatar';
 import { formatDuration } from '@/core/lib/format-duration';
 import { toPersianDigits } from '@/core/lib/persian';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { useMediaQuery } from '@/shared/hooks/use-media-query';
 import {
   Button,
   Icon,
@@ -15,6 +24,7 @@ import {
   Input,
   OptionalImage,
   Skeleton,
+  UserAvatar,
   type IconName,
 } from '@/shared/ui';
 import type {
@@ -76,11 +86,14 @@ export function SessionContent({
   const lastTimeRef = useRef(0);
   const maxWatchedTimeRef = useRef(0);
   const lastReportAtRef = useRef(0);
+  const trackedSessionIdRef = useRef(session.id);
   const thresholdReportedRef = useRef(session.status === 'done');
   const reportProgressRef = useRef(onWatchProgress);
+  const isMobileViewport = useMediaQuery('(max-width: 767px)');
   const [watchProgressBySession, setWatchProgressBySession] = useState<Record<string, number>>({});
   const [commentText, setCommentText] = useState('');
-  const [activeTab, setActiveTab] = useState<SessionTab>('about');
+  const [selectedTab, setSelectedTab] = useState<SessionTab | null>(null);
+  const activeTab = selectedTab ?? (isMobileViewport ? 'sections' : 'about');
   const displayCourse: Course = course ?? {
     id: session.courseId ?? 'current-course',
     title: 'دوره آموزشی',
@@ -192,6 +205,9 @@ export function SessionContent({
   }, [canTrackWatch, reportWatchProgress, session.id]);
 
   useEffect(() => {
+    if (trackedSessionIdRef.current === session.id) return;
+
+    trackedSessionIdRef.current = session.id;
     watchedRangesRef.current = [];
     lastTimeRef.current = 0;
     maxWatchedTimeRef.current = session.watchedSeconds ?? 0;
@@ -380,7 +396,7 @@ export function SessionContent({
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => setSelectedTab(tab.id)}
                 aria-current={activeTab === tab.id ? 'page' : undefined}
                 className={cn(
                   'relative min-h-11 rounded-[14px] border px-2 text-sm font-black transition-[background,border-color,color,box-shadow,transform] duration-250 active:scale-[.98]',
@@ -504,6 +520,7 @@ function VideoOrCover({
         onEnded={() => reportWatchProgress('ended', true)}
         onSeeking={syncLastTime}
         onSeeked={syncLastTime}
+        controlsList="nodownload"
       />
     );
   }
@@ -1078,16 +1095,32 @@ function CommentsPanel({
 }
 
 function CommentItem({ comment }: { comment: Comment }) {
-  const initial = getAvatarInitial(comment.name);
+  const router = useRouter();
+  const goToAuthor = () => {
+    if (comment.authorId) router.push(`/social/users/${comment.authorId}`);
+  };
 
   return (
     <div className="flex items-start gap-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-3.5">
-      <div className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] [background:var(--session-primary)]">
-        {initial}
-      </div>
+      <button
+        type="button"
+        disabled={!comment.authorId}
+        onClick={goToAuthor}
+        className="mt-0.5 disabled:cursor-default"
+        aria-label={`مشاهده پروفایل ${comment.name}`}
+      >
+        <UserAvatar name={comment.name} avatar={comment.avatar} className="size-9 text-xs text-[#1a0a00]" />
+      </button>
       <div className="min-w-0 flex-1 space-y-2">
         <div className="min-w-0">
-          <span className="text-ink truncate text-sm font-black">{comment.name}</span>
+          <button
+            type="button"
+            disabled={!comment.authorId}
+            onClick={goToAuthor}
+            className="text-ink hover:text-gold max-w-full truncate text-sm font-black disabled:cursor-default disabled:hover:text-ink"
+          >
+            {comment.name}
+          </button>
         </div>
         <p className="text-ink-3 text-sm leading-7">{comment.text}</p>
         <div className="flex justify-end">

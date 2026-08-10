@@ -57,7 +57,6 @@ export default function SessionPage() {
   const {
     data: sessionDetail,
     isLoading: sessionLoading,
-    isFetching: sessionFetching,
     error: sessionError,
     refetch: refetchSession,
   } = useSessionDetail(sessionRepo, courseId, sectionId);
@@ -120,7 +119,7 @@ export default function SessionPage() {
     }
   }, [course, coursesQuery, enqueueReward, purchaseCourse, refetchSession, refetchUser, router]);
 
-  if (coursesLoading || sessionFetching) {
+  if (coursesLoading || (sessionLoading && !sessionDetail)) {
     return <SessionSkeleton />;
   }
 
