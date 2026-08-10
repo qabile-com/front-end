@@ -21,13 +21,13 @@ export function UserAvatar({ name, avatar, className, imageClassName, children }
   return (
     <span
       className={cn(
-        'relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-[linear-gradient(135deg,#cc4308,#ff6200,#f3ba63)] font-black text-white',
+        'relative grid shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,#cc4308,#ff6200,#f3ba63)] font-black text-white',
         className,
       )}
       style={{ background: isImage ? undefined : (avatar ?? undefined) }}
     >
       {isImage && avatar ? (
-        <OptionalImage src={avatar} alt={name} className={cn('object-cover', imageClassName)} />
+        <OptionalImage src={avatar} alt={name} className={cn('rounded-full object-cover', imageClassName)} />
       ) : (
         getAvatarInitial(name)
       )}

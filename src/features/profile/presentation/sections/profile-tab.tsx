@@ -134,7 +134,7 @@ export function ProfileTab({
                     path: `/social/users/${profile.id}`,
                   })
                 }
-                className="text-gold border-hair mx-auto mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border bg-black/25 px-3 text-xs font-black transition-colors hover:border-gold/50 sm:mx-0"
+                className="text-gold border-hair hover:border-gold/50 mx-auto mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border bg-black/25 px-3 text-xs font-black transition-colors sm:mx-0"
               >
                 <Icon name="share" size={14} />
                 اشتراک پروفایل
@@ -670,7 +670,10 @@ function AchievementModal({
           {achievement.label}
         </h3>
         <p className="text-ink-2 mt-3 text-[13px] leading-7">
-          {getAchievementDescription(achievement)}
+          با دریافت این دستاورد
+          <span className="text-ember"> {toPersianDigits(achievement.xpEarned)} آتش </span>
+          دریافت میکنید
+          {/* {getAchievementDescription(achievement)} */}
         </p>
 
         <div className="mt-6 flex w-full flex-wrap items-center gap-x-4 gap-y-2 text-[13px] sm:justify-between">
