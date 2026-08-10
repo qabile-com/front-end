@@ -189,7 +189,7 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            className="sr-only"
+            hidden
             onChange={(event) => void handleFileChange(event.target.files?.[0])}
           />
 

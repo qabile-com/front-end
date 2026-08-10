@@ -92,6 +92,7 @@ export function ProfileTab({
       setSelectedAchievement(null);
     } catch (error) {
       showError(getPostPublishErrorMessage(error));
+      throw new Error('Achievement post publish failed');
     }
   };
 
