@@ -7,6 +7,7 @@ export interface ForumUserDto {
   lastName?: string | null;
   displayName?: string | null;
   username?: string | null;
+  bio?: string | null;
   name?: string;
   role?: string;
   title?: string;
@@ -178,6 +179,9 @@ export const createForumPost = (body: {
 export const deleteForumPost = (postId: string) =>
   httpClient.delete<{ success: boolean }>(`/api/v1/forum/posts/${postId}`);
 
+export const pinForumPost = (postId: string, isPinned: boolean) =>
+  httpClient.patch<ForumPostDto>(`/api/v1/forum/posts/${postId}/pin`, { isPinned });
+
 export const addForumComment = (postId: string, body: { text: string }) =>
   httpClient.post<ActionResponse<ForumPostDto> | ForumPostDto>(`/api/v1/forum/posts/${postId}/comments`, body);
 
@@ -186,6 +190,9 @@ export const getForumComments = (postId: string, params?: { limit?: number; offs
 
 export const deleteForumComment = (commentId: string) =>
   httpClient.delete<{ success: boolean }>(`/api/v1/forum/comments/${commentId}`);
+
+export const deleteForumPostComment = (postId: string, commentId: string) =>
+  httpClient.delete<{ success: boolean }>(`/api/v1/forum/posts/${postId}/comments/${commentId}`);
 
 export const likePost = (postId: string) =>
   httpClient.post<ActionResponse<ForumPostDto> | ForumPostDto>(`/api/v1/forum/posts/${postId}/like`);
