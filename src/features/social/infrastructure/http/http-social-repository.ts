@@ -148,7 +148,7 @@ export class HttpSocialRepository implements ISocialRepository {
     const res = await addForumComment(postId, { text });
     const result = unwrapActionResponse(res.data, apiForumPostToDomain);
     return {
-      data: result.data.comments.at(-1) ?? { name: '', text, time: new Date().toISOString() },
+      data: result.data.comments.at(-1) ?? { name: '', text, time: new Date().toISOString(), avatar: null },
       reward: result.reward,
     };
   }
@@ -266,12 +266,13 @@ function apiCommentToDomain(comment: ForumCommentDto): PostComment {
   const author = comment.author ? apiUserToDomain(comment.author) : null;
 
   return {
-    id: comment.id,
+    id: comment.authorId ?? comment.author?.id,
     authorId: comment.authorId ?? comment.author?.id,
     name: author?.name ?? comment.name ?? 'کاربر قبیله',
     username: author?.username,
     text: comment.text,
     time: comment.createdAt,
+    avatar: author?.avatar ?? null,
   };
 }
 

@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { getAvatarInitial } from '@/core/lib/avatar';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
 import { toPersianDigits } from '@/core/lib/persian';
 import { BaseModal, Button, Icon, Input, OptionalImage, UserAvatar } from '@/shared/ui';
@@ -16,6 +15,7 @@ interface Props {
   onAddComment?: (postId: string, text: string) => void;
   onShare?: () => void;
   currentUserName?: string | null;
+  currentUserAvatar?: string | null;
 }
 
 export function SocialPostDetailModal({
@@ -25,6 +25,7 @@ export function SocialPostDetailModal({
   onAddComment,
   onShare,
   currentUserName,
+  currentUserAvatar,
 }: Props) {
   const [commentText, setCommentText] = useState('');
   const [liked, setLiked] = useState(false);
@@ -128,40 +129,38 @@ export function SocialPostDetailModal({
           <div className="p-4">
             <p className="text-ink-3 mb-3 text-xs font-bold">نظرات هم‌قبله‌ای‌ها</p>
             <div className="lg:max-h-[360px] lg:overflow-y-auto lg:overscroll-contain lg:rounded-[16px] lg:pe-1">
-              <div className="flex flex-col gap-4">
-                {post.comments.map((comment, idx) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-white">
-                      {getAvatarInitial(comment.name)}
-                    </div>
-                    <div className="flex-1 text-right">
-                      <div className="flex items-center justify-between">
-                        <span className="min-w-0 text-start">
-                          <span className="text-ink block truncate text-sm font-bold">
-                            {comment.name}
-                          </span>
-                          {formatUsername(comment.username) && (
-                            <span className="text-ink-4 block truncate text-[11px] font-bold">
-                              {formatUsername(comment.username)}
-                            </span>
-                          )}
-                        </span>
-                        <span className="text-ink-4 text-xs">{formatRelativeTime(comment.time)}</span>
-                      </div>
-                      <p className="text-ink-2 mt-1 text-sm">{comment.text}</p>
-                    </div>
-                  </div>
-                ))}
-                <div ref={commentsEndRef} />
-              </div>
+               <div className="flex flex-col gap-4">
+                 {post.comments.map((comment, idx) => (
+                   <div key={idx} className="flex items-start gap-3">
+                     <div className="size-8 shrink-0 rounded-full">
+                       <UserAvatar name={comment.name} avatar={comment.avatar} className="size-8 text-xs" />
+                     </div>
+                     <div className="flex-1 text-right">
+                       <div className="flex items-center justify-between">
+                         <span className="min-w-0 text-start">
+                           <span className="text-ink block truncate text-sm font-bold">
+                             {comment.name}
+                           </span>
+                           {formatUsername(comment.username) && (
+                             <span className="text-ink-4 block truncate text-[11px] font-bold">
+                               {formatUsername(comment.username)}
+                             </span>
+                           )}
+                         </span>
+                         <span className="text-ink-4 text-xs">{formatRelativeTime(comment.time)}</span>
+                       </div>
+                       <p className="text-ink-2 mt-1 text-sm">{comment.text}</p>
+                     </div>
+                   </div>
+                 ))}
+                 <div ref={commentsEndRef} />
+               </div>
             </div>
           </div>
         </div>
 
         <div className="border-hair flex shrink-0 items-center gap-3 border-t p-4">
-          <div className="bg-ember flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
-            {getAvatarInitial(currentUserName)}
-          </div>
+          <UserAvatar name={currentUserName ?? '?'} avatar={currentUserAvatar ?? undefined} className="size-8 text-xs" />
           <Input
             placeholder="نظرت رو بنویس..."
             value={commentText}

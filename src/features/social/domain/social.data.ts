@@ -7,6 +7,7 @@ export interface PostComment {
   username?: string | null;
   text: string;
   time: string;
+  avatar?: string | null;
 }
 
 export interface AchievementCard {

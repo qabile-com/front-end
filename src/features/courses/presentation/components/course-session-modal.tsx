@@ -19,6 +19,7 @@ interface Props {
   onAddComment: (text: string) => void;
   isAddingComment?: boolean;
   userName?: string;
+  userAvatar?: string | null;
 }
 
 export function CourseSessionModal({
@@ -31,6 +32,7 @@ export function CourseSessionModal({
   videoUrl,
   audioUrl,
   userName,
+  userAvatar,
   onAddComment,
   isAddingComment = false,
 }: Props) {
@@ -56,6 +58,7 @@ export function CourseSessionModal({
           onWatchProgress={onWatchProgress}
           onAddComment={onAddComment}
           userName={userName}
+          userAvatar={userAvatar}
           isAddingComment={isAddingComment}
           onBack={handleClose}
         />

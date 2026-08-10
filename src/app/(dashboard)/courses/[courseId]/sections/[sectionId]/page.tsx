@@ -204,12 +204,13 @@ export default function SessionPage() {
                   router.push(`/courses/${courseId}/sections/${id}${sourceQuery}`)
                 }
                 onWatchProgress={handleWatchProgress}
-                onAddComment={handleAddComment}
-                onBuyCourse={() => setCourseToPurchase(course)}
-                onBack={() => router.push(returnHref)}
-                isAddingComment={addComment.isPending}
-                userName={user?.name}
-              />
+                 onAddComment={handleAddComment}
+                 onBuyCourse={() => setCourseToPurchase(course)}
+                 onBack={() => router.push(returnHref)}
+                 isAddingComment={addComment.isPending}
+                 userName={user?.name}
+                 userAvatar={user?.avatar}
+               />
             )}
           </div>
 

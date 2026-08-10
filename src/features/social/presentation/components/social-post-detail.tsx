@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
-import { getAvatarInitial } from '@/core/lib/avatar';
 import { toPersianDigits } from '@/core/lib/persian';
 import { Button, Icon, Input, OptionalImage, UserAvatar, type IconName } from '@/shared/ui';
 import { AdamAvatar } from '@/features/dashboard/presentation/sections/dashboard-sidebar';
@@ -21,6 +20,7 @@ interface SocialPostDetailProps {
   canManageComments?: boolean;
   isAddingComment?: boolean;
   currentUserName?: string | null;
+  currentUserAvatar?: string | null;
 }
 
 export function SocialPostDetail({
@@ -35,6 +35,7 @@ export function SocialPostDetail({
   canManageComments = false,
   isAddingComment = false,
   currentUserName,
+  currentUserAvatar,
 }: SocialPostDetailProps) {
   const [commentText, setCommentText] = useState('');
   const commentsEndRef = useRef<HTMLDivElement>(null);
@@ -178,10 +179,10 @@ export function SocialPostDetail({
                     type="button"
                     disabled={!comment.authorId}
                     onClick={() => comment.authorId && onCommentAuthorClick?.(comment.authorId)}
-                    className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] [background:var(--fire-grad)] disabled:cursor-default"
+                    className="size-9 shrink-0 rounded-full disabled:cursor-default"
                     aria-label={`مشاهده پروفایل ${comment.name}`}
                   >
-                    {getAvatarInitial(comment.name)}
+                    <UserAvatar name={comment.name} avatar={comment.avatar} className="size-9 text-xs" />
                   </button>
                   <div className="min-w-0 flex-1 rounded-[16px] bg-black/20 p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -226,9 +227,7 @@ export function SocialPostDetail({
       </section>
 
       <div className="border-hair sticky bottom-0 flex items-center gap-3 border-t bg-[var(--color-panel)] p-4">
-        <div className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] [background:var(--fire-grad)]">
-          {getAvatarInitial(currentUserName)}
-        </div>
+        <UserAvatar name={currentUserName ?? '?'} avatar={currentUserAvatar ?? undefined} className="size-9 text-xs" />
         <Input
           placeholder="نظرت رو بنویس..."
           value={commentText}

@@ -52,6 +52,7 @@ interface SessionContentProps {
   onBack: () => void;
   isAddingComment?: boolean;
   userName?: string;
+  userAvatar?: string | null;
 }
 
 type SessionTab = 'sections' | 'about' | 'comments';
@@ -74,11 +75,12 @@ export function SessionContent({
   videoUrl,
   fireBalance = 0,
   isPurchasingCourse = false,
-  userName,
-  onAddComment,
   onBuyCourse,
   onBack,
   isAddingComment = false,
+  userName,
+  userAvatar,
+  onAddComment,
 }: SessionContentProps) {
   const shouldReduceMotion = useReducedMotion();
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -452,6 +454,7 @@ export function SessionContent({
                   handleSubmitComment={handleSubmitComment}
                   isAddingComment={isAddingComment}
                   userName={userName}
+                  userAvatar={userAvatar}
                 />
               </AnimatedPanel>
             )}
@@ -956,6 +959,7 @@ function CommentsPanel({
   handleSubmitComment,
   isAddingComment,
   userName,
+  userAvatar,
 }: {
   allComments: Comment[];
   commentsQuery: UseInfiniteQueryResult<InfiniteData<PaginatedComments>>;
@@ -965,10 +969,10 @@ function CommentsPanel({
   handleSubmitComment: () => void;
   isAddingComment: boolean;
   userName?: string;
+  userAvatar?: string | null;
 }) {
   const commentsEndRef = useRef<HTMLDivElement | null>(null);
   const shouldScrollAfterSubmitRef = useRef(false);
-  const currentUserInitial = getAvatarInitial(userName);
 
   useEffect(() => {
     if (!shouldScrollAfterSubmitRef.current || isAddingComment) return;
@@ -999,9 +1003,7 @@ function CommentsPanel({
         </p>
 
         <div className="flex min-w-0 items-center gap-2 rounded-[18px] border border-[var(--session-border)] bg-black/25 p-2.5 opacity-70 sm:gap-3 sm:p-3">
-          <div className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] shadow-[0_8px_22px_-14px_var(--glow)] [background:var(--session-primary)]">
-            {currentUserInitial}
-          </div>
+          <UserAvatar name={userName ?? '?'} avatar={userAvatar ?? undefined} className="size-9 text-xs" />
           <Input
             disabled
             value=""
@@ -1068,9 +1070,7 @@ function CommentsPanel({
       </div>
 
       <div className="flex min-w-0 items-center gap-2 rounded-[18px] border border-[var(--session-border)] bg-black/25 p-2.5 sm:gap-3 sm:p-3">
-        <div className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-black text-[#1a0a00] shadow-[0_8px_22px_-14px_var(--glow)] [background:var(--session-primary)]">
-          {currentUserInitial}
-        </div>
+        <UserAvatar name={userName ?? '?'} avatar={userAvatar ?? undefined} className="size-9 text-xs" />
         <Input
           placeholder="نظرت رو بنویس..."
           value={commentText}

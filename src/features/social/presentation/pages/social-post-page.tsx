@@ -190,6 +190,7 @@ export function SocialPostPage() {
         canManageComments={canManageComments}
         isAddingComment={addComment.isPending}
         currentUserName={user?.name}
+        currentUserAvatar={user?.avatar}
       />
       {isOwnPost && (
         <div className="mt-3 flex flex-wrap gap-2">
