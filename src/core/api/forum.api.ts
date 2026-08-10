@@ -108,6 +108,15 @@ export interface ForumUserStatsDto {
   followingCount: number;
 }
 
+export interface ForumPostingStatusDto {
+  canCreatePost: boolean;
+  isLocked: boolean;
+  cooldownHours: number;
+  lastPostAt?: string | null;
+  lockedUntil?: string | null;
+  remainingSeconds?: number | null;
+}
+
 export interface ActionResponse<T> {
   data?: T;
   reward?: ActionRewardResult | null;
@@ -140,6 +149,12 @@ export const getForumUser = (userId: string, options?: { signal?: AbortSignal })
 
 export const getForumPost = (postId: string, options?: { signal?: AbortSignal }) =>
   httpClient.get<ForumPostDto>(`/api/v1/forum/posts/${postId}`, { signal: options?.signal });
+
+export const getForumPostingStatus = (options?: { signal?: AbortSignal }) =>
+  httpClient.get<{ data: ForumPostingStatusDto } | ForumPostingStatusDto>(
+    '/api/v1/forum/posting-status',
+    { signal: options?.signal },
+  );
 
 export const getForumTrendingTags = (options?: { signal?: AbortSignal }) =>
   httpClient.get<{ data: Array<string | ForumTagDto> } | Array<string | ForumTagDto>>(

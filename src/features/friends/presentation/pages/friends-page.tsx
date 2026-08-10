@@ -189,20 +189,20 @@ function ReferralPanel({ program }: { program: FriendsProgram | null }) {
     <section className="rounded-[18px] border border-[rgba(255,98,0,.16)] bg-[rgba(13,5,2,.82)] p-3.5 sm:rounded-[22px] sm:p-4">
       <h2 className="mb-3 text-right text-sm font-black text-white">لینک دعوت شما</h2>
 
-      <div className="flex min-h-14 items-center gap-2 rounded-[10px] border border-[rgba(255,98,0,.22)] bg-[rgba(255,98,0,.12)] px-3">
+      <div className="flex min-h-14 min-w-0 items-center gap-1.5 rounded-[10px] border border-[rgba(255,98,0,.22)] bg-[rgba(255,98,0,.12)] px-2 sm:gap-2 sm:px-3">
         <CopyButton
           value={referralLink}
           idleLabel="کپی"
           copiedLabel="کپی شد"
           iconSize={18}
-          className="text-gold min-w-21 flex-row-reverse rounded-[8px] bg-[rgba(243,186,99,.08)] px-3 text-xs"
+          className="text-gold min-w-15 flex-row-reverse rounded-[8px] bg-[rgba(243,186,99,.08)] px-2 text-[11px] sm:min-w-21 sm:px-3 sm:text-xs"
         />
-        <p className="text-ink-2 min-w-0 flex-1 truncate text-left text-xs font-medium" dir="ltr">
+        <p className="text-ink-2 min-w-0 flex-1 truncate text-left text-[11px] font-medium sm:text-xs" dir="ltr">
           {referralLink.replace(/^https?:\/\//, '')}
         </p>
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-2">
+      <div className="mt-3 grid grid-cols-3 gap-1.5 sm:gap-2">
         <ShareTile label="اشتراک" tone="gold" onClick={() => void nativeShare()}>
           <Icon name="share" size={19} />
         </ShareTile>
@@ -252,7 +252,7 @@ function ShareTile({
   children: React.ReactNode;
 }) {
   const cls = cn(
-    'flex min-h-16 flex-col items-center justify-center gap-1 rounded-[8px] border text-[11px] font-bold transition-[transform,opacity,border-color] hover:-translate-y-0.5',
+    'flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-[8px] border px-1 text-[10px] font-bold transition-[transform,opacity,border-color] hover:-translate-y-0.5 sm:min-h-16 sm:text-[11px]',
     tone === 'gold' && 'border-[rgba(243,186,99,.28)] bg-[rgba(243,186,99,.10)] text-gold',
     tone === 'whatsapp' && 'border-emerald-500/30 bg-emerald-500/12 text-emerald-400',
     tone === 'telegram' && 'border-sky-400/30 bg-sky-400/12 text-sky-300',
@@ -263,7 +263,7 @@ function ShareTile({
     return (
       <a href={href} target="_blank" rel="noreferrer" className={cls}>
         {children}
-        <span>{label}</span>
+        <span className="max-w-full truncate">{label}</span>
       </a>
     );
   }
@@ -271,24 +271,24 @@ function ShareTile({
   return (
     <button type="button" onClick={onClick} className={cls}>
       {children}
-      <span>{label}</span>
+      <span className="max-w-full truncate">{label}</span>
     </button>
   );
 }
 
 function RewardPath() {
   return (
-    <section className="rounded-[18px] border border-[rgba(255,98,0,.12)] bg-[rgba(13,5,2,.72)] p-4 sm:rounded-[22px] sm:p-5">
-      <h2 className="mb-5 text-center text-sm font-black text-white lg:text-right">مسیر پاداش</h2>
-      <div className="grid grid-cols-3 gap-2">
+    <section className="rounded-[18px] border border-[rgba(255,98,0,.12)] bg-[rgba(13,5,2,.72)] p-3 sm:rounded-[22px] sm:p-5">
+      <h2 className="mb-4 text-center text-sm font-black text-white sm:mb-5 lg:text-right">مسیر پاداش</h2>
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
         {REWARD_STEPS.map((item) => (
-          <div key={item.step} className="flex flex-col items-center text-center">
-            <span className="border-ember grid size-18 place-items-center rounded-full border border-dashed bg-[rgba(255,98,0,.08)] p-2 sm:size-22">
+          <div key={item.step} className="flex min-w-0 flex-col items-center text-center">
+            <span className="border-ember grid size-15 place-items-center rounded-full border border-dashed bg-[rgba(255,98,0,.08)] p-1.5 sm:size-22 sm:p-2">
               <span className="text-ember grid size-full place-items-center rounded-full border border-[rgba(255,98,0,.36)] bg-[radial-gradient(circle,rgba(255,98,0,.30),rgba(64,24,8,.92))] text-sm font-bold">
                 {toPersianDigits(item.step)}
               </span>
             </span>
-            <p className="text-ink mt-3 max-w-24 text-[11px] leading-5 font-bold">{item.label}</p>
+            <p className="text-ink mt-2 max-w-full text-[10px] leading-5 font-bold sm:mt-3 sm:max-w-24 sm:text-[11px]">{item.label}</p>
           </div>
         ))}
       </div>

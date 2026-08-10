@@ -26,7 +26,7 @@ import type {
 } from '../../domain/profile-repository';
 import { DEFAULT_AVATAR_GRADIENT } from '@/features/dashboard/domain/dashboard.types';
 import {
-  normalizeAchievements,
+  normalizeAchievementCollection,
   normalizeActionRewardResult,
 } from '@/features/dashboard/domain/achievement-normalizer';
 
@@ -220,7 +220,7 @@ export class HttpProfileRepository implements IProfileRepository {
       securitySettings: { ...DEFAULT_SECURITY_SETTINGS, ...p.securitySettings },
       stats: normalizeProfileStats(p),
       profileStats: p.profileStats ?? [],
-      achievements: normalizeAchievements(p.achievements),
+      achievements: normalizeAchievementCollection(p.achievements),
       settings: p.settings ?? [],
       posts: (p.posts ?? []).map((post) => ({
         id: post.id,

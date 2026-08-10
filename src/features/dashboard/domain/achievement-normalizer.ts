@@ -25,6 +25,124 @@ export type RewardPayload = Partial<ActionRewardResult> & {
 
 export const DEFAULT_ACHIEVEMENT_IMAGE = '/assets/achievements/new/jaraghe-nokhostin.webp';
 
+const ACHIEVEMENT_CATALOG: AchievementDto[] = [
+  {
+    id: 'ghors-ghermez-placeholder',
+    slug: 'ghors-ghermez',
+    label: 'قرص قرمز',
+    title: 'قرص قرمز',
+    description: '۲۱ روز متوالی ثبت عادت',
+    triggerType: 'habit_streak_days',
+    threshold: 21,
+    xpEarned: 2200,
+    unlocked: false,
+    count: 0,
+    isRepeatable: false,
+    isShareable: false,
+    conditions: [
+      {
+        id: 'ghors-ghermez',
+        label: '۲۱ روز متوالی ثبت عادت',
+        current: 0,
+        target: 21,
+        passed: false,
+      },
+    ],
+  },
+  {
+    id: 'bidari-avalie-placeholder',
+    slug: 'bidari-avalie',
+    label: 'بیداری اولیه',
+    title: 'بیداری اولیه',
+    description: '۴۰ روز متوالی بدون شکست',
+    triggerType: 'unbroken_streak_days',
+    threshold: 40,
+    xpEarned: 4500,
+    unlocked: false,
+    count: 0,
+    isRepeatable: false,
+    isShareable: false,
+    conditions: [
+      {
+        id: 'bidari-avalie',
+        label: '۴۰ روز متوالی بدون شکست',
+        current: 0,
+        target: 40,
+        passed: false,
+      },
+    ],
+  },
+  {
+    id: 'jornal-nevis-placeholder',
+    slug: 'jornal-nevis',
+    label: 'ژورنال نویس بیداری',
+    title: 'ژورنال نویس بیداری',
+    description: '۵۰ ورودی ژورنال',
+    triggerType: 'journal_entries_count',
+    threshold: 50,
+    xpEarned: 2800,
+    unlocked: false,
+    count: 0,
+    isRepeatable: false,
+    isShareable: false,
+    conditions: [
+      {
+        id: 'jornal-nevis',
+        label: '۵۰ ورودی ژورنال',
+        current: 0,
+        target: 50,
+        passed: false,
+      },
+    ],
+  },
+  {
+    id: 'dooshhaye-yakhi-placeholder',
+    slug: 'dooshhaye-yakhi',
+    label: 'دوش‌های یخی صهیون',
+    title: 'دوش‌های یخی صهیون',
+    description: '۴۰ دوش آب سرد',
+    triggerType: 'cold_shower_count',
+    threshold: 40,
+    xpEarned: 2500,
+    unlocked: false,
+    count: 0,
+    isRepeatable: false,
+    isShareable: false,
+    conditions: [
+      {
+        id: 'dooshhaye-yakhi',
+        label: '۴۰ دوش آب سرد',
+        current: 0,
+        target: 40,
+        passed: false,
+      },
+    ],
+  },
+  {
+    id: 'hich-ghasogh-placeholder',
+    slug: 'hich-ghasogh',
+    label: 'هیچ قاشقی وجود ندارد',
+    title: 'هیچ قاشقی وجود ندارد',
+    description: '۳ عادت سخت همزمان به مدت ۳۰ روز',
+    triggerType: 'parallel_hard_habits_streak',
+    threshold: 30,
+    xpEarned: 9000,
+    unlocked: false,
+    count: 0,
+    isRepeatable: false,
+    isShareable: false,
+    conditions: [
+      {
+        id: 'hich-ghasogh',
+        label: '۳ عادت سخت همزمان به مدت ۳۰ روز',
+        current: 0,
+        target: 30,
+        passed: false,
+      },
+    ],
+  },
+];
+
 const ACHIEVEMENT_IMAGE_BY_SLUG: Record<string, string> = {
   'azadkardane-zehn': '/assets/achievements/new/azadkardane-zehn.webp',
   'azad-kardan-zehn': '/assets/achievements/new/azadkardane-zehn.webp',
@@ -75,6 +193,20 @@ export function normalizeAchievement(item: AchievementDto, fallbackIndex = 0): A
 export function normalizeAchievements(items?: AchievementDto[] | null): Achievement[] {
   if (!Array.isArray(items)) return [];
   return items.map((item, index) => normalizeAchievement(item, index));
+}
+
+export function normalizeAchievementCollection(items?: AchievementDto[] | null): Achievement[] {
+  const normalized = normalizeAchievements(items);
+  const existingKeys = new Set(normalized.map(getAchievementCatalogKey));
+  const placeholders = ACHIEVEMENT_CATALOG.filter(
+    (item) => !existingKeys.has(getAchievementCatalogKey(item)),
+  ).map((item, index) => normalizeAchievement(item, normalized.length + index));
+
+  return [...normalized, ...placeholders];
+}
+
+function getAchievementCatalogKey(achievement: Pick<Achievement, 'slug'>) {
+  return getAchievementAssetUrl(achievement);
 }
 
 export function normalizeActionRewardResult(payload?: unknown): ActionRewardResult | null {

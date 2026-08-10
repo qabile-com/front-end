@@ -1,6 +1,6 @@
 // src/features/dashboard/infrastructure/mock-social-repository.ts
 
-import type { ISocialRepository, SocialFeedFilters } from '../../domain/social-repository';
+import type { ISocialRepository, PostingStatus, SocialFeedFilters } from '../../domain/social-repository';
 import type { Post, ActiveUser, PostComment, AchievementCard } from '../../domain/social.data';
 import type { WithActionReward } from '@/features/dashboard/domain/achievement-normalizer';
 import { POSTS, TRENDING_TAGS, ACTIVE_USERS } from '../../domain/social.data';
@@ -61,6 +61,18 @@ export class MockSocialRepository implements ISocialRepository {
       isFollowedByMe: mockFollowedUsers.has(user.id),
       followedByMe: mockFollowedUsers.has(user.id),
     }));
+  }
+
+  async getPostingStatus(): Promise<PostingStatus> {
+    await delay(120);
+    return {
+      canCreatePost: true,
+      isLocked: false,
+      cooldownHours: 12,
+      lastPostAt: null,
+      lockedUntil: null,
+      remainingSeconds: 0,
+    };
   }
 
   async likePost(postId: string): Promise<WithActionReward<Post>> {

@@ -4,7 +4,10 @@ import type { IUserRepository } from '../../domain/dashboard-repository';
 import { getMyProfile, updateMyOnboarding } from '@/core/api/users.api';
 import { DEFAULT_AVATAR_GRADIENT, type CurrentUser } from '../../domain/dashboard.types';
 import { getAvatarInitial } from '@/core/lib/avatar';
-import { normalizeAchievements, normalizeActionRewardResult } from '../../domain/achievement-normalizer';
+import {
+  normalizeAchievementCollection,
+  normalizeActionRewardResult,
+} from '../../domain/achievement-normalizer';
 
 export class HttpUserRepository implements IUserRepository {
   async getCurrentUser(): Promise<CurrentUser> {
@@ -41,7 +44,7 @@ function normalizeCurrentUser(user: CurrentUserDto, rewardPayload?: unknown): Cu
     xpMax: user.xpMax ?? 0,
     streak: user.streak ?? 0,
     avatar: user.avatar ?? DEFAULT_AVATAR_GRADIENT,
-    achievements: normalizeAchievements(user.achievements),
+    achievements: normalizeAchievementCollection(user.achievements),
     isCompleteOnboarding: user.isCompleteOnboarding ?? false,
     actionReward: normalizeActionRewardResult(rewardPayload ?? user),
   };

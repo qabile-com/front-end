@@ -7,6 +7,7 @@ import {
   getForumFeed,
   getForumComments,
   getForumPost,
+  getForumPostingStatus,
   getForumUser,
   likePost,
   pinForumPost,
@@ -17,7 +18,7 @@ import {
   type ForumTagDto,
   type ForumUserDto,
 } from '@/core/api/forum.api';
-import type { ISocialRepository } from '../../domain/social-repository';
+import type { ISocialRepository, PostingStatus } from '../../domain/social-repository';
 import type { SocialFeedFilters } from '../../domain/social-repository';
 import type { ActiveUser, AchievementCard, Post, PostComment } from '../../domain/social.data';
 import {
@@ -72,6 +73,21 @@ export class HttpSocialRepository implements ISocialRepository {
     const res = await getForumComments(postId, { limit, offset }, options);
     const payload = res.data;
     return (payload.data ?? []).map(apiCommentToDomain);
+  }
+
+  async getPostingStatus(options?: { signal?: AbortSignal }): Promise<PostingStatus> {
+    const res = await getForumPostingStatus(options);
+    const payload = res.data;
+    const data = 'data' in payload ? payload.data : payload;
+
+    return {
+      canCreatePost: Boolean(data.canCreatePost),
+      isLocked: Boolean(data.isLocked),
+      cooldownHours: data.cooldownHours ?? 12,
+      lastPostAt: data.lastPostAt ?? null,
+      lockedUntil: data.lockedUntil ?? null,
+      remainingSeconds: data.remainingSeconds ?? null,
+    };
   }
 
   async getTrendingTags(options?: { signal?: AbortSignal }): Promise<string[]> {
