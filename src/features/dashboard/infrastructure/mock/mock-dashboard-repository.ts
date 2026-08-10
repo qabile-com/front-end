@@ -377,6 +377,13 @@ export class MockProfileRepository implements IProfileRepository {
     return this.cache;
   }
 
+  async deleteProfileAvatar(): Promise<MyProfile> {
+    await delay(200);
+    const profile = await this.getMyProfile();
+    this.cache = { ...profile, avatar: CURRENT_USER.avatar };
+    return this.cache;
+  }
+
   async requestEmailVerification(): Promise<void> {
     await delay(250);
   }

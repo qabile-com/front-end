@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Icon, OptionalImage, type IconName } from '@/shared/ui';
+import { Icon, OptionalImage, UserAvatar, type IconName } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import type { CurrentUser, NavItem } from '../../domain/dashboard.types';
 import { toPersianDigits } from '@/core/lib/persian';
@@ -30,12 +30,11 @@ export function DashboardSidebar({ activeHref, user, nav }: SidebarProps) {
       </div>
 
       <div className="border-hair mb-5 flex items-center gap-3 rounded-[20px] border px-3.5 py-3 [background:var(--glass-2)]">
-        <span
-          className="grid size-10 place-items-center rounded-full border-2 border-[rgba(255,130,50,.3)] text-base font-black text-[#1a0a00]"
-          style={{ background: user.avatar }}
-        >
-          {user.initial}
-        </span>
+        <UserAvatar
+          name={user.name}
+          avatar={user.avatar}
+          className="size-10 border-2 border-[rgba(255,130,50,.3)] text-base text-[#1a0a00]"
+        />
         <span className="min-w-0 flex-1 leading-tight">
           <b className="block truncate text-[13.5px] font-extrabold">{user.name}</b>
           <small className="text-gold text-[11px]">{user.title}</small>
