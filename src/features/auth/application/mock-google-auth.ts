@@ -17,6 +17,7 @@ export function createMockGoogleAuthSession(payload: GoogleAuthPayload = {}): Ve
       lastName: 'Gmail',
       displayName: name,
       username: email.split('@')[0] ?? 'gmail_user',
+      avatar: payload.googleAvatarUrl,
       phone: null,
       email,
       role: 'user',

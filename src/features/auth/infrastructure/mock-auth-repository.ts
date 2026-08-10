@@ -26,6 +26,11 @@ export class MockAuthRepository implements IAuthRepository {
     return createMockSession('google-user@qabile.local', 'Google User');
   }
 
+  async validateReferralCode(referralCode: string): Promise<boolean> {
+    await delay(250);
+    return referralCode.trim().length >= 4 && !referralCode.toLowerCase().includes('bad');
+  }
+
   async requestOtp(identifier: string, referralCode?: string): Promise<string> {
     await delay(800);
     console.log(`[Mock] OTP sent to ${identifier}`, { referralCode });

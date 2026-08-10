@@ -49,6 +49,7 @@ export function AuthCard({
           loading={auth.loading}
           loginWithPassword={auth.loginWithPassword}
           loginWithGoogle={auth.loginWithGoogle}
+          validateReferralCode={auth.validateReferralCode}
           googleEnabled={googleEnabled}
           googleMockEnabled={googleMockEnabled}
           initialReferralCode={initialReferralCode}
@@ -85,6 +86,7 @@ function LoginView({
   onForgot,
   loginWithPassword,
   loginWithGoogle,
+  validateReferralCode,
   requestOtp,
   verifyOtp,
   loading,
@@ -95,6 +97,7 @@ function LoginView({
   onForgot: () => void;
   loginWithPassword: (email: string, password: string) => Promise<boolean>;
   loginWithGoogle: (payload: GoogleAuthPayload) => Promise<boolean>;
+  validateReferralCode: (referralCode: string) => Promise<boolean>;
   requestOtp: (email: string, referralCode?: string) => Promise<boolean>;
   verifyOtp: (email: string, code: string, referralCode?: string) => Promise<boolean>;
   loading: boolean;
@@ -104,17 +107,27 @@ function LoginView({
 }) {
   const [tab, setTab] = useState<LoginTab>('otp');
   const [isMockGoogleOpen, setIsMockGoogleOpen] = useState(false);
+  const [isReferralModalOpen, setIsReferralModalOpen] = useState(false);
   const [referralCode, setReferralCode] = useState(initialReferralCode ?? '');
+  const [modalReferralCode, setModalReferralCode] = useState('');
+  const [modalReferralError, setModalReferralError] = useState<string | null>(null);
   const cleanReferralCode = referralCode.trim();
+  const googleReferralCodeRef = useRef('');
 
   useEffect(() => {
     queueMicrotask(() => setReferralCode((current) => current || initialReferralCode || ''));
   }, [initialReferralCode]);
+
   const googleLogin = useGoogleLogin({
     flow: 'implicit',
     scope: 'openid email profile',
-    onSuccess: (response) => {
-      void loginWithGoogle(toGoogleAuthPayload(response, cleanReferralCode));
+    onSuccess: async (response) => {
+      const finalReferralCode = googleReferralCodeRef.current.trim();
+      const googleProfile = await getGoogleProfile(response.access_token);
+      void loginWithGoogle({
+        ...toGoogleAuthPayload(response, finalReferralCode),
+        googleAvatarUrl: googleProfile?.picture,
+      });
     },
     onError: (error) => {
       showError(error.error_description || 'ورود با گوگل شروع نشد. تنظیمات Google OAuth را بررسی کن.');
@@ -129,9 +142,17 @@ function LoginView({
       showError(message);
     },
   });
+
   const canUseGoogle = googleEnabled || googleMockEnabled;
 
   const handleGoogleLogin = () => {
+    setModalReferralCode(cleanReferralCode);
+    setModalReferralError(null);
+    setIsReferralModalOpen(true);
+  };
+
+  const resumeGoogleLogin = () => {
+    setIsReferralModalOpen(false);
     if (googleMockEnabled) {
       setIsMockGoogleOpen(true);
       return;
@@ -145,14 +166,42 @@ function LoginView({
     googleLogin();
   };
 
+  const handleReferralContinueWithCode = async () => {
+    const nextReferralCode = modalReferralCode.trim();
+    if (!nextReferralCode) {
+      setModalReferralError('اگر می‌خواهی با کد رفرال ادامه بدهی، کد را وارد کن.');
+      return;
+    }
+
+    setModalReferralError(null);
+    const isValid = await validateReferralCode(nextReferralCode);
+    if (!isValid) {
+      setModalReferralError('کد رفرال معتبر نیست. کد را بررسی کن یا بدون کد ادامه بده.');
+      return;
+    }
+
+    googleReferralCodeRef.current = nextReferralCode;
+    setReferralCode(nextReferralCode);
+    resumeGoogleLogin();
+  };
+
+  const handleReferralContinueWithoutCode = () => {
+    googleReferralCodeRef.current = '';
+    setModalReferralCode('');
+    setModalReferralError(null);
+    resumeGoogleLogin();
+  };
+
   const handleSelectMockGoogleAccount = (account: MockGoogleAccount) => {
     setIsMockGoogleOpen(false);
+    const finalReferralCode = googleReferralCodeRef.current.trim();
     void loginWithGoogle({
       mock: true,
       mockEmail: account.email,
       mockName: account.name,
       accessToken: 'mock-google-access-token',
-      referralCode: cleanReferralCode || undefined,
+      referralCode: finalReferralCode || undefined,
+      googleAvatarUrl: account.avatarUrl,
       refreshToken: 'mock-google-refresh-token',
       tokenType: 'Bearer',
       expiresIn: 3600,
@@ -196,6 +245,15 @@ function LoginView({
         isOpen={isMockGoogleOpen}
         onClose={() => setIsMockGoogleOpen(false)}
         onSelect={handleSelectMockGoogleAccount}
+      />
+      <ReferralModal
+        isOpen={isReferralModalOpen}
+        value={modalReferralCode}
+        onChange={setModalReferralCode}
+        error={modalReferralError}
+        loading={loading}
+        onContinueWithCode={() => void handleReferralContinueWithCode()}
+        onContinueWithoutCode={handleReferralContinueWithoutCode}
       />
     </>
   );
@@ -627,6 +685,7 @@ interface MockGoogleAccount {
   email: string;
   initial: string;
   accent: string;
+  avatarUrl?: string;
 }
 
 const MOCK_GOOGLE_ACCOUNTS: MockGoogleAccount[] = [
@@ -723,6 +782,72 @@ function MockGoogleAccountChooser({
   );
 }
 
+function ReferralModal({
+  isOpen,
+  value,
+  error,
+  loading = false,
+  onChange,
+  onContinueWithCode,
+  onContinueWithoutCode,
+}: {
+  isOpen: boolean;
+  value: string;
+  error?: string | null;
+  loading?: boolean;
+  onChange: (value: string) => void;
+  onContinueWithCode: () => void;
+  onContinueWithoutCode: () => void;
+}) {
+  return (
+    <BaseModal
+      isOpen={isOpen}
+      onClose={loading ? () => undefined : onContinueWithoutCode}
+      title="کد رفرال"
+      panelClassName="w-full max-w-[420px] overflow-hidden rounded-[22px] border border-hair bg-black/95 text-white shadow-[0_30px_90px_-38px_rgba(0,0,0,.75)]"
+      contentClassName="max-h-[calc(100dvh-2rem)]"
+    >
+      <div className="px-6 py-6">
+        <p className="text-ink-2 text-center text-[14px] leading-7">
+          اگر کد رفرال دارید، در فیلد زیر وارد کنید. در غیر این صورت روی ادامه بدون کد رفرال کلیک
+          کنید.
+        </p>
+        <div className="mt-5">
+          <Field
+            label="کد رفرال (اختیاری)"
+            type="text"
+            inputMode="text"
+            placeholder="کد رفرال را وارد کنید"
+            value={value}
+            onChange={(event) => onChange(event.target.value.trimStart())}
+            disabled={loading}
+            autoComplete="off"
+          />
+          {error && <p className="mt-2 text-right text-[12px] font-bold text-red-400">{error}</p>}
+        </div>
+        <div className="mt-2 flex flex-col gap-2.5 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            disabled={loading}
+            onClick={onContinueWithoutCode}
+            className="text-ink-3 hover:text-ink inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-[13px] font-bold transition-colors disabled:opacity-50"
+          >
+            ادامه بدون کد رفرال
+          </button>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={onContinueWithCode}
+            className="text-gold border-ember hover:border-ember-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-5 text-[13px] font-black transition-colors [background:var(--glass)] disabled:opacity-50"
+          >
+            تایید و ادامه
+          </button>
+        </div>
+      </div>
+    </BaseModal>
+  );
+}
+
 function ResendRow({ cooldown, onResend }: { cooldown: number; onResend: () => void }) {
   return (
     <div className="text-ink-3 mb-[18px] text-center text-[13px]">
@@ -788,6 +913,20 @@ function toGoogleAuthPayload(response: TokenResponse, referralCode?: string): Go
     expiresIn: response.expires_in,
     scope: response.scope,
   };
+}
+
+async function getGoogleProfile(accessToken?: string) {
+  if (!accessToken) return null;
+
+  try {
+    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as { picture?: string };
+  } catch {
+    return null;
+  }
 }
 
 function useOtpSubmit({

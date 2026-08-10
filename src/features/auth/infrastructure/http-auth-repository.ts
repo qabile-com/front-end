@@ -27,6 +27,11 @@ export class HttpAuthRepository implements IAuthRepository {
     return mapAuthSession(response.data);
   }
 
+  async validateReferralCode(referralCode: string): Promise<boolean> {
+    const response = await authApi.validateReferralCode(referralCode);
+    return Boolean(response.data.valid);
+  }
+
   async requestOtp(identifier: string, referralCode?: string): Promise<string | void> {
     const response = await authApi.requestOtp(identifier, referralCode);
     return response.data.message;
@@ -87,6 +92,7 @@ function mapAuthUser(user: OtpVerifyResponse['user']): AuthUser {
     lastName: user.lastName,
     displayName,
     username: user.username,
+    avatar: user.avatar,
     phone: user.phone,
     email: user.email,
     role: user.role,

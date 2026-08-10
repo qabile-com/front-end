@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { saveAuthSession } from '@/core/auth/token';
 import { useAuthSession } from '@/providers/auth-provider';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { updateMyProfileAvatar } from '@/core/api/users.api';
 import type {
   GoogleAuthPayload,
   IAuthRepository,
@@ -161,6 +162,16 @@ export function useAuth(repo: IAuthRepository, getRedirectTo: () => string = () 
         const session = payload.mock
           ? createMockGoogleAuthSession(payload)
           : await repo.loginWithGoogle(payload);
+        if (payload.googleAvatarUrl && !session.user.avatar) {
+          saveAuthSession(session);
+          refreshFromStorage();
+          const avatar = await uploadGoogleAvatar(payload.googleAvatarUrl);
+          if (avatar) {
+            session.user.avatar = avatar;
+            saveAuthSession(session);
+            refreshFromStorage();
+          }
+        }
         completeLogin(session);
         return true;
       } catch (error: unknown) {
@@ -170,7 +181,28 @@ export function useAuth(repo: IAuthRepository, getRedirectTo: () => string = () 
         setLoading(false);
       }
     },
-    [completeLogin, repo],
+    [completeLogin, refreshFromStorage, repo],
+  );
+
+  const validateReferralCode = useCallback(
+    async (referralCode: string) => {
+      setLoading(true);
+      try {
+        const valid = await repo.validateReferralCode(referralCode);
+        if (!valid) {
+          showError('کد رفرال معتبر نیست.');
+          return false;
+        }
+        showSuccess('کد رفرال تایید شد.');
+        return true;
+      } catch (error: unknown) {
+        showError(getAuthErrorMessage(error, 'کد رفرال معتبر نیست.'));
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [repo],
   );
 
   return {
@@ -178,6 +210,7 @@ export function useAuth(repo: IAuthRepository, getRedirectTo: () => string = () 
     success,
     loginWithPassword,
     loginWithGoogle,
+    validateReferralCode,
     requestOtp,
     verifyOtp,
     requestForgotPassword,
@@ -185,4 +218,20 @@ export function useAuth(repo: IAuthRepository, getRedirectTo: () => string = () 
     resetPassword,
     clearSuccess: () => setSuccess(null),
   };
+}
+
+async function uploadGoogleAvatar(avatarUrl: string) {
+  try {
+    const response = await fetch(avatarUrl);
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    if (!blob.type.startsWith('image/')) return null;
+
+    const file = new File([blob], 'google-avatar.jpg', { type: blob.type || 'image/jpeg' });
+    const uploadResponse = await updateMyProfileAvatar(file);
+    const data = uploadResponse.data as { data?: { avatar?: string | null }; avatar?: string | null };
+    return data.data?.avatar ?? data.avatar ?? null;
+  } catch {
+    return null;
+  }
 }

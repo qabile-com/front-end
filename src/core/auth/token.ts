@@ -11,6 +11,7 @@ export interface StoredAuthUser {
   lastName?: string | null;
   displayName?: string | null;
   username?: string | null;
+  avatar?: string | null;
   phone?: string | null;
   email?: string | null;
   role: string;
@@ -120,6 +121,14 @@ export function saveAuthSession({
   if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
   localStorage.setItem(AUTH_META_KEY, JSON.stringify(meta));
+  notifyAuthSessionChange();
+}
+
+export function updateStoredAuthUser(patch: Partial<StoredAuthUser>) {
+  if (!canUseStorage()) return;
+  const currentUser = readJson<StoredAuthUser>(AUTH_USER_KEY);
+  if (!currentUser) return;
+  localStorage.setItem(AUTH_USER_KEY, JSON.stringify({ ...currentUser, ...patch }));
   notifyAuthSessionChange();
 }
 

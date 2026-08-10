@@ -7,6 +7,7 @@ export interface AuthUser {
   lastName?: string | null;
   displayName?: string | null;
   username?: string | null;
+  avatar?: string | null;
   phone?: string | null;
   email?: string | null;
   role: string;
@@ -57,11 +58,13 @@ export interface GoogleAuthPayload {
   mock?: boolean;
   mockEmail?: string;
   mockName?: string;
+  googleAvatarUrl?: string;
 }
 
 export interface IAuthRepository {
   login(email: string, password: string): Promise<VerifyOtpResult>;
   loginWithGoogle(payload: GoogleAuthPayload): Promise<VerifyOtpResult>;
+  validateReferralCode(referralCode: string): Promise<boolean>;
   requestOtp(identifier: string, referralCode?: string): Promise<string | void>;
   verifyOtp(identifier: string, code: string, referralCode?: string): Promise<VerifyOtpResult>;
   requestForgotPassword(email: string): Promise<string | void>;
