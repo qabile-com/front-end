@@ -2,7 +2,7 @@ const CACHE_NAME = 'qabile-pwa-v1';
 const OFFLINE_URL = '/offline';
 const STATIC_ASSETS = [OFFLINE_URL, '/icons/icon-192.png', '/icons/icon-512.png'];
 const FIREBASE_CONFIG = {
-  apiKey: 'AIzaS...',
+  apiKey: 'AIzaSyAHwv2b0rYcRoIkthpPMRKNHPAG91H5KkY',
   authDomain: 'qabile.firebaseapp.com',
   projectId: 'qabile',
   storageBucket: 'qabile.firebasestorage.app',

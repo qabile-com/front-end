@@ -14,6 +14,7 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: '#050302',
     theme_color: '#050302',
     categories: ['education', 'productivity', 'social'],
+    gcm_sender_id: '633527158445',
     icons: [
       {
         src: '/icons/icon-192.png',
