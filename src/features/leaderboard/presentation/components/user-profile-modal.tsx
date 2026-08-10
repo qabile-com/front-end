@@ -3,11 +3,21 @@
 
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
 import { toPersianDigits } from '@/core/lib/persian';
-import { BaseModal, GlassCard, Button, Icon, IconName, InlineSpinner, UserAvatar } from '@/shared/ui';
+import {
+  BaseModal,
+  GlassCard,
+  Button,
+  Icon,
+  IconName,
+  InlineSpinner,
+  OptionalImage,
+  UserAvatar,
+} from '@/shared/ui';
 import type { UserProfileData, UserProfilePost } from '../../domain/user-profile-repository';
 import { formatUsername } from '@/features/social/presentation/lib/format-username';
 import { cn } from '@/core/lib/cn';
 import { useAuthSession } from '@/providers/auth-provider';
+import { shareUrl } from '@/shared/lib/native-share';
 
 interface Props {
   isOpen: boolean;
@@ -111,6 +121,21 @@ export function UserProfileModal({
               {/* Action Buttons */}
               <div className="flex justify-start gap-4 pb-2">
                 <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    void shareUrl({
+                      title: user.name,
+                      text: `پروفایل ${user.name} در قبیله`,
+                      path: `/social/users/${user.id}`,
+                    })
+                  }
+                  className="gap-1.5"
+                >
+                  <Icon name="share" size={15} />
+                  اشتراک
+                </Button>
+                <Button
                   variant={followed ? 'ghost' : 'primary'}
                   size="sm"
                   disabled={isToggling || !canFollow}
@@ -206,10 +231,14 @@ export function UserProfileModal({
                   </span>
                 )}
                 <p className="text-ink-2 text-right text-sm leading-relaxed">{post.text}</p>
-                {(post.image || post.hasImage) && (
-                  <div className="border-hair mt-3 overflow-hidden rounded-lg border bg-black/20">
-                    {post.image ? (
-                      <img src={post.image} alt="" className="max-h-40 w-full object-contain" />
+                {(post.attachment?.url || post.image || post.hasImage) && (
+                  <div className="border-hair relative mt-3 h-36 overflow-hidden rounded-lg border bg-black/20">
+                    {post.attachment?.url || post.image ? (
+                      <OptionalImage
+                        src={post.attachment?.url ?? post.image ?? ''}
+                        alt=""
+                        className="object-contain"
+                      />
                     ) : (
                       <div className="text-ink-4 grid h-28 place-items-center">
                         <Icon name="book" size={26} />

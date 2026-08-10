@@ -2,6 +2,7 @@
 
 import type { Achievement } from '@/features/dashboard/domain/dashboard.types';
 import type { PostComment } from '@/features/social/domain/social.data';
+import type { Post } from '@/features/social/domain/social.data';
 
 export interface UserProfileData {
   id: string;
@@ -50,6 +51,8 @@ export interface UserProfilePost {
   time: string;
   image?: string;
   hasImage?: boolean;
+  attachment?: Post['attachment'];
+  attachments?: Post['attachments'];
   isPinned?: boolean;
 }
 

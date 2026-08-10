@@ -75,8 +75,10 @@ export class HttpUserProfileRepository implements IUserProfileRepository {
         time: comment.createdAt ?? '',
       })),
       time: post.createdAt ?? '',
-      image: post.image ?? post.attachment?.url,
-      hasImage: post.hasImage ?? Boolean(post.attachment),
+      image: post.image ?? post.attachments?.[0]?.url ?? post.attachment?.url,
+      hasImage: post.hasImage ?? Boolean(post.attachments?.length || post.attachment),
+      attachment: normalizeAttachment(post.attachments?.[0] ?? post.attachment),
+      attachments: post.attachments?.map(normalizeAttachment).filter(Boolean),
       isPinned: post.isPinned ?? false,
     }));
   }
@@ -88,6 +90,18 @@ export class HttpUserProfileRepository implements IUserProfileRepository {
   async unblockUser(userId: string): Promise<void> {
     await unblockForumUser(userId);
   }
+}
+
+function normalizeAttachment(attachment?: ForumPostDto['attachments'][number] | null) {
+  if (!attachment) return undefined;
+  return {
+    id: attachment.id,
+    kind: attachment.kind,
+    url: attachment.url,
+    mimeType: attachment.mimeType,
+    originalName: attachment.originalName,
+    sizeBytes: attachment.sizeBytes,
+  };
 }
 
 function normalizeForumUserName(user: ForumUserProfileDto | ForumPostDto['comments'][number]['author'] | undefined) {

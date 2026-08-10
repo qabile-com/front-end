@@ -16,6 +16,7 @@ import {
   Icon,
   InlineSpinner,
   MotionPage,
+  OptionalImage,
   Skeleton,
   UserAvatar,
 } from '@/shared/ui';
@@ -31,6 +32,7 @@ import { useDeleteOwnPost } from '@/features/social/application/use-delete-own-p
 import { socialRepo } from '@/features/social/infrastructure/repository-factory';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { DeletePostConfirmModal } from '@/features/social/presentation/components/delete-post-confirm-modal';
+import { shareUrl } from '@/shared/lib/native-share';
 
 export function ForumUserProfilePage() {
   const params = useParams<{ userId: string }>();
@@ -94,7 +96,8 @@ export function ForumUserProfilePage() {
   const canFollow = (Boolean(user.canFollow) || !isLoggedIn) && !blocked && !isOwnProfile;
   const canBlock = !user.isAdam && !isOwnProfile;
   const userPosts = sortPinnedFirst(postsQuery.data?.pages.flat() ?? []);
-  const backTarget = from === 'post' && fromPostId ? `/social/${encodeURIComponent(fromPostId)}` : '/social';
+  const backTarget =
+    from === 'post' && fromPostId ? `/social/${encodeURIComponent(fromPostId)}` : '/social';
   const backLabel = from === 'post' && fromPostId ? 'بازگشت به پست' : 'بازگشت به محفل';
 
   const handleDeletePost = async () => {
@@ -156,6 +159,22 @@ export function ForumUserProfilePage() {
               </div>
 
               <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    void shareUrl({
+                      title: user.name,
+                      text: `پروفایل ${user.name} در قبیله`,
+                      path: `/social/users/${user.id}`,
+                    })
+                  }
+                  className="gap-1.5"
+                >
+                  <Icon name="share" size={15} />
+                  اشتراک
+                </Button>
                 {canFollow && (
                   <Button
                     type="button"
@@ -199,7 +218,7 @@ export function ForumUserProfilePage() {
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <ProfileStat label="پست" value={user.stats.streak} />
-              <ProfileStat label="لایک" value={user.stats.xp} />
+              <ProfileStat label="آتش" value={user.stats.xp} />
               <ProfileStat label="فالورها" value={user.stats.peersFollowed} />
               <ProfileStat label="فالویینگ‌ها" value={user.stats.peersFollowing} />
             </div>
@@ -230,7 +249,7 @@ export function ForumUserProfilePage() {
                   )}
                 >
                   {post.isPinned && (
-                    <span className="text-gold absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full border border-gold/25 bg-gold/10 px-2 py-1 text-[10px] font-black">
+                    <span className="text-gold border-gold/25 bg-gold/10 absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black">
                       <Icon name="star" size={11} />
                       سنجاق شده
                     </span>
@@ -240,7 +259,7 @@ export function ForumUserProfilePage() {
                       type="button"
                       disabled={deleteOwnPost.isPending}
                       onClick={() => setPostToDelete(post.id)}
-                      className="text-danger hover:text-red-400 absolute top-3 left-3 z-10 rounded-lg p-1 disabled:opacity-60"
+                      className="text-danger absolute top-3 left-3 z-10 rounded-lg p-1 hover:text-red-400 disabled:opacity-60"
                       aria-label="حذف پست"
                     >
                       <Icon name="trash" size={16} />
@@ -248,14 +267,29 @@ export function ForumUserProfilePage() {
                   )}
                   <button
                     type="button"
-                    onClick={() => router.push(`/social/${post.id}?from=user-profile&userId=${encodeURIComponent(user.id)}`)}
+                    onClick={() =>
+                      router.push(
+                        `/social/${post.id}?from=user-profile&userId=${encodeURIComponent(user.id)}`,
+                      )
+                    }
                     className={cn(
                       'block w-full text-start',
                       isOwnProfile && 'ps-8',
                       post.isPinned && 'pt-8',
                     )}
-                  >
+                    >
                     <p className="text-ink-2 line-clamp-3 text-sm leading-7">{post.text}</p>
+                    {(post.image || post.hasImage) && (
+                      <div className="border-hair relative mt-3 h-40 overflow-hidden rounded-xl border bg-[var(--glass-2)]">
+                        {post.image ? (
+                          <OptionalImage src={post.image} alt="" className="object-cover" />
+                        ) : (
+                          <div className="text-ink-4 grid h-full place-items-center">
+                            <Icon name="book" size={28} />
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className="text-ink-4 mt-3 flex items-center justify-between gap-3 text-xs">
                       <span className="flex items-center gap-3">
                         <span className="inline-flex items-center gap-1">
