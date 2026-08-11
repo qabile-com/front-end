@@ -344,7 +344,7 @@ export function SocialTab({
         type="button"
         onClick={handleOpenCreatePost}
         aria-label="ایجاد پست جدید"
-        className="fixed bottom-24 left-4 z-40 inline-flex min-h-14 min-w-14 items-center justify-center gap-2 rounded-full border border-[rgba(255,130,50,.36)] px-4 text-[#1a0a00] shadow-[0_18px_48px_-18px_var(--glow)] transition-[transform,opacity,box-shadow] duration-250 [background:var(--fire-grad)] hover:-translate-y-0.5 hover:shadow-[0_24px_56px_-18px_var(--glow)] active:scale-95 lg:bottom-8 lg:left-8 lg:min-w-40"
+        className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-4 z-40 inline-flex min-h-14 min-w-14 items-center justify-center gap-2 rounded-full border border-[rgba(255,130,50,.36)] px-4 text-[#1a0a00] shadow-[0_18px_48px_-18px_var(--glow)] transition-[transform,opacity,box-shadow] duration-250 [background:var(--fire-grad)] hover:-translate-y-0.5 hover:shadow-[0_24px_56px_-18px_var(--glow)] active:scale-95 lg:bottom-8 lg:left-8 lg:min-w-40"
       >
         <Icon name="edit-post" size={22} />
         <span className="hidden text-sm font-black lg:inline">ایجاد پست</span>
