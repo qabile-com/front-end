@@ -1,5 +1,7 @@
 'use client';
 
+import { fileToImage } from './image-compression';
+
 type NsfwClassName = 'Drawing' | 'Hentai' | 'Neutral' | 'Porn' | 'Sexy';
 
 interface NsfwPrediction {
@@ -23,11 +25,63 @@ const BLOCK_MESSAGES: Partial<Record<NsfwClassName, string>> = {
   Sexy: 'این تصویر بیش از حد نامناسب تشخیص داده شد. لطفاً عکس واضح‌تر و مناسب‌تری انتخاب کنید.',
 };
 
-let modelPromise: Promise<NsfwModel> | null = null;
+const MODEL_LOAD_TIMEOUT_MS = 8000;
+const CLASSIFY_TIMEOUT_MS = 8000;
 
-function getModel() {
-  modelPromise ??= import('nsfwjs').then((nsfw) => nsfw.load()) as Promise<NsfwModel>;
-  return modelPromise;
+let modelPromise: Promise<NsfwModel | null> | null = null;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('عملیات زمان‌بر شد.')), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
+// tfjs auto-detects WebGL and can throw on older/low-end mobile browsers with no
+// fallback of its own, which would take the whole moderation flow down with it.
+async function ensureTfBackend(): Promise<void> {
+  const tf = await import('@tensorflow/tfjs');
+  try {
+    await tf.setBackend('webgl');
+    await tf.ready();
+  } catch {
+    try {
+      await tf.setBackend('cpu');
+      await tf.ready();
+    } catch (error) {
+      console.warn('[nsfw] failed to initialize any tfjs backend', error);
+    }
+  }
+}
+
+// Never let a broken/slow model load block an upload indefinitely — fail open
+// (treat as allowed) and let it retry fresh on the next call instead of caching the failure.
+function getModel(): Promise<NsfwModel | null> {
+  modelPromise ??= (async () => {
+    try {
+      await ensureTfBackend();
+      const nsfw = await import('nsfwjs');
+      const model = await withTimeout(nsfw.load(), MODEL_LOAD_TIMEOUT_MS);
+      return model as NsfwModel;
+    } catch (error) {
+      console.warn('[nsfw] model failed to load, skipping moderation for this upload', error);
+      return null;
+    }
+  })();
+
+  return modelPromise.then((model) => {
+    if (!model) modelPromise = null;
+    return model;
+  });
 }
 
 export async function moderateAvatarImage(file: File): Promise<AvatarModerationResult> {
@@ -37,7 +91,18 @@ export async function moderateAvatarImage(file: File): Promise<AvatarModerationR
 
   const image = await fileToImage(file);
   const model = await getModel();
-  const predictions = await model.classify(image);
+  if (!model) {
+    return { allowed: true };
+  }
+
+  let predictions: NsfwPrediction[];
+  try {
+    predictions = await withTimeout(model.classify(image), CLASSIFY_TIMEOUT_MS);
+  } catch (error) {
+    console.warn('[nsfw] classification failed, skipping moderation for this upload', error);
+    return { allowed: true };
+  }
+
   const byClass = new Map(predictions.map((item) => [item.className, item.probability]));
   const porn = byClass.get('Porn') ?? 0;
   const hentai = byClass.get('Hentai') ?? 0;
@@ -61,21 +126,4 @@ export async function moderateAvatarImage(file: File): Promise<AvatarModerationR
   }
 
   return { allowed: true, predictions };
-}
-
-function fileToImage(file: File) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const image = new Image();
-
-    image.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(image);
-    };
-    image.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('تصویر انتخاب شده قابل خواندن نیست.'));
-    };
-    image.src = url;
-  });
 }
