@@ -39,7 +39,11 @@ type CourseDto = Omit<Course, 'imageUrl' | 'episodes'> & {
   userProgress?: {
     isUnlocked?: boolean;
     xpPrice?: number;
+    progressPercent?: number;
+    completedEpisodes?: number;
+    totalEpisodes?: number;
   } | null;
+  episodesCount?: number;
   episodes: CoursePartDto[];
 };
 
@@ -61,7 +65,10 @@ type PurchaseCourseDto = {
 };
 
 export class HttpCoursesRepository implements ICoursesRepository {
-  async getCourses(filters?: { limit?: number; offset?: number; q?: string }, options?: { signal?: AbortSignal }): Promise<Course[]> {
+  async getCourses(
+    filters?: { limit?: number; offset?: number; q?: string },
+    options?: { signal?: AbortSignal },
+  ): Promise<Course[]> {
     const res = await getCourses(filters, options);
     const courses = (res.data.data ?? res.data) as CourseDto[];
     return courses.map((course) =>
@@ -72,6 +79,7 @@ export class HttpCoursesRepository implements ICoursesRepository {
         isUnlocked: resolveCourseAccess(course),
         isPurchased: resolveCourseAccess(course),
         isFree: course.isFree ?? resolveCoursePrice(course) <= 0,
+        ...resolveCourseProgress(course),
         episodes: course.episodes.map((part) => ({
           ...normalizeCoursePartDto(part),
           previousSectionId:
@@ -93,11 +101,13 @@ export class HttpCoursesRepository implements ICoursesRepository {
       course: course
         ? withCourseSectionNavigation({
             ...course,
-            imageUrl: course.imageUrl ?? course.thumbnailUrl ?? course.coverUrl ?? course.image ?? null,
+            imageUrl:
+              course.imageUrl ?? course.thumbnailUrl ?? course.coverUrl ?? course.image ?? null,
             priceInFire: resolveCoursePrice(course),
             isUnlocked: true,
             isPurchased: true,
             isFree: course.isFree ?? resolveCoursePrice(course) <= 0,
+            ...resolveCourseProgress(course),
             episodes: course.episodes.map((part) => ({
               ...normalizeCoursePartDto(part),
               nextSectionId: part.nextSectionId ?? part.nextEpisodeId ?? part.nextId ?? null,
@@ -149,15 +159,38 @@ function resolveCoursePrice(course: CourseDto): number {
   );
 }
 
+// The API already computes completion in `userProgress`; deriving it from the episode list
+// client-side gave different answers on different screens (episode-watch average vs. count of
+// finished episodes), so the server value is the single source of truth when present.
+function resolveCourseProgress(course: CourseDto) {
+  const progress = course.userProgress;
+  const totalEpisodes =
+    progress?.totalEpisodes ?? course.episodesCount ?? course.episodes?.length ?? 0;
+  const completedEpisodes =
+    progress?.completedEpisodes ??
+    course.episodes?.filter((part) => part.status === 'done').length ??
+    0;
+
+  const percent =
+    progress?.progressPercent ??
+    (totalEpisodes > 0 ? Math.round((completedEpisodes / totalEpisodes) * 100) : 0);
+
+  return {
+    progressPercent: Math.min(100, Math.max(0, Math.round(percent))),
+    completedEpisodes,
+    totalEpisodes,
+  };
+}
+
 function resolveCourseAccess(course: CourseDto): boolean {
   const price = resolveCoursePrice(course);
   return Boolean(
     course.isUnlocked ??
-      course.userProgress?.isUnlocked ??
-      course.isPurchased ??
-      course.purchased ??
-      course.canAccess ??
-      course.isFree ??
-      price <= 0,
+    course.userProgress?.isUnlocked ??
+    course.isPurchased ??
+    course.purchased ??
+    course.canAccess ??
+    course.isFree ??
+    price <= 0,
   );
 }

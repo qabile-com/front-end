@@ -43,6 +43,10 @@ export interface Course {
   isUnlocked?: boolean;
   isFree?: boolean;
   description?: string;
+  /** Server-calculated completion (0-100). Authoritative — prefer it over deriving from episodes. */
+  progressPercent?: number;
+  completedEpisodes?: number;
+  totalEpisodes?: number;
   episodes: CoursePart[];
 }
 

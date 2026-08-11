@@ -325,6 +325,9 @@ function FeaturedCourse({
   const price = course.priceInFire ?? 0;
   const nextEpisode = getNextEpisodeTitle(course);
   const actionLabel = getCourseActionLabel(access.canAccess, progress);
+  const totalEpisodes = course.totalEpisodes ?? course.episodes.length;
+  const completedEpisodes =
+    course.completedEpisodes ?? course.episodes.filter((part) => part.status === 'done').length;
 
   return (
     <section className="relative overflow-hidden rounded-[30px] border border-[rgba(255,98,0,.20)] p-3 shadow-[0_28px_90px_-62px_var(--glow)] [background:linear-gradient(145deg,rgba(22,10,4,.96),rgba(7,4,2,.96))] sm:p-4">
@@ -394,34 +397,47 @@ function FeaturedCourse({
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-            <div className="min-w-0">
-              <div className="mb-2 flex items-center justify-between text-xs font-black">
-                <span className="text-ink-3">پیشرفت دوره</span>
-                <span className="text-gold">{toPersianDigits(progress)}٪</span>
+          <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+            {access.canAccess && (
+              <div className="min-w-0">
+                <div className="mb-2 flex items-baseline justify-between gap-3 text-xs font-black">
+                  <span className="text-ink-3 min-w-0 truncate">
+                    پیشرفت دوره
+                    {totalEpisodes > 0 && (
+                      <span className="text-ink-4 font-bold">
+                        {' · '}
+                        {toPersianDigits(completedEpisodes)} از {toPersianDigits(totalEpisodes)}{' '}
+                        جلسه
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-gold shrink-0 tabular-nums">
+                    {toPersianDigits(progress)}٪
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-[rgba(255,255,255,.08)]">
+                  <div
+                    className="h-full rounded-full transition-[width] duration-500 [background:var(--fire-grad)]"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-[rgba(255,255,255,.08)]">
-                <div
-                  className="h-full rounded-full [background:var(--fire-grad)]"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
+            )}
 
-            <div className="flex flex-col gap-3 sm:flex-row lg:min-w-64 lg:flex-col xl:flex-row">
-              <Button type="button" className="flex-1" onClick={onOpen}>
-                {actionLabel}
-                <Icon name="arrow-left" size={18} />
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row xl:shrink-0">
+              <Button type="button" className="min-w-0 flex-1" onClick={onOpen}>
+                <span className="truncate">{actionLabel}</span>
+                <Icon name="arrow-left" size={18} className="shrink-0" />
               </Button>
               {!access.canAccess && (
                 <Button
                   type="button"
                   variant="ghost"
-                  className="border-gold/25 text-gold flex-1"
+                  className="border-gold/25 text-gold min-w-0 flex-1"
                   disabled={fireBalance < price}
                   onClick={onBuy}
                 >
-                  خرید دوره با {formatPersianNumber(price)} آتش
+                  <span className="truncate">خرید با {formatPersianNumber(price)} آتش</span>
                 </Button>
               )}
             </div>
@@ -763,6 +779,12 @@ function getCourseAccess(course: Course) {
 }
 
 function getCourseProgress(course: Course) {
+  // The server-calculated value wins; the episode average below is only a fallback for
+  // responses without it (and for the mock repository).
+  if (course.progressPercent != null) {
+    return Math.min(100, Math.max(0, Math.round(course.progressPercent)));
+  }
+
   if (!course.episodes.length) return 0;
   const total = course.episodes.reduce((sum, part) => {
     if (part.status === 'done') return sum + 100;

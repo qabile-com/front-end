@@ -114,7 +114,10 @@ function HeroCarousel({ user }: { user: CurrentUser }) {
   }, [carouselResetKey, reduceMotion]);
 
   const handleDragEnd = useCallback(
-    (event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number }; velocity: { x: number } }) => {
+    (
+      event: MouseEvent | TouchEvent | PointerEvent,
+      info: { offset: { x: number }; velocity: { x: number } },
+    ) => {
       const swipeThreshold = 60;
       const velocityThreshold = 300;
       const offset = info.offset.x;
@@ -402,10 +405,18 @@ function RecentCourseCard({ course, index }: { course: Course; index: number }) 
     course.episodes.find((part) => part.status === 'partial') ??
     course.episodes.find((part) => part.status === 'none') ??
     course.episodes[0];
-  const completed = course.episodes.filter((part) => part.status === 'done').length;
-  const progress = course.episodes.length
-    ? Math.round((completed / course.episodes.length) * 100)
-    : 0;
+  // Uses the server-calculated percentage so this matches the courses page exactly; the local
+  // count is only a fallback for responses that don't include it.
+  const completed =
+    course.completedEpisodes ?? course.episodes.filter((part) => part.status === 'done').length;
+  const totalEpisodes = course.totalEpisodes ?? course.episodes.length;
+  const progress = Math.min(
+    100,
+    Math.max(
+      0,
+      Math.round(course.progressPercent ?? (totalEpisodes ? (completed / totalEpisodes) * 100 : 0)),
+    ),
+  );
   const href = firstPlayable
     ? `/courses/${course.id}/sections/${firstPlayable.id}?from=home`
     : '/courses';
