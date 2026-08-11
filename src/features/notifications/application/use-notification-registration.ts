@@ -262,34 +262,24 @@ async function logDiagnostics(availability: NotificationAvailability) {
 }
 
 /**
- * Turns push-subscription failures into something the user can act on. Raw text like
- * "push service initialization failed" (WebKit) means nothing to them, and on iOS there's no
- * console to read, so the guidance has to live in the toast itself.
+ * Builds the failure toast for a push subscription error.
+ *
+ * The raw text is appended on purpose: iOS has no reachable console, and Firebase wraps the
+ * underlying WebKit error, so guessing at a friendly message hides the one string that actually
+ * identifies the cause (e.g. `messaging/token-subscribe-failed` vs. a WebKit push-service error).
  */
 function getSubscribeErrorMessage(error: unknown): string {
-  const raw = [
-    error instanceof Error ? error.message : '',
+  const detail = [
     typeof error === 'object' && error && 'code' in error
       ? String((error as { code?: unknown }).code ?? '')
       : '',
+    error instanceof Error ? error.message : String(error ?? ''),
   ]
-    .join(' ')
-    .toLowerCase();
+    .filter(Boolean)
+    .join(' — ')
+    .slice(0, 180);
 
-  // WebKit throws this when the Home Screen app predates push support, which a reinstall fixes.
-  if (raw.includes('push service') || raw.includes('aborterror')) {
-    return 'اعلان‌ها فعال نشد. اپ را از صفحه اصلی حذف کن، دوباره اضافه کن و مطمئن شو iOS نسخه ۱۶.۴ یا بالاتر است.';
-  }
-
-  if (raw.includes('token-subscribe-failed') || raw.includes('applicationserverkey')) {
-    return 'اعلان‌ها فعال نشد. تنظیمات سرویس پیام‌رسان معتبر نیست.';
-  }
-
-  if (raw.includes('permission')) {
-    return 'اجازه اعلان داده نشد. از تنظیمات دستگاه اعلان‌های قبیله را روشن کن.';
-  }
-
-  return 'دریافت مجوز اعلان انجام نشد. کمی بعد دوباره تلاش کن.';
+  return detail ? `اعلان‌ها فعال نشد: ${detail}` : 'اعلان‌ها فعال نشد. دوباره تلاش کن.';
 }
 
 function getDeviceId() {
