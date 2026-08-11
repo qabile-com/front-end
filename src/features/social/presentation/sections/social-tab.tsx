@@ -121,14 +121,14 @@ export function SocialTab({
   const handleShare = async (post: Post) => {
     try {
       await shareUrl({
-        title: post.author ? `Post by ${post.author}` : 'Qabile post',
-        text: post.text ? post.text.slice(0, 120) : 'Check this Qabile post.',
+        title: post.author ? `پست ${post.author}` : 'پست قبیله',
+        text: post.text ? post.text.slice(0, 120) : 'این پست قبیله را ببین.',
         path: `/social/${post.id}`,
       });
-      showSuccess('Post link copied.');
+      showSuccess('لینک پست کپی شد');
     } catch (shareError) {
       if (shareError instanceof DOMException && shareError.name === 'AbortError') return;
-      showError('Sharing failed.');
+      showError('اشتراک‌گذاری انجام نشد');
     }
   };
 

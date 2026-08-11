@@ -39,10 +39,10 @@ export function useBlockToggle(repo: IUserProfileRepository, userId: string) {
     },
     onError: (error, _blockedByMe, context) => {
       queryClient.setQueryData(['dashboard', 'profile', userId], context?.previousProfile);
-      showError(error instanceof Error ? error.message : 'Block action failed.');
+      showError(error instanceof Error ? error.message : 'عملیات مسدودسازی انجام نشد.');
     },
     onSuccess: (blocked) => {
-      showSuccess(blocked ? 'User blocked.' : 'User unblocked.');
+      showSuccess(blocked ? 'کاربر مسدود شد.' : 'کاربر از حالت مسدود خارج شد.');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
