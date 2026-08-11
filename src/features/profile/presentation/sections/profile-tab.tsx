@@ -550,7 +550,6 @@ function ProfileSettingsTab({
         <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-x-4 gap-y-7 sm:grid-cols-4 sm:gap-x-5 lg:grid-cols-6">
           {achievements.map((achievement) => {
             const isEarned = isAchievementEarned(achievement);
-            const progress = getAchievementProgress(achievement);
             const count = getAchievementCount(achievement);
 
             return (
@@ -586,16 +585,6 @@ function ProfileSettingsTab({
                 <span className={cn('text-[12px]', isEarned ? 'text-ink-2' : 'text-ink-4')}>
                   {achievement.label}
                 </span>
-                {progress && (
-                  <span
-                    className={cn(
-                      '-mt-1 text-[11px] font-black tabular-nums',
-                      isEarned ? 'text-gold' : 'text-ink-4',
-                    )}
-                  >
-                    {toPersianDigits(progress.done)} / {toPersianDigits(progress.threshold)}
-                  </span>
-                )}
               </button>
             );
           })}
@@ -698,7 +687,8 @@ function AchievementModal({
       onClose={onClose}
       title={achievement.label}
       zIndexClassName="z-[1000]"
-      panelClassName="border-hair relative w-full max-w-[426px] overflow-hidden rounded-[10px] border bg-[#050302] px-4 py-5 shadow-[0_28px_90px_-40px_var(--glow)] sm:px-8 sm:py-7"
+      panelClassName="border-hair relative w-full max-w-[426px] overflow-hidden rounded-[10px] border bg-[#050302] shadow-[0_28px_90px_-40px_var(--glow)]"
+      contentClassName="modal-scroll px-4 py-5 sm:px-8 sm:py-7"
     >
       <button
         type="button"
