@@ -182,7 +182,11 @@ export function SocialPostDetail({
                     className="size-9 shrink-0 rounded-full disabled:cursor-default"
                     aria-label={`مشاهده پروفایل ${comment.name}`}
                   >
-                    <UserAvatar name={comment.name} avatar={comment.avatar} className="size-9 text-xs" />
+                    <UserAvatar
+                      name={comment.name}
+                      avatar={comment.avatar}
+                      className="size-9 text-xs"
+                    />
                   </button>
                   <div className="min-w-0 flex-1 rounded-[16px] bg-black/20 p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -190,8 +194,10 @@ export function SocialPostDetail({
                         <button
                           type="button"
                           disabled={!comment.authorId}
-                          onClick={() => comment.authorId && onCommentAuthorClick?.(comment.authorId)}
-                          className="text-ink hover:text-gold block max-w-full truncate text-sm font-black disabled:cursor-default disabled:hover:text-ink"
+                          onClick={() =>
+                            comment.authorId && onCommentAuthorClick?.(comment.authorId)
+                          }
+                          className="text-ink hover:text-gold disabled:hover:text-ink block max-w-full truncate text-sm font-black disabled:cursor-default"
                         >
                           {comment.name}
                         </button>
@@ -226,8 +232,12 @@ export function SocialPostDetail({
         </div>
       </section>
 
-      <div className="border-hair sticky bottom-0 flex items-center gap-3 border-t bg-[var(--color-panel)] p-4">
-        <UserAvatar name={currentUserName ?? '?'} avatar={currentUserAvatar ?? undefined} className="size-9 text-xs" />
+      <div className="border-hair sticky bottom-0 flex items-center gap-3 border-t bg-[var(--color-panel)] px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <UserAvatar
+          name={currentUserName ?? '?'}
+          avatar={currentUserAvatar ?? undefined}
+          className="size-9 text-xs"
+        />
         <Input
           placeholder="نظرت رو بنویس..."
           value={commentText}

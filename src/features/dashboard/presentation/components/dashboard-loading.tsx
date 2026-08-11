@@ -55,7 +55,7 @@ export function DashboardLoader() {
           <Skeleton className="h-5 flex-1" />
           <Skeleton className="h-8 w-20 rounded-full" />
         </div>
-        <div className="p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
+        <div className="px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-6 sm:pb-[calc(6rem+env(safe-area-inset-bottom))] lg:p-8 lg:pb-8">
           <PageSkeleton />
         </div>
       </main>

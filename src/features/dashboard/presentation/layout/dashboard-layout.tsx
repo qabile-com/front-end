@@ -132,7 +132,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     if (!user?.actionReward?.unlockedAchievements?.length) return;
 
     const rewardKey = user.actionReward.unlockedAchievements
-      .map((achievement) => `${achievement.id}:${achievement.earnedAt ?? achievement.repeatIndex ?? ''}`)
+      .map(
+        (achievement) =>
+          `${achievement.id}:${achievement.earnedAt ?? achievement.repeatIndex ?? ''}`,
+      )
       .join('|');
     if (!rewardKey || enqueuedRewardKeysRef.current.has(rewardKey)) return;
 
@@ -215,7 +218,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         )}
 
         <div className="min-w-0 flex-1 overflow-x-clip">
-          <div className="overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
+          <div
+            className={cn(
+              'overflow-y-auto px-4 sm:px-6 lg:px-8 lg:pb-8',
+              // Chromeless routes (e.g. shared post/profile pages) render with no MobileHeader
+              // above them, so they need their own top safe-area clearance from the status bar/notch.
+              // calc() keeps the normal top spacing and just adds the inset on top of it, instead
+              // of replacing it (env() is 0 on devices with no notch, so nothing changes there).
+              showChrome
+                ? 'pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:pt-6 sm:pb-[calc(6rem+env(safe-area-inset-bottom))]'
+                : 'pt-[calc(1rem+env(safe-area-inset-top))] pb-24 sm:pt-[calc(1.5rem+env(safe-area-inset-top))] sm:pb-24 lg:pt-8',
+            )}
+          >
             <motion.div
               key={pathname}
               initial={reduceMotion ? false : { opacity: 0, y: 8 }}

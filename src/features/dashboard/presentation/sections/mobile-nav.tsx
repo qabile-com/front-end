@@ -18,7 +18,7 @@ const ITEMS: { id: DashboardTab; label: string; icon: IconName; href: string }[]
 
 export function MobileNav({ activeHref }: MobileNavProps) {
   return (
-    <nav className="border-hair fixed inset-x-0 bottom-0 z-50 flex h-19 items-start border-t pt-2.5 [backdrop-filter:blur(22px)] [background:rgba(8,5,2,.94)] lg:hidden">
+    <nav className="border-hair fixed inset-x-0 bottom-0 z-50 flex h-[calc(4.75rem+env(safe-area-inset-bottom))] items-start border-t pt-2.5 [backdrop-filter:blur(22px)] [background:rgba(8,5,2,.94)] lg:hidden">
       {ITEMS.map((item) => {
         const isActive = activeHref === item.href;
         return (

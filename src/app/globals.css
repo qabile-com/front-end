@@ -38,6 +38,34 @@
   --ease-back: cubic-bezier(0.34, 1.36, 0.64, 1);
 }
 
+/* Safe-area utilities for PWA standalone mode (notch/status bar, home indicator). */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility pl-safe {
+  padding-left: env(safe-area-inset-left);
+}
+@utility pr-safe {
+  padding-right: env(safe-area-inset-right);
+}
+@utility px-safe {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+@utility py-safe {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility mt-safe {
+  margin-top: env(safe-area-inset-top);
+}
+@utility mb-safe {
+  margin-bottom: env(safe-area-inset-bottom);
+}
+
 :root {
   --fire-grad: linear-gradient(135deg, #cc4308 0%, #ff6200 42%, #ffa04d 74%, #f3ba63 100%);
   --gold-grad: linear-gradient(135deg, #ffd98a, #f3ba63 45%, #cc4308);

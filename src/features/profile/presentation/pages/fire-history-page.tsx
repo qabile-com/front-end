@@ -51,13 +51,14 @@ export function FireHistoryPage() {
     [items],
   );
   const spentFire = useMemo(
-    () => Math.abs(items.filter((item) => item.amount < 0).reduce((sum, item) => sum + item.amount, 0)),
+    () =>
+      Math.abs(items.filter((item) => item.amount < 0).reduce((sum, item) => sum + item.amount, 0)),
     [items],
   );
 
   return (
     <MotionPage>
-      <DashboardPageShell size="narrow" className="pb-24">
+      <DashboardPageShell size="narrow" className="pb-[calc(6rem+env(safe-area-inset-bottom))]">
         <div className="mb-5 flex items-center justify-between gap-3">
           <Link
             href="/profile"
@@ -66,13 +67,11 @@ export function FireHistoryPage() {
             <Icon name="arrow-right" size={17} />
             بازگشت
           </Link>
-          <span className="text-ink-3 text-xs font-bold">
-            {toPersianDigits(totalItems)} رکورد
-          </span>
+          <span className="text-ink-3 text-xs font-bold">{toPersianDigits(totalItems)} رکورد</span>
         </div>
 
         <section className="border-hair relative overflow-hidden rounded-[28px] border p-5 [background:radial-gradient(circle_at_50%_0%,rgba(255,98,0,.18),transparent_38%),var(--glass)] sm:p-7">
-          <div className="pointer-events-none absolute -top-24 start-1/2 size-64 -translate-x-1/2 rounded-full bg-[rgba(255,98,0,.12)] blur-3xl" />
+          <div className="pointer-events-none absolute start-1/2 -top-24 size-64 -translate-x-1/2 rounded-full bg-[rgba(255,98,0,.12)] blur-3xl" />
           <div className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
               <span className="text-gold inline-flex items-center gap-2 text-xs font-black">
@@ -83,7 +82,8 @@ export function FireHistoryPage() {
                 رد آتش‌هایی که گرفتی و خرج کردی
               </h1>
               <p className="text-ink-3 mt-2 max-w-xl text-sm leading-7">
-                اینجا همه دریافت‌ها و خرج‌کردن‌های آتش حساب تو جدا از صفحه پروفایل نمایش داده می‌شود.
+                اینجا همه دریافت‌ها و خرج‌کردن‌های آتش حساب تو جدا از صفحه پروفایل نمایش داده
+                می‌شود.
               </p>
             </div>
 
@@ -106,7 +106,7 @@ export function FireHistoryPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="جستجو در تاریخچه آتش..."
-              className="border-hair text-ink placeholder:text-ink-4 h-12 w-full rounded-2xl border bg-black/25 pe-11 ps-4 text-base outline-none transition-colors focus:border-[rgba(255,98,0,.45)]"
+              className="border-hair text-ink placeholder:text-ink-4 h-12 w-full rounded-2xl border bg-black/25 ps-4 pe-11 text-base transition-colors outline-none focus:border-[rgba(255,98,0,.45)]"
             />
           </label>
         </div>
@@ -222,7 +222,7 @@ function HistoryRow({ item, index }: { item: XpHistoryItem; index: number }) {
             'grid size-11 shrink-0 place-items-center rounded-2xl border shadow-[0_14px_34px_-24px_var(--glow)]',
             isPositive
               ? 'border-[rgba(243,186,99,.28)] text-[#1a0a00] [background:var(--fire-grad)]'
-              : 'border-[rgba(255,98,0,.24)] text-gold [background:rgba(255,98,0,.08)]',
+              : 'text-gold border-[rgba(255,98,0,.24)] [background:rgba(255,98,0,.08)]',
           )}
         >
           <Icon name={isPositive ? 'flame' : 'lock'} size={20} />
@@ -233,7 +233,7 @@ function HistoryRow({ item, index }: { item: XpHistoryItem; index: number }) {
             <div className="min-w-0">
               <h2 className="text-ink truncate text-sm font-black sm:text-base">{title}</h2>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="rounded-xl border border-[rgba(243,186,99,.14)] bg-black/24 px-2.5 py-1 text-[11px] font-bold text-gold">
+                <span className="text-gold rounded-xl border border-[rgba(243,186,99,.14)] bg-black/24 px-2.5 py-1 text-[11px] font-bold">
                   {sourceLabel}
                 </span>
                 <span className="text-ink-4 text-[11px] font-bold">
@@ -246,7 +246,7 @@ function HistoryRow({ item, index }: { item: XpHistoryItem; index: number }) {
               className={cn(
                 'shrink-0 rounded-2xl border px-3 py-2 text-sm font-black tabular-nums',
                 isPositive
-                  ? 'border-[rgba(243,186,99,.22)] text-gold [background:rgba(243,186,99,.08)]'
+                  ? 'text-gold border-[rgba(243,186,99,.22)] [background:rgba(243,186,99,.08)]'
                   : 'border-red-500/20 text-red-300 [background:rgba(239,68,68,.07)]',
               )}
             >
