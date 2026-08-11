@@ -12,12 +12,11 @@ import {
 } from '../infrastructure/firebase-client';
 import { useAuthSession } from '@/providers/auth-provider';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { isIosDevice, isStandalonePwa } from '@/shared/lib/pwa-platform';
 
 const TOKEN_STORAGE_KEY = 'qabile:fcm-token';
 const TOKEN_USER_STORAGE_KEY = 'qabile:fcm-token-user-id';
 const DEVICE_ID_STORAGE_KEY = 'qabile:notification-device-id';
-const PROMPT_DISMISSED_UNTIL_KEY = 'qabile:notification-prompt-dismissed-until';
-const DISMISS_DAYS = 7;
 
 export function useNotificationRegistration() {
   const auth = useAuthSession();
@@ -60,11 +59,11 @@ export function useNotificationRegistration() {
       window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
       window.localStorage.setItem(TOKEN_USER_STORAGE_KEY, currentAuth.user.id);
       registeredForUserRef.current = currentAuth.user.id;
-      window.localStorage.removeItem(PROMPT_DISMISSED_UNTIL_KEY);
       setShouldShowPrompt(false);
       showSuccess('اعلان‌های قبیله فعال شد.');
       return token;
-    } catch {
+    } catch (error) {
+      console.error('[notifications] registration failed', error);
       showError('فعال‌سازی اعلان‌ها انجام نشد.');
       return null;
     } finally {
@@ -74,6 +73,15 @@ export function useNotificationRegistration() {
 
   useEffect(() => {
     let cancelled = false;
+    // iOS only supports web push for a PWA added to the home screen (16.4+); the underlying
+    // APIs (Notification/PushManager) are present in a regular Safari/Chrome-iOS tab too, so
+    // isFirebaseMessagingAvailable() alone would report "supported" there and burn the
+    // permission prompt on a request that can never actually deliver a push.
+    if (isIosDevice() && !isStandalonePwa()) {
+      queueMicrotask(() => setIsSupported(false));
+      return undefined;
+    }
+
     void isFirebaseMessagingAvailable().then((available) => {
       if (!cancelled) setIsSupported(available);
     });
@@ -83,11 +91,9 @@ export function useNotificationRegistration() {
     };
   }, []);
 
+  // Intentionally doesn't persist a "dismissed" cooldown: as long as permission isn't granted,
+  // the login effect below re-prompts on every subsequent login.
   const dismissPrompt = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      const dismissedUntil = Date.now() + DISMISS_DAYS * 24 * 60 * 60 * 1000;
-      window.localStorage.setItem(PROMPT_DISMISSED_UNTIL_KEY, String(dismissedUntil));
-    }
     setShouldShowPrompt(false);
   }, []);
 
@@ -112,23 +118,27 @@ export function useNotificationRegistration() {
       void unregister();
       return;
     }
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    if (!isSupported) return;
 
+    // Browsers never re-show the native prompt once denied; requestPermission() would just
+    // resolve to 'denied' silently, so there's nothing useful our own modal can do here.
+    if (Notification.permission === 'denied') return;
+
+    // Not yet decided by the user — ask on every login (not gated by any prior dismissal),
+    // per product requirement: keep asking until they actually grant or deny it.
+    if (Notification.permission === 'default') {
+      queueMicrotask(() => setShouldShowPrompt(true));
+      return;
+    }
+
+    // Permission is already 'granted' here — only (re)register the device token if we haven't
+    // already done so for this user, to avoid redundant calls on every render.
     const tokenUserId = window.localStorage.getItem(TOKEN_USER_STORAGE_KEY);
     if (registeredForUserRef.current === auth.user?.id || tokenUserId === auth.user?.id) {
       registeredForUserRef.current = auth.user?.id ?? null;
       return;
     }
-    if (typeof window === 'undefined' || !('Notification' in window)) return;
-
-    if (!isSupported) return;
-
-    if (Notification.permission === 'default') {
-      const dismissedUntil = Number(window.localStorage.getItem(PROMPT_DISMISSED_UNTIL_KEY) ?? 0);
-      queueMicrotask(() => setShouldShowPrompt(Date.now() > dismissedUntil));
-      return;
-    }
-
-    if (Notification.permission !== 'granted') return;
 
     queueMicrotask(() => void register());
   }, [auth.isLoggedIn, auth.isReady, auth.user?.id, isSupported, register, unregister]);
