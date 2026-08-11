@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { deleteNotificationDevice, registerNotificationDevice } from '@/core/api/notifications.api';
 import {
+  getFirebaseMessagingConfig,
   getFirebaseNotificationToken,
-  hasFirebaseMessagingConfig,
   isFirebaseMessagingAvailable,
   listenForForegroundMessages,
 } from '../infrastructure/firebase-client';
@@ -99,7 +99,7 @@ export function useNotificationRegistration() {
       const result = await resolveAvailability();
       if (cancelled) return;
 
-      logDiagnostics(result);
+      void logDiagnostics(result);
       setAvailability(result);
       if ('Notification' in window) setPermission(Notification.permission);
     })();
@@ -137,13 +137,7 @@ export function useNotificationRegistration() {
       return;
     }
     if (availability === 'loading') return;
-
-    // On iOS outside a home-screen install we still surface a prompt, but it explains how to
-    // install instead of asking for a permission the platform can never grant here.
-    if (availability !== 'available') {
-      if (availability === 'requires-install') queueMicrotask(() => setShouldShowPrompt(true));
-      return;
-    }
+    if (availability !== 'available') return;
 
     // Once denied, browsers never re-show the native dialog, so keep surfacing our own prompt
     // with instructions for re-enabling it from browser settings.
@@ -208,7 +202,7 @@ async function resolveAvailability(): Promise<NotificationAvailability> {
   return (await isFirebaseMessagingAvailable()) ? 'available' : 'unsupported';
 }
 
-function logDiagnostics(availability: NotificationAvailability) {
+async function logDiagnostics(availability: NotificationAvailability) {
   if (availability === 'available') return;
 
   console.warn(
@@ -222,7 +216,7 @@ function logDiagnostics(availability: NotificationAvailability) {
         hasNotificationApi: typeof window !== 'undefined' && 'Notification' in window,
         hasServiceWorker: typeof navigator !== 'undefined' && 'serviceWorker' in navigator,
         hasPushManager: typeof window !== 'undefined' && 'PushManager' in window,
-        hasFirebaseConfig: hasFirebaseMessagingConfig(),
+        hasFirebaseConfig: Boolean(await getFirebaseMessagingConfig()),
       },
       null,
       2,

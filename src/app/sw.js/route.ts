@@ -1,15 +1,20 @@
 // Served at /sw.js (see headers() in next.config.ts for Cache-Control / Service-Worker-Allowed).
 // Generated from env vars instead of a static public/sw.js file so the Firebase config used by
 // the background push handler can never drift from the client config in firebase-client.ts.
+// Read per request (not inlined at build time), so setting the env vars in the hosting
+// environment takes effect without a rebuild.
+export const dynamic = 'force-dynamic';
 
-const FIREBASE_CONFIG = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? '',
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? '',
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? '',
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? '',
-};
+function getFirebaseConfig() {
+  return {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? '',
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '',
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? '',
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? '',
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '',
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? '',
+  };
+}
 
 // In dev the worker is registered on demand by the enable-notifications flow, so push can be
 // tested locally. Precaching/serving assets from cache there would fight HMR (stale chunks),
@@ -21,7 +26,7 @@ function buildServiceWorkerScript(): string {
 const OFFLINE_URL = '/offline';
 const STATIC_ASSETS = [OFFLINE_URL, '/icons/icon-192.png', '/icons/icon-512.png'];
 const ENABLE_CACHING = ${ENABLE_CACHING};
-const FIREBASE_CONFIG = ${JSON.stringify(FIREBASE_CONFIG)};
+const FIREBASE_CONFIG = ${JSON.stringify(getFirebaseConfig())};
 
 try {
   importScripts('https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js');
