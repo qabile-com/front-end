@@ -49,6 +49,7 @@ export interface MyProfile {
   isCompleteOnboarding?: boolean;
   securitySettings: ProfileSecuritySettings;
   stats: ProfileStats;
+  usedReferralCode?: string | null;
   profileStats: { value: string; label: string }[];
   achievements: Achievement[];
   settings: SettingItem[];

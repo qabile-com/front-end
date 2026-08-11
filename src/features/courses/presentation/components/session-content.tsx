@@ -10,7 +10,10 @@ import { getAvatarInitial } from '@/core/lib/avatar';
 import { formatDuration } from '@/core/lib/format-duration';
 import { toPersianDigits } from '@/core/lib/persian';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { rewriteTrueTradeReferralLinks } from '@/shared/lib/referral-link';
 import { useMediaQuery } from '@/shared/hooks/use-media-query';
+import { useProfile } from '@/features/profile/application/use-profile';
+import { profileRepo } from '@/features/profile/infrastructure/repository-factory';
 import {
   Button,
   Icon,
@@ -80,6 +83,7 @@ export function SessionContent({
 }: SessionContentProps) {
   const shouldReduceMotion = useReducedMotion();
   const queryClient = useQueryClient();
+  const usedReferralCode = useProfile(profileRepo).data?.usedReferralCode;
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const watchedRangesRef = useRef<{ start: number; end: number }[]>([]);
   const lastTimeRef = useRef(0);
@@ -155,19 +159,25 @@ export function SessionContent({
     });
 
     const courseId = session.courseId ?? displayCourse.id;
-    queryClient.setQueriesData<SessionDetail>({ queryKey: ['dashboard', 'session', courseId, session.id] }, (previous) => {
-      if (!previous) return previous;
-      const localProgress = watchProgressBySession[session.id];
-      if (localProgress == null) return previous;
-      return {
-        ...previous,
-        part: {
-          ...previous.part,
-          progress: Math.max(previous.part.progress ?? 0, localProgress),
-          status: localProgress >= 80 && previous.part.status !== 'done' ? 'done' : previous.part.status,
-        },
-      };
-    });
+    queryClient.setQueriesData<SessionDetail>(
+      { queryKey: ['dashboard', 'session', courseId, session.id] },
+      (previous) => {
+        if (!previous) return previous;
+        const localProgress = watchProgressBySession[session.id];
+        if (localProgress == null) return previous;
+        return {
+          ...previous,
+          part: {
+            ...previous.part,
+            progress: Math.max(previous.part.progress ?? 0, localProgress),
+            status:
+              localProgress >= 80 && previous.part.status !== 'done'
+                ? 'done'
+                : previous.part.status,
+          },
+        };
+      },
+    );
   }, [displayCourse.id, session.id, session.courseId, watchProgressBySession]);
 
   useEffect(() => {
@@ -276,15 +286,6 @@ export function SessionContent({
     };
   }, [buildWatchPayload]);
 
-  useEffect(() => {
-    if (session.progress == null) return;
-    setWatchProgressBySession((previous) => {
-      const current = previous[session.id] ?? 0;
-      if (session.progress! <= current) return previous;
-      return { ...previous, [session.id]: session.progress! };
-    });
-  }, [session.id, session.progress]);
-
   const handleSubmitComment = useCallback(() => {
     if (!commentText.trim()) return;
     onAddComment(commentText.trim());
@@ -345,7 +346,7 @@ export function SessionContent({
       initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
       animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
       transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-      className="mx-auto flex min-h-full w-full max-w-[920px] min-w-0 flex-col overflow-x-clip pb-28 min-[1440px]:max-w-none md:pb-0"
+      className="mx-auto flex min-h-full w-full max-w-[920px] min-w-0 flex-col overflow-x-clip pb-[calc(7rem+env(safe-area-inset-bottom))] min-[1440px]:max-w-none md:pb-0"
     >
       <section className="max-w-full min-w-0 overflow-hidden rounded-[28px] border border-[var(--session-border)] bg-[var(--session-surface)] shadow-[0_30px_90px_-50px_var(--glow)] lg:rounded-[32px]">
         <div className="relative aspect-video min-h-[190px] w-full max-w-full overflow-hidden bg-black sm:min-h-0">
@@ -417,7 +418,10 @@ export function SessionContent({
                 {session.title}
               </h1>
               <p className="text-ink-2 mt-3 max-w-2xl text-[13.5px] leading-7 sm:text-sm">
-                {(displayCourse.description ?? course?.description ?? session.description) ||
+                {rewriteTrueTradeReferralLinks(
+                  displayCourse.description ?? course?.description ?? session.description,
+                  usedReferralCode,
+                ) ||
                   `این جلسه بخشی از مسیر «${displayCourse.title}» است. ویدیو را کامل ببین، نکات مهم را
                   مرور کن و با ادامه دادن مسیر، پیشرفتت را ثبت کن.`}
               </p>
@@ -506,6 +510,7 @@ export function SessionContent({
                     course={displayCourseWithProgress}
                     session={session}
                     courseDurationSeconds={courseDurationSeconds}
+                    usedReferralCode={usedReferralCode}
                   />
                 </div>
               </AnimatedPanel>
@@ -516,6 +521,7 @@ export function SessionContent({
                   course={displayCourseWithProgress}
                   session={session}
                   courseDurationSeconds={courseDurationSeconds}
+                  usedReferralCode={usedReferralCode}
                 />
               </AnimatedPanel>
             )}
@@ -934,7 +940,15 @@ function SectionRow({
     >
       <span className="relative grid size-8 shrink-0 place-items-center">
         <svg viewBox="0 0 36 36" className="size-8 -rotate-90">
-          <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="3" opacity="0.15" />
+          <circle
+            cx="18"
+            cy="18"
+            r="15"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            opacity="0.15"
+          />
           {!isDone && !isLocked && progress > 0 && (
             <circle
               cx="18"
@@ -958,7 +972,7 @@ function SectionRow({
                 ? 'border-gold text-gold bg-black/25'
                 : isLocked
                   ? 'text-ink-3 border-[var(--session-border)]'
-                  : 'border-[var(--session-border)] bg-[var(--session-surface-2)] text-ink-2',
+                  : 'text-ink-2 border-[var(--session-border)] bg-[var(--session-surface-2)]',
           )}
         >
           {isDone ? (
@@ -991,19 +1005,20 @@ function AboutPanel({
   course,
   session,
   courseDurationSeconds,
+  usedReferralCode,
 }: {
   course: Course;
   session: CoursePart;
   courseDurationSeconds: number;
+  usedReferralCode?: string | null;
 }) {
   return (
     <div className="text-ink-2 space-y-4 text-sm leading-8">
       <div className="rounded-[18px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-4">
         <h2 className="text-ink text-base font-black">{course.title}</h2>
         <p className="mt-2">
-          {session.description
-            ? session.description
-            : `در این بخش روی موضوع «${session.title}» تمرکز می‌کنی. هدف این جلسه این است که با دیدن و
+          {rewriteTrueTradeReferralLinks(session.description, usedReferralCode) ||
+            `در این بخش روی موضوع «${session.title}» تمرکز می‌کنی. هدف این جلسه این است که با دیدن و
             تمرین کردن، مسیر دوره را مرحله‌به‌مرحله جلو ببری.`}
         </p>
       </div>

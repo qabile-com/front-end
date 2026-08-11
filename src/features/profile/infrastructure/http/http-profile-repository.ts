@@ -55,6 +55,7 @@ type MyProfileDto = Omit<
   initial?: string;
   avatar?: string | null;
   securitySettings?: Partial<ProfileSecuritySettings>;
+  referral?: { usedReferralCode?: string | null } | null;
   achievements?: (MyProfile['achievements'][number] & {
     timesAchieved?: number;
     earnedCount?: number;
@@ -228,6 +229,7 @@ export class HttpProfileRepository implements IProfileRepository {
       isCompleteOnboarding: p.isCompleteOnboarding ?? false,
       securitySettings: { ...DEFAULT_SECURITY_SETTINGS, ...p.securitySettings },
       stats: normalizeProfileStats(p),
+      usedReferralCode: p.referral?.usedReferralCode ?? null,
       profileStats: p.profileStats ?? [],
       achievements: normalizeAchievementCollection(p.achievements),
       settings: p.settings ?? [],
