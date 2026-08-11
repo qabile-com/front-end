@@ -8,6 +8,7 @@ import { useSessionComments } from '@/features/courses/application/use-session-c
 import { useAddSessionComment } from '@/features/courses/application/use-session-comments';
 import {
   useCourses,
+  useMarkEpisodeWatched,
   usePurchaseCourse,
   useReportSectionWatchProgress,
 } from '@/features/courses/application/use-courses';
@@ -67,6 +68,7 @@ export default function SessionPage() {
   const addComment = useAddSessionComment(commentsRepo, enqueueReward);
   const reportWatchProgress = useReportSectionWatchProgress(coursesRepo);
   const purchaseCourse = usePurchaseCourse(coursesRepo);
+  const markEpisodeWatched = useMarkEpisodeWatched(coursesRepo);
 
   const handleWatchProgress = useCallback(
     (body: SectionWatchProgressInput) => {
@@ -103,6 +105,24 @@ export default function SessionPage() {
     if (!nextSectionId) return;
     router.push(`/courses/${courseId}/sections/${nextSectionId}${sourceQuery}`);
   }, [course, router, courseId, sectionId, session, sourceQuery]);
+
+  const handleMarkWatched = useCallback(async () => {
+    if (!isCourseUnlocked) {
+      showError('برای ثبت این جلسه، ابتدا کورس را خریداری کن.');
+      return;
+    }
+
+    try {
+      const result = await markEpisodeWatched.mutateAsync({ courseId, episodeId: sectionId });
+      enqueueReward(result.reward, {
+        xpDescription: 'آتش این جلسه به حسابت اضافه شد و جلسه تکمیل شد.',
+      });
+      showSuccess('این جلسه تکمیل شد.');
+      handleNextSession();
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'ثبت این جلسه انجام نشد.');
+    }
+  }, [courseId, enqueueReward, handleNextSession, isCourseUnlocked, markEpisodeWatched, sectionId]);
 
   const handlePurchaseCourse = useCallback(async () => {
     if (!course) return;
@@ -204,13 +224,15 @@ export default function SessionPage() {
                   router.push(`/courses/${courseId}/sections/${id}${sourceQuery}`)
                 }
                 onWatchProgress={handleWatchProgress}
-                 onAddComment={handleAddComment}
-                 onBuyCourse={() => setCourseToPurchase(course)}
-                 onBack={() => router.push(returnHref)}
-                 isAddingComment={addComment.isPending}
-                 userName={user?.name}
-                 userAvatar={user?.avatar}
-               />
+                onAddComment={handleAddComment}
+                onBuyCourse={() => setCourseToPurchase(course)}
+                onBack={() => router.push(returnHref)}
+                isAddingComment={addComment.isPending}
+                userName={user?.name}
+                userAvatar={user?.avatar}
+                onMarkWatched={() => void handleMarkWatched()}
+                isMarkingWatched={markEpisodeWatched.isPending}
+              />
             )}
           </div>
 
@@ -374,4 +396,3 @@ function PartRow({
     </button>
   );
 }
-

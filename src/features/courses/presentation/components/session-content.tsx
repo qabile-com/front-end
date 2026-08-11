@@ -51,6 +51,8 @@ interface SessionContentProps {
   isAddingComment?: boolean;
   userName?: string;
   userAvatar?: string | null;
+  onMarkWatched?: () => void;
+  isMarkingWatched?: boolean;
   queryClient?: ReturnType<typeof useQueryClient>;
 }
 
@@ -79,6 +81,8 @@ export function SessionContent({
   isAddingComment = false,
   userName,
   userAvatar,
+  onMarkWatched,
+  isMarkingWatched = false,
   onAddComment,
 }: SessionContentProps) {
   const shouldReduceMotion = useReducedMotion();
@@ -118,6 +122,11 @@ export function SessionContent({
   const hasEnoughFire = fireBalance >= coursePrice;
   const canTrackWatch = !requiresPurchase && Boolean(videoUrl);
   const shouldAutoStartVideo = canTrackWatch;
+  // "بدون ترک" episodes can be completed without tracked playback. The flag lives on the
+  // episode, falling back to the course-level setting.
+  const allowsMarkWatched = session.noTrackRequired ?? displayCourse.noTrackRequired ?? false;
+  const canMarkWatched =
+    allowsMarkWatched && !requiresPurchase && session.status !== 'done' && Boolean(onMarkWatched);
 
   const progressOverrides = watchProgressBySession;
 
@@ -435,9 +444,23 @@ export function SessionContent({
                 onBuyCourse={onBuyCourse}
               />
             )}
-            <div className="hidden md:flex md:justify-start">
+            <div className="hidden md:flex md:flex-wrap md:justify-start md:gap-3">
               {requiresPurchase ? null : (
-                <ContinueButton hasNext={hasNext} onNextSession={onNextSession} variant="desktop" />
+                <>
+                  {canMarkWatched && (
+                    <MarkWatchedButton
+                      onMarkWatched={onMarkWatched!}
+                      isMarkingWatched={isMarkingWatched}
+                      xp={session.xp ?? 0}
+                      variant="desktop"
+                    />
+                  )}
+                  <ContinueButton
+                    hasNext={hasNext}
+                    onNextSession={onNextSession}
+                    variant="desktop"
+                  />
+                </>
               )}
             </div>
           </div>
@@ -560,6 +583,12 @@ export function SessionContent({
               hasEnoughFire={hasEnoughFire}
               isPurchasing={isPurchasingCourse}
               onBuyCourse={onBuyCourse}
+            />
+          ) : canMarkWatched ? (
+            <MarkWatchedButton
+              onMarkWatched={onMarkWatched!}
+              isMarkingWatched={isMarkingWatched}
+              xp={session.xp ?? 0}
             />
           ) : (
             <ContinueButton hasNext={hasNext} onNextSession={onNextSession} />
@@ -786,6 +815,39 @@ function ContinueButton({
     >
       {label}
       <Icon name={hasNext ? 'arrow-left' : 'check'} size={18} />
+    </button>
+  );
+}
+
+/** Completes a "بدون ترک" episode without tracked playback and claims its XP. */
+function MarkWatchedButton({
+  onMarkWatched,
+  isMarkingWatched,
+  xp,
+  variant = 'mobile',
+}: {
+  onMarkWatched: () => void;
+  isMarkingWatched: boolean;
+  xp: number;
+  variant?: 'mobile' | 'desktop';
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onMarkWatched}
+      disabled={isMarkingWatched}
+      className={cn(
+        'flex min-h-13 items-center justify-center gap-2.5 rounded-[14px] border border-[rgba(43,212,168,.42)] px-5 text-[15px] font-black text-[#0b120f] shadow-[0_18px_42px_-20px_rgba(43,212,168,.55)] transition-transform duration-250 [background:linear-gradient(135deg,#2bd4a8,#1f8a5b)] hover:-translate-y-0.5 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60',
+        variant === 'desktop' ? 'min-w-56' : 'flex-1',
+      )}
+    >
+      <Icon name="check" size={18} className="shrink-0" />
+      <span className="truncate">{isMarkingWatched ? 'در حال ثبت...' : 'دیدم'}</span>
+      {xp > 0 && !isMarkingWatched && (
+        <span className="shrink-0 rounded-full bg-black/20 px-2 py-0.5 text-[11px] font-extrabold">
+          +{toPersianDigits(xp)}
+        </span>
+      )}
     </button>
   );
 }

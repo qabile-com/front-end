@@ -1,11 +1,15 @@
 // http-courses-repository.ts
 import {
   getCourses,
+  markEpisodeWatched,
   purchaseCourse,
   reportSectionWatchProgress,
   updateSectionProgress,
 } from '@/core/api/courses.api';
-import type { ICoursesRepository } from '@/features/dashboard/domain/dashboard-repository';
+import type {
+  ICoursesRepository,
+  MarkEpisodeWatchedResult,
+} from '@/features/dashboard/domain/dashboard-repository';
 import type { Course } from '../../domain/courses.data';
 import { withCourseSectionNavigation } from '../../domain/courses.data';
 import { normalizeCoursePartDto, type CoursePartMediaDto } from '../normalize-course-part-dto';
@@ -45,6 +49,19 @@ type CourseDto = Omit<Course, 'imageUrl' | 'episodes'> & {
   } | null;
   episodesCount?: number;
   episodes: CoursePartDto[];
+};
+
+type MarkEpisodeWatchedDto = {
+  data?: MarkEpisodeWatchedDto;
+  success?: boolean;
+  userProgress?: {
+    episode?: Record<string, unknown> | null;
+    course?: {
+      progressPercent?: number;
+      completedEpisodes?: number;
+      totalEpisodes?: number;
+    } | null;
+  } | null;
 };
 
 type PurchaseCourseDto = {
@@ -144,6 +161,24 @@ export class HttpCoursesRepository implements ICoursesRepository {
     return {
       ...data,
       reward: normalizeActionRewardResult(data),
+    };
+  }
+
+  async markEpisodeWatched(
+    courseId: string,
+    episodeId: string,
+    options?: { signal?: AbortSignal },
+  ): Promise<MarkEpisodeWatchedResult> {
+    const res = await markEpisodeWatched(courseId, episodeId, options);
+    // The reward payload (xp/streak/unlockedAchievements) sits on the envelope, while
+    // userProgress is nested one level deeper.
+    const payload = (res.data ?? {}) as MarkEpisodeWatchedDto;
+    const data = (payload.data ?? payload) as MarkEpisodeWatchedDto;
+
+    return {
+      success: data.success ?? true,
+      reward: normalizeActionRewardResult(data) ?? normalizeActionRewardResult(payload),
+      courseProgress: data.userProgress?.course ?? null,
     };
   }
 }

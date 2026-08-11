@@ -64,6 +64,31 @@ export function useUpdateSectionProgress(
   });
 }
 
+/**
+ * Marks a "بدون ترک" episode as watched, granting its XP without tracked playback.
+ * Invalidates everything the XP/progress change can affect (course lists, session detail,
+ * profile stats and fire balance) so the UI reflects the new state immediately.
+ */
+export function useMarkEpisodeWatched(repo: ICoursesRepository) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ courseId, episodeId }: { courseId: string; episodeId: string }) =>
+      repo.markEpisodeWatched(courseId, episodeId),
+    onSuccess: async (_result, { courseId, episodeId }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'courses'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'home'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'session', courseId, episodeId] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'session', courseId] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'xp-history'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] }),
+      ]);
+    },
+  });
+}
+
 export function usePurchaseCourse(repo: ICoursesRepository) {
   const queryClient = useQueryClient();
 
@@ -87,13 +112,8 @@ export function useReportSectionWatchProgress(repo: ICoursesRepository) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      sectionId,
-      body,
-    }: {
-      sectionId: string;
-      body: SectionWatchProgressInput;
-    }) => repo.reportSectionWatchProgress(sectionId, body),
+    mutationFn: ({ sectionId, body }: { sectionId: string; body: SectionWatchProgressInput }) =>
+      repo.reportSectionWatchProgress(sectionId, body),
     onSuccess: async (result, variables) => {
       const { sectionId } = variables;
       const courseId = variables.body.courseId;
@@ -121,18 +141,21 @@ export function useReportSectionWatchProgress(repo: ICoursesRepository) {
           );
         });
 
-        queryClient.setQueriesData<SessionDetail>({ queryKey: ['dashboard', 'session', courseId, sectionId] }, (previous) => {
-          if (!previous) return previous;
-          return {
-            ...previous,
-            part: {
-              ...previous.part,
-              status: 'done',
-              progress: realProgress,
-              hasReceivedXp: true,
-            },
-          };
-        });
+        queryClient.setQueriesData<SessionDetail>(
+          { queryKey: ['dashboard', 'session', courseId, sectionId] },
+          (previous) => {
+            if (!previous) return previous;
+            return {
+              ...previous,
+              part: {
+                ...previous.part,
+                status: 'done',
+                progress: realProgress,
+                hasReceivedXp: true,
+              },
+            };
+          },
+        );
       }
 
       if (result.reward) {

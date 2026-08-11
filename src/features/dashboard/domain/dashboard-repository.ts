@@ -47,8 +47,14 @@ export interface ILeaderboardRepository {
  * Courses data.
  */
 export interface ICoursesRepository {
-  getCourses(filters?: { limit?: number; offset?: number; q?: string }, options?: { signal?: AbortSignal }): Promise<Course[]>;
-  purchaseCourse(courseId: string, options?: { signal?: AbortSignal }): Promise<CoursePurchaseResult>;
+  getCourses(
+    filters?: { limit?: number; offset?: number; q?: string },
+    options?: { signal?: AbortSignal },
+  ): Promise<Course[]>;
+  purchaseCourse(
+    courseId: string,
+    options?: { signal?: AbortSignal },
+  ): Promise<CoursePurchaseResult>;
   updateSectionProgress(
     sectionId: string,
     body: { status: string; progress?: number },
@@ -59,6 +65,21 @@ export interface ICoursesRepository {
     body: SectionWatchProgressInput,
     options?: { signal?: AbortSignal },
   ): Promise<SectionWatchProgressResult>;
+  markEpisodeWatched(
+    courseId: string,
+    episodeId: string,
+    options?: { signal?: AbortSignal },
+  ): Promise<MarkEpisodeWatchedResult>;
+}
+
+export interface MarkEpisodeWatchedResult {
+  success: boolean;
+  reward?: ActionRewardResult | null;
+  courseProgress?: {
+    progressPercent?: number;
+    completedEpisodes?: number;
+    totalEpisodes?: number;
+  } | null;
 }
 
 export interface CoursePurchaseResult {
