@@ -548,55 +548,57 @@ function ProfileSettingsTab({
       <div>
         <h3 className="text-ink mb-4 text-sm font-black">دستاوردها</h3>
         <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-x-4 gap-y-7 sm:grid-cols-4 sm:gap-x-5 lg:grid-cols-6">
-          {achievements.map((achievement) => (
-            <button
-              key={achievement.label}
-              type="button"
-              onClick={() => onAchievementClick(achievement)}
-              className="group flex flex-col items-center gap-2.5 text-center"
-            >
-              <span
-                className={cn(
-                  'border-hair relative block size-[72px] overflow-hidden rounded-[8px] border bg-black shadow-[0_12px_26px_-18px_var(--glow)] transition-transform duration-200 group-hover:-translate-y-0.5',
-                  achievement.unlocked
-                    ? 'border-[rgba(255,98,0,.72)]'
-                    : 'border-[rgba(253,238,226,.28)] opacity-70 grayscale',
-                )}
+          {achievements.map((achievement) => {
+            const isEarned = isAchievementEarned(achievement);
+            const progress = getAchievementProgress(achievement);
+            const count = getAchievementCount(achievement);
+
+            return (
+              <button
+                key={achievement.label}
+                type="button"
+                onClick={() => onAchievementClick(achievement)}
+                className="group flex flex-col items-center gap-2.5 text-center"
               >
-                <OptionalImage
-                  src={getAchievementImage(achievement)}
-                  alt={achievement.label}
-                  className="object-cover"
-                  fallbackSrc={DEFAULT_ACHIEVEMENT_IMAGE}
-                  loading="lazy"
-                />
-                {getAchievementCount(achievement) > 1 && (
-                  <span className="bg-ember absolute start-1.5 top-1.5 rounded-[5px] px-1.5 py-0.5 text-[10px] font-black text-white shadow-[0_6px_14px_-8px_var(--glow)]">
-                    {toPersianDigits(getAchievementCount(achievement))}x
-                  </span>
-                )}
-              </span>
-              <span
-                className={cn('text-[12px]', achievement.unlocked ? 'text-ink-2' : 'text-ink-4')}
-              >
-                {achievement.label}
-              </span>
-              {(() => {
-                const progress = getAchievementProgress(achievement);
-                if (!progress) return null;
-                return (
+                <span
+                  className={cn(
+                    'border-hair relative block size-[72px] overflow-hidden rounded-[8px] border bg-black shadow-[0_12px_26px_-18px_var(--glow)] transition-transform duration-200 group-hover:-translate-y-0.5',
+                    isEarned
+                      ? 'border-[rgba(255,98,0,.72)]'
+                      : 'border-[rgba(253,238,226,.28)] opacity-70 grayscale',
+                  )}
+                >
+                  <OptionalImage
+                    src={getAchievementImage(achievement)}
+                    alt={achievement.label}
+                    className="object-cover"
+                    fallbackSrc={DEFAULT_ACHIEVEMENT_IMAGE}
+                    loading="lazy"
+                  />
+                  {/* Repeat badge only once actually earned — otherwise a half-finished
+                      achievement reads as if it were completed several times. */}
+                  {isEarned && count > 1 && (
+                    <span className="bg-ember absolute start-1.5 top-1.5 rounded-[5px] px-1.5 py-0.5 text-[10px] font-black text-white shadow-[0_6px_14px_-8px_var(--glow)]">
+                      {toPersianDigits(count)}x
+                    </span>
+                  )}
+                </span>
+                <span className={cn('text-[12px]', isEarned ? 'text-ink-2' : 'text-ink-4')}>
+                  {achievement.label}
+                </span>
+                {progress && (
                   <span
                     className={cn(
                       '-mt-1 text-[11px] font-black tabular-nums',
-                      achievement.unlocked ? 'text-gold' : 'text-ink-4',
+                      isEarned ? 'text-gold' : 'text-ink-4',
                     )}
                   >
                     {toPersianDigits(progress.done)} / {toPersianDigits(progress.threshold)}
                   </span>
-                );
-              })()}
-            </button>
-          ))}
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -659,12 +661,16 @@ function AchievementModal({
   const count = getAchievementCount(achievement);
   const conditions = getAchievementConditions(achievement);
   const progress = getAchievementProgress(achievement);
-  const isEarned = achievement.unlocked && conditions.every((condition) => condition.passed);
-  const canShare = achievement.isShareable ?? isEarned;
+  // Completion alone decides this. ANDing the per-condition `passed` flags would keep a
+  // finished achievement greyed out, since the API reports those independently of the count.
+  const isEarned = isAchievementEarned(achievement);
+  // `isShareable` says the achievement *may* be shared, not that it has been earned — so it
+  // narrows an earned achievement rather than standing in for one.
+  const canShare = isEarned && (achievement.isShareable ?? true);
   // Only daily check-in achievements are claimable by the user; everything else unlocks
   // automatically from its own trigger.
   const canClaim =
-    Boolean(onClaim) && achievement.triggerType === 'manual_daily_check' && !achievement.unlocked;
+    Boolean(onClaim) && achievement.triggerType === 'manual_daily_check' && !isEarned;
 
   const handleShare = async () => {
     if (!canShare) return;
@@ -708,7 +714,7 @@ function AchievementModal({
           <div
             className={cn(
               'relative size-[200px] overflow-hidden rounded-[5px] border border-[rgba(255,98,0,.72)] bg-black shadow-[0_26px_40px_-32px_var(--glow)]',
-              !achievement.unlocked && 'grayscale',
+              !isEarned && 'grayscale',
             )}
           >
             <OptionalImage
@@ -719,14 +725,19 @@ function AchievementModal({
               loading="lazy"
             />
           </div>
-          {count > 1 && (
+          {isEarned && count > 1 && (
             <span className="text-gold absolute inset-x-0 -bottom-6 mx-auto grid size-13 place-items-center rounded-full border-2 border-[#050302] bg-[#120904] text-lg font-black shadow-[0_0_0_1px_rgba(255,98,0,.65),0_12px_26px_-14px_var(--glow)]">
               {toPersianDigits(count)}x
             </span>
           )}
         </div>
 
-        <h3 className={cn('text-gold mt-9 text-[24px] font-black', count <= 1 && 'mt-6')}>
+        <h3
+          className={cn(
+            'text-gold mt-9 text-[24px] font-black',
+            !(isEarned && count > 1) && 'mt-6',
+          )}
+        >
           {achievement.label}
         </h3>
         <p className="text-ink-2 mt-3 text-[13px] leading-7">
@@ -854,6 +865,19 @@ function getAchievementProgress(achievement: Achievement) {
   return { done, threshold, percent: Math.round((done / threshold) * 100) };
 }
 
+/**
+ * Whether the achievement is actually earned.
+ *
+ * For multi-step achievements the API reports `unlocked: true` as soon as the first step is
+ * recorded, so trusting that flag alone lights the badge up (and enables sharing) at 1 of 40.
+ * When a threshold exists, completion is what counts.
+ */
+function isAchievementEarned(achievement: Achievement) {
+  const progress = getAchievementProgress(achievement);
+  if (progress) return progress.done >= progress.threshold;
+  return Boolean(achievement.unlocked);
+}
+
 function getAchievementImage(achievement: Achievement) {
   return getAchievementAssetUrl(achievement);
 }
@@ -879,11 +903,13 @@ function getAchievementConditions(achievement: Achievement): AchievementConditio
     {
       id: `${slug ?? achievement.label}-main-condition`,
       label: achievement.description ?? 'تکمیل شرط تعیین‌شده برای این دستاورد',
-      passed: achievement.unlocked,
+      passed: isAchievementEarned(achievement),
     },
   ];
 }
 
 function sortAchievementsByUnlocked(achievements: Achievement[]) {
-  return [...achievements].sort((a, b) => Number(b.unlocked) - Number(a.unlocked));
+  return [...achievements].sort(
+    (a, b) => Number(isAchievementEarned(b)) - Number(isAchievementEarned(a)),
+  );
 }
