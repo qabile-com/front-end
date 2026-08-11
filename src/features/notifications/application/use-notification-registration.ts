@@ -68,15 +68,45 @@ export function useNotificationRegistration() {
         return null;
       }
 
-      const registration = await ensureServiceWorkerRegistration();
-      const token = await getFirebaseNotificationToken(registration);
-      if (!token) {
-        console.error('[notifications] no FCM token returned — check the VAPID key and config');
-        showError('فعال‌سازی اعلان‌ها انجام نشد.');
+      // Each step fails for a genuinely different reason, so they're reported separately —
+      // a single catch-all makes "فعال‌سازی انجام نشد" impossible to act on.
+      let registration: ServiceWorkerRegistration;
+      try {
+        registration = await ensureServiceWorkerRegistration();
+      } catch (error) {
+        console.error('[notifications] service worker never became ready', error);
+        showError('سرویس‌ورکر آماده نشد. اپ را کامل ببند و دوباره باز کن.');
         return null;
       }
 
-      await registerNotificationDevice({ token, platform: 'web', deviceId: getDeviceId() });
+      let token: string | null;
+      try {
+        token = await getFirebaseNotificationToken(registration);
+      } catch (error) {
+        // Typically an invalid/mismatched VAPID key, or the push service rejecting the
+        // subscription — the thrown message from Firebase is the useful part here.
+        console.error(
+          '[notifications] getToken() failed — check NEXT_PUBLIC_FIREBASE_VAPID_KEY',
+          error,
+        );
+        showError('دریافت مجوز اعلان از سرویس پیام‌رسان انجام نشد.');
+        return null;
+      }
+
+      if (!token) {
+        console.error('[notifications] getToken() returned no token (firebase config incomplete)');
+        showError('تنظیمات اعلان کامل نیست. کمی بعد دوباره تلاش کن.');
+        return null;
+      }
+
+      try {
+        await registerNotificationDevice({ token, platform: 'web', deviceId: getDeviceId() });
+      } catch (error) {
+        console.error('[notifications] backend device registration failed', error);
+        showError('ثبت دستگاه روی سرور انجام نشد. دوباره تلاش کن.');
+        return null;
+      }
+
       window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
       window.localStorage.setItem(TOKEN_USER_STORAGE_KEY, currentAuth.user.id);
       registeredForUserRef.current = currentAuth.user.id;
@@ -195,7 +225,11 @@ async function resolveAvailability(): Promise<NotificationAvailability> {
   // home-screen install (iOS 16.4+). Detect that first so we can tell the user to install.
   if (isIosDevice() && !isStandalonePwa()) return 'requires-install';
 
-  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+  if (
+    !('Notification' in window) ||
+    !('serviceWorker' in navigator) ||
+    !('PushManager' in window)
+  ) {
     return isIosDevice() ? 'requires-install' : 'unsupported';
   }
 
