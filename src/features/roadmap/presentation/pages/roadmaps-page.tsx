@@ -118,6 +118,7 @@ function RoadmapCard({ roadmap }: { roadmap: RoadmapSummary }) {
     ? Math.round((roadmap.completedSteps / roadmap.totalSteps) * 100)
     : 0;
   const isComplete = roadmap.status === 'done' || roadmap.completedSteps >= roadmap.totalSteps;
+  const isNotStarted = roadmap.status === 'not_started' || roadmap.completedSteps <= 0;
   const currentStep = isComplete ? roadmap.totalSteps : roadmap.completedSteps + 1;
   const href = currentStep ? `/roadmap/steps/${currentStep}` : '/roadmap';
 
@@ -184,7 +185,13 @@ function RoadmapCard({ roadmap }: { roadmap: RoadmapSummary }) {
             : 'border-hair hover:border-hair-2 border [background:var(--glass-2)]',
         )}
       >
-        {isComplete ? 'تکمیل شده است' : roadmap.isActive ? 'ادامه مسیر' : 'مشاهده مسیر'}
+        {isComplete
+          ? 'تکمیل شده است'
+          : roadmap.isActive
+            ? isNotStarted
+              ? 'شروع مسیر'
+              : 'ادامه مسیر'
+            : 'مشاهده مسیر'}
         <Icon name="arrow-left" size={18} />
       </Link>
     </article>
