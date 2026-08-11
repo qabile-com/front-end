@@ -40,10 +40,10 @@ const ACCESS_FILTERS: Array<{
   icon: 'book' | 'play' | 'check' | 'flame' | 'lock';
 }> = [
   { id: 'all', label: 'همه', icon: 'book' },
-  { id: 'continue', label: 'ادامه آموزش', icon: 'play' },
   { id: 'owned', label: 'خریداری‌شده', icon: 'check' },
-  { id: 'free', label: 'رایگان', icon: 'flame' },
   { id: 'locked', label: 'قفل‌شده', icon: 'lock' },
+  { id: 'continue', label: 'ادامه آموزش', icon: 'play' },
+  // { id: 'free', label: 'رایگان', icon: 'flame' },
 ];
 
 export function CoursesTab({
