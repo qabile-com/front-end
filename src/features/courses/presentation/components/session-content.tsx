@@ -427,10 +427,7 @@ export function SessionContent({
                 {session.title}
               </h1>
               <p className="text-ink-2 mt-3 max-w-2xl text-[13.5px] leading-7 sm:text-sm">
-                {rewriteTrueTradeReferralLinks(
-                  displayCourse.description ?? course?.description ?? session.description,
-                  usedReferralCode,
-                ) ||
+                {rewriteTrueTradeReferralLinks(session.description, usedReferralCode) ||
                   `این جلسه بخشی از مسیر «${displayCourse.title}» است. ویدیو را کامل ببین، نکات مهم را
                   مرور کن و با ادامه دادن مسیر، پیشرفتت را ثبت کن.`}
               </p>
@@ -1079,7 +1076,7 @@ function AboutPanel({
       <div className="rounded-[18px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-4">
         <h2 className="text-ink text-base font-black">{course.title}</h2>
         <p className="mt-2">
-          {rewriteTrueTradeReferralLinks(session.description, usedReferralCode) ||
+          {rewriteTrueTradeReferralLinks(course.description, usedReferralCode) ||
             `در این بخش روی موضوع «${session.title}» تمرکز می‌کنی. هدف این جلسه این است که با دیدن و
             تمرین کردن، مسیر دوره را مرحله‌به‌مرحله جلو ببری.`}
         </p>
