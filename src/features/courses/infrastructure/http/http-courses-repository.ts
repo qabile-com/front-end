@@ -110,7 +110,7 @@ export class HttpCoursesRepository implements ICoursesRepository {
       },
       spentFire: data.spentFire ?? data.xpSpent ?? data.priceInFire ?? 0,
       isUnlocked: data.isUnlocked ?? true,
-      reward: normalizeActionRewardResult(res.data),
+      reward: normalizeActionRewardResult(data),
     };
   }
 
@@ -120,7 +120,8 @@ export class HttpCoursesRepository implements ICoursesRepository {
     options?: { signal?: AbortSignal },
   ): Promise<ActionRewardResult> {
     const res = await updateSectionProgress(sectionId, body, options);
-    return normalizeActionRewardResult(res.data) ?? {};
+    const data = (res.data.data ?? res.data) as ActionRewardResult;
+    return normalizeActionRewardResult(data) ?? {};
   }
 
   async reportSectionWatchProgress(
@@ -132,7 +133,7 @@ export class HttpCoursesRepository implements ICoursesRepository {
     const data = (res.data.data ?? res.data) as SectionWatchProgressResult;
     return {
       ...data,
-      reward: normalizeActionRewardResult(res.data),
+      reward: normalizeActionRewardResult(data),
     };
   }
 }

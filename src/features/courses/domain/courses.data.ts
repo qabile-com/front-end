@@ -42,6 +42,7 @@ export interface Course {
   isPurchased?: boolean;
   isUnlocked?: boolean;
   isFree?: boolean;
+  description?: string;
   episodes: CoursePart[];
 }
 

@@ -1,14 +1,8 @@
 ﻿'use client';
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-  type RefObject,
-} from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/core/lib/cn';
@@ -33,6 +27,7 @@ import type {
 } from '@/features/dashboard/domain/dashboard.types';
 import type { Comment, PaginatedComments } from '../../domain/comments-repository';
 import type { Course, CoursePart } from '../../domain/courses.data';
+import type { SessionDetail } from '../../domain/session-repository';
 
 interface SessionContentProps {
   session: CoursePart;
@@ -53,6 +48,7 @@ interface SessionContentProps {
   isAddingComment?: boolean;
   userName?: string;
   userAvatar?: string | null;
+  queryClient?: ReturnType<typeof useQueryClient>;
 }
 
 type SessionTab = 'sections' | 'about' | 'comments';
@@ -83,6 +79,7 @@ export function SessionContent({
   onAddComment,
 }: SessionContentProps) {
   const shouldReduceMotion = useReducedMotion();
+  const queryClient = useQueryClient();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const watchedRangesRef = useRef<{ start: number; end: number }[]>([]);
   const lastTimeRef = useRef(0);
@@ -117,7 +114,61 @@ export function SessionContent({
   const hasEnoughFire = fireBalance >= coursePrice;
   const canTrackWatch = !requiresPurchase && Boolean(videoUrl);
   const shouldAutoStartVideo = canTrackWatch;
+
+  const progressOverrides = watchProgressBySession;
+
+  const displayCourseWithProgress: Course = {
+    ...displayCourse,
+    episodes: displayCourse.episodes.map((episode) => {
+      const localProgress = progressOverrides[episode.id];
+      if (localProgress == null) return episode;
+      return {
+        ...episode,
+        progress: Math.max(episode.progress ?? 0, localProgress),
+        status: localProgress >= 80 && episode.status !== 'done' ? 'done' : episode.status,
+      };
+    }),
+  };
+
   const [showVideo, setShowVideo] = useState(shouldAutoStartVideo);
+
+  useEffect(() => {
+    if (!queryClient) return;
+
+    const hasUpdates = Object.values(watchProgressBySession).some((value) => value > 0);
+    if (!hasUpdates) return;
+
+    queryClient.setQueriesData<Course[]>({ queryKey: ['dashboard', 'courses'] }, (previous) => {
+      if (!previous) return previous;
+      return previous.map((course) => ({
+        ...course,
+        episodes: course.episodes.map((episode) => {
+          const localProgress = watchProgressBySession[episode.id];
+          if (localProgress == null) return episode;
+          return {
+            ...episode,
+            progress: Math.max(episode.progress ?? 0, localProgress),
+            status: localProgress >= 80 && episode.status !== 'done' ? 'done' : episode.status,
+          };
+        }),
+      }));
+    });
+
+    const courseId = session.courseId ?? displayCourse.id;
+    queryClient.setQueriesData<SessionDetail>({ queryKey: ['dashboard', 'session', courseId, session.id] }, (previous) => {
+      if (!previous) return previous;
+      const localProgress = watchProgressBySession[session.id];
+      if (localProgress == null) return previous;
+      return {
+        ...previous,
+        part: {
+          ...previous.part,
+          progress: Math.max(previous.part.progress ?? 0, localProgress),
+          status: localProgress >= 80 && previous.part.status !== 'done' ? 'done' : previous.part.status,
+        },
+      };
+    });
+  }, [displayCourse.id, session.id, session.courseId, watchProgressBySession]);
 
   useEffect(() => {
     reportProgressRef.current = onWatchProgress;
@@ -162,7 +213,7 @@ export function SessionContent({
         return { ...previous, [session.id]: Math.max(previous[session.id] ?? 0, progress) };
       });
 
-      if (!force && now - lastReportAtRef.current < 12_000 && progress < 80) return;
+      if (!force && now - lastReportAtRef.current < 12_000) return;
 
       lastReportAtRef.current = now;
       reportProgressRef.current(payload);
@@ -188,7 +239,8 @@ export function SessionContent({
     maxWatchedTimeRef.current = Math.max(maxWatchedTimeRef.current, current);
 
     const watchedSeconds = calculateWatchedSeconds(watchedRangesRef.current);
-    const progress = Math.min(100, Math.floor((watchedSeconds / video.duration) * 100));
+    const duration = session.durationSeconds || video.duration || 1;
+    const progress = Math.min(100, Math.floor((watchedSeconds / duration) * 100));
     setWatchProgressBySession((previousProgress) => {
       if (previousProgress[session.id] === progress) return previousProgress;
       return {
@@ -204,7 +256,7 @@ export function SessionContent({
     }
 
     reportWatchProgress('timeupdate');
-  }, [canTrackWatch, reportWatchProgress, session.id]);
+  }, [canTrackWatch, reportWatchProgress, session.id, session.durationSeconds]);
 
   useEffect(() => {
     if (trackedSessionIdRef.current === session.id) return;
@@ -223,6 +275,15 @@ export function SessionContent({
       if (payload) reportProgressRef.current(payload);
     };
   }, [buildWatchPayload]);
+
+  useEffect(() => {
+    if (session.progress == null) return;
+    setWatchProgressBySession((previous) => {
+      const current = previous[session.id] ?? 0;
+      if (session.progress! <= current) return previous;
+      return { ...previous, [session.id]: session.progress! };
+    });
+  }, [session.id, session.progress]);
 
   const handleSubmitComment = useCallback(() => {
     if (!commentText.trim()) return;
@@ -255,6 +316,18 @@ export function SessionContent({
     }
   }, [displayCourse.title, session.title]);
 
+  const handleDownloadVideo = useCallback(() => {
+    if (!videoUrl) return;
+    const link = document.createElement('a');
+    link.href = videoUrl;
+    link.download = `${session.title}.mp4`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [session.title, videoUrl]);
+
   const allComments = commentsQuery.data?.pages.flatMap((page) => page.comments) ?? [];
   const currentIndex = Math.max(
     0,
@@ -275,7 +348,7 @@ export function SessionContent({
       className="mx-auto flex min-h-full w-full max-w-[920px] min-w-0 flex-col overflow-x-clip pb-28 min-[1440px]:max-w-none md:pb-0"
     >
       <section className="max-w-full min-w-0 overflow-hidden rounded-[28px] border border-[var(--session-border)] bg-[var(--session-surface)] shadow-[0_30px_90px_-50px_var(--glow)] lg:rounded-[32px]">
-        <div className="relative aspect-video min-h-[190px] overflow-hidden bg-black sm:min-h-0">
+        <div className="relative aspect-video min-h-[190px] w-full max-w-full overflow-hidden bg-black sm:min-h-0">
           <VideoOrCover
             session={session}
             videoUrl={videoUrl}
@@ -291,7 +364,8 @@ export function SessionContent({
           />
 
           {!showVideo && (
-            <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between p-4 sm:p-6">
+            <div className="absolute inset-x-0 top-0 z-20 flex flex-wrap items-center justify-end gap-2 p-3 sm:p-6">
+              <IconButton label="دانلود" onClick={handleDownloadVideo} icon="download" />
               <IconButton label="بازگشت" onClick={handleClose} icon="arrow-right" />
               <IconButton label="اشتراک‌گذاری" onClick={() => void handleShare()} icon="share" />
             </div>
@@ -325,13 +399,16 @@ export function SessionContent({
           className="border-t border-[var(--session-border)] bg-[linear-gradient(180deg,rgba(255,98,0,.08),rgba(0,0,0,.16))] p-5 sm:p-7 lg:p-8"
         >
           {showVideo && (
-            <div className="mb-5 flex items-center justify-between gap-3">
+            <div className="mb-5 flex items-start justify-between gap-3">
               <IconTextButton label="بازگشت" onClick={handleClose} icon="arrow-right" />
-              <IconTextButton
-                label="اشتراک‌گذاری"
-                onClick={() => void handleShare()}
-                icon="share"
-              />
+              <div className="flex flex-col items-center gap-2 sm:flex-row">
+                <IconTextButton
+                  label="اشتراک‌گذاری"
+                  onClick={() => void handleShare()}
+                  icon="share"
+                />
+                <IconTextButton label="دانلود" onClick={handleDownloadVideo} icon="download" />
+              </div>
             </div>
           )}
           <div className="flex min-w-0 flex-col gap-5">
@@ -340,9 +417,8 @@ export function SessionContent({
                 {session.title}
               </h1>
               <p className="text-ink-2 mt-3 max-w-2xl text-[13.5px] leading-7 sm:text-sm">
-                {session.description
-                  ? session.description
-                  : `این جلسه بخشی از مسیر «${displayCourse.title}» است. ویدیو را کامل ببین، نکات مهم را
+                {(displayCourse.description ?? course?.description ?? session.description) ||
+                  `این جلسه بخشی از مسیر «${displayCourse.title}» است. ویدیو را کامل ببین، نکات مهم را
                   مرور کن و با ادامه دادن مسیر، پیشرفتت را ثبت کن.`}
               </p>
             </div>
@@ -420,14 +496,14 @@ export function SessionContent({
               <AnimatedPanel key="sections">
                 <div className="min-[1440px]:hidden">
                   <SectionsPanel
-                    course={displayCourse}
+                    course={displayCourseWithProgress}
                     currentSectionId={selectedSectionId}
                     onNavigateSection={handleNavigateSection}
                   />
                 </div>
                 <div className="hidden min-[1440px]:block">
                   <AboutPanel
-                    course={displayCourse}
+                    course={displayCourseWithProgress}
                     session={session}
                     courseDurationSeconds={courseDurationSeconds}
                   />
@@ -437,7 +513,7 @@ export function SessionContent({
             {activeTab === 'about' && (
               <AnimatedPanel key="about">
                 <AboutPanel
-                  course={displayCourse}
+                  course={displayCourseWithProgress}
                   session={session}
                   courseDurationSeconds={courseDurationSeconds}
                 />
@@ -523,7 +599,6 @@ function VideoOrCover({
         onEnded={() => reportWatchProgress('ended', true)}
         onSeeking={syncLastTime}
         onSeeked={syncLastTime}
-        controlsList="nodownload"
       />
     );
   }
@@ -577,7 +652,7 @@ function IconButton({
   onClick,
 }: {
   label: string;
-  icon: 'arrow-right' | 'share';
+  icon: 'arrow-right' | 'share' | 'download';
   onClick?: () => void;
 }) {
   return (
@@ -598,14 +673,14 @@ function IconTextButton({
   onClick,
 }: {
   label: string;
-  icon: 'arrow-right' | 'share';
+  icon: 'arrow-right' | 'share' | 'download';
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="text-ink-2 hover:text-gold flex min-h-11 items-center gap-2 rounded-[12px] border border-[var(--session-border)] bg-[var(--session-surface-2)] px-3 text-sm font-black transition-colors hover:border-[var(--session-border-strong)]"
+      className="text-ink-2 hover:text-gold flex min-h-11 items-center justify-center gap-2 rounded-[12px] border border-[var(--session-border)] bg-[var(--session-surface-2)] px-3 text-sm font-black transition-colors hover:border-[var(--session-border-strong)]"
     >
       <Icon name={icon} size={17} />
       {label}
@@ -843,6 +918,7 @@ function SectionRow({
   const isDone = part.status === 'done';
   const isLocked = Boolean(part.requiresPurchase);
   const duration = formatDurationFa(part.durationSeconds ?? 0);
+  const progress = Math.min(100, Math.max(0, part.progress ?? 0));
 
   return (
     <button
@@ -856,23 +932,43 @@ function SectionRow({
         isLocked && !isActive && 'opacity-75',
       )}
     >
-      <span
-        className={cn(
-          'grid size-8 shrink-0 place-items-center rounded-full border text-xs font-black',
-          isDone
-            ? 'border-success bg-success/15 text-success'
-            : isActive
-              ? 'border-gold text-gold bg-black/25'
-              : 'text-ink-3 border-[var(--session-border)]',
-        )}
-      >
-        {isDone ? (
-          <Icon name="check" size={15} />
-        ) : isLocked ? (
-          <Icon name="lock" size={14} />
-        ) : (
-          toPersianDigits(index + 1)
-        )}
+      <span className="relative grid size-8 shrink-0 place-items-center">
+        <svg viewBox="0 0 36 36" className="size-8 -rotate-90">
+          <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="3" opacity="0.15" />
+          {!isDone && !isLocked && progress > 0 && (
+            <circle
+              cx="18"
+              cy="18"
+              r="15"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeDasharray={`${progress * 0.94} 94`}
+              strokeLinecap="round"
+              className="text-gold"
+            />
+          )}
+        </svg>
+        <span
+          className={cn(
+            'absolute grid size-8 place-items-center rounded-full text-[11px] font-black',
+            isDone
+              ? 'border-success bg-success/15 text-success'
+              : isActive
+                ? 'border-gold text-gold bg-black/25'
+                : isLocked
+                  ? 'text-ink-3 border-[var(--session-border)]'
+                  : 'border-[var(--session-border)] bg-[var(--session-surface-2)] text-ink-2',
+          )}
+        >
+          {isDone ? (
+            <Icon name="check" size={14} />
+          ) : isLocked ? (
+            <Icon name="lock" size={12} />
+          ) : (
+            <span className="tabular-nums">{toPersianDigits(progress)}٪</span>
+          )}
+        </span>
       </span>
       <div className="min-w-0 flex-1">
         <b className="block truncate text-[13px] font-black sm:text-sm">{part.title}</b>
@@ -1003,7 +1099,11 @@ function CommentsPanel({
         </p>
 
         <div className="flex min-w-0 items-center gap-2 rounded-[18px] border border-[var(--session-border)] bg-black/25 p-2.5 opacity-70 sm:gap-3 sm:p-3">
-          <UserAvatar name={userName ?? '?'} avatar={userAvatar ?? undefined} className="size-9 text-xs" />
+          <UserAvatar
+            name={userName ?? '?'}
+            avatar={userAvatar ?? undefined}
+            className="size-9 text-xs"
+          />
           <Input
             disabled
             value=""
@@ -1070,7 +1170,11 @@ function CommentsPanel({
       </div>
 
       <div className="flex min-w-0 items-center gap-2 rounded-[18px] border border-[var(--session-border)] bg-black/25 p-2.5 sm:gap-3 sm:p-3">
-        <UserAvatar name={userName ?? '?'} avatar={userAvatar ?? undefined} className="size-9 text-xs" />
+        <UserAvatar
+          name={userName ?? '?'}
+          avatar={userAvatar ?? undefined}
+          className="size-9 text-xs"
+        />
         <Input
           placeholder="نظرت رو بنویس..."
           value={commentText}
@@ -1109,7 +1213,11 @@ function CommentItem({ comment }: { comment: Comment }) {
         className="mt-0.5 disabled:cursor-default"
         aria-label={`مشاهده پروفایل ${comment.name}`}
       >
-        <UserAvatar name={comment.name} avatar={comment.avatar} className="size-9 text-xs text-[#1a0a00]" />
+        <UserAvatar
+          name={comment.name}
+          avatar={comment.avatar}
+          className="size-9 text-xs text-[#1a0a00]"
+        />
       </button>
       <div className="min-w-0 flex-1 space-y-2">
         <div className="min-w-0">
@@ -1117,7 +1225,7 @@ function CommentItem({ comment }: { comment: Comment }) {
             type="button"
             disabled={!comment.authorId}
             onClick={goToAuthor}
-            className="text-ink hover:text-gold max-w-full truncate text-sm font-black disabled:cursor-default disabled:hover:text-ink"
+            className="text-ink hover:text-gold disabled:hover:text-ink max-w-full truncate text-sm font-black disabled:cursor-default"
           >
             {comment.name}
           </button>

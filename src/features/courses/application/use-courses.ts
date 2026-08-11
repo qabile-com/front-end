@@ -6,7 +6,10 @@ import type { ICoursesRepository } from '@/features/dashboard/domain/dashboard-r
 import type {
   ActionRewardResult,
   SectionWatchProgressInput,
+  SectionWatchProgressResult,
 } from '@/features/dashboard/domain/dashboard.types';
+import type { Course } from '@/features/courses/domain/courses.data';
+import type { SessionDetail } from '@/features/courses/domain/session-repository';
 
 export interface CourseListFilters {
   limit?: number;
@@ -91,17 +94,52 @@ export function useReportSectionWatchProgress(repo: ICoursesRepository) {
       sectionId: string;
       body: SectionWatchProgressInput;
     }) => repo.reportSectionWatchProgress(sectionId, body),
-    onSuccess: async (result) => {
-      if (result.section.status !== 'done') return;
+    onSuccess: async (result, variables) => {
+      const { sectionId } = variables;
+      const courseId = variables.body.courseId;
 
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['dashboard', 'courses'] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard', 'home'] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard', 'session'] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'xp-history'] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] }),
-      ]);
+      if (result.section.status === 'done') {
+        const realProgress = Math.min(100, Math.max(0, result.section.progress ?? 100));
+        queryClient.setQueriesData<Course[]>({ queryKey: ['dashboard', 'courses'] }, (previous) => {
+          if (!previous) return previous;
+          return previous.map((course) =>
+            course.id === courseId
+              ? {
+                  ...course,
+                  episodes: course.episodes.map((episode) =>
+                    episode.id === sectionId
+                      ? {
+                          ...episode,
+                          status: 'done',
+                          progress: realProgress,
+                          hasReceivedXp: true,
+                        }
+                      : episode,
+                  ),
+                }
+              : course,
+          );
+        });
+
+        queryClient.setQueriesData<SessionDetail>({ queryKey: ['dashboard', 'session', courseId, sectionId] }, (previous) => {
+          if (!previous) return previous;
+          return {
+            ...previous,
+            part: {
+              ...previous.part,
+              status: 'done',
+              progress: realProgress,
+              hasReceivedXp: true,
+            },
+          };
+        });
+      }
+
+      if (result.reward) {
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'xp-history'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] });
+      }
     },
   });
 }
