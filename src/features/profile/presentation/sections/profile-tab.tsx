@@ -670,7 +670,7 @@ function AchievementModal({
           {achievement.label}
         </h3>
         <p className="text-ink-2 mt-3 text-[13px] leading-7">
-          با دریافت این دستاورد
+          با کسب این دستاورد
           <span className="text-ember"> {toPersianDigits(achievement.xpEarned)} آتش </span>
           دریافت میکنید
           {/* {getAchievementDescription(achievement)} */}
