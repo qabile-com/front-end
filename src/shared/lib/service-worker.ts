@@ -1,6 +1,7 @@
 const SERVICE_WORKER_URL = '/sw.js';
 const SERVICE_WORKER_SCOPE = '/';
 const READY_TIMEOUT_MS = 15_000;
+const UPDATE_TIMEOUT_MS = 5_000;
 
 export function isServiceWorkerSupported() {
   return typeof window !== 'undefined' && 'serviceWorker' in navigator;
@@ -35,11 +36,21 @@ export async function ensureServiceWorkerRegistration(): Promise<ServiceWorkerRe
   );
 
   // An already-installed PWA can still be running a worker from an older deploy (with, say, an
-  // empty Firebase config). Kick off an update check so the next launch picks up the current
-  // one; not awaited because a slow check shouldn't hold up token registration.
-  void registration.update().catch(() => undefined);
+  // empty Firebase config), so check for a newer one. This is awaited deliberately: the worker
+  // uses skipWaiting()/clients.claim(), so an update landing *while* getToken() subscribes would
+  // swap the active worker mid-subscription and make the push subscription fail.
+  try {
+    await withTimeout(registration.update(), UPDATE_TIMEOUT_MS, 'service worker update timed out');
+  } catch {
+    // A failed/slow update check shouldn't block registering for push with the current worker.
+  }
 
-  return registration;
+  // Re-read after the update so we return a registration whose active worker has settled.
+  return withTimeout(
+    navigator.serviceWorker.ready,
+    READY_TIMEOUT_MS,
+    'service worker did not become ready in time',
+  );
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {

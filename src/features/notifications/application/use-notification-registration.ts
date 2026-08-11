@@ -90,7 +90,7 @@ export function useNotificationRegistration() {
           '[notifications] getToken() failed — check NEXT_PUBLIC_FIREBASE_VAPID_KEY',
           error,
         );
-        showError(`دریافت مجوز اعلان انجام نشد: ${getErrorDetail(error)}`);
+        showError(getSubscribeErrorMessage(error));
         return null;
       }
 
@@ -261,14 +261,35 @@ async function logDiagnostics(availability: NotificationAvailability) {
   );
 }
 
-/** Firebase error codes look like `messaging/token-subscribe-failed` and identify the cause. */
-function getErrorDetail(error: unknown): string {
-  if (typeof error === 'object' && error && 'code' in error) {
-    const code = (error as { code?: unknown }).code;
-    if (typeof code === 'string' && code) return code;
+/**
+ * Turns push-subscription failures into something the user can act on. Raw text like
+ * "push service initialization failed" (WebKit) means nothing to them, and on iOS there's no
+ * console to read, so the guidance has to live in the toast itself.
+ */
+function getSubscribeErrorMessage(error: unknown): string {
+  const raw = [
+    error instanceof Error ? error.message : '',
+    typeof error === 'object' && error && 'code' in error
+      ? String((error as { code?: unknown }).code ?? '')
+      : '',
+  ]
+    .join(' ')
+    .toLowerCase();
+
+  // WebKit throws this when the Home Screen app predates push support, which a reinstall fixes.
+  if (raw.includes('push service') || raw.includes('aborterror')) {
+    return 'اعلان‌ها فعال نشد. اپ را از صفحه اصلی حذف کن، دوباره اضافه کن و مطمئن شو iOS نسخه ۱۶.۴ یا بالاتر است.';
   }
-  if (error instanceof Error && error.message) return error.message.slice(0, 140);
-  return 'خطای نامشخص';
+
+  if (raw.includes('token-subscribe-failed') || raw.includes('applicationserverkey')) {
+    return 'اعلان‌ها فعال نشد. تنظیمات سرویس پیام‌رسان معتبر نیست.';
+  }
+
+  if (raw.includes('permission')) {
+    return 'اجازه اعلان داده نشد. از تنظیمات دستگاه اعلان‌های قبیله را روشن کن.';
+  }
+
+  return 'دریافت مجوز اعلان انجام نشد. کمی بعد دوباره تلاش کن.';
 }
 
 function getDeviceId() {
