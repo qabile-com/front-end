@@ -1,12 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  deleteNotificationDevice,
-  registerNotificationDevice,
-} from '@/core/api/notifications.api';
+import { deleteNotificationDevice, registerNotificationDevice } from '@/core/api/notifications.api';
 import {
   getFirebaseNotificationToken,
+  hasFirebaseMessagingConfig,
   isFirebaseMessagingAvailable,
   listenForForegroundMessages,
 } from '../infrastructure/firebase-client';
@@ -19,14 +17,28 @@ const TOKEN_STORAGE_KEY = 'qabile:fcm-token';
 const TOKEN_USER_STORAGE_KEY = 'qabile:fcm-token-user-id';
 const DEVICE_ID_STORAGE_KEY = 'qabile:notification-device-id';
 
+export type NotificationAvailability =
+  /** Still resolving browser/Firebase support. */
+  | 'loading'
+  /** iOS outside a home-screen PWA: web push is impossible until the app is installed. */
+  | 'requires-install'
+  /** Page isn't a secure context (http on a LAN IP), so push APIs don't exist. */
+  | 'insecure-context'
+  /** Browser genuinely can't do web push, or Firebase env config is missing. */
+  | 'unsupported'
+  /** Everything is in place; permission state decides what to do next. */
+  | 'available';
+
 export function useNotificationRegistration() {
   const auth = useAuthSession();
   const [isRegistering, setIsRegistering] = useState(false);
   const [shouldShowPrompt, setShouldShowPrompt] = useState(false);
-  const [isSupported, setIsSupported] = useState(false);
+  const [availability, setAvailability] = useState<NotificationAvailability>('loading');
   const [permission, setPermission] = useState<NotificationPermission | null>(null);
   const registeredForUserRef = useRef<string | null>(null);
   const authRef = useRef(auth);
+
+  const isSupported = availability === 'available';
 
   useEffect(() => {
     authRef.current = auth;
@@ -36,29 +48,22 @@ export function useNotificationRegistration() {
     const currentAuth = authRef.current;
     if (!currentAuth.isLoggedIn || !currentAuth.user?.id) return null;
     if (!isSupported) return null;
-    if (
-      typeof window === 'undefined' ||
-      !('Notification' in window) ||
-      !('serviceWorker' in navigator)
-    ) {
-      return null;
-    }
 
     setIsRegistering(true);
     try {
-      // Must stay in the click's task so the browser still counts this as a user gesture,
-      // otherwise some browsers refuse to show the native permission dialog.
-      const permission =
+      // Stays inside the click's task so the browser still treats this as a user gesture —
+      // iOS in particular refuses to show the native dialog otherwise.
+      const nextPermission =
         Notification.permission === 'default'
           ? await Notification.requestPermission()
           : Notification.permission;
 
-      setPermission(permission);
+      setPermission(nextPermission);
 
-      if (permission !== 'granted') {
+      if (nextPermission !== 'granted') {
         setShouldShowPrompt(false);
-        if (permission === 'denied') {
-          showError('اجازه نمایش اعلان در مرورگر رد شد. از تنظیمات سایت آن را مجاز کن.');
+        if (nextPermission === 'denied') {
+          showError('اجازه نمایش اعلان رد شد. برای فعال‌سازی، از تنظیمات مرورگر اجازه بده.');
         }
         return null;
       }
@@ -66,7 +71,7 @@ export function useNotificationRegistration() {
       const registration = await ensureServiceWorkerRegistration();
       const token = await getFirebaseNotificationToken(registration);
       if (!token) {
-        console.error('[notifications] firebase returned no token (check VAPID key / config)');
+        console.error('[notifications] no FCM token returned — check the VAPID key and config');
         showError('فعال‌سازی اعلان‌ها انجام نشد.');
         return null;
       }
@@ -90,39 +95,22 @@ export function useNotificationRegistration() {
   useEffect(() => {
     let cancelled = false;
 
-    if ('Notification' in window) {
-      queueMicrotask(() => setPermission(Notification.permission));
-    }
-
-    // iOS only supports web push for a PWA added to the home screen (16.4+); the underlying
-    // APIs (Notification/PushManager) are present in a regular Safari/Chrome-iOS tab too, so
-    // isFirebaseMessagingAvailable() alone would report "supported" there and burn the
-    // permission prompt on a request that can never actually deliver a push.
-    if (isIosDevice() && !isStandalonePwa()) {
-      console.info(
-        '[notifications] iOS detected outside standalone PWA — web push requires the app to be added to the home screen first.',
-      );
-      queueMicrotask(() => setIsSupported(false));
-      return undefined;
-    }
-
-    void isFirebaseMessagingAvailable().then((available) => {
+    void (async () => {
+      const result = await resolveAvailability();
       if (cancelled) return;
-      if (!available) {
-        console.warn(
-          '[notifications] messaging unavailable — check NEXT_PUBLIC_FIREBASE_* env vars (including VAPID key) and browser support.',
-        );
-      }
-      setIsSupported(available);
-    });
+
+      logDiagnostics(result);
+      setAvailability(result);
+      if ('Notification' in window) setPermission(Notification.permission);
+    })();
 
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // Intentionally doesn't persist a "dismissed" cooldown: as long as permission isn't granted,
-  // the login effect below re-prompts on every subsequent login.
+  // Deliberately not persisted: while permission isn't granted the login effect below re-prompts
+  // on every subsequent login, so dismissing only hides it for the current session.
   const dismissPrompt = useCallback(() => {
     setShouldShowPrompt(false);
   }, []);
@@ -148,22 +136,23 @@ export function useNotificationRegistration() {
       void unregister();
       return;
     }
-    if (typeof window === 'undefined' || !('Notification' in window)) return;
-    if (!isSupported) return;
+    if (availability === 'loading') return;
 
-    // Browsers never re-show the native prompt once denied; requestPermission() would just
-    // resolve to 'denied' silently, so there's nothing useful our own modal can do here.
-    if (Notification.permission === 'denied') return;
+    // On iOS outside a home-screen install we still surface a prompt, but it explains how to
+    // install instead of asking for a permission the platform can never grant here.
+    if (availability !== 'available') {
+      if (availability === 'requires-install') queueMicrotask(() => setShouldShowPrompt(true));
+      return;
+    }
 
-    // Not yet decided by the user — ask on every login (not gated by any prior dismissal),
-    // per product requirement: keep asking until they actually grant or deny it.
-    if (Notification.permission === 'default') {
+    // Once denied, browsers never re-show the native dialog, so keep surfacing our own prompt
+    // with instructions for re-enabling it from browser settings.
+    if (Notification.permission !== 'granted') {
       queueMicrotask(() => setShouldShowPrompt(true));
       return;
     }
 
-    // Permission is already 'granted' here — only (re)register the device token if we haven't
-    // already done so for this user, to avoid redundant calls on every render.
+    // Granted — only (re)register the device token when we haven't already for this user.
     const tokenUserId = window.localStorage.getItem(TOKEN_USER_STORAGE_KEY);
     if (registeredForUserRef.current === auth.user?.id || tokenUserId === auth.user?.id) {
       registeredForUserRef.current = auth.user?.id ?? null;
@@ -171,7 +160,7 @@ export function useNotificationRegistration() {
     }
 
     queueMicrotask(() => void register());
-  }, [auth.isLoggedIn, auth.isReady, auth.user?.id, isSupported, register, unregister]);
+  }, [auth.isLoggedIn, auth.isReady, auth.user?.id, availability, register, unregister]);
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -196,8 +185,49 @@ export function useNotificationRegistration() {
     unregister,
     dismissPrompt,
     isSupported,
+    availability,
     permission,
   };
+}
+
+async function resolveAvailability(): Promise<NotificationAvailability> {
+  if (typeof window === 'undefined') return 'unsupported';
+
+  // Service workers and the Notification API only exist in secure contexts. Reaching a dev
+  // server from a phone over http://<lan-ip> is the common way to trip this.
+  if (!window.isSecureContext) return 'insecure-context';
+
+  // iOS exposes no Notification API at all in a normal Safari tab; web push works only from a
+  // home-screen install (iOS 16.4+). Detect that first so we can tell the user to install.
+  if (isIosDevice() && !isStandalonePwa()) return 'requires-install';
+
+  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return isIosDevice() ? 'requires-install' : 'unsupported';
+  }
+
+  return (await isFirebaseMessagingAvailable()) ? 'available' : 'unsupported';
+}
+
+function logDiagnostics(availability: NotificationAvailability) {
+  if (availability === 'available') return;
+
+  console.warn(
+    `[notifications] unavailable (${availability}).`,
+    JSON.stringify(
+      {
+        availability,
+        isSecureContext: typeof window !== 'undefined' && window.isSecureContext,
+        isIos: isIosDevice(),
+        isStandalonePwa: isStandalonePwa(),
+        hasNotificationApi: typeof window !== 'undefined' && 'Notification' in window,
+        hasServiceWorker: typeof navigator !== 'undefined' && 'serviceWorker' in navigator,
+        hasPushManager: typeof window !== 'undefined' && 'PushManager' in window,
+        hasFirebaseConfig: hasFirebaseMessagingConfig(),
+      },
+      null,
+      2,
+    ),
+  );
 }
 
 function getDeviceId() {
