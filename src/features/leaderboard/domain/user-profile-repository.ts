@@ -48,6 +48,7 @@ export interface UserProfilePost {
   text: string;
   likes: number;
   comments: PostComment[];
+  commentsCount?: number;
   time: string;
   image?: string;
   hasImage?: boolean;

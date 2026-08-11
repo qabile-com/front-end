@@ -298,7 +298,7 @@ export function ForumUserProfilePage() {
                         </span>
                         <span className="inline-flex items-center gap-1">
                           <Icon name="msg" size={15} />
-                          {toPersianDigits(post.comments.length)}
+                          {toPersianDigits(post.commentsCount ?? post.comments.length)}
                         </span>
                       </span>
                       <time>{formatRelativeTime(post.time)}</time>

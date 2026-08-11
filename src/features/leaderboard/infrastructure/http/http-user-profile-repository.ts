@@ -74,6 +74,7 @@ export class HttpUserProfileRepository implements IUserProfileRepository {
         text: comment.text,
         time: comment.createdAt ?? '',
       })),
+      commentsCount: post.commentsCount ?? post.comments?.length ?? 0,
       time: post.createdAt ?? '',
       image: post.image ?? post.attachments?.[0]?.url ?? post.attachment?.url,
       hasImage: post.hasImage ?? Boolean(post.attachments?.length || post.attachment),

@@ -249,7 +249,8 @@ export function UserProfileModal({
                     <Icon name="heart" size={16} /> {toPersianDigits(post.likes)}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Icon name="msg" size={16} /> {toPersianDigits(post.comments.length)}
+                    <Icon name="msg" size={16} />{' '}
+                    {toPersianDigits(post.commentsCount ?? post.comments.length)}
                   </span>
                 </div>
               </button>

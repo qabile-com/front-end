@@ -310,7 +310,7 @@ function UserPostsTab({
       id: post.id,
       text: post.text,
       likes: post.likes,
-      commentsCount: post.comments.length,
+      commentsCount: post.commentsCount ?? post.comments.length,
       time: post.time,
       image: post.attachment?.url ?? post.image,
       hasImage: post.hasImage,
