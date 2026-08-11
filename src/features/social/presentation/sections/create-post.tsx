@@ -185,10 +185,10 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
         <div className="text-ember flex items-center gap-2.5">
           <button
             type="button"
-            disabled={isPublishing || isCheckingImage}
+            disabled={isPublishing || isCheckingImage || postLocked}
             onClick={() => fileInputRef.current?.click()}
             className="hover:bg-ember/10 rounded-md p-1.5 transition-colors disabled:opacity-50"
-            title="آپلود تصویر"
+            title={postLocked ? 'تا انتشار پست بعدی امکان آپلود عکس نیست' : 'آپلود تصویر'}
           >
             <Icon name="image" size={20} />
           </button>
@@ -196,7 +196,8 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            hidden
+            disabled={postLocked}
+            className="sr-only"
             onChange={(event) => void handleFileChange(event.target.files?.[0])}
           />
 
@@ -216,7 +217,7 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
             : isCheckingImage
               ? 'در حال بررسی تصویر...'
               : postLocked
-                ? `انتشار تا ${formatCompactRemainingTime(remainingSeconds)} ساعت دیگر`
+                ? `انتشار تا ${formatRemainingTime(remainingSeconds)} دیگر`
                 : 'انتشار'}
         </button>
       </div>
@@ -259,18 +260,6 @@ function formatRemainingTime(totalSeconds: number) {
   }
 
   return `${toPersianDigits(minutes)} دقیقه و ${toPersianDigits(restSeconds)} ثانیه`;
-}
-
-function formatCompactRemainingTime(totalSeconds: number) {
-  const seconds = Math.max(0, Math.floor(totalSeconds));
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.ceil((seconds % 3600) / 60);
-
-  if (hours > 0) {
-    return `${toPersianDigits(hours)}:${toPersianDigits(String(minutes).padStart(2, '0'))}`;
-  }
-
-  return `${toPersianDigits(minutes)} دقیقه`;
 }
 
 function formatLocalDateTime(value: string) {
