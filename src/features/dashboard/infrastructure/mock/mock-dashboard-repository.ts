@@ -210,6 +210,24 @@ export class MockCoursesRepository implements ICoursesRepository {
     }
     return result;
   }
+
+  async markEpisodeWatched(courseId: string, episodeId: string) {
+    await delay(200);
+    if (this.cache) {
+      this.cache = this.cache.map((course) =>
+        course.id === courseId
+          ? {
+              ...course,
+              episodes: course.episodes.map((part) =>
+                part.id === episodeId ? { ...part, status: 'done' as const, progress: 100 } : part,
+              ),
+            }
+          : course,
+      );
+    }
+
+    return { success: true, reward: null, courseProgress: null };
+  }
 }
 
 // ---------- Profile Repository ----------
@@ -431,6 +449,17 @@ export class MockProfileRepository implements IProfileRepository {
 
   async confirmPasswordChange(): Promise<void> {
     await delay(250);
+  }
+
+  async claimAchievement(achievementId: string) {
+    await delay(250);
+    return { id: achievementId, unlocked: true, reward: null };
+  }
+
+  async getMyAchievements() {
+    await delay(200);
+    const profile = await this.getMyProfile();
+    return profile.achievements;
   }
 }
 

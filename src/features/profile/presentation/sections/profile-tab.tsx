@@ -19,6 +19,8 @@ import {
   getAchievementAssetUrl,
 } from '@/features/dashboard/domain/achievement-normalizer';
 import type { IProfileRepository, MyProfile } from '../../domain/profile-repository';
+import { useClaimAchievement } from '../../application/use-claim-achievement';
+import { useMyAchievements } from '../../application/use-my-achievements';
 import { CreatePost } from '@/features/social/presentation/sections/create-post';
 import { socialRepo } from '@/features/social/infrastructure/repository-factory';
 import type { AchievementCard } from '@/features/social/domain/social.data';
@@ -56,7 +58,13 @@ export function ProfileTab({
   const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
   const enqueuedRewardKeysRef = useRef(new Set<string>());
   const logout = useLogout();
-  const sortedAchievements = sortAchievementsByUnlocked(profile.achievements);
+  const claimAchievement = useClaimAchievement(profileRepo);
+  const achievementsQuery = useMyAchievements(profileRepo);
+  const achievements = useMemo(
+    () => mergeAchievementMetadata(profile.achievements, achievementsQuery.data),
+    [profile.achievements, achievementsQuery.data],
+  );
+  const sortedAchievements = sortAchievementsByUnlocked(achievements);
   const summaryStats = getProfileSummaryStats(profile);
 
   useEffect(() => {
@@ -77,6 +85,33 @@ export function ProfileTab({
   const handleAchievementShare = (achievement: Achievement) => {
     setSelectedAchievement(achievement);
     setIsSharePostOpen(true);
+  };
+
+  const handleAchievementClaim = async (achievement: Achievement) => {
+    if (!achievement.id) return;
+
+    try {
+      const result = await claimAchievement.mutateAsync(achievement.id);
+
+      if (result.unlocked) {
+        enqueueReward(result.reward);
+        showSuccess('دستاورد برای تو ثبت شد.');
+        setSelectedAchievement(null);
+        return;
+      }
+
+      // Daily check-ins only unlock once the streak reaches the threshold; until then, tell
+      // the user how far along they are instead of implying nothing happened.
+      const streak = result.streak ?? 0;
+      const threshold = result.threshold ?? 0;
+      showSuccess(
+        threshold > 0
+          ? `امروز ثبت شد. ${toPersianDigits(streak)} از ${toPersianDigits(threshold)} روز`
+          : 'امروز ثبت شد.',
+      );
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'ثبت دستاورد انجام نشد.');
+    }
   };
 
   const handlePublishPost = async (
@@ -181,6 +216,8 @@ export function ProfileTab({
           achievement={selectedAchievement}
           onClose={() => setSelectedAchievement(null)}
           onShare={() => handleAchievementShare(selectedAchievement)}
+          onClaim={(achievement) => void handleAchievementClaim(achievement)}
+          isClaiming={claimAchievement.isPending}
         />
       )}
 
@@ -596,15 +633,23 @@ function AchievementModal({
   achievement,
   onClose,
   onShare,
+  onClaim,
+  isClaiming = false,
 }: {
   achievement: Achievement;
   onClose: () => void;
   onShare?: () => void;
+  onClaim?: (achievement: Achievement) => void;
+  isClaiming?: boolean;
 }) {
   const count = getAchievementCount(achievement);
   const conditions = getAchievementConditions(achievement);
   const isEarned = achievement.unlocked && conditions.every((condition) => condition.passed);
   const canShare = achievement.isShareable ?? isEarned;
+  // Only daily check-in achievements are claimable by the user; everything else unlocks
+  // automatically from its own trigger.
+  const canClaim =
+    Boolean(onClaim) && achievement.triggerType === 'manual_daily_check' && !achievement.unlocked;
 
   const handleShare = async () => {
     if (!canShare) return;
@@ -694,6 +739,21 @@ function AchievementModal({
           </div>
         </div>
 
+        {canClaim && (
+          <Button
+            type="button"
+            variant="primary"
+            size="md"
+            block
+            disabled={isClaiming}
+            onClick={() => onClaim?.(achievement)}
+            className="mt-5 h-11 rounded-[7px] text-[13px]"
+          >
+            <Icon name="check" size={17} />
+            {isClaiming ? 'در حال ثبت...' : 'انجام دادم'}
+          </Button>
+        )}
+
         <Button
           type="button"
           variant="primary"
@@ -715,6 +775,38 @@ function AchievementModal({
 
 function getAchievementCount(achievement: Achievement) {
   return achievement.count ?? 1;
+}
+
+/**
+ * The profile payload drives the grid, but its achievement objects omit `triggerType` and
+ * `threshold`. Those come from the dedicated achievements endpoint, matched by id (falling back
+ * to slug), so the claim button can tell daily check-ins apart from auto-unlocked achievements.
+ */
+function mergeAchievementMetadata(
+  achievements: Achievement[],
+  detailed?: Achievement[],
+): Achievement[] {
+  if (!detailed?.length) return achievements;
+
+  const byId = new Map<string, Achievement>();
+  for (const item of detailed) {
+    if (item.id) byId.set(item.id, item);
+    if (item.slug) byId.set(item.slug, item);
+  }
+
+  return achievements.map((achievement) => {
+    const match =
+      (achievement.id ? byId.get(achievement.id) : undefined) ??
+      (achievement.slug ? byId.get(achievement.slug) : undefined);
+    if (!match) return achievement;
+
+    return {
+      ...achievement,
+      triggerType: achievement.triggerType ?? match.triggerType,
+      threshold: achievement.threshold ?? match.threshold,
+      isRepeatable: achievement.isRepeatable ?? match.isRepeatable,
+    };
+  });
 }
 
 function getAchievementImage(achievement: Achievement) {

@@ -5,8 +5,7 @@ export const getUsers = (params?: { limit?: number; offset?: number; q?: string 
 
 export const followUser = (userId: string) => httpClient.post(`/api/v1/users/${userId}/follow`);
 
-export const unfollowUser = (userId: string) =>
-  httpClient.delete(`/api/v1/users/${userId}/follow`);
+export const unfollowUser = (userId: string) => httpClient.delete(`/api/v1/users/${userId}/follow`);
 
 export const getFollowStatus = (userId: string) =>
   httpClient.get<{ isFollowedByMe: boolean }>(`/api/v1/users/${userId}/follow-status`);
@@ -21,18 +20,18 @@ export const getMyProfile = () => httpClient.get('/api/v1/users/me/profile');
 export const getMyReferral = (options?: { signal?: AbortSignal }) =>
   httpClient.get('/api/v1/users/me/referral', { signal: options?.signal });
 
-export const submitMyExchangeReferral = (body: {
-  exchangeReferralUrl: string;
-  identity: string;
-}) => httpClient.post('/api/v1/users/me/referral/exchange', body);
+export const submitMyExchangeReferral = (body: { exchangeReferralUrl: string; identity: string }) =>
+  httpClient.post('/api/v1/users/me/referral/exchange', body);
 
 export const getMyFriends = (
   params?: { limit?: number; offset?: number; q?: string },
   options?: { signal?: AbortSignal },
 ) => httpClient.get('/api/v1/users/me/friends', { params, signal: options?.signal });
 
-export const getMyXpHistory = (params?: { limit?: number; offset?: number; q?: string }, options?: { signal?: AbortSignal }) =>
-  httpClient.get('/api/v1/users/me/xp-history', { params, signal: options?.signal });
+export const getMyXpHistory = (
+  params?: { limit?: number; offset?: number; q?: string },
+  options?: { signal?: AbortSignal },
+) => httpClient.get('/api/v1/users/me/xp-history', { params, signal: options?.signal });
 
 export const updateMyOnboarding = (isCompleteOnboarding: boolean) =>
   httpClient.patch('/api/v1/users/me/onboarding', { isCompleteOnboarding });
@@ -53,11 +52,8 @@ export const updateMyProfileAvatar = (file: File) => {
 
 export const deleteMyProfileAvatar = () => httpClient.delete('/api/v1/users/me/avatar');
 
-export const registerMyPushToken = (body: {
-  token: string;
-  platform: 'web';
-  deviceId: string;
-}) => httpClient.post('/api/v1/users/me/push-tokens', body);
+export const registerMyPushToken = (body: { token: string; platform: 'web'; deviceId: string }) =>
+  httpClient.post('/api/v1/users/me/push-tokens', body);
 
 export const deleteMyPushToken = (token: string) =>
   httpClient.delete('/api/v1/users/me/push-tokens', { data: { token } });
@@ -66,6 +62,28 @@ export const requestEmailVerification = (email: string) =>
   httpClient.post('/api/v1/users/me/email/verification/request', { email });
 
 export const deleteMyAccount = () => httpClient.delete('/api/v1/users/me');
+
+/**
+ * Full achievement list for the current user. Unlike the copy embedded in `/users/me/profile`,
+ * these items carry `triggerType` and `threshold`, which is what tells us an achievement is
+ * user-claimable (`manual_daily_check`) rather than automatically unlocked.
+ */
+export const getMyAchievements = (
+  params?: { limit?: number; offset?: number },
+  options?: { signal?: AbortSignal },
+) => httpClient.get('/api/v1/users/me/achievements', { params, signal: options?.signal });
+
+/**
+ * Claims an achievement for the current user. For daily check-in achievements
+ * (triggerType "manual_daily_check") this records one check-in for today and only grants the
+ * achievement once the required consecutive-day streak is reached.
+ */
+export const awardMyAchievement = (achievementId: string, options?: { signal?: AbortSignal }) =>
+  httpClient.post(
+    `/api/v1/users/me/achievements/${encodeURIComponent(achievementId)}/award`,
+    undefined,
+    { signal: options?.signal },
+  );
 
 export const updateMyProfileSetting = (field: string, value: boolean) =>
   httpClient.patch(`/api/v1/users/me/settings/${field}`, { enabled: value });

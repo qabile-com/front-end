@@ -1,6 +1,8 @@
 import {
+  awardMyAchievement,
   confirmPasswordChange,
   confirmPhoneChange,
+  getMyAchievements,
   deleteMyAccount,
   deleteMyProfileAvatar,
   getMyProfile,
@@ -14,7 +16,9 @@ import {
   verifyPasswordChangeCode,
   verifyPhoneChangeCode,
 } from '@/core/api/users.api';
+import type { Achievement } from '@/features/dashboard/domain/dashboard.types';
 import type {
+  AchievementClaimResult,
   IProfileRepository,
   MyProfile,
   PaginatedXpHistory,
@@ -28,7 +32,9 @@ import type {
 import { DEFAULT_AVATAR_GRADIENT } from '@/features/dashboard/domain/dashboard.types';
 import {
   normalizeAchievementCollection,
+  normalizeAchievements,
   normalizeActionRewardResult,
+  type AchievementDto,
 } from '@/features/dashboard/domain/achievement-normalizer';
 
 const DEFAULT_SECURITY_SETTINGS: ProfileSecuritySettings = {
@@ -74,6 +80,18 @@ type MyProfileDto = Omit<
     hasImage?: boolean;
     isPinned?: boolean;
   }[];
+};
+
+type AchievementClaimDto = {
+  id?: string;
+  slug?: string;
+  title?: string;
+  description?: string;
+  imageUrl?: string | null;
+  xpEarned?: number;
+  streak?: number;
+  threshold?: number;
+  unlocked?: boolean;
 };
 
 type XpHistoryDto = Omit<XpHistoryItem, 'title'> & {
@@ -198,6 +216,32 @@ export class HttpProfileRepository implements IProfileRepository {
     verificationToken: string,
   ): Promise<void> {
     await confirmPasswordChange(password, passwordConfirmation, verificationToken);
+  }
+
+  async getMyAchievements(options?: { signal?: AbortSignal }): Promise<Achievement[]> {
+    const res = await getMyAchievements({ limit: 100 }, options);
+    const payload = (res.data ?? {}) as { data?: unknown };
+    const items = (Array.isArray(payload) ? payload : (payload.data ?? [])) as AchievementDto[];
+    return normalizeAchievements(items);
+  }
+
+  async claimAchievement(achievementId: string): Promise<AchievementClaimResult> {
+    const res = await awardMyAchievement(achievementId);
+    const data = (res.data.data ?? res.data) as AchievementClaimDto;
+
+    return {
+      id: data.id ?? achievementId,
+      slug: data.slug,
+      title: data.title,
+      description: data.description,
+      xpEarned: data.xpEarned,
+      streak: data.streak,
+      threshold: data.threshold,
+      unlocked: data.unlocked ?? false,
+      // Only surface the reward modal when the claim actually unlocked the achievement;
+      // an intermediate check-in grants nothing yet.
+      reward: data.unlocked ? normalizeActionRewardResult({ unlockedAchievements: [data] }) : null,
+    };
   }
 
   private normalizeProfile(p: MyProfileDto, rewardPayload?: unknown): MyProfile {

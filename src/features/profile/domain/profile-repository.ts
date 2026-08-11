@@ -98,7 +98,10 @@ export interface PaginatedXpHistory {
 
 export interface IProfileRepository {
   getMyProfile(): Promise<MyProfile>;
-  getXpHistory(params?: { limit?: number; offset?: number; q?: string }, options?: { signal?: AbortSignal }): Promise<PaginatedXpHistory>;
+  getXpHistory(
+    params?: { limit?: number; offset?: number; q?: string },
+    options?: { signal?: AbortSignal },
+  ): Promise<PaginatedXpHistory>;
   updateMyProfile(input: UpdateProfileInput): Promise<MyProfile>;
   updateProfileAvatar(file: File): Promise<MyProfile>;
   deleteProfileAvatar(): Promise<MyProfile>;
@@ -118,4 +121,21 @@ export interface IProfileRepository {
     passwordConfirmation: string,
     verificationToken: string,
   ): Promise<void>;
+  claimAchievement(achievementId: string): Promise<AchievementClaimResult>;
+  getMyAchievements(options?: { signal?: AbortSignal }): Promise<Achievement[]>;
+}
+
+export interface AchievementClaimResult {
+  id: string;
+  slug?: string;
+  title?: string;
+  description?: string;
+  xpEarned?: number;
+  /** Consecutive check-in count so far. Only meaningful for daily check-in achievements. */
+  streak?: number;
+  /** Consecutive check-ins needed to unlock. */
+  threshold?: number;
+  /** True only when this claim reached the threshold and actually granted the achievement. */
+  unlocked: boolean;
+  reward?: ActionRewardResult | null;
 }
