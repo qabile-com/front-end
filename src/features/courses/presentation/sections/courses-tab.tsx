@@ -388,7 +388,7 @@ function FeaturedCourse({
                 label="جلسه"
                 value={toPersianDigits(course.episodes.length)}
               />
-              <CourseMiniStat icon="eye" label="بازدید" value={course.views} />
+              <CourseMiniStat icon="eye" label="بازدید" value={formatPersianNumber(course.views)} />
               <CourseMiniStat
                 icon="flame"
                 label="آتش"
