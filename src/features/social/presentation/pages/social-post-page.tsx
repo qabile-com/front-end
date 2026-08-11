@@ -142,17 +142,19 @@ export function SocialPostPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <button
-        type="button"
-        onClick={() => {
-          if (!requireLogin()) return;
-          router.push(backTarget);
-        }}
-        className="text-ink-3 hover:text-gold mb-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--color-hair)] bg-black/20 px-3 text-sm font-black transition-colors"
-      >
-        <Icon name="arrow-right" size={17} />
-        {backLabel}
-      </button>
+      <div className="sticky top-[env(safe-area-inset-top)] z-30 mb-4 flex">
+        <button
+          type="button"
+          onClick={() => {
+            if (!requireLogin()) return;
+            router.push(backTarget);
+          }}
+          className="text-ink-3 hover:text-gold inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--color-hair)] bg-[var(--color-panel)] px-3 text-sm font-black shadow-[0_10px_30px_-18px_var(--glow)] backdrop-blur-xl transition-colors"
+        >
+          <Icon name="arrow-right" size={17} />
+          {backLabel}
+        </button>
+      </div>
 
       <SocialPostDetail
         post={{

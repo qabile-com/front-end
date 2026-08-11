@@ -220,7 +220,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="min-w-0 flex-1 overflow-x-clip">
           <div
             className={cn(
-              'overflow-y-auto px-4 sm:px-6 lg:px-8 lg:pb-8',
+              // No overflow-y here: it has no height constraint so it never scrolls itself (the
+              // document does), but it would still count as a scroll container and silently break
+              // `position: sticky` for page content like the back buttons on post/profile pages.
+              'px-4 sm:px-6 lg:px-8 lg:pb-8',
               // Chromeless routes (e.g. shared post/profile pages) render with no MobileHeader
               // above them, so they need their own top safe-area clearance from the status bar/notch.
               // calc() keeps the normal top spacing and just adds the inset on top of it, instead
