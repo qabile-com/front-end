@@ -45,6 +45,12 @@ const ACHIEVEMENT_IMAGE_BY_SLUG: Record<string, string> = {
   'jarghe-nokhostin': '/assets/achievements/new/jaraghe-nokhostin.webp',
   'jornal-nevis': '/assets/achievements/new/jornal-nevis.webp',
 
+  // Slugs the API actually sends, which don't match the asset filenames.
+  'zhornal-nevis-bidari': '/assets/achievements/new/jornal-nevis.webp',
+  'dosh-abe-sarde-sohyoon': '/assets/achievements/new/dooshhaye-yakhi.webp',
+  'azad-sazi-se-adat': '/assets/achievements/new/hich-ghasogh.webp',
+  'bidari-avaliye-motavali': '/assets/achievements/new/bidari-avalie.webp',
+
   'atash-afrooz': '/assets/achievements/atash-afrooz.webp',
   'atash-afroz': '/assets/achievements/atash-afrooz.webp',
   'farzand-ghabile': '/assets/achievements/farzand-ghabile.webp',
