@@ -1,22 +1,27 @@
-const CACHE_NAME = 'qabile-pwa-v1';
+// Served at /sw.js (see headers() in next.config.ts for Cache-Control / Service-Worker-Allowed).
+// Generated from env vars instead of a static public/sw.js file so the Firebase config used by
+// the background push handler can never drift from the client config in firebase-client.ts.
+
+const FIREBASE_CONFIG = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? '',
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '',
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? '',
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? '',
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? '',
+};
+
+function buildServiceWorkerScript(): string {
+  return `const CACHE_NAME = 'qabile-pwa-v1';
 const OFFLINE_URL = '/offline';
 const STATIC_ASSETS = [OFFLINE_URL, '/icons/icon-192.png', '/icons/icon-512.png'];
-const FIREBASE_CONFIG = {
-  apiKey: 'AIzaSyAHwv2b0rYcRoIkthpPMRKNHPAG91H5KkY',
-  authDomain: 'qabile.firebaseapp.com',
-  projectId: 'qabile',
-  storageBucket: 'qabile.firebasestorage.app',
-  messagingSenderId: '633527158445',
-  appId: '1:633527158445:web:9fe7ff6a983a7f6444a824',
-};
+const FIREBASE_CONFIG = ${JSON.stringify(FIREBASE_CONFIG)};
 
 try {
   importScripts('https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js');
   importScripts('https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging-compat.js');
 
-  if (self.firebase?.apps?.length === 0) {
-    self.firebase.initializeApp(FIREBASE_CONFIG);
-  } else if (self.firebase && !self.firebase.apps.length) {
+  if (self.firebase?.apps && !self.firebase.apps.length) {
     self.firebase.initializeApp(FIREBASE_CONFIG);
   }
 
@@ -121,3 +126,13 @@ self.addEventListener('notificationclick', (event) => {
       }),
   );
 });
+`;
+}
+
+export function GET() {
+  return new Response(buildServiceWorkerScript(), {
+    headers: {
+      'Content-Type': 'application/javascript; charset=utf-8',
+    },
+  });
+}
