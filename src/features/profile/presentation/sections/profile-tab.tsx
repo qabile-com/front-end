@@ -581,6 +581,20 @@ function ProfileSettingsTab({
               >
                 {achievement.label}
               </span>
+              {(() => {
+                const progress = getAchievementProgress(achievement);
+                if (!progress) return null;
+                return (
+                  <span
+                    className={cn(
+                      '-mt-1 text-[11px] font-black tabular-nums',
+                      achievement.unlocked ? 'text-gold' : 'text-ink-4',
+                    )}
+                  >
+                    {toPersianDigits(progress.done)} / {toPersianDigits(progress.threshold)}
+                  </span>
+                );
+              })()}
             </button>
           ))}
         </div>
@@ -644,6 +658,7 @@ function AchievementModal({
 }) {
   const count = getAchievementCount(achievement);
   const conditions = getAchievementConditions(achievement);
+  const progress = getAchievementProgress(achievement);
   const isEarned = achievement.unlocked && conditions.every((condition) => condition.passed);
   const canShare = achievement.isShareable ?? isEarned;
   // Only daily check-in achievements are claimable by the user; everything else unlocks
@@ -720,6 +735,23 @@ function AchievementModal({
           دریافت میکنید
           {/* {getAchievementDescription(achievement)} */}
         </p>
+
+        {progress && (
+          <div className="mt-5 w-full">
+            <div className="mb-2 flex items-baseline justify-between gap-3 text-[12px] font-black">
+              <span className="text-ink-3">پیشرفت تو</span>
+              <span className="text-gold tabular-nums">
+                {toPersianDigits(progress.done)} از {toPersianDigits(progress.threshold)}
+              </span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-[rgba(255,255,255,.08)]">
+              <div
+                className="h-full rounded-full transition-[width] duration-500 [background:var(--fire-grad)]"
+                style={{ width: `${progress.percent}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="mt-6 flex w-full flex-wrap items-center gap-x-4 gap-y-2 text-[13px] sm:justify-between">
           <span className="text-ink-3 font-bold">شرایط دریافت:</span>
@@ -807,6 +839,19 @@ function mergeAchievementMetadata(
       isRepeatable: achievement.isRepeatable ?? match.isRepeatable,
     };
   });
+}
+
+/**
+ * Progress toward a multi-step achievement, e.g. 12 of 40 cold showers.
+ * Returns null when there's nothing meaningful to show (no threshold, or a single-step
+ * achievement where "۱ از ۱" would just be noise).
+ */
+function getAchievementProgress(achievement: Achievement) {
+  const threshold = achievement.threshold ?? 0;
+  if (threshold <= 1) return null;
+
+  const done = Math.min(getAchievementCount(achievement), threshold);
+  return { done, threshold, percent: Math.round((done / threshold) * 100) };
 }
 
 function getAchievementImage(achievement: Achievement) {
