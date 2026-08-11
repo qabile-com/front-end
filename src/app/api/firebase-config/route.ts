@@ -9,6 +9,15 @@ import { NextResponse } from 'next/server';
 // bundle by design and are not secrets.
 export const dynamic = 'force-dynamic';
 
+const REQUIRED_ENV_VARS = [
+  'NEXT_PUBLIC_FIREBASE_API_KEY',
+  'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
+  'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
+  'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
+  'NEXT_PUBLIC_FIREBASE_APP_ID',
+  'NEXT_PUBLIC_FIREBASE_VAPID_KEY',
+];
+
 export function GET() {
   return NextResponse.json(
     {
@@ -19,6 +28,8 @@ export function GET() {
       messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '',
       appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? '',
       vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ?? '',
+      // Names only (never values) so this is safe to open in a browser while debugging a deploy.
+      missingEnvVars: REQUIRED_ENV_VARS.filter((name) => !process.env[name]),
     },
     { headers: { 'Cache-Control': 'no-store' } },
   );

@@ -205,6 +205,8 @@ async function resolveAvailability(): Promise<NotificationAvailability> {
 async function logDiagnostics(availability: NotificationAvailability) {
   if (availability === 'available') return;
 
+  const config = await getFirebaseMessagingConfig();
+
   console.warn(
     `[notifications] unavailable (${availability}).`,
     JSON.stringify(
@@ -216,7 +218,7 @@ async function logDiagnostics(availability: NotificationAvailability) {
         hasNotificationApi: typeof window !== 'undefined' && 'Notification' in window,
         hasServiceWorker: typeof navigator !== 'undefined' && 'serviceWorker' in navigator,
         hasPushManager: typeof window !== 'undefined' && 'PushManager' in window,
-        hasFirebaseConfig: Boolean(await getFirebaseMessagingConfig()),
+        hasFirebaseConfig: Boolean(config),
       },
       null,
       2,

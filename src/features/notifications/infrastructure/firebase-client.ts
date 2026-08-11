@@ -32,15 +32,33 @@ const buildTimeConfig: FirebaseMessagingConfig = {
 
 let configPromise: Promise<FirebaseMessagingConfig | null> | null = null;
 
+const REQUIRED_KEYS = [
+  'apiKey',
+  'authDomain',
+  'projectId',
+  'messagingSenderId',
+  'appId',
+  // Not part of the config snippet Firebase shows you — it lives under
+  // Project Settings > Cloud Messaging > Web Push certificates.
+  'vapidKey',
+] as const satisfies readonly (keyof FirebaseMessagingConfig)[];
+
+const ENV_VAR_BY_KEY: Record<(typeof REQUIRED_KEYS)[number], string> = {
+  apiKey: 'NEXT_PUBLIC_FIREBASE_API_KEY',
+  authDomain: 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
+  projectId: 'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
+  messagingSenderId: 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
+  appId: 'NEXT_PUBLIC_FIREBASE_APP_ID',
+  vapidKey: 'NEXT_PUBLIC_FIREBASE_VAPID_KEY',
+};
+
+/** Env var names whose values are missing/empty, so failures name the exact culprit. */
+export function getMissingConfigEnvVars(config: Partial<FirebaseMessagingConfig>): string[] {
+  return REQUIRED_KEYS.filter((key) => !config[key]).map((key) => ENV_VAR_BY_KEY[key]);
+}
+
 function isComplete(config: Partial<FirebaseMessagingConfig>): config is FirebaseMessagingConfig {
-  return Boolean(
-    config.apiKey &&
-      config.authDomain &&
-      config.projectId &&
-      config.messagingSenderId &&
-      config.appId &&
-      config.vapidKey,
-  );
+  return getMissingConfigEnvVars(config).length === 0;
 }
 
 /**
@@ -59,7 +77,10 @@ export function getFirebaseMessagingConfig(): Promise<FirebaseMessagingConfig | 
       if (isComplete(runtimeConfig)) return runtimeConfig;
 
       console.error(
-        '[notifications] firebase config is incomplete — set the NEXT_PUBLIC_FIREBASE_* env vars (including NEXT_PUBLIC_FIREBASE_VAPID_KEY) in the deployment environment.',
+        '[notifications] firebase config incomplete. Missing env vars in this deployment: ' +
+          `${getMissingConfigEnvVars(runtimeConfig).join(', ')}. ` +
+          'Note: NEXT_PUBLIC_FIREBASE_VAPID_KEY is NOT part of the Firebase config snippet — ' +
+          'copy it from Project Settings > Cloud Messaging > Web Push certificates.',
       );
       return null;
     } catch (error) {
