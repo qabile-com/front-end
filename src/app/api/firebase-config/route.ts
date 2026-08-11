@@ -18,18 +18,25 @@ const REQUIRED_ENV_VARS = [
   'NEXT_PUBLIC_FIREBASE_VAPID_KEY',
 ];
 
+// Pasting env vars into a hosting dashboard very easily picks up a trailing newline or space.
+// An untrimmed VAPID key makes getToken() throw ("applicationServerKey is not valid"), so trim
+// every value rather than debugging invisible whitespace later.
+const read = (name: string) => (process.env[name] ?? '').trim();
+
 export function GET() {
   return NextResponse.json(
     {
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? '',
-      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '',
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? '',
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? '',
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '',
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? '',
-      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ?? '',
+      apiKey: read('NEXT_PUBLIC_FIREBASE_API_KEY'),
+      authDomain: read('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'),
+      projectId: read('NEXT_PUBLIC_FIREBASE_PROJECT_ID'),
+      storageBucket: read('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'),
+      messagingSenderId: read('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'),
+      appId: read('NEXT_PUBLIC_FIREBASE_APP_ID'),
+      vapidKey: read('NEXT_PUBLIC_FIREBASE_VAPID_KEY'),
       // Names only (never values) so this is safe to open in a browser while debugging a deploy.
-      missingEnvVars: REQUIRED_ENV_VARS.filter((name) => !process.env[name]),
+      missingEnvVars: REQUIRED_ENV_VARS.filter((name) => !read(name)),
+      // Lets you spot a truncated/padded VAPID key without exposing it (expected: 87).
+      vapidKeyLength: read('NEXT_PUBLIC_FIREBASE_VAPID_KEY').length,
     },
     { headers: { 'Cache-Control': 'no-store' } },
   );

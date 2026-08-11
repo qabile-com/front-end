@@ -84,12 +84,13 @@ export function useNotificationRegistration() {
         token = await getFirebaseNotificationToken(registration);
       } catch (error) {
         // Typically an invalid/mismatched VAPID key, or the push service rejecting the
-        // subscription — the thrown message from Firebase is the useful part here.
+        // subscription. Surfaced in the toast too because on iOS there's no reachable console
+        // without plugging into a Mac, and the Firebase error code is what identifies the cause.
         console.error(
           '[notifications] getToken() failed — check NEXT_PUBLIC_FIREBASE_VAPID_KEY',
           error,
         );
-        showError('دریافت مجوز اعلان از سرویس پیام‌رسان انجام نشد.');
+        showError(`دریافت مجوز اعلان انجام نشد: ${getErrorDetail(error)}`);
         return null;
       }
 
@@ -258,6 +259,16 @@ async function logDiagnostics(availability: NotificationAvailability) {
       2,
     ),
   );
+}
+
+/** Firebase error codes look like `messaging/token-subscribe-failed` and identify the cause. */
+function getErrorDetail(error: unknown): string {
+  if (typeof error === 'object' && error && 'code' in error) {
+    const code = (error as { code?: unknown }).code;
+    if (typeof code === 'string' && code) return code;
+  }
+  if (error instanceof Error && error.message) return error.message.slice(0, 140);
+  return 'خطای نامشخص';
 }
 
 function getDeviceId() {

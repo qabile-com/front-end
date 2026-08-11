@@ -28,11 +28,18 @@ export async function ensureServiceWorkerRegistration(): Promise<ServiceWorkerRe
     });
   }
 
-  return withTimeout(
+  const registration = await withTimeout(
     navigator.serviceWorker.ready,
     READY_TIMEOUT_MS,
     'service worker did not become ready in time',
   );
+
+  // An already-installed PWA can still be running a worker from an older deploy (with, say, an
+  // empty Firebase config). Kick off an update check so the next launch picks up the current
+  // one; not awaited because a slow check shouldn't hold up token registration.
+  void registration.update().catch(() => undefined);
+
+  return registration;
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
