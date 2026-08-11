@@ -11,10 +11,16 @@ const FIREBASE_CONFIG = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? '',
 };
 
+// In dev the worker is registered on demand by the enable-notifications flow, so push can be
+// tested locally. Precaching/serving assets from cache there would fight HMR (stale chunks),
+// so caching is production-only — push handling stays active in both.
+const ENABLE_CACHING = process.env.NODE_ENV === 'production';
+
 function buildServiceWorkerScript(): string {
   return `const CACHE_NAME = 'qabile-pwa-v1';
 const OFFLINE_URL = '/offline';
 const STATIC_ASSETS = [OFFLINE_URL, '/icons/icon-192.png', '/icons/icon-512.png'];
+const ENABLE_CACHING = ${ENABLE_CACHING};
 const FIREBASE_CONFIG = ${JSON.stringify(FIREBASE_CONFIG)};
 
 try {
@@ -46,6 +52,11 @@ try {
 }
 
 self.addEventListener('install', (event) => {
+  if (!ENABLE_CACHING) {
+    self.skipWaiting();
+    return;
+  }
+
   event.waitUntil(
     caches
       .open(CACHE_NAME)
@@ -66,6 +77,8 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  if (!ENABLE_CACHING) return;
+
   const request = event.request;
   const url = new URL(request.url);
 

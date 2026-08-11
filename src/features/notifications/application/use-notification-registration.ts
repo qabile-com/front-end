@@ -13,6 +13,7 @@ import {
 import { useAuthSession } from '@/providers/auth-provider';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { isIosDevice, isStandalonePwa } from '@/shared/lib/pwa-platform';
+import { ensureServiceWorkerRegistration } from '@/shared/lib/service-worker';
 
 const TOKEN_STORAGE_KEY = 'qabile:fcm-token';
 const TOKEN_USER_STORAGE_KEY = 'qabile:fcm-token-user-id';
@@ -23,6 +24,7 @@ export function useNotificationRegistration() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [shouldShowPrompt, setShouldShowPrompt] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
+  const [permission, setPermission] = useState<NotificationPermission | null>(null);
   const registeredForUserRef = useRef<string | null>(null);
   const authRef = useRef(auth);
 
@@ -44,16 +46,30 @@ export function useNotificationRegistration() {
 
     setIsRegistering(true);
     try {
+      // Must stay in the click's task so the browser still counts this as a user gesture,
+      // otherwise some browsers refuse to show the native permission dialog.
       const permission =
         Notification.permission === 'default'
           ? await Notification.requestPermission()
           : Notification.permission;
 
-      if (permission !== 'granted') return null;
+      setPermission(permission);
 
-      const registration = await navigator.serviceWorker.ready;
+      if (permission !== 'granted') {
+        setShouldShowPrompt(false);
+        if (permission === 'denied') {
+          showError('اجازه نمایش اعلان در مرورگر رد شد. از تنظیمات سایت آن را مجاز کن.');
+        }
+        return null;
+      }
+
+      const registration = await ensureServiceWorkerRegistration();
       const token = await getFirebaseNotificationToken(registration);
-      if (!token) return null;
+      if (!token) {
+        console.error('[notifications] firebase returned no token (check VAPID key / config)');
+        showError('فعال‌سازی اعلان‌ها انجام نشد.');
+        return null;
+      }
 
       await registerNotificationDevice({ token, platform: 'web', deviceId: getDeviceId() });
       window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
@@ -73,17 +89,31 @@ export function useNotificationRegistration() {
 
   useEffect(() => {
     let cancelled = false;
+
+    if ('Notification' in window) {
+      queueMicrotask(() => setPermission(Notification.permission));
+    }
+
     // iOS only supports web push for a PWA added to the home screen (16.4+); the underlying
     // APIs (Notification/PushManager) are present in a regular Safari/Chrome-iOS tab too, so
     // isFirebaseMessagingAvailable() alone would report "supported" there and burn the
     // permission prompt on a request that can never actually deliver a push.
     if (isIosDevice() && !isStandalonePwa()) {
+      console.info(
+        '[notifications] iOS detected outside standalone PWA — web push requires the app to be added to the home screen first.',
+      );
       queueMicrotask(() => setIsSupported(false));
       return undefined;
     }
 
     void isFirebaseMessagingAvailable().then((available) => {
-      if (!cancelled) setIsSupported(available);
+      if (cancelled) return;
+      if (!available) {
+        console.warn(
+          '[notifications] messaging unavailable — check NEXT_PUBLIC_FIREBASE_* env vars (including VAPID key) and browser support.',
+        );
+      }
+      setIsSupported(available);
     });
 
     return () => {
@@ -166,6 +196,7 @@ export function useNotificationRegistration() {
     unregister,
     dismissPrompt,
     isSupported,
+    permission,
   };
 }
 
