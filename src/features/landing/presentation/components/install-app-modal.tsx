@@ -54,32 +54,27 @@ export function InstallAppModal({
   const isIOS = platform === 'ios';
   const steps = isAndroid ? INSTALL_STEPS_ANDROID : isIOS ? INSTALL_STEPS_IOS : [];
 
-  const shouldShow = useMemo(() => {
-    if (!openOnEligibleVisit) return false;
+  useEffect(() => {
+    if (!openOnEligibleVisit) return;
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       ('standalone' in window.navigator && window.navigator.standalone === true);
     const isMobile = window.matchMedia('(max-width: 767px)').matches;
-    if (isStandalone || !isMobile) return false;
+    if (isStandalone || !isMobile) return;
 
     const dismissedAt = Number(window.localStorage.getItem(DISMISS_KEY) ?? 0);
     const dismissWindow = DISMISS_DAYS * 24 * 60 * 60 * 1000;
     if (dismissedAt && Date.now() - dismissedAt < dismissWindow) {
       const dismissedUserId = window.localStorage.getItem(DISMISS_USER_KEY) ?? '';
-      if (dismissedUserId && currentUserId && dismissedUserId !== currentUserId) {
-        return true;
-      }
-      return false;
+      const stillEligible = Boolean(
+        dismissedUserId && currentUserId && dismissedUserId !== currentUserId,
+      );
+      if (!stillEligible) return;
     }
 
-    return true;
-  }, [openOnEligibleVisit, currentUserId]);
-
-  useEffect(() => {
-    if (!shouldShow) return;
     const timer = window.setTimeout(() => setInternalOpen(true), 1400);
     return () => window.clearTimeout(timer);
-  }, [shouldShow]);
+  }, [openOnEligibleVisit, currentUserId]);
 
   const closeModal = useCallback(() => {
     window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
