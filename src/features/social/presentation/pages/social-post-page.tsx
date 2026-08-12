@@ -93,10 +93,9 @@ export function SocialPostPage() {
 
   const handleShare = async () => {
     const title = post?.author ? `پست ${post.author}` : 'پست قبیله';
-    const text = post?.text ? post.text.slice(0, 120) : 'این پست قبیله را ببین.';
 
     try {
-      await shareUrl({ title, text, path: currentPath });
+      await shareUrl({ title, path: currentPath });
       showSuccess('لینک پست کپی شد');
     } catch (shareError) {
       if (shareError instanceof DOMException && shareError.name === 'AbortError') return;

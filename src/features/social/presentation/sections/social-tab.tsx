@@ -122,7 +122,6 @@ export function SocialTab({
     try {
       await shareUrl({
         title: post.author ? `پست ${post.author}` : 'پست قبیله',
-        text: post.text ? post.text.slice(0, 120) : 'این پست قبیله را ببین.',
         path: `/social/${post.id}`,
       });
       showSuccess('لینک پست کپی شد');
