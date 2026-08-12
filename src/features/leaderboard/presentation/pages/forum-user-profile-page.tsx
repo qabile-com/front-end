@@ -297,7 +297,7 @@ export function ForumUserProfilePage() {
                               src={post.image}
                               alt="تصویر پیوست پست"
                               fill={false}
-                              className="max-h-[360px] w-full object-contain"
+                              className="max-h-[360px] w-full object-cover"
                             />
                           ) : (
                             <div className="text-ink-4 grid h-40 place-items-center">

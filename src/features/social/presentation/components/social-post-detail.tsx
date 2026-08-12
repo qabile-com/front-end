@@ -126,7 +126,7 @@ export function SocialPostDetail({
                 src={post.attachment?.url ?? post.image ?? ''}
                 alt="تصویر پیوست پست"
                 fill={false}
-                className="max-h-[min(640px,75vh)] w-full object-contain"
+                className="max-h-[min(640px,75vh)] w-full object-cover"
               />
             ) : (
               <div className="text-ink-4 grid h-52 place-items-center">

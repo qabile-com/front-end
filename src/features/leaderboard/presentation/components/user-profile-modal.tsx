@@ -236,7 +236,7 @@ export function UserProfileModal({
                         src={post.attachment?.url ?? post.image ?? ''}
                         alt="تصویر پیوست پست"
                         fill={false}
-                        className="max-h-[360px] w-full object-contain"
+                        className="max-h-[360px] w-full object-cover"
                       />
                     ) : (
                       <div className="text-ink-4 grid h-28 place-items-center">
