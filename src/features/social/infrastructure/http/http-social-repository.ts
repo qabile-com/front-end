@@ -266,7 +266,7 @@ function apiCommentToDomain(comment: ForumCommentDto): PostComment {
   const author = comment.author ? apiUserToDomain(comment.author) : null;
 
   return {
-    id: comment.authorId ?? comment.author?.id,
+    id: comment.id,
     authorId: comment.authorId ?? comment.author?.id,
     name: author?.name ?? comment.name ?? 'کاربر قبیله',
     username: author?.username,
