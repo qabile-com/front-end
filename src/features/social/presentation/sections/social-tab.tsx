@@ -595,7 +595,7 @@ function PostCard({
   adminRepo?: IAdminRepository;
   onReward?: (reward?: ActionRewardResult | null) => void;
 }) {
-  const { like, unlike } = useLikePost(socialRepo, onReward);
+  const { like, unlike, isToggling: isTogglingLike } = useLikePost(socialRepo, onReward);
   const deleteOwnPost = useDeleteOwnPost(socialRepo);
   const pinOwnPost = usePinOwnPost(socialRepo);
   const adminPinPost = useAdminPinPost(adminRepo as IAdminRepository);
@@ -843,8 +843,9 @@ function PostCard({
               <button
                 type="button"
                 onClick={handleLike}
+                disabled={isTogglingLike}
                 className={cn(
-                  'flex items-center gap-1.5 transition-colors',
+                  'flex items-center gap-1.5 transition-colors disabled:opacity-60',
                   post.likedByMe && 'text-[#ff5a5a]',
                 )}
               >

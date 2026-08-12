@@ -38,6 +38,7 @@ export function useLikePost(
       onReward?.(result.reward);
     },
     onSettled: (_data, _error, postId) => {
+      queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       queryClient.invalidateQueries({ queryKey: ['social-post', postId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
       queryClient.invalidateQueries({ queryKey: ['roadmap-step-condition'] });
@@ -67,13 +68,26 @@ export function useLikePost(
       context?.previousData.forEach(([queryKey, data]) => queryClient.setQueryData(queryKey, data));
     },
     onSettled: (_data, _error, postId) => {
+      queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       queryClient.invalidateQueries({ queryKey: ['social-post', postId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
       queryClient.invalidateQueries({ queryKey: ['roadmap-step-condition'] });
     },
   });
 
-  return { like: likeMutation.mutate, unlike: unlikeMutation.mutate };
+  const isToggling = likeMutation.isPending || unlikeMutation.isPending;
+
+  return {
+    like: (postId: string) => {
+      if (isToggling) return;
+      likeMutation.mutate(postId);
+    },
+    unlike: (postId: string) => {
+      if (isToggling) return;
+      unlikeMutation.mutate(postId);
+    },
+    isToggling,
+  };
 }
 
 function updateFeedPost(
