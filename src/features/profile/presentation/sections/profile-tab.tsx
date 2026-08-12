@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
-import { BaseModal, Button, Icon, type IconName, OptionalImage, UserAvatar } from '@/shared/ui';
+import { BaseModal, Icon, type IconName, OptionalImage, UserAvatar } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
@@ -10,14 +10,10 @@ import { Panel } from '@/shared/ui';
 import { useLogout } from '@/features/auth/application/use-auth-guard';
 import { ProfileSettingsPanel } from '../components/profile-settings-panel';
 import { EditProfileModal } from '../components/edit-profile-modal';
-import type {
-  Achievement,
-  AchievementCondition,
-} from '@/features/dashboard/domain/dashboard.types';
-import {
-  DEFAULT_ACHIEVEMENT_IMAGE,
-  getAchievementAssetUrl,
-} from '@/features/dashboard/domain/achievement-normalizer';
+import { AchievementModal } from '../components/achievement-modal';
+import { AchievementsGrid } from '../components/achievements-grid';
+import { getAchievementKey, sortAchievementsByUnlocked } from '../components/achievement-helpers';
+import type { Achievement } from '@/features/dashboard/domain/dashboard.types';
 import type { IProfileRepository, MyProfile } from '../../domain/profile-repository';
 import { useClaimAchievement } from '../../application/use-claim-achievement';
 import { useMyAchievements } from '../../application/use-my-achievements';
@@ -49,7 +45,7 @@ export function ProfileTab({
   profileRepo,
   initialEditProfileOpen = false,
 }: ProfileTabProps) {
-  const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
+  const [selectedAchievementKey, setSelectedAchievementKey] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ProfileBottomTab>('posts');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(initialEditProfileOpen);
@@ -66,6 +62,11 @@ export function ProfileTab({
   );
   const sortedAchievements = sortAchievementsByUnlocked(achievements);
   const summaryStats = getProfileSummaryStats(profile);
+  const selectedAchievement =
+    sortedAchievements.find((achievement) => getAchievementKey(achievement) === selectedAchievementKey) ??
+    null;
+  const setSelectedAchievement = (achievement: Achievement | null) =>
+    setSelectedAchievementKey(achievement ? getAchievementKey(achievement) : null);
 
   useEffect(() => {
     if (!profile.actionReward?.unlockedAchievements?.length) return;
@@ -197,7 +198,7 @@ export function ProfileTab({
           {activeTab === 'posts' ? (
             <UserPostsTab profileId={profile.id} posts={profile.posts ?? []} />
           ) : activeTab === 'achievements' ? (
-            <AchievementsTab achievements={sortedAchievements} onAchievementClick={setSelectedAchievement} />
+            <AchievementsGrid achievements={sortedAchievements} onAchievementClick={setSelectedAchievement} />
           ) : (
             <ProfileSettingsTab
               onOpenSettings={() => setIsSettingsOpen(true)}
@@ -558,65 +559,6 @@ function ProfileSettingsTab({
   );
 }
 
-function AchievementsTab({
-  achievements,
-  onAchievementClick,
-}: {
-  achievements: Achievement[];
-  onAchievementClick: (achievement: Achievement) => void;
-}) {
-  if (achievements.length === 0) {
-    return (
-      <p className="text-ink-3 rounded-[16px] border border-[var(--color-hair)] bg-black/20 p-5 text-center text-sm">
-        هنوز دستاوردی برای نمایش نیست.
-      </p>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-x-4 gap-y-7 sm:grid-cols-4 sm:gap-x-5 lg:grid-cols-6">
-      {achievements.map((achievement) => {
-        const isEarned = isAchievementEarned(achievement);
-        const count = getAchievementCount(achievement);
-
-        return (
-          <button
-            key={achievement.label}
-            type="button"
-            onClick={() => onAchievementClick(achievement)}
-            className="group flex flex-col items-center gap-2.5 text-center"
-          >
-            <span
-              className={cn(
-                'border-hair relative block size-[72px] overflow-hidden rounded-[8px] border bg-black shadow-[0_12px_26px_-18px_var(--glow)] transition-transform duration-200 group-hover:-translate-y-0.5',
-                isEarned
-                  ? 'border-[rgba(255,98,0,.72)]'
-                  : 'border-[rgba(253,238,226,.28)] opacity-70 grayscale',
-              )}
-            >
-              <OptionalImage
-                src={getAchievementImage(achievement)}
-                alt={achievement.label}
-                className="object-cover"
-                fallbackSrc={DEFAULT_ACHIEVEMENT_IMAGE}
-                loading="lazy"
-              />
-              {isEarned && count > 1 && (
-                <span className="bg-ember absolute start-1.5 top-1.5 rounded-[5px] px-1.5 py-0.5 text-[10px] font-black text-white shadow-[0_6px_14px_-8px_var(--glow)]">
-                  {toPersianDigits(count)}x
-                </span>
-              )}
-            </span>
-            <span className={cn('text-[12px]', isEarned ? 'text-ink-2' : 'text-ink-4')}>
-              {achievement.label}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 function ProfileActionButton({
   title,
   description,
@@ -646,176 +588,6 @@ function ProfileActionButton({
   );
 }
 
-function AchievementModal({
-  achievement,
-  onClose,
-  onShare,
-  onClaim,
-  isClaiming = false,
-}: {
-  achievement: Achievement;
-  onClose: () => void;
-  onShare?: () => void;
-  onClaim?: (achievement: Achievement) => void;
-  isClaiming?: boolean;
-}) {
-  const count = getAchievementCount(achievement);
-  const conditions = getAchievementConditions(achievement);
-  const progress = getAchievementProgress(achievement);
-  const isEarned = isAchievementEarned(achievement);
-  const canShare = isEarned && (achievement.isShareable ?? true);
-  const canClaim =
-    Boolean(onClaim) && achievement.triggerType === 'manual_daily_check' && !isEarned;
-
-  const handleShare = async () => {
-    if (!canShare) return;
-    if (onShare) {
-      onShare();
-      return;
-    }
-    const text = `من دستاورد ${achievement.label} را در قبیله ققنوس دریافت کردم.`;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: achievement.label, text });
-        return;
-      }
-      await navigator.clipboard.writeText(text);
-      showSuccess('متن اشتراک‌گذاری کپی شد');
-    } catch {
-      showError('اشتراک‌گذاری انجام نشد');
-    }
-  };
-
-  return (
-    <BaseModal
-      isOpen
-      onClose={onClose}
-      title={achievement.label}
-      zIndexClassName="z-[1000]"
-      panelClassName="border-hair relative w-full max-w-[426px] overflow-hidden rounded-[10px] border bg-[#050302] shadow-[0_28px_90px_-40px_var(--glow)]"
-      contentClassName="modal-scroll px-4 py-5 sm:px-8 sm:py-7"
-    >
-      <button
-        type="button"
-        onClick={onClose}
-        className="text-gold hover:text-gold-lite mb-4 flex min-h-11 items-center gap-1.5 text-[13px] font-bold transition-colors"
-      >
-        <Icon name="arrow-right" size={16} />
-        بازگشت
-      </button>
-
-      <div className="flex flex-col items-center text-center">
-        <div className="relative">
-          <div
-            className={cn(
-              'relative size-[200px] overflow-hidden rounded-[5px] border border-[rgba(255,98,0,.72)] bg-black shadow-[0_26px_40px_-32px_var(--glow)]',
-              !isEarned && 'grayscale',
-            )}
-          >
-            <OptionalImage
-              src={getAchievementImage(achievement)}
-              alt={achievement.label}
-              className="object-cover"
-              fallbackSrc={DEFAULT_ACHIEVEMENT_IMAGE}
-              loading="lazy"
-            />
-          </div>
-          {isEarned && count > 1 && (
-            <span className="text-gold absolute inset-x-0 -bottom-6 mx-auto grid size-13 place-items-center rounded-full border-2 border-[#050302] bg-[#120904] text-lg font-black shadow-[0_0_0_1px_rgba(255,98,0,.65),0_12px_26px_-14px_var(--glow)]">
-              {toPersianDigits(count)}x
-            </span>
-          )}
-        </div>
-
-        <h3
-          className={cn(
-            'text-gold mt-9 text-[24px] font-black',
-            !(isEarned && count > 1) && 'mt-6',
-          )}
-        >
-          {achievement.label}
-        </h3>
-        <p className="text-ink-2 mt-3 text-[13px] leading-7">
-          با کسب این دستاورد
-          <span className="text-ember"> {toPersianDigits(achievement.xpEarned)} آتش </span>
-          دریافت میکنید
-          {/* {getAchievementDescription(achievement)} */}
-        </p>
-
-        {progress && (
-          <div className="mt-5 w-full">
-            <div className="mb-2 flex items-baseline justify-between gap-3 text-[12px] font-black">
-              <span className="text-ink-3">پیشرفت تو</span>
-              <span className="text-gold tabular-nums">
-                {toPersianDigits(progress.done)} از {toPersianDigits(progress.threshold)}
-              </span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-[rgba(255,255,255,.08)]">
-              <div
-                className="h-full rounded-full transition-[width] duration-500 [background:var(--fire-grad)]"
-                style={{ width: `${progress.percent}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="mt-6 flex w-full flex-wrap items-center gap-x-4 gap-y-2 text-[13px] sm:justify-between">
-          <span className="text-ink-3 font-bold">شرایط دریافت:</span>
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-            {conditions.map((condition) => (
-              <span
-                key={condition.id}
-                className={cn(
-                  'inline-flex items-center gap-2 leading-7 font-bold',
-                  condition.passed ? 'text-gold' : 'text-ink-4 grayscale',
-                )}
-              >
-                <Icon name="check-inner-empty" size={24} className="shrink-0" />
-                <span>{condition.label}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {canClaim && (
-          <Button
-            type="button"
-            variant="primary"
-            size="md"
-            block
-            disabled={isClaiming}
-            onClick={() => onClaim?.(achievement)}
-            className="mt-5 h-11 rounded-[7px] text-[13px]"
-          >
-            <Icon name="check" size={17} />
-            {isClaiming ? 'در حال ثبت...' : 'انجام دادم'}
-          </Button>
-        )}
-
-        <Button
-          type="button"
-          variant="primary"
-          size="md"
-          block
-          disabled={!canShare}
-          onClick={handleShare}
-          className="mt-4 h-11 rounded-[7px] text-[13px]"
-        >
-          <Icon name="share" size={17} />
-          اشتراک گذاری
-        </Button>
-
-        <p className="text-ink-3 mt-5 text-[10.5px]">قبیله به تو افتخار می‌کند، ادامه بده.</p>
-      </div>
-    </BaseModal>
-  );
-}
-
-function getAchievementCount(achievement: Achievement) {
-  return achievement.count ?? 1;
-}
-
 function mergeAchievementMetadata(
   achievements: Achievement[],
   detailed?: Achievement[],
@@ -843,52 +615,10 @@ function mergeAchievementMetadata(
   });
 }
 
-function getAchievementProgress(achievement: Achievement) {
-  const threshold = achievement.threshold ?? 0;
-  if (threshold <= 1) return null;
-
-  const done = Math.min(getAchievementCount(achievement), threshold);
-  return { done, threshold, percent: Math.round((done / threshold) * 100) };
-}
-
-function isAchievementEarned(achievement: Achievement) {
-  const progress = getAchievementProgress(achievement);
-  if (progress) return progress.done >= progress.threshold;
-  return Boolean(achievement.unlocked);
-}
-
-function getAchievementImage(achievement: Achievement) {
-  return getAchievementAssetUrl(achievement);
-}
-
-function getAchievementSlug(achievement: Achievement) {
-  return achievement.slug?.trim();
-}
-
 function getAchievementDescription(achievement: Achievement) {
   return achievement.description ?? 'این دستاورد با تکمیل شرط مشخص‌شده برای کاربر ثبت می‌شود.';
 }
 
 function getAchievementIcon(): IconName {
   return 'flame';
-}
-
-function getAchievementConditions(achievement: Achievement): AchievementCondition[] {
-  if (achievement.conditions?.length) return achievement.conditions;
-
-  const slug = getAchievementSlug(achievement);
-
-  return [
-    {
-      id: `${slug ?? achievement.label}-main-condition`,
-      label: achievement.description ?? 'تکمیل شرط تعیین‌شده برای این دستاورد',
-      passed: isAchievementEarned(achievement),
-    },
-  ];
-}
-
-function sortAchievementsByUnlocked(achievements: Achievement[]) {
-  return [...achievements].sort(
-    (a, b) => Number(isAchievementEarned(b)) - Number(isAchievementEarned(a)),
-  );
 }

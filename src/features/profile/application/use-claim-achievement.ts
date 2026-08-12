@@ -11,6 +11,7 @@ export function useClaimAchievement(repo: IProfileRepository) {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'achievements'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'xp-history'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard', 'home'] }),
