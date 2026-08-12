@@ -90,13 +90,10 @@ export const login = (email: string, password?: string) =>
   });
 
 export const loginWithGoogle = (payload: GoogleLoginRequest) =>
-  httpClient.post<OtpVerifyResponse>(
-    process.env.NEXT_PUBLIC_GOOGLE_AUTH_EXCHANGE_ENDPOINT || '/api/v1/auth/google',
-    {
-      accessToken: payload.accessToken,
-      ...(payload.referralCode?.trim() ? { referralCode: payload.referralCode.trim() } : {}),
-    },
-  );
+  httpClient.post<OtpVerifyResponse>('/api/v1/auth/google', {
+    accessToken: payload.accessToken,
+    ...(payload.referralCode?.trim() ? { referralCode: payload.referralCode.trim() } : {}),
+  });
 
 export const validateReferralCode = (referralCode: string) =>
   httpClient.get<{ valid: boolean }>(

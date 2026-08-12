@@ -779,8 +779,6 @@ function getCourseAccess(course: Course) {
 }
 
 function getCourseProgress(course: Course) {
-  // The server-calculated value wins; the episode average below is only a fallback for
-  // responses without it (and for the mock repository).
   if (course.progressPercent != null) {
     return Math.min(100, Math.max(0, Math.round(course.progressPercent)));
   }
