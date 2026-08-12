@@ -21,6 +21,7 @@ interface SocialPostDetailProps {
   isAddingComment?: boolean;
   currentUserName?: string | null;
   currentUserAvatar?: string | null;
+  currentUserId?: string | null;
 }
 
 export function SocialPostDetail({
@@ -36,6 +37,7 @@ export function SocialPostDetail({
   isAddingComment = false,
   currentUserName,
   currentUserAvatar,
+  currentUserId,
 }: SocialPostDetailProps) {
   const [commentText, setCommentText] = useState('');
   const commentsEndRef = useRef<HTMLDivElement>(null);
@@ -211,19 +213,22 @@ export function SocialPostDetail({
                           </span>
                         )}
                       </span>
-                      <span className="flex items-center gap-2">
+                      <span className="flex items-center gap-1.5">
                         <span className="text-ink-4 text-xs">
                           {formatRelativeTime(comment.time)}
                         </span>
-                        {canManageComments && comment.id && (
-                          <button
-                            type="button"
-                            onClick={() => onDeleteComment?.(comment.id!)}
-                            className="text-danger/80 hover:text-danger rounded-lg px-2 py-1 text-[11px] font-black transition-colors"
-                          >
-                            حذف
-                          </button>
-                        )}
+                        {(canManageComments ||
+                          (currentUserId && comment.authorId === currentUserId)) &&
+                          comment.id && (
+                            <button
+                              type="button"
+                              onClick={() => onDeleteComment?.(comment.id!)}
+                              aria-label="حذف نظر"
+                              className="text-danger/70 hover:text-danger hover:bg-danger/10 -m-1 rounded-full p-1.5 transition-colors"
+                            >
+                              <Icon name="trash" size={14} />
+                            </button>
+                          )}
                       </span>
                     </div>
                     <p className="text-ink-2 mt-1 text-sm leading-7">{comment.text}</p>

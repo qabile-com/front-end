@@ -199,6 +199,7 @@ export function SocialPostPage() {
         isAddingComment={addComment.isPending}
         currentUserName={user?.name}
         currentUserAvatar={user?.avatar}
+        currentUserId={auth.user?.id}
       />
       {isOwnPost && (
         <div className="mt-3 flex flex-wrap gap-2">
