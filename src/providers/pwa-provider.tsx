@@ -19,9 +19,6 @@ export function PwaProvider() {
       });
     };
 
-    // `load` may already have fired by the time this effect runs (e.g. on client-side
-    // navigation into the app), in which case the listener would never fire and the worker
-    // would never register.
     if (document.readyState === 'complete') {
       register();
       return;

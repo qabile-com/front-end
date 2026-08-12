@@ -170,8 +170,6 @@ export class HttpCoursesRepository implements ICoursesRepository {
     options?: { signal?: AbortSignal },
   ): Promise<MarkEpisodeWatchedResult> {
     const res = await markEpisodeWatched(courseId, episodeId, options);
-    // The reward payload (xp/streak/unlockedAchievements) sits on the envelope, while
-    // userProgress is nested one level deeper.
     const payload = (res.data ?? {}) as MarkEpisodeWatchedDto;
     const data = (payload.data ?? payload) as MarkEpisodeWatchedDto;
 
@@ -194,9 +192,6 @@ function resolveCoursePrice(course: CourseDto): number {
   );
 }
 
-// The API already computes completion in `userProgress`; deriving it from the episode list
-// client-side gave different answers on different screens (episode-watch average vs. count of
-// finished episodes), so the server value is the single source of truth when present.
 function resolveCourseProgress(course: CourseDto) {
   const progress = course.userProgress;
   const totalEpisodes =

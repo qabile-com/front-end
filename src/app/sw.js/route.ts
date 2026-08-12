@@ -1,20 +1,12 @@
 import { getFirebaseConfig } from '@/core/config/public-env';
 
-// Served at /sw.js (see headers() in next.config.ts for Cache-Control / Service-Worker-Allowed).
-// Generated rather than a static public/sw.js file so the Firebase config used by the background
-// push handler comes from the same source as the client config and can never drift from it.
-// Read per request, so overriding via env vars takes effect without a rebuild.
 export const dynamic = 'force-dynamic';
 
-/** The worker only needs the app identity, not the VAPID key (that's used client-side). */
 function getServiceWorkerFirebaseConfig() {
   const { vapidKey: _vapidKey, ...appConfig } = getFirebaseConfig();
   return appConfig;
 }
 
-// In dev the worker is registered on demand by the enable-notifications flow, so push can be
-// tested locally. Precaching/serving assets from cache there would fight HMR (stale chunks),
-// so caching is production-only — push handling stays active in both.
 const ENABLE_CACHING = process.env.NODE_ENV === 'production';
 
 function buildServiceWorkerScript(): string {

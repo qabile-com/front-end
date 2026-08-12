@@ -34,10 +34,6 @@ export const reportSectionWatchProgress = (
     signal: options?.signal,
   });
 
-/**
- * Marks an episode as watched and grants its XP without tracked playback.
- * Only accepted when the episode (or its course) has `noTrackRequired` enabled.
- */
 export const markEpisodeWatched = (
   courseId: string,
   episodeId: string,

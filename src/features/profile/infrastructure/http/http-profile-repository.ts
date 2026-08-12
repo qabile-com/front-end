@@ -238,8 +238,6 @@ export class HttpProfileRepository implements IProfileRepository {
       streak: data.streak,
       threshold: data.threshold,
       unlocked: data.unlocked ?? false,
-      // Only surface the reward modal when the claim actually unlocked the achievement;
-      // an intermediate check-in grants nothing yet.
       reward: data.unlocked ? normalizeActionRewardResult({ unlockedAchievements: [data] }) : null,
     };
   }

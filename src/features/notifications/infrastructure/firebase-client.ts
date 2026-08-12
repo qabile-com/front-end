@@ -11,8 +11,6 @@ import {
 } from 'firebase/messaging';
 import { getFirebaseConfig, type FirebaseMessagingConfig } from '@/core/config/public-env';
 
-// Env vars win when set; otherwise the bundled production defaults apply, so a deployment
-// that forgets to configure them still receives push notifications.
 const buildTimeConfig: FirebaseMessagingConfig = getFirebaseConfig();
 
 let configPromise: Promise<FirebaseMessagingConfig | null> | null = null;
@@ -23,8 +21,6 @@ const REQUIRED_KEYS = [
   'projectId',
   'messagingSenderId',
   'appId',
-  // Not part of the config snippet Firebase shows you — it lives under
-  // Project Settings > Cloud Messaging > Web Push certificates.
   'vapidKey',
 ] as const satisfies readonly (keyof FirebaseMessagingConfig)[];
 
@@ -37,7 +33,6 @@ const ENV_VAR_BY_KEY: Record<(typeof REQUIRED_KEYS)[number], string> = {
   vapidKey: 'NEXT_PUBLIC_FIREBASE_VAPID_KEY',
 };
 
-/** Env var names whose values are missing/empty, so failures name the exact culprit. */
 export function getMissingConfigEnvVars(config: Partial<FirebaseMessagingConfig>): string[] {
   return REQUIRED_KEYS.filter((key) => !config[key]).map((key) => ENV_VAR_BY_KEY[key]);
 }
@@ -46,10 +41,6 @@ function isComplete(config: Partial<FirebaseMessagingConfig>): config is Firebas
   return getMissingConfigEnvVars(config).length === 0;
 }
 
-/**
- * Resolves the Firebase messaging config, preferring the build-time values and falling back to
- * the server route when they're missing (i.e. env vars were set in the host without a rebuild).
- */
 export function getFirebaseMessagingConfig(): Promise<FirebaseMessagingConfig | null> {
   configPromise ??= (async () => {
     if (isComplete(buildTimeConfig)) return buildTimeConfig;
@@ -74,7 +65,6 @@ export function getFirebaseMessagingConfig(): Promise<FirebaseMessagingConfig | 
     }
   })();
 
-  // Don't cache a failed lookup: a later attempt (e.g. after the env is fixed) should retry.
   return configPromise.then((config) => {
     if (!config) configPromise = null;
     return config;

@@ -27,7 +27,6 @@ export interface CoursePart {
   steps?: { id: string; text: string; isCompleted: boolean }[];
   views?: number;
   description?: string;
-  /** "بدون ترک": can be marked done (and grant XP) without tracked watch progress. */
   noTrackRequired?: boolean;
 }
 
@@ -45,11 +44,9 @@ export interface Course {
   isUnlocked?: boolean;
   isFree?: boolean;
   description?: string;
-  /** Server-calculated completion (0-100). Authoritative — prefer it over deriving from episodes. */
   progressPercent?: number;
   completedEpisodes?: number;
   totalEpisodes?: number;
-  /** "بدون ترک" at course level: applies to every episode unless the episode overrides it. */
   noTrackRequired?: boolean;
   episodes: CoursePart[];
 }

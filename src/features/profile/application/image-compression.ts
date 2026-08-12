@@ -65,7 +65,12 @@ export async function compressImage(file: File, options: ImageCompressOptions = 
   return result;
 }
 
-const HEIC_MIME_TYPES = new Set(['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence']);
+const HEIC_MIME_TYPES = new Set([
+  'image/heic',
+  'image/heif',
+  'image/heic-sequence',
+  'image/heif-sequence',
+]);
 
 function isHeicFile(file: File): boolean {
   if (HEIC_MIME_TYPES.has(file.type.toLowerCase())) return true;
@@ -96,8 +101,6 @@ export function fileToImage(file: File): Promise<HTMLImageElement> {
   });
 }
 
-// Reads the EXIF orientation tag (0x0112) straight out of the JPEG's APP1 segment so
-// canvas re-encoding doesn't silently strip it and leave phone photos sideways/upside-down.
 async function readExifOrientation(file: File): Promise<number> {
   if (file.type !== 'image/jpeg') return 1;
 
@@ -112,7 +115,8 @@ async function readExifOrientation(file: File): Promise<number> {
     offset += 2;
 
     if (marker === 0xffe1) {
-      if (offset + 6 > view.byteLength || view.getUint32(offset + 2, false) !== 0x45786966) return 1;
+      if (offset + 6 > view.byteLength || view.getUint32(offset + 2, false) !== 0x45786966)
+        return 1;
 
       const tiffOffset = offset + 8;
       if (tiffOffset + 8 > view.byteLength) return 1;
@@ -141,7 +145,6 @@ async function readExifOrientation(file: File): Promise<number> {
   return 1;
 }
 
-// Standard EXIF-orientation-to-canvas-transform table (values 2-8; 1 is identity/no-op).
 function applyOrientationTransform(
   ctx: CanvasRenderingContext2D,
   orientation: number,

@@ -18,15 +18,10 @@ const TOKEN_USER_STORAGE_KEY = 'qabile:fcm-token-user-id';
 const DEVICE_ID_STORAGE_KEY = 'qabile:notification-device-id';
 
 export type NotificationAvailability =
-  /** Still resolving browser/Firebase support. */
   | 'loading'
-  /** iOS outside a home-screen PWA: web push is impossible until the app is installed. */
   | 'requires-install'
-  /** Page isn't a secure context (http on a LAN IP), so push APIs don't exist. */
   | 'insecure-context'
-  /** Browser genuinely can't do web push, or Firebase env config is missing. */
   | 'unsupported'
-  /** Everything is in place; permission state decides what to do next. */
   | 'available';
 
 export function useNotificationRegistration() {
@@ -51,8 +46,6 @@ export function useNotificationRegistration() {
 
     setIsRegistering(true);
     try {
-      // Stays inside the click's task so the browser still treats this as a user gesture —
-      // iOS in particular refuses to show the native dialog otherwise.
       const nextPermission =
         Notification.permission === 'default'
           ? await Notification.requestPermission()
@@ -68,8 +61,6 @@ export function useNotificationRegistration() {
         return null;
       }
 
-      // Each step fails for a genuinely different reason, so they're reported separately —
-      // a single catch-all makes "فعال‌سازی انجام نشد" impossible to act on.
       let registration: ServiceWorkerRegistration;
       try {
         registration = await ensureServiceWorkerRegistration();
@@ -83,9 +74,6 @@ export function useNotificationRegistration() {
       try {
         token = await getFirebaseNotificationToken(registration);
       } catch (error) {
-        // Typically an invalid/mismatched VAPID key, or the push service rejecting the
-        // subscription. Surfaced in the toast too because on iOS there's no reachable console
-        // without plugging into a Mac, and the Firebase error code is what identifies the cause.
         console.error(
           '[notifications] getToken() failed — check NEXT_PUBLIC_FIREBASE_VAPID_KEY',
           error,
@@ -140,8 +128,6 @@ export function useNotificationRegistration() {
     };
   }, []);
 
-  // Deliberately not persisted: while permission isn't granted the login effect below re-prompts
-  // on every subsequent login, so dismissing only hides it for the current session.
   const dismissPrompt = useCallback(() => {
     setShouldShowPrompt(false);
   }, []);
@@ -170,14 +156,11 @@ export function useNotificationRegistration() {
     if (availability === 'loading') return;
     if (availability !== 'available') return;
 
-    // Once denied, browsers never re-show the native dialog, so keep surfacing our own prompt
-    // with instructions for re-enabling it from browser settings.
     if (Notification.permission !== 'granted') {
       queueMicrotask(() => setShouldShowPrompt(true));
       return;
     }
 
-    // Granted — only (re)register the device token when we haven't already for this user.
     const tokenUserId = window.localStorage.getItem(TOKEN_USER_STORAGE_KEY);
     if (registeredForUserRef.current === auth.user?.id || tokenUserId === auth.user?.id) {
       registeredForUserRef.current = auth.user?.id ?? null;
@@ -218,12 +201,8 @@ export function useNotificationRegistration() {
 async function resolveAvailability(): Promise<NotificationAvailability> {
   if (typeof window === 'undefined') return 'unsupported';
 
-  // Service workers and the Notification API only exist in secure contexts. Reaching a dev
-  // server from a phone over http://<lan-ip> is the common way to trip this.
   if (!window.isSecureContext) return 'insecure-context';
 
-  // iOS exposes no Notification API at all in a normal Safari tab; web push works only from a
-  // home-screen install (iOS 16.4+). Detect that first so we can tell the user to install.
   if (isIosDevice() && !isStandalonePwa()) return 'requires-install';
 
   if (
@@ -261,13 +240,6 @@ async function logDiagnostics(availability: NotificationAvailability) {
   );
 }
 
-/**
- * Builds the failure toast for a push subscription error.
- *
- * The raw text is appended on purpose: iOS has no reachable console, and Firebase wraps the
- * underlying WebKit error, so guessing at a friendly message hides the one string that actually
- * identifies the cause (e.g. `messaging/token-subscribe-failed` vs. a WebKit push-service error).
- */
 function getSubscribeErrorMessage(error: unknown): string {
   const detail = [
     typeof error === 'object' && error && 'code' in error

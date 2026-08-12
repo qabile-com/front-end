@@ -63,21 +63,11 @@ export const requestEmailVerification = (email: string) =>
 
 export const deleteMyAccount = () => httpClient.delete('/api/v1/users/me');
 
-/**
- * Full achievement list for the current user. Unlike the copy embedded in `/users/me/profile`,
- * these items carry `triggerType` and `threshold`, which is what tells us an achievement is
- * user-claimable (`manual_daily_check`) rather than automatically unlocked.
- */
 export const getMyAchievements = (
   params?: { limit?: number; offset?: number },
   options?: { signal?: AbortSignal },
 ) => httpClient.get('/api/v1/users/me/achievements', { params, signal: options?.signal });
 
-/**
- * Claims an achievement for the current user. For daily check-in achievements
- * (triggerType "manual_daily_check") this records one check-in for today and only grants the
- * achievement once the required consecutive-day streak is reached.
- */
 export const awardMyAchievement = (achievementId: string, options?: { signal?: AbortSignal }) =>
   httpClient.post(
     `/api/v1/users/me/achievements/${encodeURIComponent(achievementId)}/award`,

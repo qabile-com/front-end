@@ -137,7 +137,8 @@ export function SocialPostPage() {
       : from === 'user-profile' && fromUserId
         ? `/social/users/${encodeURIComponent(fromUserId)}`
         : '/social';
-  const backLabel = from === 'profile' || from === 'user-profile' ? 'بازگشت به پروفایل' : 'بازگشت به محفل';
+  const backLabel =
+    from === 'profile' || from === 'user-profile' ? 'بازگشت به پروفایل' : 'بازگشت به محفل';
   const visiblePost = { ...post, isPinned: pinnedOverride ?? post.isPinned };
 
   return (
@@ -200,7 +201,7 @@ export function SocialPostPage() {
             type="button"
             disabled={pinOwnPost.isPending}
             onClick={handlePinOwnPost}
-            className="text-gold border-gold/30 inline-flex min-h-11 items-center gap-2 rounded-xl border bg-black/20 px-3 text-sm font-black transition-colors hover:text-ember disabled:opacity-60"
+            className="text-gold border-gold/30 hover:text-ember inline-flex min-h-11 items-center gap-2 rounded-xl border bg-black/20 px-3 text-sm font-black transition-colors disabled:opacity-60"
           >
             <Icon name={visiblePost.isPinned ? 'star' : 'star-line'} size={17} />
             {visiblePost.isPinned ? 'برداشتن سنجاق' : 'سنجاق پست'}

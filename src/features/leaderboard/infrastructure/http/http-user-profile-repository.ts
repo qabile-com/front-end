@@ -18,7 +18,9 @@ export class HttpUserProfileRepository implements IUserProfileRepository {
   async getUserProfile(userId: string): Promise<UserProfileData> {
     const res = await getForumUser(userId);
     const payload = res.data as ForumUserProfileDto | { data?: ForumUserProfileDto };
-    const data = ('data' in payload && payload.data ? payload.data : res.data) as ForumUserProfileDto;
+    const data = (
+      'data' in payload && payload.data ? payload.data : res.data
+    ) as ForumUserProfileDto;
     const name = normalizeForumUserName(data);
     const followersCount = data.stats?.followersCount ?? data.followersCount ?? 0;
     const followingCount = data.stats?.followingCount ?? 0;
@@ -105,7 +107,9 @@ function normalizeAttachment(attachment?: ForumPostDto['attachments'][number] | 
   };
 }
 
-function normalizeForumUserName(user: ForumUserProfileDto | ForumPostDto['comments'][number]['author'] | undefined) {
+function normalizeForumUserName(
+  user: ForumUserProfileDto | ForumPostDto['comments'][number]['author'] | undefined,
+) {
   if (!user) return 'کاربر قبیله';
   return (
     user.displayName ??

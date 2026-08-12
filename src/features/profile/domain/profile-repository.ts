@@ -131,11 +131,8 @@ export interface AchievementClaimResult {
   title?: string;
   description?: string;
   xpEarned?: number;
-  /** Consecutive check-in count so far. Only meaningful for daily check-in achievements. */
   streak?: number;
-  /** Consecutive check-ins needed to unlock. */
   threshold?: number;
-  /** True only when this claim reached the threshold and actually granted the achievement. */
   unlocked: boolean;
   reward?: ActionRewardResult | null;
 }

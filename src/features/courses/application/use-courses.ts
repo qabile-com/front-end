@@ -64,11 +64,6 @@ export function useUpdateSectionProgress(
   });
 }
 
-/**
- * Marks a "بدون ترک" episode as watched, granting its XP without tracked playback.
- * Invalidates everything the XP/progress change can affect (course lists, session detail,
- * profile stats and fire balance) so the UI reflects the new state immediately.
- */
 export function useMarkEpisodeWatched(repo: ICoursesRepository) {
   const queryClient = useQueryClient();
 

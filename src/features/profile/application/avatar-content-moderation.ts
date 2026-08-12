@@ -46,8 +46,6 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
-// tfjs auto-detects WebGL and can throw on older/low-end mobile browsers with no
-// fallback of its own, which would take the whole moderation flow down with it.
 async function ensureTfBackend(): Promise<void> {
   const tf = await import('@tensorflow/tfjs');
   try {
@@ -63,8 +61,6 @@ async function ensureTfBackend(): Promise<void> {
   }
 }
 
-// Never let a broken/slow model load block an upload indefinitely — fail open
-// (treat as allowed) and let it retry fresh on the next call instead of caching the failure.
 function getModel(): Promise<NsfwModel | null> {
   modelPromise ??= (async () => {
     try {

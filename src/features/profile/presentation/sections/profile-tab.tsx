@@ -100,8 +100,6 @@ export function ProfileTab({
         return;
       }
 
-      // Daily check-ins only unlock once the streak reaches the threshold; until then, tell
-      // the user how far along they are instead of implying nothing happened.
       const streak = result.streak ?? 0;
       const threshold = result.threshold ?? 0;
       showSuccess(
@@ -574,8 +572,6 @@ function ProfileSettingsTab({
                     fallbackSrc={DEFAULT_ACHIEVEMENT_IMAGE}
                     loading="lazy"
                   />
-                  {/* Repeat badge only once actually earned — otherwise a half-finished
-                      achievement reads as if it were completed several times. */}
                   {isEarned && count > 1 && (
                     <span className="bg-ember absolute start-1.5 top-1.5 rounded-[5px] px-1.5 py-0.5 text-[10px] font-black text-white shadow-[0_6px_14px_-8px_var(--glow)]">
                       {toPersianDigits(count)}x
@@ -650,14 +646,8 @@ function AchievementModal({
   const count = getAchievementCount(achievement);
   const conditions = getAchievementConditions(achievement);
   const progress = getAchievementProgress(achievement);
-  // Completion alone decides this. ANDing the per-condition `passed` flags would keep a
-  // finished achievement greyed out, since the API reports those independently of the count.
   const isEarned = isAchievementEarned(achievement);
-  // `isShareable` says the achievement *may* be shared, not that it has been earned — so it
-  // narrows an earned achievement rather than standing in for one.
   const canShare = isEarned && (achievement.isShareable ?? true);
-  // Only daily check-in achievements are claimable by the user; everything else unlocks
-  // automatically from its own trigger.
   const canClaim =
     Boolean(onClaim) && achievement.triggerType === 'manual_daily_check' && !isEarned;
 
@@ -810,11 +800,6 @@ function getAchievementCount(achievement: Achievement) {
   return achievement.count ?? 1;
 }
 
-/**
- * The profile payload drives the grid, but its achievement objects omit `triggerType` and
- * `threshold`. Those come from the dedicated achievements endpoint, matched by id (falling back
- * to slug), so the claim button can tell daily check-ins apart from auto-unlocked achievements.
- */
 function mergeAchievementMetadata(
   achievements: Achievement[],
   detailed?: Achievement[],
@@ -842,11 +827,6 @@ function mergeAchievementMetadata(
   });
 }
 
-/**
- * Progress toward a multi-step achievement, e.g. 12 of 40 cold showers.
- * Returns null when there's nothing meaningful to show (no threshold, or a single-step
- * achievement where "۱ از ۱" would just be noise).
- */
 function getAchievementProgress(achievement: Achievement) {
   const threshold = achievement.threshold ?? 0;
   if (threshold <= 1) return null;
@@ -855,13 +835,6 @@ function getAchievementProgress(achievement: Achievement) {
   return { done, threshold, percent: Math.round((done / threshold) * 100) };
 }
 
-/**
- * Whether the achievement is actually earned.
- *
- * For multi-step achievements the API reports `unlocked: true` as soon as the first step is
- * recorded, so trusting that flag alone lights the badge up (and enables sharing) at 1 of 40.
- * When a threshold exists, completion is what counts.
- */
 function isAchievementEarned(achievement: Achievement) {
   const progress = getAchievementProgress(achievement);
   if (progress) return progress.done >= progress.threshold;

@@ -652,7 +652,8 @@ function PostCard({
     pinOwnPost.mutate(
       { postId: post.id, isPinned: !post.isPinned },
       {
-        onSuccess: () => showSuccess(post.isPinned ? 'پست از حالت سنجاق خارج شد.' : 'پست سنجاق شد.'),
+        onSuccess: () =>
+          showSuccess(post.isPinned ? 'پست از حالت سنجاق خارج شد.' : 'پست سنجاق شد.'),
         onError: (error) =>
           showError(error instanceof Error ? error.message : 'تغییر وضعیت سنجاق انجام نشد.'),
       },
@@ -667,201 +668,205 @@ function PostCard({
 
   return (
     <>
-    <article
-      className={cn(
-        'relative cursor-pointer overflow-hidden transition-all',
-        post.isAdam
-          ? `border-t border-[rgba(255,98,0,.25)] bg-[#140C07] shadow-[0_0_0_1px_rgba(255,130,40,.05),0_20px_40px_rgba(0,0,0,.35)]`
-          : `border-t border-[#2A1C16] bg-[#090705]`,
-      )}
-      onClick={onClick}
-    >
-      {post.isPinned && (
-        <div className="text-gold absolute top-2 right-2 text-xs font-bold">
-          <Icon name="star" size={16} />
-        </div>
-      )}
-      {post.isAdam && <FounderBanner />}
-      <div className="p-5">
-        {/* Author area */}
-        <div className="flex items-center gap-3">
-          {/*  author avatar and name  */}
-          {/* Admin actions */}
-          <button
-            type="button"
-            className="focus-visible:ring-ember shrink-0 rounded-full focus-visible:ring-2 focus-visible:outline-none"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAuthorClick(post.authorId);
-            }}
-            aria-label={`مشاهده پروفایل ${post.author}`}
-          >
-            {post.isAdam ? (
-              <AdamAvatar className="size-11" />
-            ) : (
-              <UserAvatar name={post.author} avatar={post.avatar} className="size-11 text-sm" />
-            )}
-          </button>
-          <div
-            className="min-w-0 flex-1 leading-tight"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAuthorClick(post.authorId);
-            }}
-          >
-            <div className="mb-1 flex items-center gap-1.5">
-              <b className="truncate text-sm font-extrabold">{post.author}</b>
-              {post.verified && (
-                <span className="relative inline-block size-6 shrink-0">
-                  <OptionalImage
-                    src="/assets/verified-user.webp"
-                    alt="verified"
-                    className="object-contain"
-                  />
-                </span>
+      <article
+        className={cn(
+          'relative cursor-pointer overflow-hidden transition-all',
+          post.isAdam
+            ? `border-t border-[rgba(255,98,0,.25)] bg-[#140C07] shadow-[0_0_0_1px_rgba(255,130,40,.05),0_20px_40px_rgba(0,0,0,.35)]`
+            : `border-t border-[#2A1C16] bg-[#090705]`,
+        )}
+        onClick={onClick}
+      >
+        {post.isPinned && (
+          <div className="text-gold absolute top-2 right-2 text-xs font-bold">
+            <Icon name="star" size={16} />
+          </div>
+        )}
+        {post.isAdam && <FounderBanner />}
+        <div className="p-5">
+          {/* Author area */}
+          <div className="flex items-center gap-3">
+            {/*  author avatar and name  */}
+            {/* Admin actions */}
+            <button
+              type="button"
+              className="focus-visible:ring-ember shrink-0 rounded-full focus-visible:ring-2 focus-visible:outline-none"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAuthorClick(post.authorId);
+              }}
+              aria-label={`مشاهده پروفایل ${post.author}`}
+            >
+              {post.isAdam ? (
+                <AdamAvatar className="size-11" />
+              ) : (
+                <UserAvatar name={post.author} avatar={post.avatar} className="size-11 text-sm" />
               )}
-              {post.isAdam && (
-                <span className="text-gold rounded-xs border border-[rgba(255,98,0,.18)] px-2 py-1 text-[10px] font-extrabold shadow-[0_4px_16px_-8px_rgba(255,98,0,.25)] [background:linear-gradient(135deg,rgba(255,98,0,.16),rgba(243,186,99,.08))]">
-                  موسس
-                </span>
+            </button>
+            <div
+              className="min-w-0 flex-1 leading-tight"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAuthorClick(post.authorId);
+              }}
+            >
+              <div className="mb-1 flex items-center gap-1.5">
+                <b className="truncate text-sm font-extrabold">{post.author}</b>
+                {post.verified && (
+                  <span className="relative inline-block size-6 shrink-0">
+                    <OptionalImage
+                      src="/assets/verified-user.webp"
+                      alt="verified"
+                      className="object-contain"
+                    />
+                  </span>
+                )}
+                {post.isAdam && (
+                  <span className="text-gold rounded-xs border border-[rgba(255,98,0,.18)] px-2 py-1 text-[10px] font-extrabold shadow-[0_4px_16px_-8px_rgba(255,98,0,.25)] [background:linear-gradient(135deg,rgba(255,98,0,.16),rgba(243,186,99,.08))]">
+                    موسس
+                  </span>
+                )}
+              </div>
+              {(() => {
+                const username = formatUsername(post.authorUsername);
+                return username ? (
+                  <small className="text-ink-4 mb-1 block truncate text-[11px] font-bold">
+                    {username}
+                  </small>
+                ) : null;
+              })()}
+              <small className={`${post.isAdam ? 'text-gold' : 'text-ink-3'} text-[12px]`}>
+                {post.isAdam ? 'ققنوس' : post.badge}
+              </small>
+              {canFollowAuthor && !isFollowingAuthor && (
+                <button
+                  type="button"
+                  disabled={isCurrentAuthorToggling}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onToggleAuthorFollow(post.authorId, isFollowingAuthor);
+                  }}
+                  className={cn(
+                    'mt-2 inline-flex min-h-8 min-w-22 items-center justify-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-extrabold transition-[border-color,background,color,opacity] disabled:opacity-80',
+                    isFollowingAuthor
+                      ? 'border-gold/40 text-gold bg-white/5'
+                      : 'border-transparent text-[#1a0a00] [background:var(--fire-grad)]',
+                  )}
+                >
+                  {isCurrentAuthorToggling && <InlineSpinner className="size-3" />}
+                  {isFollowingAuthor ? 'فالو شده' : 'فالو کردن'}
+                </button>
               )}
             </div>
-            {(() => {
-              const username = formatUsername(post.authorUsername);
-              return username ? (
-                <small className="text-ink-4 mb-1 block truncate text-[11px] font-bold">
-                  {username}
-                </small>
-              ) : null;
-            })()}
-            <small className={`${post.isAdam ? 'text-gold' : 'text-ink-3'} text-[12px]`}>
-              {post.isAdam ? 'ققنوس' : post.badge}
-            </small>
-            {canFollowAuthor && !isFollowingAuthor && (
+            {/* {post.location && <div className="mt-3 text-sm text-orange-300">📍 {post.location}</div>}
+        </div> */}
+            <div className="ms-auto flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              {isAdmin && (
+                <>
+                  <button onClick={handlePinToggle} className="text-gold hover:text-ember">
+                    <Icon name={post.isPinned ? 'star' : 'star-line'} size={18} />
+                  </button>
+                  <button onClick={handleDeleteClick} className="text-danger hover:text-red-400">
+                    <Icon name="trash" size={18} />
+                  </button>
+                </>
+              )}
+              {!isAdmin && isOwnPost && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleOwnPinToggle}
+                    disabled={pinOwnPost.isPending}
+                    className="text-gold hover:text-ember disabled:opacity-60"
+                    aria-label={post.isPinned ? 'برداشتن سنجاق پست' : 'سنجاق کردن پست'}
+                  >
+                    <Icon name={post.isPinned ? 'star' : 'star-line'} size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteClick}
+                    disabled={deleteOwnPost.isPending}
+                    className="text-danger hover:text-red-400 disabled:opacity-60"
+                    aria-label="حذف پست"
+                  >
+                    <Icon name="trash" size={18} />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          <p className="mt-3.5 text-[14.5px] leading-[1.8] whitespace-pre-line">{post.text}</p>
+          {post.achievement && (
+            <div className="mt-3 flex items-center gap-3 rounded-[14px] border border-[rgba(255,98,0,.3)] p-3.5 [background:rgba(255,98,0,.08)]">
+              <span className="text-ember grid size-11 shrink-0 place-items-center rounded-xl [background:rgba(255,98,0,.18)]">
+                <Icon name={post.achievement.icon as IconName} size={22} />
+              </span>
+              <span className="leading-tight">
+                <b className="text-ember block text-[13.5px] font-extrabold">
+                  {post.achievement.title}
+                </b>
+                <small className="text-ink-3 text-[12px]">{post.achievement.sub}</small>
+              </span>
+            </div>
+          )}
+          {(post.attachment?.url || post.image || post.hasImage) && (
+            <div className="text-ink-4 relative mt-3 grid h-44 place-items-center overflow-hidden rounded-[14px] [background:var(--glass-2)]">
+              {post.attachment?.url || post.image ? (
+                <OptionalImage
+                  src={post.attachment?.url ?? post.image ?? ''}
+                  alt="Post attachment"
+                  className="object-cover"
+                />
+              ) : (
+                <Icon name="book" size={34} />
+              )}
+            </div>
+          )}
+          {/* ... post text, achievement, image ... unchanged */}
+
+          {/* Like, comment, share */}
+          <div className="text-ink-3 mt-4 flex flex-col gap-3 text-[13px] sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+            <div className="flex flex-wrap gap-x-8 gap-y-3 sm:gap-10">
               <button
                 type="button"
-                disabled={isCurrentAuthorToggling}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onToggleAuthorFollow(post.authorId, isFollowingAuthor);
-                }}
+                onClick={handleLike}
                 className={cn(
-                  'mt-2 inline-flex min-h-8 min-w-22 items-center justify-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-extrabold transition-[border-color,background,color,opacity] disabled:opacity-80',
-                  isFollowingAuthor
-                    ? 'border-gold/40 text-gold bg-white/5'
-                    : 'border-transparent text-[#1a0a00] [background:var(--fire-grad)]',
+                  'flex items-center gap-1.5 transition-colors',
+                  post.likedByMe && 'text-[#ff5a5a]',
                 )}
               >
-                {isCurrentAuthorToggling && <InlineSpinner className="size-3" />}
-                {isFollowingAuthor ? 'فالو شده' : 'فالو کردن'}
+                <Icon name="heart" size={18} className={post.likedByMe ? 'fill-current' : ''} />
+                {toPersianDigits(post.likes)}
               </button>
-            )}
-          </div>
-          {/* {post.location && <div className="mt-3 text-sm text-orange-300">📍 {post.location}</div>}
-        </div> */}
-          <div className="ms-auto flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            {isAdmin && (
-              <>
-                <button onClick={handlePinToggle} className="text-gold hover:text-ember">
-                  <Icon name={post.isPinned ? 'star' : 'star-line'} size={18} />
-                </button>
-                <button onClick={handleDeleteClick} className="text-danger hover:text-red-400">
-                  <Icon name="trash" size={18} />
-                </button>
-              </>
-            )}
-            {!isAdmin && isOwnPost && (
-              <>
-                <button
-                  type="button"
-                  onClick={handleOwnPinToggle}
-                  disabled={pinOwnPost.isPending}
-                  className="text-gold hover:text-ember disabled:opacity-60"
-                  aria-label={post.isPinned ? 'برداشتن سنجاق پست' : 'سنجاق کردن پست'}
-                >
-                  <Icon name={post.isPinned ? 'star' : 'star-line'} size={18} />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDeleteClick}
-                  disabled={deleteOwnPost.isPending}
-                  className="text-danger hover:text-red-400 disabled:opacity-60"
-                  aria-label="حذف پست"
-                >
-                  <Icon name="trash" size={18} />
-                </button>
-              </>
-            )}
+              <button
+                type="button"
+                onClick={handleCommentClick}
+                className="hover:text-ink flex items-center gap-1.5 transition-colors"
+              >
+                <Icon name="msg" size={18} />
+                {toPersianDigits(post.commentsCount ?? post.comments.length)}
+              </button>
+              <button
+                type="button"
+                onClick={handleShareClick}
+                className="hover:text-ink flex items-center gap-1.5 transition-colors"
+              >
+                <Icon name="share" size={18} />
+                اشتراک‌گذاری
+              </button>
+            </div>
+            <time className="text-ink-4 block text-xs sm:text-[13px]">
+              {formatRelativeTime(post.time)}
+            </time>
           </div>
         </div>
-        <p className="mt-3.5 text-[14.5px] leading-[1.8] whitespace-pre-line">{post.text}</p>
-        {post.achievement && (
-          <div className="mt-3 flex items-center gap-3 rounded-[14px] border border-[rgba(255,98,0,.3)] p-3.5 [background:rgba(255,98,0,.08)]">
-            <span className="text-ember grid size-11 shrink-0 place-items-center rounded-xl [background:rgba(255,98,0,.18)]">
-              <Icon name={post.achievement.icon as IconName} size={22} />
-            </span>
-            <span className="leading-tight">
-              <b className="text-ember block text-[13.5px] font-extrabold">
-                {post.achievement.title}
-              </b>
-              <small className="text-ink-3 text-[12px]">{post.achievement.sub}</small>
-            </span>
-          </div>
-        )}
-        {(post.attachment?.url || post.image || post.hasImage) && (
-          <div className="text-ink-4 relative mt-3 grid h-44 place-items-center overflow-hidden rounded-[14px] [background:var(--glass-2)]">
-            {post.attachment?.url || post.image ? (
-              <OptionalImage src={post.attachment?.url ?? post.image ?? ''} alt="Post attachment" className="object-cover" />
-            ) : (
-              <Icon name="book" size={34} />
-            )}
-          </div>
-        )}
-        {/* ... post text, achievement, image ... unchanged */}
-
-        {/* Like, comment, share */}
-        <div className="text-ink-3 mt-4 flex flex-col gap-3 text-[13px] sm:flex-row sm:items-center sm:justify-between sm:gap-5">
-          <div className="flex flex-wrap gap-x-8 gap-y-3 sm:gap-10">
-            <button
-              type="button"
-              onClick={handleLike}
-              className={cn(
-                'flex items-center gap-1.5 transition-colors',
-                post.likedByMe && 'text-[#ff5a5a]',
-              )}
-            >
-              <Icon name="heart" size={18} className={post.likedByMe ? 'fill-current' : ''} />
-              {toPersianDigits(post.likes)}
-            </button>
-            <button
-              type="button"
-              onClick={handleCommentClick}
-              className="hover:text-ink flex items-center gap-1.5 transition-colors"
-            >
-              <Icon name="msg" size={18} />
-              {toPersianDigits(post.commentsCount ?? post.comments.length)}
-            </button>
-            <button
-              type="button"
-              onClick={handleShareClick}
-              className="hover:text-ink flex items-center gap-1.5 transition-colors"
-            >
-              <Icon name="share" size={18} />
-              اشتراک‌گذاری
-            </button>
-          </div>
-          <time className="text-ink-4 block text-xs sm:text-[13px]">
-            {formatRelativeTime(post.time)}
-          </time>
-        </div>
-      </div>
-    </article>
-    <DeletePostConfirmModal
-      isOpen={deleteModalOpen}
-      isDeleting={deleteOwnPost.isPending}
-      onClose={() => setDeleteModalOpen(false)}
-      onConfirm={() => void handleDeletePost()}
-    />
+      </article>
+      <DeletePostConfirmModal
+        isOpen={deleteModalOpen}
+        isDeleting={deleteOwnPost.isPending}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={() => void handleDeletePost()}
+      />
     </>
   );
 }

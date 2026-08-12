@@ -25,8 +25,6 @@ import { authRepo } from '../infrastructure/repository-factory';
 import { AuthCard } from './components/auth-card';
 
 const googleClientId = publicEnv.googleClientId;
-// Opt-in only now: the client id always resolves (env var or bundled default), so the old
-// "fall back to mock when it's missing" branch could never fire.
 const shouldMockGoogleAuth = process.env.NEXT_PUBLIC_MOCK_GOOGLE_AUTH === 'true';
 
 export function AuthPage() {

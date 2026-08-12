@@ -142,129 +142,129 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
       className="overflow-hidden p-3 sm:p-5"
       panelClassName="border-hair flex max-h-[calc(100dvh-1.5rem)] w-full max-w-[606px] flex-col overflow-hidden rounded-[10px] border bg-[#080402] shadow-[0_34px_100px_-42px_var(--glow)] sm:max-h-[calc(100dvh-2.5rem)]"
     >
-        <div className="flex shrink-0 items-center justify-between gap-3 px-5 pt-5 pb-4 sm:px-7 sm:pt-7">
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-gold hover:text-gold-lite flex min-h-11 items-center gap-1.5 text-[13px] font-bold transition-colors"
-          >
-            <Icon name="arrow-right" size={16} />
-            بازگشت
-          </button>
+      <div className="flex shrink-0 items-center justify-between gap-3 px-5 pt-5 pb-4 sm:px-7 sm:pt-7">
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-gold hover:text-gold-lite flex min-h-11 items-center gap-1.5 text-[13px] font-bold transition-colors"
+        >
+          <Icon name="arrow-right" size={16} />
+          بازگشت
+        </button>
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          disabled={isBusy}
+          onClick={handleSave}
+          className="min-w-24 rounded-[7px]"
+        >
+          <Icon name="flame" size={14} />
+          ذخیره
+        </Button>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 sm:px-7 sm:pb-7">
+        <div className="border-hair rounded-[18px] px-5 py-5 text-center [background:linear-gradient(135deg,rgba(255,98,0,.16),rgba(243,186,99,.06))]">
+          <ProfileAvatar profile={profile} />
+          <h3 className="mt-3 text-[15px] font-black">{profile.name}</h3>
+          <p className="text-gold mt-1 text-[11px] font-bold">
+            {profile.title} · سطح {profile.level}
+          </p>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={(event) => void handleAvatarChange(event.target.files?.[0])}
+          />
           <Button
             type="button"
             variant="primary"
             size="sm"
             disabled={isBusy}
-            onClick={handleSave}
-            className="min-w-24 rounded-[7px]"
+            onClick={() => fileRef.current?.click()}
+            className="mx-auto mt-4 h-9 w-full max-w-[294px] rounded-[7px]"
           >
-            <Icon name="flame" size={14} />
-            ذخیره
+            <Icon name="paperclip" size={15} />
+            {isCheckingAvatar ? 'در حال بررسی تصویر...' : 'تغییر عکس'}
           </Button>
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={() => void handleDeleteAvatar()}
+            className="border-hair text-ink mx-auto mt-2 flex h-9 w-full max-w-[294px] items-center justify-center gap-1.5 rounded-[7px] border bg-black/30 text-[12px] font-black transition-colors hover:border-red-500/60 hover:text-red-400 disabled:opacity-50"
+          >
+            <Icon name="plus" size={14} className="rotate-45" />
+            حذف عکس
+          </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 sm:px-7 sm:pb-7">
-          <div className="border-hair rounded-[18px] px-5 py-5 text-center [background:linear-gradient(135deg,rgba(255,98,0,.16),rgba(243,186,99,.06))]">
-            <ProfileAvatar profile={profile} />
-            <h3 className="mt-3 text-[15px] font-black">{profile.name}</h3>
-            <p className="text-gold mt-1 text-[11px] font-bold">
-              {profile.title} · سطح {profile.level}
-            </p>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              onChange={(event) => void handleAvatarChange(event.target.files?.[0])}
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <EditSection title="اطلاعات شخصی">
+            <EditField
+              label="نام"
+              value={firstName}
+              onChange={setFirstName}
+              icon="user"
+              placeholder="آرش"
+              disabled={isBusy}
             />
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
+            <EditField
+              label="نام خانوادگی"
+              value={lastName}
+              onChange={setLastName}
+              icon="user"
+              placeholder="کریمی"
               disabled={isBusy}
-              onClick={() => fileRef.current?.click()}
-              className="mx-auto mt-4 h-9 w-full max-w-[294px] rounded-[7px]"
-            >
-              <Icon name="paperclip" size={15} />
-              {isCheckingAvatar ? 'در حال بررسی تصویر...' : 'تغییر عکس'}
-            </Button>
-            <button
-              type="button"
+            />
+            <EditField
+              label="نام کاربری"
+              value={username}
+              onChange={setUsername}
+              icon="user-f"
+              placeholder="Sample"
               disabled={isBusy}
-              onClick={() => void handleDeleteAvatar()}
-              className="border-hair text-ink mx-auto mt-2 flex h-9 w-full max-w-[294px] items-center justify-center gap-1.5 rounded-[7px] border bg-black/30 text-[12px] font-black transition-colors hover:border-red-500/60 hover:text-red-400 disabled:opacity-50"
-            >
-              <Icon name="plus" size={14} className="rotate-45" />
-              حذف عکس
-            </button>
-          </div>
-
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <EditSection title="اطلاعات شخصی">
-              <EditField
-                label="نام"
-                value={firstName}
-                onChange={setFirstName}
-                icon="user"
-                placeholder="آرش"
-                disabled={isBusy}
-              />
-              <EditField
-                label="نام خانوادگی"
-                value={lastName}
-                onChange={setLastName}
-                icon="user"
-                placeholder="کریمی"
-                disabled={isBusy}
-              />
-              <EditField
-                label="نام کاربری"
-                value={username}
-                onChange={setUsername}
-                icon="user-f"
-                placeholder="Sample"
-                disabled={isBusy}
-                ltr
-              />
-              <EditTextarea
-                label="بیو"
-                value={bio}
-                onChange={setBio}
-                placeholder="چند جمله کوتاه درباره خودت"
-                disabled={isBusy}
-              />
-            </EditSection>
-
-            <EditSection title="اطلاعات تماس">
-              <div className="text-ink-2 rounded-[6px] bg-[rgba(253,238,226,.18)] px-3 py-3 text-right text-[11px] leading-6">
-                ایمیل فعلا قابل تغییر نیست و فقط برای ورود و دریافت کد تایید استفاده می‌شود.
-              </div>
-              <EditField
-                label="ایمیل"
-                value={profile.email ?? 'ایمیلی ثبت نشده است'}
-                onChange={() => undefined}
-                icon="mail"
-                placeholder="email@example.com"
-                disabled
-                badge={profile.isEmailVerified ? 'تایید شده' : 'تایید نشده'}
-                ltr
-              />
-            </EditSection>
-          </div>
-
-          <EditSection title="منطقه خطر" className="mt-4">
-            <button
-              type="button"
+              ltr
+            />
+            <EditTextarea
+              label="بیو"
+              value={bio}
+              onChange={setBio}
+              placeholder="چند جمله کوتاه درباره خودت"
               disabled={isBusy}
-              onClick={handleDeleteAccount}
-              className="mx-auto flex h-9 w-full max-w-[294px] items-center justify-center gap-2 rounded-[7px] border border-red-600 bg-black text-[12px] font-black text-red-500 transition-colors hover:bg-red-600/10 disabled:opacity-50"
-            >
-              <Icon name="flame" size={15} />
-              حذف حساب کاربری
-            </button>
+            />
+          </EditSection>
+
+          <EditSection title="اطلاعات تماس">
+            <div className="text-ink-2 rounded-[6px] bg-[rgba(253,238,226,.18)] px-3 py-3 text-right text-[11px] leading-6">
+              ایمیل فعلا قابل تغییر نیست و فقط برای ورود و دریافت کد تایید استفاده می‌شود.
+            </div>
+            <EditField
+              label="ایمیل"
+              value={profile.email ?? 'ایمیلی ثبت نشده است'}
+              onChange={() => undefined}
+              icon="mail"
+              placeholder="email@example.com"
+              disabled
+              badge={profile.isEmailVerified ? 'تایید شده' : 'تایید نشده'}
+              ltr
+            />
           </EditSection>
         </div>
+
+        <EditSection title="منطقه خطر" className="mt-4">
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={handleDeleteAccount}
+            className="mx-auto flex h-9 w-full max-w-[294px] items-center justify-center gap-2 rounded-[7px] border border-red-600 bg-black text-[12px] font-black text-red-500 transition-colors hover:bg-red-600/10 disabled:opacity-50"
+          >
+            <Icon name="flame" size={15} />
+            حذف حساب کاربری
+          </button>
+        </EditSection>
+      </div>
     </BaseModal>
   );
 }

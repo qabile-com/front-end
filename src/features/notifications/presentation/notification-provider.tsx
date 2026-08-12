@@ -7,8 +7,6 @@ export function NotificationProvider() {
   const notifications = useNotificationRegistration();
   const { availability, permission } = notifications;
 
-  // Only prompt where enabling notifications is actually possible. In particular iOS outside a
-  // home-screen install gets nothing: web push can't work there, so a modal would just be noise.
   if (availability !== 'available') return null;
   if (permission === 'granted') return null;
 

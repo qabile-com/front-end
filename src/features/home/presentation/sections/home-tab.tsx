@@ -405,8 +405,6 @@ function RecentCourseCard({ course, index }: { course: Course; index: number }) 
     course.episodes.find((part) => part.status === 'partial') ??
     course.episodes.find((part) => part.status === 'none') ??
     course.episodes[0];
-  // Uses the server-calculated percentage so this matches the courses page exactly; the local
-  // count is only a fallback for responses that don't include it.
   const completed =
     course.completedEpisodes ?? course.episodes.filter((part) => part.status === 'done').length;
   const totalEpisodes = course.totalEpisodes ?? course.episodes.length;

@@ -122,8 +122,6 @@ export function SessionContent({
   const hasEnoughFire = fireBalance >= coursePrice;
   const canTrackWatch = !requiresPurchase && Boolean(videoUrl);
   const shouldAutoStartVideo = canTrackWatch;
-  // "بدون ترک" episodes can be completed without tracked playback. The flag lives on the
-  // episode, falling back to the course-level setting.
   const allowsMarkWatched = session.noTrackRequired ?? displayCourse.noTrackRequired ?? false;
   const canMarkWatched =
     allowsMarkWatched && !requiresPurchase && session.status !== 'done' && Boolean(onMarkWatched);
@@ -816,7 +814,6 @@ function ContinueButton({
   );
 }
 
-/** Completes a "بدون ترک" episode without tracked playback and claims its XP. */
 function MarkWatchedButton({
   onMarkWatched,
   isMarkingWatched,
