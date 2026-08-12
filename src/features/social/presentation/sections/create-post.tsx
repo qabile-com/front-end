@@ -8,9 +8,14 @@ import type { AchievementCard } from '../../domain/social.data';
 import { moderateAvatarImage } from '@/features/profile/application/avatar-content-moderation';
 import { compressImage } from '@/features/profile/application/image-compression';
 import { showError } from '@/shared/lib/toast';
-import { toPersianDigits } from '@/core/lib/persian';
 import { socialRepo } from '../../infrastructure/repository-factory';
-import { postingStatusQueryKey, usePostingStatus } from '../../application/use-posting-status';
+import {
+  formatPostingRemainingTime,
+  getPostingRemainingSeconds,
+  isPostingLocked,
+  postingStatusQueryKey,
+  usePostingStatus,
+} from '../../application/use-posting-status';
 import type { PostingStatus } from '../../domain/social-repository';
 
 interface Props {
@@ -38,8 +43,8 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
   const postingStatusQuery = usePostingStatus(socialRepo);
   const postingStatus = postingStatusQuery.data;
   const refetchPostingStatus = postingStatusQuery.refetch;
-  const remainingSeconds = getRemainingSeconds(postingStatus, now);
-  const postLocked = isLocked(postingStatus, remainingSeconds);
+  const remainingSeconds = getPostingRemainingSeconds(postingStatus, now);
+  const postLocked = isPostingLocked(postingStatus, remainingSeconds);
   const canSubmit =
     !isPublishing &&
     !isCheckingImage &&
@@ -79,8 +84,8 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
         return;
       }
 
-      const freshRemainingSeconds = getRemainingSeconds(freshStatusResult.data, Date.now());
-      if (isLocked(freshStatusResult.data, freshRemainingSeconds)) {
+      const freshRemainingSeconds = getPostingRemainingSeconds(freshStatusResult.data, Date.now());
+      if (isPostingLocked(freshStatusResult.data, freshRemainingSeconds)) {
         showError(getPostingStatusMessage(freshStatusResult.data, freshRemainingSeconds));
         return;
       }
@@ -156,7 +161,7 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
       {postLocked && (
         <div className="border-hair border-ember/40 mt-3 rounded-xl border bg-[rgba(255,98,0,.08)] px-4 py-3 text-right">
           <p className="text-ember text-[13px] font-extrabold">
-            تا انتشار پست بعدی {formatRemainingTime(remainingSeconds)} باقی مانده.
+            تا انتشار پست بعدی {formatPostingRemainingTime(remainingSeconds)} باقی مانده.
           </p>
           {postingStatus?.lockedUntil && (
             <p className="text-ink-3 mt-1 text-[12px] leading-6">
@@ -217,7 +222,7 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
             : isCheckingImage
               ? 'در حال بررسی تصویر...'
               : postLocked
-                ? `انتشار تا ${formatRemainingTime(remainingSeconds)} دیگر`
+                ? `انتشار تا ${formatPostingRemainingTime(remainingSeconds)} دیگر`
                 : 'انتشار'}
         </button>
       </div>
@@ -225,41 +230,12 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
   );
 }
 
-function isLocked(status: PostingStatus | undefined, remainingSeconds: number) {
-  return Boolean(status?.isLocked || status?.canCreatePost === false || remainingSeconds > 0);
-}
-
-function getRemainingSeconds(status: PostingStatus | undefined, now: number) {
-  if (!status) return 0;
-  if (status.lockedUntil) {
-    const lockedUntilTime = new Date(status.lockedUntil).getTime();
-    if (!Number.isNaN(lockedUntilTime)) {
-      return Math.max(0, Math.ceil((lockedUntilTime - now) / 1000));
-    }
-  }
-
-  return Math.max(0, Math.floor(status.remainingSeconds ?? 0));
-}
-
 function getPostingStatusMessage(status: PostingStatus, remainingSeconds: number) {
   const unlockText = status.lockedUntil
     ? ` از ${formatLocalDateTime(status.lockedUntil)} دوباره می‌توانی پست منتشر کنی.`
     : '';
 
-  return `فعلا امکان انتشار پست جدید وجود ندارد. ${formatRemainingTime(remainingSeconds)} دیگر صبر کن.${unlockText}`;
-}
-
-function formatRemainingTime(totalSeconds: number) {
-  const seconds = Math.max(0, Math.floor(totalSeconds));
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const restSeconds = seconds % 60;
-
-  if (hours > 0) {
-    return `${toPersianDigits(hours)} ساعت و ${toPersianDigits(minutes)} دقیقه`;
-  }
-
-  return `${toPersianDigits(minutes)} دقیقه و ${toPersianDigits(restSeconds)} ثانیه`;
+  return `فعلا امکان انتشار پست جدید وجود ندارد. ${formatPostingRemainingTime(remainingSeconds)} دیگر صبر کن.${unlockText}`;
 }
 
 function formatLocalDateTime(value: string) {

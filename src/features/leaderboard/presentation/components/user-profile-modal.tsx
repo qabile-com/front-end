@@ -230,12 +230,13 @@ export function UserProfileModal({
                 )}
                 <p className="text-ink-2 text-right text-sm leading-relaxed">{post.text}</p>
                 {(post.attachment?.url || post.image || post.hasImage) && (
-                  <div className="border-hair relative mt-3 h-36 overflow-hidden rounded-lg border bg-black/20">
+                  <div className="border-hair mt-3 overflow-hidden rounded-lg border bg-black/20">
                     {post.attachment?.url || post.image ? (
                       <OptionalImage
                         src={post.attachment?.url ?? post.image ?? ''}
-                        alt=""
-                        className="object-contain"
+                        alt="تصویر پیوست پست"
+                        fill={false}
+                        className="max-h-[360px] w-full object-contain"
                       />
                     ) : (
                       <div className="text-ink-4 grid h-28 place-items-center">

@@ -282,11 +282,16 @@ export function ForumUserProfilePage() {
                   >
                     <p className="text-ink-2 line-clamp-3 text-sm leading-7">{post.text}</p>
                     {(post.image || post.hasImage) && (
-                      <div className="border-hair relative mt-3 h-40 overflow-hidden rounded-xl border bg-[var(--glass-2)]">
+                      <div className="border-hair mt-3 overflow-hidden rounded-xl border bg-[var(--glass-2)]">
                         {post.image ? (
-                          <OptionalImage src={post.image} alt="" className="object-cover" />
+                          <OptionalImage
+                            src={post.image}
+                            alt="تصویر پیوست پست"
+                            fill={false}
+                            className="max-h-[360px] w-full object-contain"
+                          />
                         ) : (
-                          <div className="text-ink-4 grid h-full place-items-center">
+                          <div className="text-ink-4 grid h-40 place-items-center">
                             <Icon name="book" size={28} />
                           </div>
                         )}

@@ -6,9 +6,18 @@ import { cn } from '@/core/lib/cn';
 type OptionalImageProps = ImgHTMLAttributes<HTMLImageElement> & {
   src: string;
   fallbackSrc?: string;
+  /** When true (default), absolutely fills a `relative` parent. Set to false to size the image by its own natural dimensions instead. */
+  fill?: boolean;
 };
 
-export function OptionalImage({ className, alt = '', src, fallbackSrc, ...props }: OptionalImageProps) {
+export function OptionalImage({
+  className,
+  alt = '',
+  src,
+  fallbackSrc,
+  fill = true,
+  ...props
+}: OptionalImageProps) {
   const [fallbackForSrc, setFallbackForSrc] = useState<string | null>(null);
   const [hiddenSrc, setHiddenSrc] = useState<string | null>(null);
 
@@ -29,7 +38,7 @@ export function OptionalImage({ className, alt = '', src, fallbackSrc, ...props 
     <img
       {...props}
       alt={alt}
-      className={cn('absolute inset-0 size-full', className)}
+      className={cn(fill && 'absolute inset-0 size-full', className)}
       onError={handleError}
       src={currentSrc}
     />

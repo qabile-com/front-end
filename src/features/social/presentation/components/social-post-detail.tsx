@@ -122,13 +122,12 @@ export function SocialPostDetail({
         {(post.attachment?.url || post.image || post.hasImage) && (
           <div className="border-hair mt-5 overflow-hidden rounded-[18px] border bg-[var(--glass-2)]">
             {post.attachment?.url || post.image ? (
-              <div className="relative h-[min(520px,70vh)] w-full">
-                <OptionalImage
-                  src={post.attachment?.url ?? post.image ?? ''}
-                  alt="Post attachment"
-                  className="object-contain"
-                />
-              </div>
+              <OptionalImage
+                src={post.attachment?.url ?? post.image ?? ''}
+                alt="تصویر پیوست پست"
+                fill={false}
+                className="max-h-[min(640px,75vh)] w-full object-contain"
+              />
             ) : (
               <div className="text-ink-4 grid h-52 place-items-center">
                 <Icon name="book" size={34} />
