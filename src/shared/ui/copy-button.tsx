@@ -3,6 +3,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/core/lib/cn';
 import { useCopyToClipboard } from '@/shared/hooks/use-copy-to-clipboard';
+import { showError, showSuccess } from '@/shared/lib/toast';
 import { Icon } from './icon';
 
 interface CopyButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'> {
@@ -12,6 +13,10 @@ interface CopyButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 
   idleLabel?: ReactNode;
   iconSize?: number;
   onCopied?: (copied: boolean) => void;
+  /** Toast shown on successful copy. Pass null to disable the toast. */
+  successMessage?: string | null;
+  /** Toast shown when copying fails. Pass null to disable the toast. */
+  errorMessage?: string | null;
 }
 
 export function CopyButton({
@@ -23,6 +28,8 @@ export function CopyButton({
   className,
   disabled,
   onCopied,
+  successMessage = 'کپی شد.',
+  errorMessage = 'کپی نشد. دوباره تلاش کن.',
   ...props
 }: CopyButtonProps) {
   const { copy, copied, failed } = useCopyToClipboard();
@@ -36,6 +43,11 @@ export function CopyButton({
       disabled={disabled || !value}
       onClick={async () => {
         const result = await copy(value);
+        if (result) {
+          if (successMessage) showSuccess(successMessage);
+        } else if (errorMessage) {
+          showError(errorMessage);
+        }
         onCopied?.(result);
       }}
       className={cn(

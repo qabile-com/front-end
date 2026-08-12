@@ -10,12 +10,13 @@ import { getAvatarInitial } from '@/core/lib/avatar';
 import { formatDuration } from '@/core/lib/format-duration';
 import { toPersianDigits } from '@/core/lib/persian';
 import { showError, showSuccess } from '@/shared/lib/toast';
-import { rewriteTrueTradeReferralLinks } from '@/shared/lib/referral-link';
+import { extractTrueTradeReferralLink } from '@/shared/lib/referral-link';
 import { useMediaQuery } from '@/shared/hooks/use-media-query';
 import { useProfile } from '@/features/profile/application/use-profile';
 import { profileRepo } from '@/features/profile/infrastructure/repository-factory';
 import {
   Button,
+  CopyField,
   Icon,
   InlineSkeleton,
   Input,
@@ -88,6 +89,7 @@ export function SessionContent({
   const shouldReduceMotion = useReducedMotion();
   const queryClient = useQueryClient();
   const usedReferralCode = useProfile(profileRepo).data?.usedReferralCode;
+  const sessionReferral = extractTrueTradeReferralLink(session.description, usedReferralCode);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const watchedRangesRef = useRef<{ start: number; end: number }[]>([]);
   const lastTimeRef = useRef(0);
@@ -429,10 +431,19 @@ export function SessionContent({
                 {session.title}
               </h1>
               <p className="text-ink-2 mt-3 max-w-2xl text-[13.5px] leading-7 sm:text-sm">
-                {rewriteTrueTradeReferralLinks(session.description, usedReferralCode) ||
+                {sessionReferral.text ||
                   `این جلسه بخشی از مسیر «${displayCourse.title}» است. ویدیو را کامل ببین، نکات مهم را
                   مرور کن و با ادامه دادن مسیر، پیشرفتت را ثبت کن.`}
               </p>
+              {sessionReferral.link && (
+                <CopyField
+                  className="mt-3 max-w-sm"
+                  label="لینک رفرال"
+                  value={sessionReferral.link}
+                  displayValue={sessionReferral.link.replace(/^https?:\/\//, '')}
+                  successMessage="لینک رفرال کپی شد."
+                />
+              )}
             </div>
             {requiresPurchase && (
               <LockedCourseNotice
@@ -1072,15 +1083,26 @@ function AboutPanel({
   courseDurationSeconds: number;
   usedReferralCode?: string | null;
 }) {
+  const courseReferral = extractTrueTradeReferralLink(course.description, usedReferralCode);
+
   return (
     <div className="text-ink-2 space-y-4 text-sm leading-8">
       <div className="rounded-[18px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-4">
         <h2 className="text-ink text-base font-black">{course.title}</h2>
         <p className="mt-2">
-          {rewriteTrueTradeReferralLinks(course.description, usedReferralCode) ||
+          {courseReferral.text ||
             `در این بخش روی موضوع «${session.title}» تمرکز می‌کنی. هدف این جلسه این است که با دیدن و
             تمرین کردن، مسیر دوره را مرحله‌به‌مرحله جلو ببری.`}
         </p>
+        {courseReferral.link && (
+          <CopyField
+            className="mt-3"
+            label="لینک رفرال"
+            value={courseReferral.link}
+            displayValue={courseReferral.link.replace(/^https?:\/\//, '')}
+            successMessage="لینک رفرال کپی شد."
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3">

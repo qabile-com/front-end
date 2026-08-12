@@ -2,6 +2,7 @@ export { Icon, type IconName } from './icon';
 export { Button } from './button';
 export { BaseModal } from './base-modal';
 export { CopyButton } from './copy-button';
+export { CopyField } from './copy-field';
 export { DashboardPageShell } from './dashboard-page-shell';
 export { Container } from './container';
 export { GlassCard } from './glass-card';
