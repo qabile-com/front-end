@@ -1,5 +1,6 @@
 import { httpClient } from './http-client';
 import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
+import type { AchievementDto } from '@/features/dashboard/domain/achievement-normalizer';
 
 export interface ForumUserDto {
   id: string;
@@ -31,6 +32,7 @@ export interface ForumUserProfileDto extends ForumUserDto {
     followingCount?: number;
   };
   topTags?: ForumTagDto[];
+  achievements?: AchievementDto[];
 }
 
 export interface ForumCommentDto {

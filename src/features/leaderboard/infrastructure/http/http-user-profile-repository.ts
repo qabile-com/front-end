@@ -13,6 +13,7 @@ import type {
   UserProfilePost,
 } from '../../domain/user-profile-repository';
 import { DEFAULT_AVATAR_GRADIENT } from '@/features/dashboard/domain/dashboard.types';
+import { normalizeAchievementCollection } from '@/features/dashboard/domain/achievement-normalizer';
 
 export class HttpUserProfileRepository implements IUserProfileRepository {
   async getUserProfile(userId: string): Promise<UserProfileData> {
@@ -57,7 +58,7 @@ export class HttpUserProfileRepository implements IUserProfileRepository {
         { value: String(commentsReceived), label: 'کامنت' },
         { value: String(followersCount), label: 'فالور' },
       ],
-      achievements: [],
+      achievements: normalizeAchievementCollection(data.achievements),
       posts: [],
     };
   }

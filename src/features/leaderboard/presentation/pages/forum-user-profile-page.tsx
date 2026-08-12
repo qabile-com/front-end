@@ -33,6 +33,10 @@ import { socialRepo } from '@/features/social/infrastructure/repository-factory'
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { DeletePostConfirmModal } from '@/features/social/presentation/components/delete-post-confirm-modal';
 import { shareUrl } from '@/shared/lib/native-share';
+import { AchievementModal } from '@/features/profile/presentation/components/achievement-modal';
+import { AchievementsGrid } from '@/features/profile/presentation/components/achievements-grid';
+import { sortAchievementsByUnlocked } from '@/features/profile/presentation/components/achievement-helpers';
+import type { Achievement } from '@/features/dashboard/domain/dashboard.types';
 
 export function ForumUserProfilePage() {
   const params = useParams<{ userId: string }>();
@@ -45,6 +49,8 @@ export function ForumUserProfilePage() {
   const fromPostId = searchParams.get('postId');
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'posts' | 'achievements'>('posts');
+  const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const profile = useUserProfile(userProfileRepo, userId);
   const postsQuery = useUserPosts(userProfileRepo, userId);
   const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
@@ -96,6 +102,7 @@ export function ForumUserProfilePage() {
   const canFollow = (Boolean(user.canFollow) || !isLoggedIn) && !blocked && !isOwnProfile;
   const canBlock = !user.isAdam && !isOwnProfile;
   const userPosts = sortPinnedFirst(postsQuery.data?.pages.flat() ?? []);
+  const userAchievements = sortAchievementsByUnlocked(user.achievements ?? []);
   const backTarget =
     from === 'post' && fromPostId ? `/social/${encodeURIComponent(fromPostId)}` : '/social';
   const backLabel = from === 'post' && fromPostId ? 'بازگشت به پست' : 'بازگشت به محفل';
@@ -227,104 +234,113 @@ export function ForumUserProfilePage() {
           </div>
 
           <div className="p-5 sm:p-6">
-            <h2 className="mb-4 text-sm font-black text-[#FDEEE299]">پست‌ها</h2>
-            <div className="space-y-3">
-              {postsQuery.isLoading && (
-                <>
-                  <PostSkeleton />
-                  <PostSkeleton />
-                </>
-              )}
-              {!postsQuery.isLoading && userPosts.length === 0 && (
-                <p className="text-ink-3 rounded-2xl border border-[var(--color-hair)] bg-black/20 p-5 text-center text-sm">
-                  هنوز پستی ثبت نشده است.
-                </p>
-              )}
-              {userPosts.map((post) => (
-                <article
-                  key={post.id}
-                  className={cn(
-                    'relative rounded-2xl border bg-black/20 p-4 transition-colors',
-                    post.isPinned
-                      ? 'border-gold/45 hover:border-gold/60'
-                      : 'border-hair hover:border-[var(--color-hair-2)]',
-                  )}
-                >
-                  {post.isPinned && (
-                    <span className="text-gold border-gold/25 bg-gold/10 absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black">
-                      <Icon name="star" size={11} />
-                      سنجاق شده
-                    </span>
-                  )}
-                  {isOwnProfile && (
-                    <button
-                      type="button"
-                      disabled={deleteOwnPost.isPending}
-                      onClick={() => setPostToDelete(post.id)}
-                      className="text-danger absolute top-3 left-3 z-10 rounded-lg p-1 hover:text-red-400 disabled:opacity-60"
-                      aria-label="حذف پست"
-                    >
-                      <Icon name="trash" size={16} />
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      router.push(
-                        `/social/${post.id}?from=user-profile&userId=${encodeURIComponent(user.id)}`,
-                      )
-                    }
+            <UserProfileTabSwitcher activeTab={activeTab} onChange={setActiveTab} />
+
+            {activeTab === 'posts' ? (
+              <div className="space-y-3">
+                {postsQuery.isLoading && (
+                  <>
+                    <PostSkeleton />
+                    <PostSkeleton />
+                  </>
+                )}
+                {!postsQuery.isLoading && userPosts.length === 0 && (
+                  <p className="text-ink-3 rounded-2xl border border-[var(--color-hair)] bg-black/20 p-5 text-center text-sm">
+                    هنوز پستی ثبت نشده است.
+                  </p>
+                )}
+                {userPosts.map((post) => (
+                  <article
+                    key={post.id}
                     className={cn(
-                      'block w-full text-start',
-                      isOwnProfile && 'ps-8',
-                      post.isPinned && 'pt-8',
+                      'relative rounded-2xl border bg-black/20 p-4 transition-colors',
+                      post.isPinned
+                        ? 'border-gold/45 hover:border-gold/60'
+                        : 'border-hair hover:border-[var(--color-hair-2)]',
                     )}
                   >
-                    <p className="text-ink-2 line-clamp-3 text-sm leading-7">{post.text}</p>
-                    {(post.image || post.hasImage) && (
-                      <div className="border-hair mt-3 overflow-hidden rounded-xl border bg-[var(--glass-2)]">
-                        {post.image ? (
-                          <OptionalImage
-                            src={post.image}
-                            alt="تصویر پیوست پست"
-                            fill={false}
-                            className="max-h-[360px] w-full object-contain"
-                          />
-                        ) : (
-                          <div className="text-ink-4 grid h-40 place-items-center">
-                            <Icon name="book" size={28} />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <div className="text-ink-4 mt-3 flex items-center justify-between gap-3 text-xs">
-                      <span className="flex items-center gap-3">
-                        <span className="inline-flex items-center gap-1">
-                          <Icon name="heart" size={15} />
-                          {toPersianDigits(post.likes)}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <Icon name="msg" size={15} />
-                          {toPersianDigits(post.commentsCount ?? post.comments.length)}
-                        </span>
+                    {post.isPinned && (
+                      <span className="text-gold border-gold/25 bg-gold/10 absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black">
+                        <Icon name="star" size={11} />
+                        سنجاق شده
                       </span>
-                      <time>{formatRelativeTime(post.time)}</time>
-                    </div>
-                  </button>
-                </article>
-              ))}
-              {postsQuery.hasNextPage && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full"
-                  disabled={postsQuery.isFetchingNextPage}
-                  onClick={() => void postsQuery.fetchNextPage()}
-                >
-                  {postsQuery.isFetchingNextPage ? '...' : 'نمایش بیشتر'}
-                </Button>
-              )}
-            </div>
+                    )}
+                    {isOwnProfile && (
+                      <button
+                        type="button"
+                        disabled={deleteOwnPost.isPending}
+                        onClick={() => setPostToDelete(post.id)}
+                        className="text-danger absolute top-3 left-3 z-10 rounded-lg p-1 hover:text-red-400 disabled:opacity-60"
+                        aria-label="حذف پست"
+                      >
+                        <Icon name="trash" size={16} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        router.push(
+                          `/social/${post.id}?from=user-profile&userId=${encodeURIComponent(user.id)}`,
+                        )
+                      }
+                      className={cn(
+                        'block w-full text-start',
+                        isOwnProfile && 'ps-8',
+                        post.isPinned && 'pt-8',
+                      )}
+                    >
+                      <p className="text-ink-2 line-clamp-3 text-sm leading-7">{post.text}</p>
+                      {(post.image || post.hasImage) && (
+                        <div className="border-hair mt-3 overflow-hidden rounded-xl border bg-[var(--glass-2)]">
+                          {post.image ? (
+                            <OptionalImage
+                              src={post.image}
+                              alt="تصویر پیوست پست"
+                              fill={false}
+                              className="max-h-[360px] w-full object-contain"
+                            />
+                          ) : (
+                            <div className="text-ink-4 grid h-40 place-items-center">
+                              <Icon name="book" size={28} />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <div className="text-ink-4 mt-3 flex items-center justify-between gap-3 text-xs">
+                        <span className="flex items-center gap-3">
+                          <span className="inline-flex items-center gap-1">
+                            <Icon name="heart" size={15} />
+                            {toPersianDigits(post.likes)}
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <Icon name="msg" size={15} />
+                            {toPersianDigits(post.commentsCount ?? post.comments.length)}
+                          </span>
+                        </span>
+                        <time>{formatRelativeTime(post.time)}</time>
+                      </div>
+                    </button>
+                  </article>
+                ))}
+                {postsQuery.hasNextPage && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    disabled={postsQuery.isFetchingNextPage}
+                    onClick={() => void postsQuery.fetchNextPage()}
+                  >
+                    {postsQuery.isFetchingNextPage ? '...' : 'نمایش بیشتر'}
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <AchievementsGrid
+                achievements={userAchievements}
+                onAchievementClick={setSelectedAchievement}
+                emptyMessage="این کاربر هنوز دستاوردی کسب نکرده است."
+              />
+            )}
           </div>
         </section>
         <LoginRequiredModal
@@ -339,8 +355,55 @@ export function ForumUserProfilePage() {
           onConfirm={() => void handleDeletePost()}
         />
         <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
+        {selectedAchievement && (
+          <AchievementModal
+            achievement={selectedAchievement}
+            onClose={() => setSelectedAchievement(null)}
+            readOnly
+          />
+        )}
       </DashboardPageShell>
     </MotionPage>
+  );
+}
+
+function UserProfileTabSwitcher({
+  activeTab,
+  onChange,
+}: {
+  activeTab: 'posts' | 'achievements';
+  onChange: (tab: 'posts' | 'achievements') => void;
+}) {
+  const tabs: Array<{ id: 'posts' | 'achievements'; label: string; icon: 'adam-chat' | 'trophy' }> = [
+    { id: 'posts', label: 'پست‌ها', icon: 'adam-chat' },
+    { id: 'achievements', label: 'دستاوردها', icon: 'trophy' },
+  ];
+
+  return (
+    <div
+      role="tablist"
+      aria-label="بخش‌های پروفایل کاربر"
+      className="mb-4 grid grid-cols-2 gap-1 rounded-[14px] border border-[rgba(255,98,0,.16)] bg-black/24 p-1"
+    >
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          role="tab"
+          aria-selected={activeTab === tab.id}
+          onClick={() => onChange(tab.id)}
+          className={cn(
+            'inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-[11px] px-3 text-xs font-black transition-[background,color,box-shadow] duration-200',
+            activeTab === tab.id
+              ? 'text-[#1a0a00] shadow-[0_12px_26px_-18px_var(--glow)] [background:var(--fire-grad)]'
+              : 'text-ink-3 hover:text-gold',
+          )}
+        >
+          <Icon name={tab.icon} size={15} className="shrink-0" />
+          <span className="truncate">{tab.label}</span>
+        </button>
+      ))}
+    </div>
   );
 }
 
