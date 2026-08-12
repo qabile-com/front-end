@@ -439,7 +439,7 @@ export function SessionContent({
               </p>
               {sessionReferral.link && (
                 <CopyField
-                  className="mx-auto mt-3 max-w-sm"
+                  className="mx-auto mt-5 max-w-sm"
                   label="لینک صرافی"
                   value={sessionReferral.link}
                   displayValue={sessionReferral.link.replace(/^https?:\/\//, '')}
@@ -757,41 +757,44 @@ function LockedCourseNotice({
     <div className="relative mx-auto w-full max-w-[920px] overflow-hidden rounded-[24px] border border-[rgba(255,98,0,.26)] shadow-[0_24px_64px_-40px_var(--glow)] md:max-w-2/3">
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-14 -start-14 size-48 rounded-full opacity-30 blur-3xl"
+        className="pointer-events-none absolute -start-14 -top-14 size-48 rounded-full opacity-30 blur-3xl"
         style={{ background: 'var(--fire-grad)' }}
       />
       <div className="relative p-4 [background:linear-gradient(135deg,rgba(255,98,0,.16),rgba(0,0,0,.4))] sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-start gap-3.5">
-            <span className="text-gold grid size-12 shrink-0 place-items-center rounded-2xl border border-[rgba(243,186,99,.3)] bg-black/30 shadow-[0_10px_26px_-14px_var(--glow)]">
-              <Icon name="lock" size={21} />
-            </span>
-            <div className="min-w-0">
-              <h3 className="text-ink text-[15px] font-black sm:text-base">این دوره قفل است</h3>
-              <p className="text-ink-2 mt-1 text-xs leading-6 sm:text-[13px]">
-                برای دیدن جلسه‌ها و ادامه دوره، آن را با آتش باز کن.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-[rgba(243,186,99,.24)] bg-black/30 px-4 py-2.5 sm:self-auto">
-            <Icon name="flame" size={22} className="text-ember" />
-            <div>
-              <div className="text-gold text-lg leading-none font-black">
-                {toPersianDigits(price)}
-              </div>
-              <div className="text-ink-4 mt-1 text-[10px] font-bold">قیمت دوره</div>
-            </div>
+        <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-start sm:gap-3.5 sm:text-start">
+          <span className="text-gold grid size-12 shrink-0 place-items-center rounded-2xl border border-[rgba(243,186,99,.3)] bg-black/30 shadow-[0_10px_26px_-14px_var(--glow)]">
+            <Icon name="lock" size={21} />
+          </span>
+          <div className="min-w-0">
+            <h3 className="text-ink text-[15px] font-black sm:text-base">این دوره قفل است</h3>
+            <p className="text-ink-2 mt-1 text-xs leading-6 sm:text-[13px]">
+              برای دیدن جلسه‌ها و ادامه دوره، آن را با آتش باز کن.
+            </p>
           </div>
         </div>
 
-        <div className="mt-5 flex flex-col gap-2 sm:max-w-[380px] sm:mx-auto">
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+          <FireStatChip value={toPersianDigits(price)} label="قیمت دوره" tone="gold" />
+          <FireStatChip
+            value={toPersianDigits(fireBalance)}
+            label="موجودی تو"
+            tone={hasEnoughFire ? 'green' : 'red'}
+          />
+        </div>
+
+        {!hasEnoughFire && (
+          <p className="text-danger mt-2.5 text-center text-[11.5px] font-bold">
+            {toPersianDigits(shortfall)} آتش دیگه لازم داری
+          </p>
+        )}
+
+        <div className="mt-5 sm:mx-auto sm:max-w-[380px]">
           <Button
             type="button"
             variant="primary"
             disabled={!hasEnoughFire || isPurchasing || !onBuyCourse}
             onClick={onBuyCourse}
-            className="w-full"
+            className="w-full gap-0"
           >
             {isPurchasing ? (
               'در حال خرید...'
@@ -802,22 +805,39 @@ function LockedCourseNotice({
               </>
             )}
           </Button>
-
-          <div
-            className={cn(
-              'flex items-center justify-between rounded-xl border px-3 py-2 text-xs font-black',
-              hasEnoughFire
-                ? 'border-[#2bd4a8]/25 text-[#2bd4a8] [background:rgba(43,212,168,.08)]'
-                : 'border-red-500/25 text-red-300 [background:rgba(239,68,68,.08)]',
-            )}
-          >
-            <span className="inline-flex items-center gap-1.5">
-              <Icon name="flame" size={13} />
-              موجودی تو: {toPersianDigits(fireBalance)}
-            </span>
-            {!hasEnoughFire && <span>{toPersianDigits(shortfall)} کم داری</span>}
-          </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function FireStatChip({
+  value,
+  label,
+  tone,
+}: {
+  value: string;
+  label: string;
+  tone: 'gold' | 'green' | 'red';
+}) {
+  const toneClass =
+    tone === 'gold'
+      ? 'border-[rgba(243,186,99,.24)] text-gold [background:rgba(243,186,99,.08)]'
+      : tone === 'green'
+        ? 'border-[#2bd4a8]/25 text-[#2bd4a8] [background:rgba(43,212,168,.08)]'
+        : 'border-red-500/25 text-red-300 [background:rgba(239,68,68,.08)]';
+
+  return (
+    <div
+      className={cn(
+        'inline-flex shrink-0 items-center gap-2.5 rounded-2xl border bg-black/30 px-4 py-2.5',
+        toneClass,
+      )}
+    >
+      <Icon name="flame" size={20} className="shrink-0" />
+      <div className="text-start leading-none">
+        <div className="text-[15px] font-black">{value}</div>
+        <div className="mt-1 text-[10px] font-bold opacity-80">{label}</div>
       </div>
     </div>
   );
@@ -1116,7 +1136,7 @@ function AboutPanel({
         </p>
         {courseReferral.link && (
           <CopyField
-            className="mt-3"
+            className="mt-5"
             label="لینک صرافی"
             value={courseReferral.link}
             displayValue={courseReferral.link.replace(/^https?:\/\//, '')}
