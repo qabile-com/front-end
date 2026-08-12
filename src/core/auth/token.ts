@@ -1,3 +1,5 @@
+import { clearAuthCookie, setAuthCookie } from './auth-cookie';
+
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 const AUTH_USER_KEY = 'authUser';
@@ -77,16 +79,18 @@ export function updateStoredTokens({
   if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
 
   const currentMeta = readJson<StoredAuthMeta>(AUTH_META_KEY) ?? {};
+  const nextExpiresAt = normalizeExpiresAt(expiresAt) ?? currentMeta.expiresAt;
   localStorage.setItem(
     AUTH_META_KEY,
     JSON.stringify({
       ...currentMeta,
       tokenType: tokenType ?? currentMeta.tokenType,
-      expiresAt: normalizeExpiresAt(expiresAt) ?? currentMeta.expiresAt,
+      expiresAt: nextExpiresAt,
       refreshTokenExpiresAt:
         normalizeExpiresAt(refreshTokenExpiresAt) ?? currentMeta.refreshTokenExpiresAt,
     }),
   );
+  setAuthCookie(nextExpiresAt);
   notifyAuthSessionChange();
 }
 
@@ -121,6 +125,7 @@ export function saveAuthSession({
   if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
   localStorage.setItem(AUTH_META_KEY, JSON.stringify(meta));
+  setAuthCookie(meta.expiresAt);
   notifyAuthSessionChange();
 }
 
@@ -156,6 +161,8 @@ export function getStoredAuthSession(): StoredAuthSession | null {
     return null;
   }
 
+  setAuthCookie(meta.expiresAt);
+
   return { accessToken, refreshToken, user, meta };
 }
 
@@ -165,6 +172,7 @@ export function clearAuthSession() {
   localStorage.removeItem(REFRESH_TOKEN_KEY);
   localStorage.removeItem(AUTH_USER_KEY);
   localStorage.removeItem(AUTH_META_KEY);
+  clearAuthCookie();
   notifyAuthSessionChange();
 }
 

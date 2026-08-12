@@ -14,6 +14,8 @@ export function useAuthGuard() {
   useEffect(() => {
     if (!isReady) return;
     if (!isLoggedIn) {
+      // Clears any stale auth cookie so the middleware guard can't bounce this redirect back here.
+      clearAuthSession();
       const currentPath = `${window.location.pathname}${window.location.search}`;
       router.replace(createAuthRedirectHref(currentPath));
     }
