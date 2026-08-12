@@ -42,7 +42,7 @@ interface ProfileTabProps {
   initialEditProfileOpen?: boolean;
 }
 
-type ProfileBottomTab = 'posts' | 'settings';
+type ProfileBottomTab = 'posts' | 'achievements' | 'settings';
 
 export function ProfileTab({
   profile,
@@ -191,18 +191,17 @@ export function ProfileTab({
           </div>
         </div>
 
-        <Panel
-          title="پروفایل"
-          action={<ProfileTabSwitcher activeTab={activeTab} onChange={setActiveTab} />}
-        >
+        <Panel title="پروفایل">
+          <ProfileTabSwitcher activeTab={activeTab} onChange={setActiveTab} />
+
           {activeTab === 'posts' ? (
             <UserPostsTab profileId={profile.id} posts={profile.posts ?? []} />
+          ) : activeTab === 'achievements' ? (
+            <AchievementsTab achievements={sortedAchievements} onAchievementClick={setSelectedAchievement} />
           ) : (
             <ProfileSettingsTab
-              achievements={sortedAchievements}
               onOpenSettings={() => setIsSettingsOpen(true)}
               onEditProfile={() => setIsEditProfileOpen(true)}
-              onAchievementClick={setSelectedAchievement}
               onLogout={logout}
             />
           )}
@@ -295,6 +294,7 @@ function ProfileTabSwitcher({
 }) {
   const tabs: Array<{ id: ProfileBottomTab; label: string; icon: IconName }> = [
     { id: 'posts', label: 'پست‌ها', icon: 'adam-chat' },
+    { id: 'achievements', label: 'دستاوردها', icon: 'trophy' },
     { id: 'settings', label: 'تنظیمات', icon: 'settings' },
   ];
 
@@ -302,7 +302,7 @@ function ProfileTabSwitcher({
     <div
       role="tablist"
       aria-label="بخش‌های پروفایل"
-      className="grid grid-cols-2 gap-1 rounded-[14px] border border-[rgba(255,98,0,.16)] bg-black/24 p-1"
+      className="mb-5 grid grid-cols-3 gap-1 rounded-[14px] border border-[rgba(255,98,0,.16)] bg-black/24 p-1"
     >
       {tabs.map((tab) => (
         <button
@@ -312,14 +312,14 @@ function ProfileTabSwitcher({
           aria-selected={activeTab === tab.id}
           onClick={() => onChange(tab.id)}
           className={cn(
-            'inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[11px] px-3 text-xs font-black transition-[background,color,box-shadow] duration-200',
+            'inline-flex min-h-10 min-w-0 items-center justify-center gap-1 rounded-[11px] px-1.5 text-[11px] font-black transition-[background,color,box-shadow] duration-200 sm:gap-1.5 sm:px-3 sm:text-xs',
             activeTab === tab.id
               ? 'text-[#1a0a00] shadow-[0_12px_26px_-18px_var(--glow)] [background:var(--fire-grad)]'
               : 'text-ink-3 hover:text-gold',
           )}
         >
-          <Icon name={tab.icon} size={15} />
-          {tab.label}
+          <Icon name={tab.icon} size={15} className="shrink-0" />
+          <span className="truncate">{tab.label}</span>
         </button>
       ))}
     </div>
@@ -519,16 +519,12 @@ function sortPinnedFirst<T extends { isPinned?: boolean }>(posts: T[]) {
 }
 
 function ProfileSettingsTab({
-  achievements,
   onOpenSettings,
   onEditProfile,
-  onAchievementClick,
   onLogout,
 }: {
-  achievements: Achievement[];
   onOpenSettings: () => void;
   onEditProfile: () => void;
-  onAchievementClick: (achievement: Achievement) => void;
   onLogout: () => void;
 }) {
   return (
@@ -548,50 +544,6 @@ function ProfileSettingsTab({
         />
       </div>
 
-      <div>
-        <h3 className="text-ink mb-4 text-sm font-black">دستاوردها</h3>
-        <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-x-4 gap-y-7 sm:grid-cols-4 sm:gap-x-5 lg:grid-cols-6">
-          {achievements.map((achievement) => {
-            const isEarned = isAchievementEarned(achievement);
-            const count = getAchievementCount(achievement);
-
-            return (
-              <button
-                key={achievement.label}
-                type="button"
-                onClick={() => onAchievementClick(achievement)}
-                className="group flex flex-col items-center gap-2.5 text-center"
-              >
-                <span
-                  className={cn(
-                    'border-hair relative block size-[72px] overflow-hidden rounded-[8px] border bg-black shadow-[0_12px_26px_-18px_var(--glow)] transition-transform duration-200 group-hover:-translate-y-0.5',
-                    isEarned
-                      ? 'border-[rgba(255,98,0,.72)]'
-                      : 'border-[rgba(253,238,226,.28)] opacity-70 grayscale',
-                  )}
-                >
-                  <OptionalImage
-                    src={getAchievementImage(achievement)}
-                    alt={achievement.label}
-                    className="object-cover"
-                    fallbackSrc={DEFAULT_ACHIEVEMENT_IMAGE}
-                    loading="lazy"
-                  />
-                  {isEarned && count > 1 && (
-                    <span className="bg-ember absolute start-1.5 top-1.5 rounded-[5px] px-1.5 py-0.5 text-[10px] font-black text-white shadow-[0_6px_14px_-8px_var(--glow)]">
-                      {toPersianDigits(count)}x
-                    </span>
-                  )}
-                </span>
-                <span className={cn('text-[12px]', isEarned ? 'text-ink-2' : 'text-ink-4')}>
-                  {achievement.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       <button
         type="button"
         onClick={onLogout}
@@ -602,6 +554,65 @@ function ProfileSettingsTab({
         </span>
         خروج از حساب کاربری
       </button>
+    </div>
+  );
+}
+
+function AchievementsTab({
+  achievements,
+  onAchievementClick,
+}: {
+  achievements: Achievement[];
+  onAchievementClick: (achievement: Achievement) => void;
+}) {
+  if (achievements.length === 0) {
+    return (
+      <p className="text-ink-3 rounded-[16px] border border-[var(--color-hair)] bg-black/20 p-5 text-center text-sm">
+        هنوز دستاوردی برای نمایش نیست.
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-x-4 gap-y-7 sm:grid-cols-4 sm:gap-x-5 lg:grid-cols-6">
+      {achievements.map((achievement) => {
+        const isEarned = isAchievementEarned(achievement);
+        const count = getAchievementCount(achievement);
+
+        return (
+          <button
+            key={achievement.label}
+            type="button"
+            onClick={() => onAchievementClick(achievement)}
+            className="group flex flex-col items-center gap-2.5 text-center"
+          >
+            <span
+              className={cn(
+                'border-hair relative block size-[72px] overflow-hidden rounded-[8px] border bg-black shadow-[0_12px_26px_-18px_var(--glow)] transition-transform duration-200 group-hover:-translate-y-0.5',
+                isEarned
+                  ? 'border-[rgba(255,98,0,.72)]'
+                  : 'border-[rgba(253,238,226,.28)] opacity-70 grayscale',
+              )}
+            >
+              <OptionalImage
+                src={getAchievementImage(achievement)}
+                alt={achievement.label}
+                className="object-cover"
+                fallbackSrc={DEFAULT_ACHIEVEMENT_IMAGE}
+                loading="lazy"
+              />
+              {isEarned && count > 1 && (
+                <span className="bg-ember absolute start-1.5 top-1.5 rounded-[5px] px-1.5 py-0.5 text-[10px] font-black text-white shadow-[0_6px_14px_-8px_var(--glow)]">
+                  {toPersianDigits(count)}x
+                </span>
+              )}
+            </span>
+            <span className={cn('text-[12px]', isEarned ? 'text-ink-2' : 'text-ink-4')}>
+              {achievement.label}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
