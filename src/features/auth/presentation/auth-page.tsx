@@ -163,7 +163,7 @@ function AuthGateLoader() {
         </div>
         <div>
           <p className="text-ink text-base font-black">در حال بررسی ورود...</p>
-          <p className="text-ink-4 mt-1 text-xs">اگر قبلاً وارد شده باشی، مستقیم به خانه می‌روی.</p>
+          <p className="text-ink-4 mt-1 text-xs">اگر قبلاً وارد شده باشی، مستقیم وارد خواهی شد.</p>
         </div>
       </div>
     </main>
