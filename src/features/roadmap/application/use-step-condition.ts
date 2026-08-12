@@ -24,7 +24,7 @@ export function useStepCondition(
 
   const postsQuery = useQuery({
     enabled: enabled && Boolean(step && condition?.type === 'posts'),
-    queryKey: ['roadmap-step-condition', 'posts', step.id],
+    queryKey: ['roadmap-step-condition', 'posts', step?.id],
     queryFn: async (): Promise<StepConditionResult> => {
       if (!step || !condition || condition.type !== 'posts') {
         return { satisfied: false };
@@ -45,7 +45,7 @@ export function useStepCondition(
 
   const engagementQuery = useQuery({
     enabled: enabled && Boolean(step && condition?.type === 'engagement'),
-    queryKey: ['roadmap-step-condition', 'engagement', step.id],
+    queryKey: ['roadmap-step-condition', 'engagement', step?.id],
     queryFn: async (): Promise<StepConditionResult> => {
       if (!step || !condition || condition.type !== 'engagement') {
         return { satisfied: false };
@@ -75,7 +75,7 @@ export function useStepCondition(
 
   const followsQuery = useQuery({
     enabled: enabled && Boolean(step && condition?.type === 'follows' && user?.id),
-    queryKey: ['roadmap-step-condition', 'follows', step.id, user?.id],
+    queryKey: ['roadmap-step-condition', 'follows', step?.id, user?.id],
     queryFn: async (): Promise<StepConditionResult> => {
       if (!step || !condition || condition.type !== 'follows' || !user?.id) {
         return { satisfied: false };
@@ -104,7 +104,7 @@ export function useStepCondition(
 
   const timerQuery = useQuery({
     enabled: enabled && Boolean(step && condition?.type === 'timer'),
-    queryKey: ['roadmap-step-condition', 'timer', step.id, elapsedSeconds],
+    queryKey: ['roadmap-step-condition', 'timer', step?.id, elapsedSeconds],
     queryFn: async (): Promise<StepConditionResult> => {
       if (!step || !condition || condition.type !== 'timer') {
         return { satisfied: false };
@@ -129,7 +129,7 @@ export function useStepCondition(
 
   const checklistQuery = useQuery({
     enabled: enabled && Boolean(step && condition?.type === 'checklist'),
-    queryKey: ['roadmap-step-condition', 'checklist', step.id, checkedItems],
+    queryKey: ['roadmap-step-condition', 'checklist', step?.id, checkedItems],
     queryFn: async (): Promise<StepConditionResult> => {
       if (!step || !condition || condition.type !== 'checklist') {
         return { satisfied: false };
