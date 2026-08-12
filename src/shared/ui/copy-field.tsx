@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { cn } from '@/core/lib/cn';
 import { CopyButton } from './copy-button';
 
@@ -10,10 +11,12 @@ interface CopyFieldProps {
   displayValue?: string;
   placeholder?: string;
   successMessage?: string;
-  /** Text for the copy button; defaults to "کپی". */
-  copyLabel?: string;
+  /** Content for the copy button; defaults to "کپی". Pass a responsive element to hide it on small screens. */
+  copyLabel?: ReactNode;
   /** When true, the displayed value opens `value` in a new tab instead of being plain text. */
   openInNewTab?: boolean;
+  /** When true, the value text gets an animated gold shimmer to draw attention to it. */
+  shine?: boolean;
   className?: string;
 }
 
@@ -25,15 +28,19 @@ export function CopyField({
   successMessage,
   copyLabel = 'کپی',
   openInNewTab = false,
+  shine = false,
   className,
 }: CopyFieldProps) {
   const shownValue = value ? (displayValue ?? value) : placeholder;
-  const valueClassName = 'text-ink-2 min-w-0 flex-1 truncate text-left text-xs font-medium';
+  const valueClassName = cn(
+    'min-w-0 truncate text-center text-xs font-medium',
+    shine && value ? 'text-shine font-black' : 'text-ink-2',
+  );
 
   return (
     <div className={className}>
-      {label && <h3 className="text-ink-3 mb-2 text-xs font-black">{label}</h3>}
-      <div className="flex min-h-12 min-w-0 items-center gap-2 rounded-[12px] border border-[rgba(255,98,0,.22)] bg-[rgba(255,98,0,.08)] px-2.5">
+      {label && <h3 className="text-ink-3 mb-2 text-center text-xs font-black">{label}</h3>}
+      <div className="flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-[12px] border border-[rgba(255,98,0,.22)] bg-[rgba(255,98,0,.08)] px-2.5">
         <CopyButton
           value={value}
           idleLabel={copyLabel}
@@ -47,7 +54,7 @@ export function CopyField({
             target="_blank"
             rel="noopener noreferrer"
             dir="ltr"
-            className={cn(valueClassName, 'hover:text-gold transition-colors')}
+            className={cn(valueClassName, !shine && 'hover:text-gold transition-colors')}
           >
             {shownValue}
           </a>

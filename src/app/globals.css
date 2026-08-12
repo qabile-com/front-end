@@ -64,6 +64,20 @@
 @utility mb-safe {
   margin-bottom: env(safe-area-inset-bottom);
 }
+@utility text-shine {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-gold) 0%,
+    var(--color-gold-lite) 45%,
+    var(--color-gold) 60%,
+    var(--color-gold) 100%
+  );
+  background-size: 220% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: skeletonShimmer 3.2s linear infinite;
+}
 
 :root {
   --fire-grad: linear-gradient(135deg, #cc4308 0%, #ff6200 42%, #ffa04d 74%, #f3ba63 100%);

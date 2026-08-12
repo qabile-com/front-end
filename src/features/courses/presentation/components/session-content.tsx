@@ -439,13 +439,14 @@ export function SessionContent({
               </p>
               {sessionReferral.link && (
                 <CopyField
-                  className="mt-3 max-w-sm"
+                  className="mx-auto mt-3 max-w-sm"
                   label="لینک صرافی"
                   value={sessionReferral.link}
                   displayValue={sessionReferral.link.replace(/^https?:\/\//, '')}
-                  copyLabel="کپی کردن لینک صرافی"
+                  copyLabel={<span className="hidden sm:inline">کپی کردن لینک صرافی</span>}
                   successMessage="لینک صرافی کپی شد."
                   openInNewTab
+                  shine
                 />
               )}
             </div>
@@ -1104,9 +1105,10 @@ function AboutPanel({
             label="لینک صرافی"
             value={courseReferral.link}
             displayValue={courseReferral.link.replace(/^https?:\/\//, '')}
-            copyLabel="کپی کردن لینک صرافی"
+            copyLabel={<span className="hidden sm:inline">کپی کردن لینک صرافی</span>}
             successMessage="لینک صرافی کپی شد."
             openInNewTab
+            shine
           />
         )}
       </div>
