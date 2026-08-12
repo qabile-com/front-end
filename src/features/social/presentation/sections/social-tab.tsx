@@ -388,9 +388,11 @@ export function SocialTab({
           profile={currentProfile}
           isPending={updateProfile.isPending}
           onClose={() => setIsCompleteProfileOpen(false)}
-          onSubmit={async ({ displayName, username }) => {
+          onSubmit={async ({ firstName, lastName, displayName, username }) => {
             try {
               await updateProfile.mutateAsync({
+                firstName,
+                lastName,
                 displayName,
                 username,
               });
@@ -436,7 +438,7 @@ export function SocialTab({
 }
 
 function hasRequiredForumProfile(profile?: MyProfile | null) {
-  return Boolean(profile?.displayName?.trim() && profile?.username?.trim());
+  return Boolean(profile?.firstName?.trim() && profile?.username?.trim());
 }
 
 function CompleteForumProfileModal({
@@ -450,26 +452,39 @@ function CompleteForumProfileModal({
   profile?: MyProfile | null;
   isPending: boolean;
   onClose: () => void;
-  onSubmit: (input: { displayName: string; username: string }) => Promise<void>;
+  onSubmit: (input: {
+    firstName: string;
+    lastName: string;
+    displayName: string;
+    username: string;
+  }) => Promise<void>;
 }) {
   const isLargeScreen = useIsLargeScreen();
-  const [displayName, setDisplayName] = useState(profile?.displayName || profile?.name || '');
+  const [firstName, setFirstName] = useState(profile?.firstName || profile?.name || '');
+  const [lastName, setLastName] = useState(profile?.lastName ?? '');
   const [username, setUsername] = useState(profile?.username ?? '');
-  const [errors, setErrors] = useState<{ displayName?: string; username?: string }>({});
+  const [errors, setErrors] = useState<{ firstName?: string; lastName?: string; username?: string }>(
+    {},
+  );
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextErrors: typeof errors = {};
-    const nextDisplayName = displayName.trim().replace(/\s+/g, ' ');
+    const nextFirstName = firstName.trim().replace(/\s+/g, ' ');
+    const nextLastName = lastName.trim().replace(/\s+/g, ' ');
     const nextUsername = normalizeUsernameInput(username);
 
-    if (nextDisplayName.length < 2) {
-      nextErrors.displayName = 'نام نمایشی باید حداقل ۲ کاراکتر باشد.';
+    if (nextFirstName.length < 2) {
+      nextErrors.firstName = 'نام باید حداقل ۲ کاراکتر باشد.';
     }
 
-    if (nextDisplayName.length > 64) {
-      nextErrors.displayName = 'نام نمایشی نباید بیشتر از ۶۴ کاراکتر باشد.';
+    if (nextFirstName.length > 64) {
+      nextErrors.firstName = 'نام نباید بیشتر از ۶۴ کاراکتر باشد.';
+    }
+
+    if (nextLastName.length > 64) {
+      nextErrors.lastName = 'نام خانوادگی نباید بیشتر از ۶۴ کاراکتر باشد.';
     }
 
     if (!isValidUsername(nextUsername)) {
@@ -479,7 +494,12 @@ function CompleteForumProfileModal({
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
 
-    await onSubmit({ displayName: nextDisplayName, username: nextUsername });
+    await onSubmit({
+      firstName: nextFirstName,
+      lastName: nextLastName,
+      displayName: [nextFirstName, nextLastName].filter(Boolean).join(' '),
+      username: nextUsername,
+    });
   };
 
   return (
@@ -510,20 +530,33 @@ function CompleteForumProfileModal({
 
         <div className="space-y-4 p-5">
           <p className="text-ink-3 rounded-[16px] border border-[var(--color-hair)] bg-black/20 p-3 text-xs leading-6">
-            برای اینکه دیگران تو را درست بشناسند، نام نمایشی و نام کاربری‌ات را کامل کن.
+            برای اینکه دیگران تو را درست بشناسند، اطلاعات پروفایلت را کامل کن.
           </p>
-          <ProfileCompletionField
-            label="نام نمایشی"
-            icon="user"
-            value={displayName}
-            error={errors.displayName}
-            placeholder="مثلاً آرش کریمی"
-            autoFocus={isLargeScreen}
-            onChange={(value) => {
-              setDisplayName(value);
-              setErrors((current) => ({ ...current, displayName: undefined }));
-            }}
-          />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <ProfileCompletionField
+              label="نام"
+              icon="user"
+              value={firstName}
+              error={errors.firstName}
+              placeholder="مثلاً آرش"
+              autoFocus={isLargeScreen}
+              onChange={(value) => {
+                setFirstName(value);
+                setErrors((current) => ({ ...current, firstName: undefined }));
+              }}
+            />
+            <ProfileCompletionField
+              label="نام خانوادگی"
+              icon="user"
+              value={lastName}
+              error={errors.lastName}
+              placeholder="مثلاً کریمی"
+              onChange={(value) => {
+                setLastName(value);
+                setErrors((current) => ({ ...current, lastName: undefined }));
+              }}
+            />
+          </div>
           <ProfileCompletionField
             label="نام کاربری"
             icon="search"
