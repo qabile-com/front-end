@@ -20,13 +20,14 @@ import { useLandingPublicData } from '@/features/landing/application/use-landing
 import { landingPublicRepo } from '@/features/landing/infrastructure/repository-factory';
 import { resolveAuthEntryTarget } from '@/core/auth/resolve-auth-entry';
 import { getSafeRedirectPath } from '@/core/auth/redirect';
+import { publicEnv } from '@/core/config/public-env';
 import { authRepo } from '../infrastructure/repository-factory';
 import { AuthCard } from './components/auth-card';
 
-const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'missing-google-client-id';
-const shouldMockGoogleAuth =
-  process.env.NEXT_PUBLIC_MOCK_GOOGLE_AUTH === 'true' ||
-  !process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+const googleClientId = publicEnv.googleClientId;
+// Opt-in only now: the client id always resolves (env var or bundled default), so the old
+// "fall back to mock when it's missing" branch could never fire.
+const shouldMockGoogleAuth = process.env.NEXT_PUBLIC_MOCK_GOOGLE_AUTH === 'true';
 
 export function AuthPage() {
   const router = useRouter();
@@ -125,7 +126,7 @@ export function AuthPage() {
               <AuthCard
                 repository={authRepo}
                 getRedirectTo={getRedirectTo}
-                googleEnabled={Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID)}
+                googleEnabled={Boolean(googleClientId)}
                 googleMockEnabled={shouldMockGoogleAuth}
                 initialReferralCode={initialReferralCode}
               />

@@ -9,28 +9,11 @@ import {
   type MessagePayload,
   type Messaging,
 } from 'firebase/messaging';
+import { getFirebaseConfig, type FirebaseMessagingConfig } from '@/core/config/public-env';
 
-interface FirebaseMessagingConfig {
-  apiKey: string;
-  authDomain: string;
-  projectId: string;
-  storageBucket: string;
-  messagingSenderId: string;
-  appId: string;
-  vapidKey: string;
-}
-
-// Trimmed for the same reason as the server route: a stray newline in an env var makes the
-// VAPID key invalid and getToken() throws with a fairly opaque message.
-const buildTimeConfig: FirebaseMessagingConfig = {
-  apiKey: (process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? '').trim(),
-  authDomain: (process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '').trim(),
-  projectId: (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? '').trim(),
-  storageBucket: (process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? '').trim(),
-  messagingSenderId: (process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '').trim(),
-  appId: (process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? '').trim(),
-  vapidKey: (process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ?? '').trim(),
-};
+// Env vars win when set; otherwise the bundled production defaults apply, so a deployment
+// that forgets to configure them still receives push notifications.
+const buildTimeConfig: FirebaseMessagingConfig = getFirebaseConfig();
 
 let configPromise: Promise<FirebaseMessagingConfig | null> | null = null;
 

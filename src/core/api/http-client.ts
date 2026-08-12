@@ -6,6 +6,7 @@ import {
   getStoredAuthSession,
   updateStoredTokens,
 } from '@/core/auth/token';
+import { publicEnv } from '@/core/config/public-env';
 
 export class ApiError extends Error {
   statusCode?: number;
@@ -21,7 +22,7 @@ export class ApiError extends Error {
   }
 }
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.qabile.com';
+const apiBaseUrl = publicEnv.apiBaseUrl;
 
 const httpClient = axios.create({
   baseURL: apiBaseUrl,
