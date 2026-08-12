@@ -378,10 +378,12 @@ export function SessionContent({
           />
 
           {!showVideo && (
-            <div className="absolute inset-x-0 top-0 z-20 flex flex-wrap items-center justify-end gap-2 p-3 sm:p-6">
-              <IconButton label="دانلود" onClick={handleDownloadVideo} icon="download" />
+            <div className="absolute inset-x-0 top-0 z-20 flex flex-wrap items-center justify-between gap-2 p-3 sm:p-6">
               <IconButton label="بازگشت" onClick={handleClose} icon="arrow-right" />
-              <IconButton label="اشتراک‌گذاری" onClick={() => void handleShare()} icon="share" />
+              <div className="flex gap-2">
+                <IconButton label="دانلود" onClick={handleDownloadVideo} icon="download" />
+                <IconButton label="اشتراک‌گذاری" onClick={() => void handleShare()} icon="share" />
+              </div>
             </div>
           )}
 
@@ -438,10 +440,12 @@ export function SessionContent({
               {sessionReferral.link && (
                 <CopyField
                   className="mt-3 max-w-sm"
-                  label="لینک رفرال"
+                  label="لینک صرافی"
                   value={sessionReferral.link}
                   displayValue={sessionReferral.link.replace(/^https?:\/\//, '')}
-                  successMessage="لینک رفرال کپی شد."
+                  copyLabel="کپی کردن لینک صرافی"
+                  successMessage="لینک صرافی کپی شد."
+                  openInNewTab
                 />
               )}
             </div>
@@ -1097,10 +1101,12 @@ function AboutPanel({
         {courseReferral.link && (
           <CopyField
             className="mt-3"
-            label="لینک رفرال"
+            label="لینک صرافی"
             value={courseReferral.link}
             displayValue={courseReferral.link.replace(/^https?:\/\//, '')}
-            successMessage="لینک رفرال کپی شد."
+            copyLabel="کپی کردن لینک صرافی"
+            successMessage="لینک صرافی کپی شد."
+            openInNewTab
           />
         )}
       </div>
