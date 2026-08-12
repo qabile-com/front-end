@@ -41,8 +41,13 @@ export function SocialPostDetail({
 }: SocialPostDetailProps) {
   const [commentText, setCommentText] = useState('');
   const commentsEndRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLDivElement>(null);
   const shouldScrollAfterSubmitRef = useRef(false);
   const commentsTotal = post.commentsCount ?? post.comments.length;
+
+  const handleScrollToComposer = () => {
+    composerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  };
 
   useEffect(() => {
     if (!shouldScrollAfterSubmitRef.current || isAddingComment) return;
@@ -146,10 +151,14 @@ export function SocialPostDetail({
               <Icon name="heart" size={17} className={post.likedByMe ? 'fill-current' : ''} />
               {toPersianDigits(post.likes)}
             </button>
-            <span className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleScrollToComposer}
+              className="hover:text-ink flex items-center gap-1.5 transition-colors"
+            >
               <Icon name="msg" size={17} />
               {toPersianDigits(post.commentsCount ?? post.comments.length)}
-            </span>
+            </button>
             <button
               type="button"
               onClick={onShare}
@@ -241,7 +250,10 @@ export function SocialPostDetail({
         </div>
       </section>
 
-      <div className="border-hair sticky bottom-0 flex items-center gap-3 border-t bg-[var(--color-panel)] px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+      <div
+        ref={composerRef}
+        className="border-hair sticky bottom-0 flex items-center gap-3 border-t bg-[var(--color-panel)] px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+      >
         <UserAvatar
           name={currentUserName ?? '?'}
           avatar={currentUserAvatar ?? undefined}
