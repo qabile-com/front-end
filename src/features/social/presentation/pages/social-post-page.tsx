@@ -13,7 +13,7 @@ import { useLikePost } from '@/features/social/application/use-like-post';
 import { SocialPostDetail } from '@/features/social/presentation/components/social-post-detail';
 import { useUser } from '@/features/dashboard/application/use-user';
 import { userRepo } from '@/features/dashboard/infrastructure/repository-factory';
-import { ErrorState, Icon, PostDetailSkeleton } from '@/shared/ui';
+import { ErrorState, Icon, MotionPage, PostDetailSkeleton } from '@/shared/ui';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { shareUrl } from '@/shared/lib/native-share';
 import { getApiErrorView } from '@/core/api/api-error-view';
@@ -141,7 +141,7 @@ export function SocialPostPage() {
   const visiblePost = { ...post, isPinned: pinnedOverride ?? post.isPinned };
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <MotionPage className="mx-auto w-full max-w-3xl">
       <div className="sticky top-[env(safe-area-inset-top)] z-30 mb-4 flex">
         <button
           type="button"
@@ -235,6 +235,6 @@ export function SocialPostPage() {
         onClose={() => setLoginPromptOpen(false)}
       />
       <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
-    </div>
+    </MotionPage>
   );
 }

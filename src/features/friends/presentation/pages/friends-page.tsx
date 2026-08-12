@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import Image from 'next/image';
-import { BaseModal, Button, CopyButton, DashboardPageShell, Icon } from '@/shared/ui';
+import { BaseModal, Button, CopyButton, DashboardPageShell, Icon, MotionPage } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
 import { showError, showSuccess } from '@/shared/lib/toast';
@@ -101,47 +101,49 @@ export function FriendsPage() {
   if (program.loading) return <FriendsPageSkeleton />;
 
   return (
-    <DashboardPageShell size="wide">
-      <div className="mx-auto max-w-[1216px] space-y-5 pb-4">
-        <FriendsHero />
+    <MotionPage>
+      <DashboardPageShell size="wide">
+        <div className="mx-auto max-w-[1216px] space-y-5 pb-4">
+          <FriendsHero />
 
-        {hasActivatedFriendsProgram ? (
-          <>
-            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(360px,1.16fr)] lg:items-stretch">
-              <RewardPath />
-              <ReferralPanel program={currentProgram} />
-            </div>
+          {hasActivatedFriendsProgram ? (
+            <>
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(360px,1.16fr)] lg:items-stretch">
+                <RewardPath />
+                <ReferralPanel program={currentProgram} />
+              </div>
 
-            <FriendsRewardList
-              friends={friends.friends}
-              loading={friends.loading}
-              totalReward={totalReward}
-            />
-          </>
-        ) : (
-          <FriendsProgramLockedState onActivate={openSetupModal} />
-        )}
-      </div>
+              <FriendsRewardList
+                friends={friends.friends}
+                loading={friends.loading}
+                totalReward={totalReward}
+              />
+            </>
+          ) : (
+            <FriendsProgramLockedState onActivate={openSetupModal} />
+          )}
+        </div>
 
-      <BaseModal
-        isOpen={isSetupModalOpen}
-        onClose={closeSetupModal}
-        title="فعال سازی لینک دعوت دوستان"
-        panelClassName="w-full max-w-lg"
-        className="bg-black/75"
-      >
-        <ExchangeSetupCard
-          exchangeReferralUrl={exchangeReferralUrl}
-          identity={identity}
-          exchangeInvalid={exchangeInvalid}
-          identityInvalid={identityInvalid}
-          isSubmitting={submitExchange.isPending}
-          onExchangeChange={setExchangeReferralUrl}
-          onIdentityChange={setIdentity}
-          onSubmit={handleSubmit}
-        />
-      </BaseModal>
-    </DashboardPageShell>
+        <BaseModal
+          isOpen={isSetupModalOpen}
+          onClose={closeSetupModal}
+          title="فعال سازی لینک دعوت دوستان"
+          panelClassName="w-full max-w-lg"
+          className="bg-black/75"
+        >
+          <ExchangeSetupCard
+            exchangeReferralUrl={exchangeReferralUrl}
+            identity={identity}
+            exchangeInvalid={exchangeInvalid}
+            identityInvalid={identityInvalid}
+            isSubmitting={submitExchange.isPending}
+            onExchangeChange={setExchangeReferralUrl}
+            onIdentityChange={setIdentity}
+            onSubmit={handleSubmit}
+          />
+        </BaseModal>
+      </DashboardPageShell>
+    </MotionPage>
   );
 }
 

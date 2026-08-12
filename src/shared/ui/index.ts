@@ -23,6 +23,7 @@ export { EmberCanvas } from './ember-canvas';
 export { BackgroundField } from './background-field';
 export { ErrorState, getErrorMessage } from './error-state';
 export { MotionItem, MotionList, MotionPage, MotionPress } from './motion';
+export { RouteTransition } from './route-transition';
 export {
   CardGridSkeleton,
   CoursesPageSkeleton,

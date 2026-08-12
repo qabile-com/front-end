@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BackgroundField, Button, Container, GlassCard, Icon, Reveal } from '@/shared/ui';
+import { BackgroundField, Button, Container, GlassCard, Icon, MotionPage, Reveal } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { SiteNav } from './sections/site-nav';
 import { SiteFooter } from './sections/site-footer';
@@ -91,7 +91,7 @@ export function DownloadPage() {
   }, [installPrompt, scrollToGuide]);
 
   return (
-    <>
+    <MotionPage>
       <BackgroundField />
       <SiteNav />
       <main className="relative w-full overflow-x-clip pt-[72px]">
@@ -105,7 +105,7 @@ export function DownloadPage() {
         <DownloadCta />
       </main>
       <SiteFooter />
-    </>
+    </MotionPage>
   );
 }
 

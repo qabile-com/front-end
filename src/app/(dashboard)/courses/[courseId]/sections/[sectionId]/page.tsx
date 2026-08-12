@@ -21,7 +21,14 @@ import {
 import { userRepo } from '@/features/dashboard/infrastructure/repository-factory';
 import type { Course, CoursePart } from '@/features/courses/domain/courses.data';
 import { toPersianDigits } from '@/core/lib/persian';
-import { DashboardPageShell, ErrorState, Icon, OptionalImage, SessionSkeleton } from '@/shared/ui';
+import {
+  DashboardPageShell,
+  ErrorState,
+  Icon,
+  MotionPage,
+  OptionalImage,
+  SessionSkeleton,
+} from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { formatDurationFa } from '@/features/courses/presentation/components/course-session-modal';
 import type { SectionWatchProgressInput } from '@/features/dashboard/domain/dashboard.types';
@@ -207,7 +214,7 @@ export default function SessionPage() {
   const audioUrl = sessionDetail?.audioUrl ?? sessionDetail?.mediaUrl ?? session?.audioUrl ?? null;
 
   return (
-    <>
+    <MotionPage>
       <DashboardPageShell size="wide" className="min-h-screen">
         <div className="grid min-w-0 items-start gap-6 min-[1440px]:grid-cols-[minmax(0,1fr)_380px]">
           <div className="min-w-0">
@@ -259,7 +266,7 @@ export default function SessionPage() {
         onConfirm={() => void handlePurchaseCourse()}
       />
       <ActionRewardModals reward={currentReward} onClose={dismissCurrentReward} />
-    </>
+    </MotionPage>
   );
 }
 

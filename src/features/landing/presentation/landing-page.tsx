@@ -1,6 +1,6 @@
 'use client';
 
-import { BackgroundField } from '@/shared/ui';
+import { BackgroundField, MotionPage } from '@/shared/ui';
 import { SiteNav } from './sections/site-nav';
 import { HeroSection } from './sections/hero-section';
 import { StatsSection } from './sections/stats-section';
@@ -22,7 +22,7 @@ export function LandingPage() {
   const { data: userData } = useLandingUserData(landingUserRepo);
 
   return (
-    <>
+    <MotionPage>
       <BackgroundField />
       <SiteNav />
       <main className="landing-page relative w-full overflow-x-clip">
@@ -108,7 +108,7 @@ export function LandingPage() {
         </Section>
       </main>
       <SiteFooter />
-    </>
+    </MotionPage>
   );
 }
 

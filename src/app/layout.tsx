@@ -7,6 +7,7 @@ import { PwaProvider } from '@/providers/pwa-provider';
 import { GlassToaster } from '@/shared/lib/toast';
 import { RootLayoutClient } from './root-layout-client';
 import { NotificationProvider } from '@/features/notifications/presentation/notification-provider';
+import { RouteTransition } from '@/shared/ui';
 
 export const metadata: Metadata = {
   title: 'قبیله ققنوس | اکوسیستم رشد و یادگیری گیمیفای‌شده',
@@ -45,7 +46,7 @@ export default function RootLayout({
             <QueryProvider>
               <PwaProvider />
               <NotificationProvider />
-              {children}
+              <RouteTransition>{children}</RouteTransition>
               <GlassToaster />
             </QueryProvider>
           </AuthProvider>
