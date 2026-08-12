@@ -751,56 +751,71 @@ function LockedCourseNotice({
   isPurchasing: boolean;
   onBuyCourse?: () => void;
 }) {
+  const shortfall = Math.max(0, price - fireBalance);
+
   return (
-    <div className="mx-auto w-full max-w-[920px] rounded-[20px] border border-[rgba(255,98,0,.24)] bg-[linear-gradient(135deg,rgba(255,98,0,.14),rgba(0,0,0,.28))] p-4 shadow-[0_18px_54px_-42px_var(--glow)] md:max-w-2/3">
-      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
-        <span className="text-gold grid size-11 shrink-0 place-items-center rounded-2xl border border-[rgba(243,186,99,.26)] bg-black/28">
-          <Icon name="lock" size={19} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h3 className="text-ink text-sm font-black sm:text-base">
-            برای دیدن جلسه‌ها و ادامه دوره باید آن را بخری.
-          </h3>
-          <div className="mt-3 flex flex-wrap gap-2 text-xs font-black">
-            <span className="text-gold inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-[rgba(243,186,99,.2)] bg-black/28 px-3">
-              قیمت: {toPersianDigits(price)}
-              <Icon name="flame" size={14} />
+    <div className="relative mx-auto w-full max-w-[920px] overflow-hidden rounded-[24px] border border-[rgba(255,98,0,.26)] shadow-[0_24px_64px_-40px_var(--glow)] md:max-w-2/3">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-14 -start-14 size-48 rounded-full opacity-30 blur-3xl"
+        style={{ background: 'var(--fire-grad)' }}
+      />
+      <div className="relative p-4 [background:linear-gradient(135deg,rgba(255,98,0,.16),rgba(0,0,0,.4))] sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3.5">
+            <span className="text-gold grid size-12 shrink-0 place-items-center rounded-2xl border border-[rgba(243,186,99,.3)] bg-black/30 shadow-[0_10px_26px_-14px_var(--glow)]">
+              <Icon name="lock" size={21} />
             </span>
-            <span
-              className={cn(
-                'inline-flex min-h-9 items-center gap-1.5 rounded-xl border bg-black/28 px-3',
-                hasEnoughFire
-                  ? 'border-[#2bd4a8]/25 text-[#2bd4a8]'
-                  : 'border-red-500/25 text-red-300',
-              )}
-            >
-              <Icon name="flame" size={14} />
-              آتش شما: {toPersianDigits(fireBalance)}
-            </span>
-          </div>
-          <div className="mt-4 flex flex-col gap-2 sm:max-w-[340px]">
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              disabled={!hasEnoughFire || isPurchasing || !onBuyCourse}
-              onClick={onBuyCourse}
-              className="w-full"
-            >
-              {isPurchasing ? (
-                'در حال خرید...'
-              ) : (
-                <>
-                  قیمت: {toPersianDigits(price)}
-                  <Icon name="flame" size={16} />
-                </>
-              )}
-            </Button>
-            {!hasEnoughFire && (
-              <p className="rounded-xl border border-red-500/25 px-3 py-2 text-center text-xs font-black text-red-300 [background:rgba(239,68,68,.08)]">
-                آتش کافی نداری
+            <div className="min-w-0">
+              <h3 className="text-ink text-[15px] font-black sm:text-base">این دوره قفل است</h3>
+              <p className="text-ink-2 mt-1 text-xs leading-6 sm:text-[13px]">
+                برای دیدن جلسه‌ها و ادامه دوره، آن را با آتش باز کن.
               </p>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-[rgba(243,186,99,.24)] bg-black/30 px-4 py-2.5 sm:self-auto">
+            <Icon name="flame" size={22} className="text-ember" />
+            <div>
+              <div className="text-gold text-lg leading-none font-black">
+                {toPersianDigits(price)}
+              </div>
+              <div className="text-ink-4 mt-1 text-[10px] font-bold">قیمت دوره</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-col gap-2 sm:max-w-[380px] sm:mx-auto">
+          <Button
+            type="button"
+            variant="primary"
+            disabled={!hasEnoughFire || isPurchasing || !onBuyCourse}
+            onClick={onBuyCourse}
+            className="w-full"
+          >
+            {isPurchasing ? (
+              'در حال خرید...'
+            ) : (
+              <>
+                باز کردن دوره با {toPersianDigits(price)}
+                <Icon name="flame" size={16} />
+              </>
             )}
+          </Button>
+
+          <div
+            className={cn(
+              'flex items-center justify-between rounded-xl border px-3 py-2 text-xs font-black',
+              hasEnoughFire
+                ? 'border-[#2bd4a8]/25 text-[#2bd4a8] [background:rgba(43,212,168,.08)]'
+                : 'border-red-500/25 text-red-300 [background:rgba(239,68,68,.08)]',
+            )}
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <Icon name="flame" size={13} />
+              موجودی تو: {toPersianDigits(fireBalance)}
+            </span>
+            {!hasEnoughFire && <span>{toPersianDigits(shortfall)} کم داری</span>}
           </div>
         </div>
       </div>
