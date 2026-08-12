@@ -513,16 +513,15 @@ function CourseCard({
             </h3>
           </button>
 
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-nowrap gap-1.5">
             <CourseCardBadge
               icon="episodes"
               value={`${toPersianDigits(course.episodes.length)} جلسه`}
             />
             <CourseCardBadge icon="eye" value={toPersianDigits(course.views)} />
             <CourseCardBadge tone="reward">
-              <span>پاداش:</span>
-              <Icon name="flame" size={16} className="text-ember" />
-              <span>+{formatPersianNumber(course.xp)}</span>
+              <Icon name="flame" size={16} className="text-ember shrink-0" />
+              <span className="truncate">+{formatPersianNumber(course.xp)}</span>
             </CourseCardBadge>
           </div>
 
@@ -578,7 +577,7 @@ function CourseCardBadge({
   return (
     <span
       className={cn(
-        'inline-flex min-h-9 min-w-0 items-center gap-1.75 rounded-xl border px-3 text-[11.5px] font-black whitespace-nowrap',
+        'flex min-h-9 min-w-0 flex-1 basis-0 items-center justify-center gap-1.5 overflow-hidden rounded-xl border px-2 text-[11.5px] font-black',
         tone === 'reward'
           ? 'text-gold border-[rgba(243,186,99,.20)] bg-[rgba(243,186,99,.08)]'
           : 'border-hair text-ink-3 bg-black/24',
@@ -590,10 +589,10 @@ function CourseCardBadge({
             <Icon
               name={icon}
               size={16}
-              className={tone === 'reward' ? 'text-ember' : 'text-gold'}
+              className={cn('shrink-0', tone === 'reward' ? 'text-ember' : 'text-gold')}
             />
           )}
-          {value}
+          <span className="truncate">{value}</span>
         </>
       )}
     </span>
