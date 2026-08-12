@@ -162,9 +162,15 @@ export function SocialPostPage() {
           comments: comments.data ?? post.comments,
           commentsCount: comments.data?.length ?? post.commentsCount,
         }}
-        onAddComment={(currentPostId, text) => {
-          if (!requireLogin()) return;
-          addComment.mutate({ postId: currentPostId, text });
+        onAddComment={async (currentPostId, text) => {
+          if (!requireLogin()) return false;
+          try {
+            await addComment.mutateAsync({ postId: currentPostId, text });
+            return true;
+          } catch (error) {
+            showError(error instanceof Error ? error.message : 'ثبت نظر انجام نشد.');
+            return false;
+          }
         }}
         onShare={() => void handleShare()}
         onLike={() => {

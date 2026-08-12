@@ -10,7 +10,7 @@ import { formatUsername } from '../lib/format-username';
 
 interface SocialPostDetailProps {
   post: Post;
-  onAddComment?: (postId: string, text: string) => void;
+  onAddComment?: (postId: string, text: string) => Promise<boolean>;
   onShare?: () => void;
   onLike?: () => void;
   onUnlike?: () => void;
@@ -49,11 +49,15 @@ export function SocialPostDetail({
     shouldScrollAfterSubmitRef.current = false;
   }, [post.comments.length, isAddingComment]);
 
-  const handleSubmitComment = () => {
-    if (!commentText.trim() || !onAddComment) return;
+  const handleSubmitComment = async () => {
+    const text = commentText.trim();
+    if (!text || !onAddComment) return;
     shouldScrollAfterSubmitRef.current = true;
-    onAddComment(post.id, commentText.trim());
     setCommentText('');
+    const succeeded = await onAddComment(post.id, text);
+    if (!succeeded) {
+      setCommentText((current) => (current ? current : text));
+    }
   };
 
   return (

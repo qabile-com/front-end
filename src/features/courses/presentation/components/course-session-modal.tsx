@@ -16,7 +16,7 @@ interface Props {
   commentsQuery: UseInfiniteQueryResult<InfiniteData<PaginatedComments>>;
   onNextSession: () => void;
   onWatchProgress: (body: SectionWatchProgressInput) => void;
-  onAddComment: (text: string) => void;
+  onAddComment: (text: string) => Promise<boolean>;
   isAddingComment?: boolean;
   userName?: string;
   userAvatar?: string | null;

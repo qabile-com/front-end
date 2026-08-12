@@ -87,12 +87,18 @@ export default function SessionPage() {
   );
 
   const handleAddComment = useCallback(
-    (text: string) => {
+    async (text: string) => {
       if (!isCourseUnlocked) {
         showError('برای ثبت نظر، ابتدا کورس را خریداری کن.');
-        return;
+        return false;
       }
-      addComment.mutate({ courseId, sectionId, text });
+      try {
+        await addComment.mutateAsync({ courseId, sectionId, text });
+        return true;
+      } catch (error) {
+        showError(error instanceof Error ? error.message : 'ثبت نظر انجام نشد.');
+        return false;
+      }
     },
     [addComment, courseId, isCourseUnlocked, sectionId],
   );

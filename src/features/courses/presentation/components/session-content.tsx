@@ -45,7 +45,7 @@ interface SessionContentProps {
   onNextSession: () => void;
   onNavigateSection?: (sectionId: string) => void;
   onWatchProgress: (body: SectionWatchProgressInput) => void;
-  onAddComment: (text: string) => void;
+  onAddComment: (text: string) => Promise<boolean>;
   onBuyCourse?: () => void;
   onBack: () => void;
   isAddingComment?: boolean;
@@ -293,10 +293,14 @@ export function SessionContent({
     };
   }, [buildWatchPayload]);
 
-  const handleSubmitComment = useCallback(() => {
-    if (!commentText.trim()) return;
-    onAddComment(commentText.trim());
+  const handleSubmitComment = useCallback(async () => {
+    const text = commentText.trim();
+    if (!text) return;
     setCommentText('');
+    const succeeded = await onAddComment(text);
+    if (!succeeded) {
+      setCommentText((current) => (current ? current : text));
+    }
   }, [commentText, onAddComment]);
 
   const handleClose = useCallback(() => {
