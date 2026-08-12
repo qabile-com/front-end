@@ -22,6 +22,13 @@ import {
 
 const HERO_SLIDES = [
   {
+    id: 'usernames',
+    title: 'نام کاربری بساز',
+    eyebrow: 'پروفایل من',
+    href: '/profile?edit=profile',
+    imageSrc: '/assets/hero/usernames.webp',
+  },
+  {
     id: 'adam',
     title: 'چت با آدم',
     eyebrow: 'هوش مصنوعی آدم',
