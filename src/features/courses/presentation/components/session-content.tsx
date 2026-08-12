@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObjec
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/core/lib/cn';
 import { getAvatarInitial } from '@/core/lib/avatar';
@@ -295,7 +296,7 @@ export function SessionContent({
     };
   }, [buildWatchPayload]);
 
-  const handleSubmitComment = useCallback(async () => {
+  const handleSubmitComment = async () => {
     const text = commentText.trim();
     if (!text) return;
     setCommentText('');
@@ -303,7 +304,7 @@ export function SessionContent({
     if (!succeeded) {
       setCommentText((current) => (current ? current : text));
     }
-  }, [commentText, onAddComment]);
+  };
 
   const handleClose = useCallback(() => {
     const payload = buildWatchPayload('close');
@@ -1207,19 +1208,40 @@ function CommentsPanel({
   userName?: string;
   userAvatar?: string | null;
 }) {
-  const commentsEndRef = useRef<HTMLDivElement | null>(null);
+  const scrollParentRef = useRef<HTMLDivElement | null>(null);
   const shouldScrollAfterSubmitRef = useRef(false);
+  const hasNextPage = commentsQuery.hasNextPage;
+  const isFetchingNextPage = commentsQuery.isFetchingNextPage;
+  const fetchNextPage = commentsQuery.fetchNextPage;
+
+  const virtualizer = useVirtualizer({
+    count: allComments.length,
+    getScrollElement: () => scrollParentRef.current,
+    estimateSize: () => 108,
+    overscan: 8,
+    gap: 12,
+  });
 
   useEffect(() => {
-    if (!shouldScrollAfterSubmitRef.current || isAddingComment) return;
+    if (!shouldScrollAfterSubmitRef.current || isAddingComment || allComments.length === 0) return;
 
     const scrollId = window.setTimeout(() => {
-      commentsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      virtualizer.scrollToIndex(allComments.length - 1, { align: 'end', behavior: 'smooth' });
       shouldScrollAfterSubmitRef.current = false;
     }, 80);
 
     return () => window.clearTimeout(scrollId);
-  }, [allComments.length, isAddingComment]);
+  }, [allComments.length, isAddingComment, virtualizer]);
+
+  const virtualItems = virtualizer.getVirtualItems();
+  const lastVirtualItem = virtualItems[virtualItems.length - 1];
+
+  useEffect(() => {
+    if (!lastVirtualItem || !hasNextPage || isFetchingNextPage) return;
+    if (lastVirtualItem.index < allComments.length - 1) return;
+
+    void fetchNextPage();
+  }, [lastVirtualItem, hasNextPage, isFetchingNextPage, fetchNextPage, allComments.length]);
 
   const submitAndFollowComment = () => {
     if (isLocked) return;
@@ -1274,41 +1296,6 @@ function CommentsPanel({
         </h3>
       </div>
 
-      <div className="lg:max-h-[430px] lg:overflow-y-auto lg:overscroll-contain lg:rounded-[18px] lg:pe-1">
-        <div className="space-y-4">
-          {isLocked && (
-            <p className="text-ink-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-5 text-center text-sm leading-7">
-              نظرات این جلسه بعد از خرید دوره فعال می‌شود.
-            </p>
-          )}
-          {!isLocked && commentsQuery.isLoading && <CommentsSkeleton />}
-          {commentsQuery.isError && <p className="text-danger text-sm">خطا در دریافت نظرات</p>}
-          {!commentsQuery.isLoading && allComments.length === 0 ? (
-            <p className="text-ink-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-5 text-center text-sm">
-              هنوز نظری برای این جلسه ثبت نشده است.
-            </p>
-          ) : (
-            allComments.map((comment) => <CommentItem key={comment.id} comment={comment} />)
-          )}
-          <div ref={commentsEndRef} aria-hidden />
-
-          {commentsQuery.hasNextPage && (
-            <button
-              type="button"
-              onClick={() => commentsQuery.fetchNextPage()}
-              className="text-gold hover:text-ember w-full rounded-[14px] border border-[var(--session-border)] bg-black/20 px-4 py-3 text-center text-sm font-black transition-colors"
-              disabled={commentsQuery.isFetchingNextPage}
-            >
-              {commentsQuery.isFetchingNextPage ? (
-                <InlineSkeleton className="mx-auto h-4 w-24" />
-              ) : (
-                'نمایش بیشتر'
-              )}
-            </button>
-          )}
-        </div>
-      </div>
-
       <div className="flex min-w-0 items-center gap-2 rounded-[18px] border border-[var(--session-border)] bg-black/25 p-2.5 sm:gap-3 sm:p-3">
         <UserAvatar
           name={userName ?? '?'}
@@ -1334,6 +1321,49 @@ function CommentsPanel({
           <Icon name="send" size={15} />
         </Button>
       </div>
+
+      {isLocked ? (
+        <p className="text-ink-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-5 text-center text-sm leading-7">
+          نظرات این جلسه بعد از خرید دوره فعال می‌شود.
+        </p>
+      ) : commentsQuery.isLoading ? (
+        <CommentsSkeleton />
+      ) : commentsQuery.isError ? (
+        <p className="text-danger text-sm">خطا در دریافت نظرات</p>
+      ) : allComments.length === 0 ? (
+        <p className="text-ink-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-5 text-center text-sm">
+          هنوز نظری برای این جلسه ثبت نشده است.
+        </p>
+      ) : (
+        <div
+          ref={scrollParentRef}
+          className="max-h-[430px] overflow-y-auto overscroll-contain rounded-[18px] pe-1"
+        >
+          <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
+            {virtualItems.map((virtualItem) => {
+              const comment = allComments[virtualItem.index];
+              if (!comment) return null;
+
+              return (
+                <div
+                  key={comment.id}
+                  data-index={virtualItem.index}
+                  ref={virtualizer.measureElement}
+                  className="absolute inset-x-0 top-0"
+                  style={{ transform: `translateY(${virtualItem.start}px)` }}
+                >
+                  <CommentItem comment={comment} />
+                </div>
+              );
+            })}
+          </div>
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-3">
+              <InlineSkeleton className="h-4 w-24" />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

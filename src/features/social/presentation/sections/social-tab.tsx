@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { motion } from 'framer-motion';
 import {
   BaseModal,
@@ -97,7 +98,8 @@ export function SocialTab({
   const updateProfile = useUpdateMyProfile(profileRepo, onReward);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [isCompleteProfileOpen, setIsCompleteProfileOpen] = useState(false);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
+  const [listOffset, setListOffset] = useState(0);
   const postingStatusQuery = usePostingStatus(socialRepo);
   const postingStatus = postingStatusQuery.data;
   const refetchPostingStatus = postingStatusQuery.refetch;
@@ -122,27 +124,27 @@ export function SocialTab({
   const isFetchingNextPage = feedQuery.isFetchingNextPage;
   const fetchNextPage = feedQuery.fetchNextPage;
 
+  useLayoutEffect(() => {
+    setListOffset(listContainerRef.current?.offsetTop ?? 0);
+  }, [feed]);
+
+  const rowVirtualizer = useWindowVirtualizer({
+    count: allPosts.length,
+    estimateSize: () => 380,
+    overscan: 6,
+    gap: 16,
+    scrollMargin: listOffset,
+  });
+
+  const virtualPostItems = rowVirtualizer.getVirtualItems();
+  const lastVirtualPostItem = virtualPostItems[virtualPostItems.length - 1];
+
   useEffect(() => {
-    const target = loadMoreRef.current;
-    if (!target || !hasNextPage || isFetchingNextPage) return;
+    if (!lastVirtualPostItem || !hasNextPage || isFetchingNextPage) return;
+    if (lastVirtualPostItem.index < allPosts.length - 1) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry?.isIntersecting || isFetchingNextPage) return;
-        void fetchNextPage();
-      },
-      {
-        root: null,
-        rootMargin: '420px 0px',
-        threshold: 0.01,
-      },
-    );
-
-    observer.observe(target);
-
-    return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+    void fetchNextPage();
+  }, [lastVirtualPostItem, hasNextPage, isFetchingNextPage, fetchNextPage, allPosts.length]);
 
   const handleShare = async (post: Post) => {
     try {
@@ -234,45 +236,61 @@ export function SocialTab({
             نتیجه‌ای پیدا نشد
           </div>
         )}
-        {allPosts.map((post) => {
-          const isNew = newPostIds?.has(post.id);
-          return (
-            <motion.div
-              key={post.id}
-              initial={isNew ? { opacity: 0, y: -20, scale: 0.98 } : false}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{
-                type: 'spring',
-                stiffness: 260,
-                damping: 22,
-                mass: 0.8,
-              }}
-            >
-              <PostCard
-                post={post}
-                onClick={() => router.push(`/social/${post.id}`)}
-                onShare={() => void handleShare(post)}
-                onAuthorClick={(authorId) => router.push(`/social/users/${authorId}`)}
-                onToggleAuthorFollow={(authorId, isFollowedByMe) =>
-                  followToggle.mutate({ userId: authorId, isFollowedByMe })
-                }
-                isTogglingAuthorFollow={followToggle.isPending}
-                togglingAuthorId={followToggle.variables?.userId}
-                currentUserRole={currentUserRole}
-                currentUserId={currentProfile?.id}
-                adminRepo={adminRepo}
-                onReward={onReward}
-              />
-            </motion.div>
-          );
-        })}
+        {allPosts.length > 0 && (
+          <div
+            ref={listContainerRef}
+            className="relative w-full"
+            style={{ height: rowVirtualizer.getTotalSize() }}
+          >
+            {virtualPostItems.map((virtualItem) => {
+              const post = allPosts[virtualItem.index];
+              if (!post) return null;
+              const isNew = newPostIds?.has(post.id);
+
+              return (
+                <div
+                  key={post.id}
+                  data-index={virtualItem.index}
+                  ref={rowVirtualizer.measureElement}
+                  className="absolute inset-x-0 top-0"
+                  style={{
+                    transform: `translateY(${virtualItem.start - rowVirtualizer.options.scrollMargin}px)`,
+                  }}
+                >
+                  <motion.div
+                    initial={isNew ? { opacity: 0, y: -20, scale: 0.98 } : false}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 260,
+                      damping: 22,
+                      mass: 0.8,
+                    }}
+                  >
+                    <PostCard
+                      post={post}
+                      onClick={() => router.push(`/social/${post.id}`)}
+                      onShare={() => void handleShare(post)}
+                      onAuthorClick={(authorId) => router.push(`/social/users/${authorId}`)}
+                      onToggleAuthorFollow={(authorId, isFollowedByMe) =>
+                        followToggle.mutate({ userId: authorId, isFollowedByMe })
+                      }
+                      isTogglingAuthorFollow={followToggle.isPending}
+                      togglingAuthorId={followToggle.variables?.userId}
+                      currentUserRole={currentUserRole}
+                      currentUserId={currentProfile?.id}
+                      adminRepo={adminRepo}
+                      onReward={onReward}
+                    />
+                  </motion.div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {feedQuery.isSuccess && allPosts.length > 0 && (
-          <div
-            ref={loadMoreRef}
-            aria-live="polite"
-            className="flex min-h-16 items-center justify-center py-3"
-          >
+          <div aria-live="polite" className="flex min-h-16 items-center justify-center py-3">
             {isFetchingNextPage ? (
               <div className="border-hair text-ink-2 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[12.5px] font-bold [background:var(--glass-2)]">
                 <InlineSpinner className="text-ember size-4" />
