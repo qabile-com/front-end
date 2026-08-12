@@ -6,16 +6,18 @@ export function getAchievementCount(achievement: Achievement) {
 }
 
 export function getAchievementProgress(achievement: Achievement) {
-  const threshold = achievement.threshold ?? 0;
-  if (threshold <= 1) return null;
+  const condition = achievement.conditions?.[0];
+  const target = condition?.target ?? 0;
+  if (!condition || target <= 1) return null;
 
-  const done = Math.min(getAchievementCount(achievement), threshold);
-  return { done, threshold, percent: Math.round((done / threshold) * 100) };
+  const done = Math.min(condition.current ?? 0, target);
+  return { done, threshold: target, percent: Math.round((done / target) * 100) };
 }
 
 export function isAchievementEarned(achievement: Achievement) {
-  const progress = getAchievementProgress(achievement);
-  if (progress) return progress.done >= progress.threshold;
+  if (achievement.conditions?.length) {
+    return achievement.conditions.every((condition) => condition.passed);
+  }
   return Boolean(achievement.unlocked);
 }
 
