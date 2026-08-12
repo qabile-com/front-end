@@ -12,7 +12,7 @@ import type {
   RoadmapItem,
   RoadmapStatus,
 } from '@/features/dashboard/domain/dashboard.types';
-import type { Course } from '@/features/courses/domain/courses.data';
+import { getCourseProgress, type Course } from '@/features/courses/domain/courses.data';
 import { PhoenixIcon } from '@/features/dashboard/presentation/sections/dashboard-sidebar';
 import type { ActiveRoadmap } from '@/features/roadmap/domain/roadmap.types';
 import {
@@ -412,16 +412,7 @@ function RecentCourseCard({ course, index }: { course: Course; index: number }) 
     course.episodes.find((part) => part.status === 'partial') ??
     course.episodes.find((part) => part.status === 'none') ??
     course.episodes[0];
-  const completed =
-    course.completedEpisodes ?? course.episodes.filter((part) => part.status === 'done').length;
-  const totalEpisodes = course.totalEpisodes ?? course.episodes.length;
-  const progress = Math.min(
-    100,
-    Math.max(
-      0,
-      Math.round(course.progressPercent ?? (totalEpisodes ? (completed / totalEpisodes) * 100 : 0)),
-    ),
-  );
+  const progress = getCourseProgress(course);
   const href = firstPlayable
     ? `/courses/${course.id}/sections/${firstPlayable.id}?from=home`
     : '/courses';

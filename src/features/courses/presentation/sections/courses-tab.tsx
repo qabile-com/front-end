@@ -17,7 +17,7 @@ import {
 import { cn } from '@/core/lib/cn';
 import { formatPersianNumber, toPersianDigits } from '@/core/lib/persian';
 import { showError, showSuccess } from '@/shared/lib/toast';
-import type { Course } from '../../domain/courses.data';
+import { getCourseProgress, type Course } from '../../domain/courses.data';
 import { formatDuration } from '@/core/lib/format-duration';
 import { usePurchaseCourse } from '../../application/use-courses';
 import { coursesRepo } from '../../infrastructure/repository-factory';
@@ -775,19 +775,6 @@ function getCourseAccess(course: Course) {
   const isFree = Boolean(course.isFree || price <= 0);
   const canAccess = Boolean(isFree || course.isPurchased || course.isUnlocked);
   return { isFree, canAccess };
-}
-
-function getCourseProgress(course: Course) {
-  if (course.progressPercent != null) {
-    return Math.min(100, Math.max(0, Math.round(course.progressPercent)));
-  }
-
-  if (!course.episodes.length) return 0;
-  const total = course.episodes.reduce((sum, part) => {
-    if (part.status === 'done') return sum + 100;
-    return sum + (part.progress ?? 0);
-  }, 0);
-  return Math.min(100, Math.round(total / course.episodes.length));
 }
 
 function getCourseActionLabel(canAccess: boolean, progress: number) {

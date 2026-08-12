@@ -51,6 +51,19 @@ export interface Course {
   episodes: CoursePart[];
 }
 
+export function getCourseProgress(course: Course) {
+  if (course.progressPercent != null) {
+    return Math.min(100, Math.max(0, Math.round(course.progressPercent)));
+  }
+
+  if (!course.episodes.length) return 0;
+  const total = course.episodes.reduce((sum, part) => {
+    if (part.status === 'done') return sum + 100;
+    return sum + (part.progress ?? 0);
+  }, 0);
+  return Math.min(100, Math.round(total / course.episodes.length));
+}
+
 const RAW_COURSES: Course[] = [
   {
     id: 'c1',
