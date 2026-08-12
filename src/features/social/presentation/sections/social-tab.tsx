@@ -43,6 +43,7 @@ import { formatUsername } from '../lib/format-username';
 import { useToggleUserFollow } from '../../application/use-toggle-user-follow';
 import { useDeleteOwnPost } from '../../application/use-delete-own-post';
 import { usePinOwnPost } from '../../application/use-pin-own-post';
+import { useAdminPinPost } from '../../application/useAdminPinPost';
 import { DeletePostConfirmModal } from '../components/delete-post-confirm-modal';
 import { shareUrl } from '@/shared/lib/native-share';
 import { showError, showSuccess } from '@/shared/lib/toast';
@@ -597,6 +598,7 @@ function PostCard({
   const { like, unlike } = useLikePost(socialRepo, onReward);
   const deleteOwnPost = useDeleteOwnPost(socialRepo);
   const pinOwnPost = usePinOwnPost(socialRepo);
+  const adminPinPost = useAdminPinPost(adminRepo as IAdminRepository);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const handleCommentClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -640,10 +642,16 @@ function PostCard({
 
   const handlePinToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!adminRepo) return;
-    adminRepo.pinPost(post.id, !post.isPinned).then(() => {
-      queryClient.invalidateQueries({ queryKey: ['social-feed'] });
-    });
+    if (!adminRepo || adminPinPost.isPending) return;
+    adminPinPost.mutate(
+      { postId: post.id, isPinned: !post.isPinned },
+      {
+        onSuccess: () =>
+          showSuccess(post.isPinned ? 'پست از حالت سنجاق خارج شد.' : 'پست سنجاق شد.'),
+        onError: (error) =>
+          showError(error instanceof Error ? error.message : 'تغییر وضعیت سنجاق انجام نشد.'),
+      },
+    );
   };
 
   const handleOwnPinToggle = (e: React.MouseEvent) => {
@@ -762,7 +770,13 @@ function PostCard({
             <div className="ms-auto flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
               {isAdmin && (
                 <>
-                  <button onClick={handlePinToggle} className="text-gold hover:text-ember">
+                  <button
+                    type="button"
+                    onClick={handlePinToggle}
+                    disabled={adminPinPost.isPending}
+                    className="text-gold hover:text-ember disabled:opacity-60"
+                    aria-label={post.isPinned ? 'برداشتن سنجاق پست' : 'سنجاق کردن پست'}
+                  >
                     <Icon name={post.isPinned ? 'star' : 'star-line'} size={18} />
                   </button>
                   <button onClick={handleDeleteClick} className="text-danger hover:text-red-400">
