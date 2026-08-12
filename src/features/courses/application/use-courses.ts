@@ -8,7 +8,7 @@ import type {
   SectionWatchProgressInput,
   SectionWatchProgressResult,
 } from '@/features/dashboard/domain/dashboard.types';
-import type { Course } from '@/features/courses/domain/courses.data';
+import { getCourseProgress, type Course } from '@/features/courses/domain/courses.data';
 import type { SessionDetail } from '@/features/courses/domain/session-repository';
 
 export interface CourseListFilters {
@@ -117,23 +117,31 @@ export function useReportSectionWatchProgress(repo: ICoursesRepository) {
         const realProgress = Math.min(100, Math.max(0, result.section.progress ?? 100));
         queryClient.setQueriesData<Course[]>({ queryKey: ['dashboard', 'courses'] }, (previous) => {
           if (!previous) return previous;
-          return previous.map((course) =>
-            course.id === courseId
-              ? {
-                  ...course,
-                  episodes: course.episodes.map((episode) =>
-                    episode.id === sectionId
-                      ? {
-                          ...episode,
-                          status: 'done',
-                          progress: realProgress,
-                          hasReceivedXp: true,
-                        }
-                      : episode,
-                  ),
-                }
-              : course,
-          );
+          return previous.map((course) => {
+            if (course.id !== courseId) return course;
+
+            const episodes = course.episodes.map((episode) =>
+              episode.id === sectionId
+                ? {
+                    ...episode,
+                    status: 'done' as const,
+                    progress: realProgress,
+                    hasReceivedXp: true,
+                  }
+                : episode,
+            );
+            const completedEpisodes = episodes.filter((episode) => episode.status === 'done').length;
+            const totalEpisodes = course.totalEpisodes ?? episodes.length;
+            const patched: Course = {
+              ...course,
+              episodes,
+              completedEpisodes,
+              totalEpisodes,
+              progressPercent: undefined,
+            };
+
+            return { ...patched, progressPercent: getCourseProgress(patched) };
+          });
         });
 
         queryClient.setQueriesData<SessionDetail>(
