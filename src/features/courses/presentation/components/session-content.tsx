@@ -439,7 +439,7 @@ export function SessionContent({
               </p>
               {sessionReferral.link && (
                 <CopyField
-                  className="mx-auto mt-5 max-w-sm"
+                  className="mx-auto mt-10 max-w-sm"
                   label="لینک صرافی"
                   value={sessionReferral.link}
                   displayValue={sessionReferral.link.replace(/^https?:\/\//, '')}
