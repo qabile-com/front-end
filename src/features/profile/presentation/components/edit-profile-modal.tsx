@@ -19,6 +19,7 @@ import { moderateAvatarImage } from '../../application/avatar-content-moderation
 import {
   isValidUsername,
   normalizeUsernameInput,
+  USERNAME_MAX_LENGTH,
   USERNAME_VALIDATION_MESSAGE,
 } from '../../domain/username-validation';
 import { compressImage } from '../../application/image-compression';
@@ -225,6 +226,7 @@ export function EditProfileModal({ profile, repo, onClose, onReward }: EditProfi
               icon="user-f"
               placeholder="Sample"
               disabled={isBusy}
+              maxLength={USERNAME_MAX_LENGTH}
               ltr
             />
             <EditTextarea
@@ -320,6 +322,7 @@ function EditField({
   badge,
   action,
   ltr,
+  maxLength,
 }: {
   label: string;
   value: string;
@@ -330,6 +333,7 @@ function EditField({
   badge?: string;
   action?: React.ReactNode;
   ltr?: boolean;
+  maxLength?: number;
 }) {
   return (
     <label className="block text-right">
@@ -342,6 +346,7 @@ function EditField({
           placeholder={placeholder}
           disabled={disabled}
           dir={ltr ? 'ltr' : 'rtl'}
+          maxLength={maxLength}
           className="placeholder:text-ink-4 min-w-[120px] flex-1 truncate bg-transparent text-right text-base outline-none disabled:opacity-60"
         />
         {badge && (

@@ -26,6 +26,7 @@ import { useUpdateMyProfile } from '@/features/profile/application/use-edit-prof
 import {
   isValidUsername,
   normalizeUsernameInput,
+  USERNAME_MAX_LENGTH,
   USERNAME_VALIDATION_MESSAGE,
 } from '@/features/profile/domain/username-validation';
 import { Panel } from '@/shared/ui';
@@ -564,6 +565,7 @@ function CompleteForumProfileModal({
             error={errors.username}
             placeholder="sample_user"
             ltr
+            maxLength={USERNAME_MAX_LENGTH}
             onChange={(value) => {
               setUsername(value);
               setErrors((current) => ({ ...current, username: undefined }));
@@ -599,6 +601,7 @@ function ProfileCompletionField({
   placeholder,
   autoFocus,
   ltr,
+  maxLength,
   onChange,
 }: {
   label: string;
@@ -608,6 +611,7 @@ function ProfileCompletionField({
   placeholder: string;
   autoFocus?: boolean;
   ltr?: boolean;
+  maxLength?: number;
   onChange: (value: string) => void;
 }) {
   return (
@@ -626,6 +630,7 @@ function ProfileCompletionField({
           invalid={Boolean(error)}
           autoFocus={autoFocus}
           dir={ltr ? 'ltr' : 'rtl'}
+          maxLength={maxLength}
           className={cn('ps-11', ltr && 'text-left')}
         />
       </div>
