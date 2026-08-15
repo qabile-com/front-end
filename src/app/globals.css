@@ -38,6 +38,15 @@
   --ease-back: cubic-bezier(0.34, 1.36, 0.64, 1);
 }
 
+/* iOS Safari zooms the page in when a focused input's font-size is below 16px */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 @utility pt-safe {
   padding-top: env(safe-area-inset-top);
 }
