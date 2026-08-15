@@ -41,6 +41,9 @@ function apiCommentToDomain(comment: CourseCommentDto): Comment {
     avatar: comment.avatar ?? comment.author?.avatar ?? null,
     moderationStatus: comment.moderationStatus,
     createdAt: comment.createdAt,
+    badge: comment.author?.title ?? comment.author?.role,
+    isAdam: comment.author?.isAdam,
+    verified: comment.author?.verified,
   };
 }
 

@@ -16,6 +16,7 @@ import { useMediaQuery } from '@/shared/hooks/use-media-query';
 import { useProfile } from '@/features/profile/application/use-profile';
 import { profileRepo } from '@/features/profile/infrastructure/repository-factory';
 import {
+  AuthorBadges,
   Button,
   CopyField,
   Icon,
@@ -1390,15 +1391,20 @@ function CommentItem({ comment }: { comment: Comment }) {
         />
       </button>
       <div className="min-w-0 flex-1 space-y-2">
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-1">
           <button
             type="button"
             disabled={!comment.authorId}
             onClick={goToAuthor}
-            className="text-ink hover:text-gold disabled:hover:text-ink max-w-full truncate text-sm font-black disabled:cursor-default"
+            className="text-ink hover:text-gold disabled:hover:text-ink truncate text-sm font-black disabled:cursor-default"
           >
             {comment.name}
           </button>
+          <AuthorBadges
+            verified={comment.verified}
+            isAdam={comment.isAdam}
+            className="flex shrink-0 items-center gap-1"
+          />
         </div>
         <p className="text-ink-3 text-sm leading-7">{comment.text}</p>
         <div className="flex justify-end">

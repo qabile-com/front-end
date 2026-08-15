@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
 import { toPersianDigits } from '@/core/lib/persian';
-import { Button, Icon, Input, OptionalImage, UserAvatar, type IconName } from '@/shared/ui';
+import { AuthorBadges, Button, Icon, Input, OptionalImage, UserAvatar, type IconName } from '@/shared/ui';
 import { AdamAvatar } from '@/features/dashboard/presentation/sections/dashboard-sidebar';
 import type { Post, PostComment } from '../../domain/social.data';
 import { formatUsername } from '../lib/format-username';
@@ -286,14 +286,21 @@ function PostCommentItem({
       <div className="min-w-0 flex-1 rounded-[16px] bg-black/20 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="min-w-0">
-            <button
-              type="button"
-              disabled={!comment.authorId}
-              onClick={() => comment.authorId && onAuthorClick?.(comment.authorId)}
-              className="text-ink hover:text-gold disabled:hover:text-ink block max-w-full truncate text-sm font-black disabled:cursor-default"
-            >
-              {comment.name}
-            </button>
+            <span className="flex min-w-0 items-center gap-1">
+              <button
+                type="button"
+                disabled={!comment.authorId}
+                onClick={() => comment.authorId && onAuthorClick?.(comment.authorId)}
+                className="text-ink hover:text-gold disabled:hover:text-ink truncate text-sm font-black disabled:cursor-default"
+              >
+                {comment.name}
+              </button>
+              <AuthorBadges
+                verified={comment.verified}
+                isAdam={comment.isAdam}
+                className="flex shrink-0 items-center gap-1"
+              />
+            </span>
             {formatUsername(comment.username) && (
               <span className="text-ink-4 block truncate text-[11px] font-bold">
                 {formatUsername(comment.username)}

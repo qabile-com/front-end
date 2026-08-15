@@ -7,6 +7,9 @@ export interface Comment {
   avatar?: string | null;
   moderationStatus?: string;
   createdAt?: string;
+  badge?: string;
+  isAdam?: boolean;
+  verified?: boolean;
 }
 
 export interface PaginatedComments {

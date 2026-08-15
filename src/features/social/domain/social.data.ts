@@ -8,6 +8,9 @@ export interface PostComment {
   text: string;
   time: string;
   avatar?: string | null;
+  badge?: string;
+  isAdam?: boolean;
+  verified?: boolean;
 }
 
 export interface AchievementCard {

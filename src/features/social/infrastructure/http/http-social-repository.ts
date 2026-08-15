@@ -273,6 +273,9 @@ function apiCommentToDomain(comment: ForumCommentDto): PostComment {
     text: comment.text,
     time: comment.createdAt,
     avatar: author?.avatar ?? null,
+    badge: author?.role,
+    isAdam: author?.isAdam,
+    verified: author?.verified,
   };
 }
 

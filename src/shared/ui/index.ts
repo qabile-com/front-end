@@ -1,4 +1,5 @@
 export { Icon, type IconName } from './icon';
+export { AuthorBadges } from './author-badges';
 export { Button } from './button';
 export { BaseModal } from './base-modal';
 export { CopyButton } from './copy-button';
