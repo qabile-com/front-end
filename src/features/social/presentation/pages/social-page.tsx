@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useUser } from '@/features/dashboard/application/use-user';
 import { useInfiniteFeed } from '@/features/social/application/use-infinite-feed';
 import { useSocialData } from '@/features/social/application/use-social-data';
@@ -14,21 +14,21 @@ import { DashboardPageShell, MotionPage } from '@/shared/ui';
 import { useActionRewardQueue } from '@/features/dashboard/application/use-action-reward-queue';
 import { ActionRewardModals } from '@/features/dashboard/presentation/components/action-reward-modals';
 
-type Feed = 'for-you' | 'following';
+type Feed = 'for-you' | 'following' | 'mine';
 
 export function SocialPage() {
   const { user } = useUser(userRepo);
   const [feed, setFeed] = useState<Feed>('for-you');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
-  const feedFilters = useMemo(
-    () => ({
-      ...parseSocialSearch(debouncedSearch),
-      ...(feed === 'following' ? { followingOnly: true } : {}),
-    }),
-    [debouncedSearch, feed],
-  );
-  const feedQuery = useInfiniteFeed(socialRepo, feedFilters);
+  const feedFilters = {
+    ...parseSocialSearch(debouncedSearch),
+    ...(feed === 'following' ? { followingOnly: true } : {}),
+    ...(feed === 'mine' && user?.id ? { authorId: user.id } : {}),
+  };
+  const feedQuery = useInfiniteFeed(socialRepo, feedFilters, {
+    enabled: feed !== 'mine' || Boolean(user?.id),
+  });
   const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
   const social = useSocialData(socialRepo, enqueueReward);
   const profile = useProfile(profileRepo);

@@ -5,7 +5,11 @@ import type { ISocialRepository, SocialFeedFilters } from '../domain/social-repo
 
 const FEED_PAGE_SIZE = 7;
 
-export function useInfiniteFeed(repo: ISocialRepository, filters: SocialFeedFilters = {}) {
+export function useInfiniteFeed(
+  repo: ISocialRepository,
+  filters: SocialFeedFilters = {},
+  options?: { enabled?: boolean },
+) {
   return useInfiniteQuery({
     queryKey: ['social-feed', filters],
     queryFn: ({ pageParam = 0, signal }) =>
@@ -16,5 +20,6 @@ export function useInfiniteFeed(repo: ISocialRepository, filters: SocialFeedFilt
     },
     initialPageParam: 0,
     staleTime: 0,
+    enabled: options?.enabled ?? true,
   });
 }
