@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { Icon, MotionItem, MotionList, Panel } from '@/shared/ui';
+import { Icon, MotionItem, MotionList, OptionalImage, Panel } from '@/shared/ui';
 import type { IconName } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { formatPersianNumber, toPersianDigits } from '@/core/lib/persian';
@@ -157,14 +158,16 @@ function HeroCarousel({ user }: { user: CurrentUser }) {
         onDragEnd={handleDragEnd}
         style={{ x: dragX }}
       >
-        <img
+        <Image
           src={active.imageSrc}
           alt=""
+          fill
+          sizes="(min-width: 1024px) 800px, 100vw"
           className={cn(
-            'size-full object-cover transition-transform duration-700 group-hover:scale-[1.035]',
+            'object-cover transition-transform duration-700 group-hover:scale-[1.035]',
             'imageClassName' in active ? active.imageClassName : undefined,
           )}
-          loading={activeIndex === 0 ? 'eager' : 'lazy'}
+          priority={activeIndex === 0}
           draggable={false}
         />
       </motion.div>
@@ -428,7 +431,7 @@ function RecentCourseCard({ course, index }: { course: Course; index: number }) 
         style={{ background: course.imageUrl ? undefined : fallback }}
       >
         {course.imageUrl ? (
-          <img src={course.imageUrl} alt="" className="size-full object-cover" loading="lazy" />
+          <OptionalImage src={course.imageUrl} alt="" className="object-cover" />
         ) : (
           <>
             <span className="absolute inset-0 bg-[radial-gradient(circle_at_35%_25%,rgba(255,210,128,.34),transparent_32%)]" />

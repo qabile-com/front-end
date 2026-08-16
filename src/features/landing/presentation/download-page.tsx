@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { BackgroundField, Button, Container, GlassCard, Icon, MotionPage, Reveal } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { SiteNav } from './sections/site-nav';
@@ -165,16 +166,20 @@ function DownloadHero({
         >
           <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(255,98,0,.22),transparent_62%)] blur-2xl" />
           <div className="relative z-10 aspect-[1.18] w-full max-w-[660px]">
-            {/* eslint-disable-next-line @next/next/no-img-element -- landing hero uses prepared static art */}
-            <img
+            <Image
               src={DOWNLOAD_ASSETS.heroPhoenix}
               alt=""
-              className="absolute inset-0 size-full object-contain drop-shadow-[0_32px_80px_rgba(255,98,0,.18)]"
+              fill
+              sizes="(min-width: 1024px) 660px, 90vw"
+              priority
+              className="object-contain drop-shadow-[0_32px_80px_rgba(255,98,0,.18)]"
             />
-            {/* eslint-disable-next-line @next/next/no-img-element -- landing hero uses prepared static art */}
-            <img
+            <Image
               src={DOWNLOAD_ASSETS.heroMobile}
               alt="نمایی از اپلیکیشن قبیله ققنوس روی موبایل"
+              width={941}
+              height={1672}
+              priority
               className="absolute top-[32%] left-3/7 z-20 w-[35%] max-w-[210px] -translate-x-1/2 rotate-[3deg] object-contain drop-shadow-[0_28px_52px_rgba(0,0,0,.72)] sm:top-[33%] sm:w-[33%] lg:top-[33%] lg:left-3/7 lg:w-[31%]"
             />
           </div>
@@ -200,12 +205,12 @@ function InstallGuide() {
         <div className="grid items-center gap-10 lg:grid-cols-[minmax(280px,0.9fr)_minmax(0,1.1fr)]">
           <Reveal delay={1} className="relative mx-auto w-full max-w-[430px]">
             <div className="pointer-events-none absolute inset-8 rounded-full bg-[radial-gradient(circle,rgba(255,98,0,.28),transparent_68%)] blur-3xl" />
-            {/* eslint-disable-next-line @next/next/no-img-element -- landing illustration uses prepared static art */}
-            <img
+            <Image
               src={DOWNLOAD_ASSETS.installGuide}
               alt="راهنمای بصری نصب اپلیکیشن قبیله"
+              width={1024}
+              height={1536}
               className="relative z-10 mx-auto w-full object-contain"
-              loading="lazy"
             />
           </Reveal>
 
