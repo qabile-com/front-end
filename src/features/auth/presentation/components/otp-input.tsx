@@ -70,7 +70,7 @@ export function OtpInput({ value, onChange, error, ok, autoFocus = false }: OtpI
           onPaste={handlePaste}
           autoComplete="one-time-code"
           className={cn(
-            'text-ink caret-ember size-[48px] rounded-xl border-[1.5px] text-center text-[22px] font-extrabold outline-none [background:var(--glass-2)] max-[400px]:size-[42px] max-[400px]:text-[18px]',
+            'text-ink caret-ember size-[48px] rounded-xl border-[1.5px] text-center text-[22px]! font-extrabold outline-none [background:var(--glass-2)] max-[400px]:size-[42px] max-[400px]:text-[18px]!',
             'transition-[border-color,box-shadow,transform] duration-300',
             'focus:scale-[1.06] focus:border-[rgba(255,98,0,.55)] focus:shadow-[0_0_0_3px_rgba(255,98,0,.14)]',
             error && 'border-[rgba(255,90,90,.5)]',
