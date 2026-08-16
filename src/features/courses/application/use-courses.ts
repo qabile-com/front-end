@@ -1,7 +1,7 @@
 // src/features/dashboard/application/use-courses.ts
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ICoursesRepository } from '@/features/dashboard/domain/dashboard-repository';
 import type {
   ActionRewardResult,
@@ -33,6 +33,22 @@ export function useCourses(repo: ICoursesRepository, filters: CourseListFilters 
     error: query.error instanceof Error ? query.error.message : null,
     rawError: query.error,
   };
+}
+
+const COURSES_PAGE_SIZE = 20;
+
+export function useInfiniteCourses(repo: ICoursesRepository, q?: string) {
+  return useInfiniteQuery({
+    queryKey: ['dashboard', 'courses', 'infinite', q],
+    queryFn: ({ pageParam = 0, signal }) =>
+      repo.getCourses({ limit: COURSES_PAGE_SIZE, offset: pageParam * COURSES_PAGE_SIZE, q }, { signal }),
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.length < COURSES_PAGE_SIZE) return undefined;
+      return allPages.length;
+    },
+    initialPageParam: 0,
+    staleTime: 2 * 60 * 1000,
+  });
 }
 
 export function useUpdateSectionProgress(

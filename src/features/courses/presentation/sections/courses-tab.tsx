@@ -8,6 +8,7 @@ import {
   Button,
   ErrorState,
   Icon,
+  InlineSkeleton,
   InlineSpinner,
   MotionItem,
   MotionList,
@@ -32,6 +33,9 @@ interface CoursesTabProps {
   search: string;
   isSearching?: boolean;
   onSearchChange: (value: string) => void;
+  hasMoreCourses?: boolean;
+  isLoadingMoreCourses?: boolean;
+  onLoadMoreCourses?: () => void;
 }
 
 const ACCESS_FILTERS: Array<{
@@ -52,6 +56,9 @@ export function CoursesTab({
   search,
   isSearching = false,
   onSearchChange,
+  hasMoreCourses = false,
+  isLoadingMoreCourses = false,
+  onLoadMoreCourses,
 }: CoursesTabProps) {
   const router = useRouter();
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -218,18 +225,31 @@ export function CoursesTab({
             }}
           />
         ) : (
-          <MotionList className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:gap-5">
-            {visibleCourses.map((course) => (
-              <MotionItem key={course.id}>
-                <CourseCard
-                  course={course}
-                  fireBalance={fireBalance}
-                  onOpen={() => openCourse(course)}
-                  onBuy={() => setSelectedCourse(course)}
-                />
-              </MotionItem>
-            ))}
-          </MotionList>
+          <>
+            <MotionList className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:gap-5">
+              {visibleCourses.map((course) => (
+                <MotionItem key={course.id}>
+                  <CourseCard
+                    course={course}
+                    fireBalance={fireBalance}
+                    onOpen={() => openCourse(course)}
+                    onBuy={() => setSelectedCourse(course)}
+                  />
+                </MotionItem>
+              ))}
+            </MotionList>
+            {hasMoreCourses && (
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                disabled={isLoadingMoreCourses}
+                onClick={onLoadMoreCourses}
+              >
+                {isLoadingMoreCourses ? <InlineSkeleton className="h-4 w-24" /> : 'نمایش بیشتر'}
+              </Button>
+            )}
+          </>
         )}
 
         <PurchaseCourseModal

@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  Button,
   DashboardPageShell,
   ErrorState,
   Icon,
+  InlineSkeleton,
   MotionItem,
   MotionList,
   MotionPage,
@@ -30,10 +32,11 @@ export function RoadmapsPage() {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const queryParams = useMemo(
-    () => ({ limit: 20, offset: 0, q: debouncedSearch.trim() || undefined }),
+    () => ({ q: debouncedSearch.trim() || undefined }),
     [debouncedSearch],
   );
-  const { roadmaps, loading, error, refetch } = useRoadmaps(roadmapRepo, queryParams);
+  const { roadmaps, loading, error, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    useRoadmaps(roadmapRepo, queryParams);
 
   return (
     <MotionPage>
@@ -99,13 +102,26 @@ export function RoadmapsPage() {
           )}
 
           {!loading && !error && roadmaps.length > 0 && (
-            <MotionList className="grid gap-4 md:grid-cols-2">
-              {roadmaps.map((roadmap) => (
-                <MotionItem key={roadmap.id}>
-                  <RoadmapCard roadmap={roadmap} />
-                </MotionItem>
-              ))}
-            </MotionList>
+            <>
+              <MotionList className="grid gap-4 md:grid-cols-2">
+                {roadmaps.map((roadmap) => (
+                  <MotionItem key={roadmap.id}>
+                    <RoadmapCard roadmap={roadmap} />
+                  </MotionItem>
+                ))}
+              </MotionList>
+              {hasNextPage && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
+                  disabled={isFetchingNextPage}
+                  onClick={() => void fetchNextPage()}
+                >
+                  {isFetchingNextPage ? <InlineSkeleton className="h-4 w-24" /> : 'نمایش بیشتر'}
+                </Button>
+              )}
+            </>
           )}
         </div>
       </DashboardPageShell>

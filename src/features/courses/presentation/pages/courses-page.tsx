@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useCourses } from '@/features/courses/application/use-courses';
+import { useInfiniteCourses } from '@/features/courses/application/use-courses';
 import { useUser } from '@/features/dashboard/application/use-user';
 import { coursesRepo } from '@/features/courses/infrastructure/repository-factory';
 import { userRepo } from '@/features/dashboard/infrastructure/repository-factory';
@@ -13,42 +13,40 @@ import { CoursesPageSkeleton, DashboardPageShell, MotionPage } from '@/shared/ui
 export function CoursesPage() {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
-  const filters = useMemo(
-    () => ({
-      limit: 30,
-      offset: 0,
-      q: debouncedSearch.trim() || undefined,
-    }),
-    [debouncedSearch],
-  );
-  const courses = useCourses(coursesRepo, filters);
+  const q = useMemo(() => debouncedSearch.trim() || undefined, [debouncedSearch]);
+  const courses = useInfiniteCourses(coursesRepo, q);
   const { user, loading: userLoading } = useUser(userRepo);
 
-  if (courses.loading || userLoading) {
+  if (courses.isPending || userLoading) {
     return (
       <DashboardPageShell size="wide">
         <CoursesPageSkeleton />
       </DashboardPageShell>
     );
   }
-  if (courses.error) return <TabError error={courses.error} onRetry={() => void courses.refetch()} />;
-  if (!courses.courses) {
+  if (courses.error) {
     return (
-      <DashboardPageShell size="wide">
-        <CoursesPageSkeleton />
-      </DashboardPageShell>
+      <TabError
+        error={courses.error instanceof Error ? courses.error.message : 'خطا در دریافت کورس‌ها'}
+        onRetry={() => void courses.refetch()}
+      />
     );
   }
+
+  const allCourses = courses.data?.pages.flat() ?? [];
 
   return (
     <MotionPage>
       <DashboardPageShell size="wide">
         <CoursesTab
-          courses={courses.courses}
+          courses={allCourses}
           fireBalance={user?.xp ?? 0}
           search={search}
-          isSearching={courses.fetching}
+          isSearching={courses.isFetching && !courses.isFetchingNextPage}
           onSearchChange={setSearch}
+          hasMoreCourses={courses.hasNextPage}
+          isLoadingMoreCourses={courses.isFetchingNextPage}
+          onLoadMoreCourses={() => void courses.fetchNextPage()}
         />
       </DashboardPageShell>
     </MotionPage>
