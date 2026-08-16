@@ -156,6 +156,8 @@ export function SocialPostDetail({
             <button
               type="button"
               onClick={post.likedByMe ? onUnlike : onLike}
+              aria-label={post.likedByMe ? 'برداشتن لایک' : 'لایک کردن پست'}
+              aria-pressed={post.likedByMe}
               className={
                 post.likedByMe
                   ? 'text-danger flex items-center gap-1.5'
@@ -168,6 +170,7 @@ export function SocialPostDetail({
             <button
               type="button"
               onClick={handleScrollToComposer}
+              aria-label={`مشاهده نظرات (${toPersianDigits(post.commentsCount ?? post.comments.length)})`}
               className="hover:text-ink flex items-center gap-1.5 transition-colors"
             >
               <Icon name="msg" size={17} />

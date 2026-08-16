@@ -227,7 +227,12 @@ export function PostCard({
                   >
                     <Icon name={post.isPinned ? 'star' : 'star-line'} size={18} />
                   </button>
-                  <button onClick={handleDeleteClick} className="text-danger hover:text-red-400">
+                  <button
+                    type="button"
+                    onClick={handleDeleteClick}
+                    className="text-danger hover:text-red-400"
+                    aria-label="حذف پست"
+                  >
                     <Icon name="trash" size={18} />
                   </button>
                 </>
@@ -294,6 +299,8 @@ export function PostCard({
                 type="button"
                 onClick={handleLike}
                 disabled={isTogglingLike}
+                aria-label={post.likedByMe ? 'برداشتن لایک' : 'لایک کردن پست'}
+                aria-pressed={post.likedByMe}
                 className={cn(
                   'flex items-center gap-1.5 transition-colors disabled:opacity-60',
                   post.likedByMe && 'text-[#ff5a5a]',
@@ -305,6 +312,7 @@ export function PostCard({
               <button
                 type="button"
                 onClick={handleCommentClick}
+                aria-label={`مشاهده نظرات (${toPersianDigits(post.commentsCount ?? post.comments.length)})`}
                 className="hover:text-ink flex items-center gap-1.5 transition-colors"
               >
                 <Icon name="msg" size={18} />
