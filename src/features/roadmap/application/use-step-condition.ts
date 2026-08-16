@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { StaticRoadmapStep } from '../domain/static-roadmap-steps';
 import type { StepConditionResult } from '../domain/roadmap.types';
@@ -102,30 +103,29 @@ export function useStepCondition(
     },
   });
 
-  const timerQuery = useQuery({
-    enabled: enabled && Boolean(step && condition?.type === 'timer'),
-    queryKey: ['roadmap-step-condition', 'timer', step?.id, elapsedSeconds],
-    queryFn: async (): Promise<StepConditionResult> => {
-      if (!step || !condition || condition.type !== 'timer') {
-        return { satisfied: false };
-      }
+  // Not a useQuery: elapsedSeconds ticks every second and this is a pure local
+  // computation, not a fetch - keying a query on it would mint a fresh cache
+  // entry every second with nothing ever evicting the old ones.
+  const timerResult = useMemo<StepConditionResult>(() => {
+    if (!step || !condition || condition.type !== 'timer') {
+      return { satisfied: false };
+    }
 
-      const satisfied = elapsedSeconds >= condition.seconds;
+    const satisfied = elapsedSeconds >= condition.seconds;
 
-      let message = '';
+    let message = '';
 
-      if (step.id === 4) {
-        message = 'مطمئن بشید که پیج رو فالو کردید';
-      } else if (step.id === 3) {
-        message = 'لطفا کل متن را بخوانید';
-      }
+    if (step.id === 4) {
+      message = 'مطمئن بشید که پیج رو فالو کردید';
+    } else if (step.id === 3) {
+      message = 'لطفا کل متن را بخوانید';
+    }
 
-      return {
-        satisfied,
-        message: satisfied ? undefined : message,
-      };
-    },
-  });
+    return {
+      satisfied,
+      message: satisfied ? undefined : message,
+    };
+  }, [step, condition, elapsedSeconds]);
 
   const checklistQuery = useQuery({
     enabled: enabled && Boolean(step && condition?.type === 'checklist'),
@@ -157,7 +157,7 @@ export function useStepCondition(
     posts: postsQuery.data,
     engagement: engagementQuery.data,
     follows: followsQuery.data,
-    timer: timerQuery.data,
+    timer: timerResult,
     checklist: checklistQuery.data,
   }[condition.type];
 
@@ -178,7 +178,7 @@ export function useStepCondition(
           result = await followsQuery.refetch();
           break;
         case 'timer':
-          result = await timerQuery.refetch();
+          result = { data: timerResult };
           break;
         case 'checklist':
           result = await checklistQuery.refetch();
