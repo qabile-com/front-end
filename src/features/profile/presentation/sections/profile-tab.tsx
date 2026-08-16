@@ -1,8 +1,17 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useQueryClient } from '@tanstack/react-query';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
-import { BaseModal, Icon, type IconName, InlineSkeleton, OptionalImage, UserAvatar } from '@/shared/ui';
+import {
+  BaseModal,
+  Icon,
+  type IconName,
+  InlineSkeleton,
+  InlineSpinner,
+  OptionalImage,
+  UserAvatar,
+} from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
@@ -10,7 +19,6 @@ import { showError, showSuccess } from '@/shared/lib/toast';
 import { Panel } from '@/shared/ui';
 import { useLogout } from '@/features/auth/application/use-auth-guard';
 import { ProfileSettingsPanel } from '../components/profile-settings-panel';
-import { EditProfileModal } from '../components/edit-profile-modal';
 import { AchievementModal } from '../components/achievement-modal';
 import { AchievementsGrid } from '../components/achievements-grid';
 import { getAchievementKey, sortAchievementsByUnlocked } from '../components/achievement-helpers';
@@ -18,7 +26,6 @@ import type { Achievement } from '@/features/dashboard/domain/dashboard.types';
 import type { IProfileRepository, MyProfile } from '../../domain/profile-repository';
 import { useClaimAchievement } from '../../application/use-claim-achievement';
 import { useMyAchievements } from '../../application/use-my-achievements';
-import { CreatePost } from '@/features/social/presentation/sections/create-post';
 import { socialRepo } from '@/features/social/infrastructure/repository-factory';
 import type { AchievementCard } from '@/features/social/domain/social.data';
 import { useActionRewardQueue } from '@/features/dashboard/application/use-action-reward-queue';
@@ -32,6 +39,24 @@ import { invalidateSocialPostCreation } from '@/features/social/application/soci
 import { useUserPosts } from '@/features/leaderboard/application/use-user-posts';
 import { userProfileRepo } from '@/features/leaderboard/infrastructure/repository-factory';
 import { shareUrl } from '@/shared/lib/native-share';
+
+// Both pull in the NSFW-moderation stack (@tensorflow/tfjs + nsfwjs) for
+// avatar/attachment checks - only needed once actually opened.
+const EditProfileModal = dynamic(
+  () => import('../components/edit-profile-modal').then((m) => m.EditProfileModal),
+  { ssr: false },
+);
+const CreatePost = dynamic(
+  () => import('@/features/social/presentation/sections/create-post').then((m) => m.CreatePost),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-32 items-center justify-center">
+        <InlineSpinner className="text-ember size-6" />
+      </div>
+    ),
+  },
+);
 
 interface ProfileTabProps {
   profile: MyProfile;

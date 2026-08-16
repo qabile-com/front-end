@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useQueryClient } from '@tanstack/react-query';
-import { BaseModal, Button, Icon, OptionalImage } from '@/shared/ui';
+import { BaseModal, Button, Icon, InlineSpinner, OptionalImage } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type { Achievement } from '@/features/dashboard/domain/dashboard.types';
@@ -10,8 +11,24 @@ import {
   DEFAULT_ACHIEVEMENT_IMAGE,
   getAchievementAssetUrl,
 } from '@/features/dashboard/domain/achievement-normalizer';
-import { CreatePost } from '@/features/social/presentation/sections/create-post';
 import { socialRepo } from '@/features/social/infrastructure/repository-factory';
+
+// CreatePost pulls in the NSFW-moderation stack (@tensorflow/tfjs + nsfwjs),
+// which is large and only needed once someone actually opens the share form -
+// loading it eagerly here would ship it in the shared dashboard layout bundle
+// for every authenticated page, since this modal is mounted unconditionally
+// via ActionRewardModals.
+const CreatePost = dynamic(
+  () => import('@/features/social/presentation/sections/create-post').then((m) => m.CreatePost),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-32 items-center justify-center">
+        <InlineSpinner className="text-ember size-6" />
+      </div>
+    ),
+  },
+);
 import type { AchievementCard } from '@/features/social/domain/social.data';
 import { getPostPublishErrorMessage } from '@/features/social/application/social-error-message';
 import { invalidateSocialPostCreation } from '@/features/social/application/social-cache';

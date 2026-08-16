@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { motion } from 'framer-motion';
@@ -29,7 +30,6 @@ import {
 } from '@/features/profile/domain/username-validation';
 import { Panel } from '@/shared/ui';
 import { AdamAvatar } from '@/features/dashboard/presentation/sections/dashboard-sidebar';
-import { CreatePost } from './create-post';
 import { adminRepo, socialRepo } from '@/features/social/infrastructure/repository-factory';
 import { type UseInfiniteQueryResult, type InfiniteData } from '@tanstack/react-query';
 import { IAdminRepository } from '../../domain/admin-repository';
@@ -45,6 +45,17 @@ import { shareUrl } from '@/shared/lib/native-share';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type { ActionRewardResult } from '@/features/dashboard/domain/dashboard.types';
 import { PostCard } from '../components/post-card';
+
+// CreatePost pulls in the NSFW-moderation stack (@tensorflow/tfjs + nsfwjs) for
+// avatar/attachment checks - only needed once the create-post dialog is opened.
+const CreatePost = dynamic(() => import('./create-post').then((m) => m.CreatePost), {
+  ssr: false,
+  loading: () => (
+    <div className="flex min-h-32 items-center justify-center">
+      <InlineSpinner className="text-ember size-6" />
+    </div>
+  ),
+});
 
 type Feed = 'for-you' | 'following' | 'mine';
 
