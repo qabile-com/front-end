@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
-import { BaseModal, Icon, type IconName, OptionalImage, UserAvatar } from '@/shared/ui';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
+import { BaseModal, Icon, type IconName, InlineSkeleton, OptionalImage, UserAvatar } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
@@ -340,6 +341,8 @@ function UserPostsTab({
   const [pinnedOverrides, setPinnedOverrides] = useState<Record<string, boolean>>({});
   const [deletedPostIds, setDeletedPostIds] = useState<Set<string>>(() => new Set());
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
+  const [listOffset, setListOffset] = useState(0);
   const remotePosts = postsQuery.data?.pages.flat();
   const sourcePosts: ProfilePostItem[] =
     remotePosts?.map((post) => ({
@@ -363,6 +366,31 @@ function UserPostsTab({
     [deletedPostIds, pinnedOverrides, sourcePosts],
   );
   const sortedPosts = sortPinnedFirst(visiblePosts);
+  const hasNextPage = Boolean(postsQuery.hasNextPage);
+  const isFetchingNextPage = postsQuery.isFetchingNextPage;
+  const fetchNextPage = postsQuery.fetchNextPage;
+
+  useLayoutEffect(() => {
+    setListOffset(listContainerRef.current?.offsetTop ?? 0);
+  }, [sortedPosts.length]);
+
+  const virtualizer = useWindowVirtualizer({
+    count: sortedPosts.length,
+    estimateSize: () => 140,
+    overscan: 6,
+    gap: 12,
+    scrollMargin: listOffset,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+  const lastVirtualItem = virtualItems[virtualItems.length - 1];
+
+  useEffect(() => {
+    if (!lastVirtualItem || !hasNextPage || isFetchingNextPage) return;
+    if (lastVirtualItem.index < sortedPosts.length - 1) return;
+
+    void fetchNextPage();
+  }, [lastVirtualItem, hasNextPage, isFetchingNextPage, fetchNextPage, sortedPosts.length]);
 
   const handleDelete = async () => {
     if (!postToDelete) return;
@@ -427,82 +455,45 @@ function UserPostsTab({
   }
 
   return (
-    <div className="space-y-3">
-      {sortedPosts.map((post) => (
-        <article
-          key={post.id}
-          className={cn(
-            'rounded-[18px] border bg-black/24 p-4',
-            post.isPinned
-              ? 'border-gold/45 shadow-[0_18px_50px_-36px_var(--glow)]'
-              : 'border-[rgba(255,98,0,.14)]',
-          )}
-        >
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <time className="text-ink-4 text-xs font-bold" dateTime={post.time}>
-                {formatRelativeTime(post.time)}
-              </time>
-              {post.isPinned && (
-                <span className="text-gold border-gold/25 bg-gold/10 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black">
-                  <Icon name="star" size={11} />
-                  سنجاق شده
-                </span>
-              )}
-            </div>
-            <div className="text-ink-3 flex items-center gap-3 text-xs font-bold">
-              <span className="inline-flex items-center gap-1">
-                <Icon name="heart" size={14} />
-                {toPersianDigits(post.likes)}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Icon name="msg" size={14} />
-                {toPersianDigits(post.commentsCount)}
-              </span>
-              <button
-                type="button"
-                disabled={pinOwnPost.isPending}
-                onClick={() => handlePinToggle(post.id, Boolean(post.isPinned))}
-                className="text-gold hover:text-ember disabled:opacity-60"
-                aria-label={post.isPinned ? 'برداشتن سنجاق پست' : 'سنجاق کردن پست'}
-              >
-                <Icon name={post.isPinned ? 'star' : 'star-line'} size={14} />
-              </button>
-              <button
-                type="button"
-                disabled={deleteOwnPost.isPending}
-                onClick={() => setPostToDelete(post.id)}
-                className="text-danger hover:text-red-400 disabled:opacity-60"
-                aria-label="حذف پست"
-              >
-                <Icon name="trash" size={14} />
-              </button>
-            </div>
-          </div>
-          <Link
-            href={`/social/${post.id}?from=profile&userId=${encodeURIComponent(profileId)}`}
-            className="focus-visible:ring-ember hover:text-gold block rounded-xl transition-colors focus-visible:ring-2 focus-visible:outline-none"
-          >
-            <p className="text-ink-2 text-sm leading-7">{post.text}</p>
-            {(post.image || post.hasImage) && (
-              <div className="border-hair mt-3 overflow-hidden rounded-xl border bg-[var(--glass-2)]">
-                {post.image ? (
-                  <OptionalImage
-                    src={post.image}
-                    alt="تصویر پیوست پست"
-                    fill={false}
-                    className="max-h-[360px] w-full object-cover"
-                  />
-                ) : (
-                  <div className="text-ink-4 grid h-36 place-items-center">
-                    <Icon name="book" size={28} />
-                  </div>
-                )}
+    <div>
+      <div
+        ref={listContainerRef}
+        className="relative w-full"
+        style={{ height: virtualizer.getTotalSize() }}
+      >
+        {virtualItems.map((virtualItem) => {
+          const post = sortedPosts[virtualItem.index];
+          if (!post) return null;
+
+          return (
+            <div
+              key={post.id}
+              data-index={virtualItem.index}
+              ref={virtualizer.measureElement}
+              className="absolute inset-x-0 top-0"
+              style={{
+                transform: `translateY(${virtualItem.start - virtualizer.options.scrollMargin}px)`,
+              }}
+            >
+              <div className="pb-3">
+                <ProfilePostCard
+                  post={post}
+                  profileId={profileId}
+                  isPinPending={pinOwnPost.isPending}
+                  isDeletePending={deleteOwnPost.isPending}
+                  onPinToggle={() => handlePinToggle(post.id, Boolean(post.isPinned))}
+                  onDeleteClick={() => setPostToDelete(post.id)}
+                />
               </div>
-            )}
-          </Link>
-        </article>
-      ))}
+            </div>
+          );
+        })}
+      </div>
+      {isFetchingNextPage && (
+        <div className="flex justify-center py-3">
+          <InlineSkeleton className="h-4 w-24" />
+        </div>
+      )}
       <DeletePostConfirmModal
         isOpen={Boolean(postToDelete)}
         isDeleting={deleteOwnPost.isPending}
@@ -514,6 +505,97 @@ function UserPostsTab({
 }
 
 type ProfilePostItem = NonNullable<MyProfile['posts']>[number];
+
+function ProfilePostCard({
+  post,
+  profileId,
+  isPinPending,
+  isDeletePending,
+  onPinToggle,
+  onDeleteClick,
+}: {
+  post: ProfilePostItem;
+  profileId: string;
+  isPinPending: boolean;
+  isDeletePending: boolean;
+  onPinToggle: () => void;
+  onDeleteClick: () => void;
+}) {
+  return (
+    <article
+      className={cn(
+        'rounded-[18px] border bg-black/24 p-4',
+        post.isPinned
+          ? 'border-gold/45 shadow-[0_18px_50px_-36px_var(--glow)]'
+          : 'border-[rgba(255,98,0,.14)]',
+      )}
+    >
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <time className="text-ink-4 text-xs font-bold" dateTime={post.time}>
+            {formatRelativeTime(post.time)}
+          </time>
+          {post.isPinned && (
+            <span className="text-gold border-gold/25 bg-gold/10 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black">
+              <Icon name="star" size={11} />
+              سنجاق شده
+            </span>
+          )}
+        </div>
+        <div className="text-ink-3 flex items-center gap-3 text-xs font-bold">
+          <span className="inline-flex items-center gap-1">
+            <Icon name="heart" size={14} />
+            {toPersianDigits(post.likes)}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Icon name="msg" size={14} />
+            {toPersianDigits(post.commentsCount)}
+          </span>
+          <button
+            type="button"
+            disabled={isPinPending}
+            onClick={onPinToggle}
+            className="text-gold hover:text-ember disabled:opacity-60"
+            aria-label={post.isPinned ? 'برداشتن سنجاق پست' : 'سنجاق کردن پست'}
+          >
+            <Icon name={post.isPinned ? 'star' : 'star-line'} size={14} />
+          </button>
+          <button
+            type="button"
+            disabled={isDeletePending}
+            onClick={onDeleteClick}
+            className="text-danger hover:text-red-400 disabled:opacity-60"
+            aria-label="حذف پست"
+          >
+            <Icon name="trash" size={14} />
+          </button>
+        </div>
+      </div>
+      <Link
+        href={`/social/${post.id}?from=profile&userId=${encodeURIComponent(profileId)}`}
+        className="focus-visible:ring-ember hover:text-gold block rounded-xl transition-colors focus-visible:ring-2 focus-visible:outline-none"
+      >
+        <p className="text-ink-2 text-sm leading-7">{post.text}</p>
+        {(post.image || post.hasImage) && (
+          <div className="border-hair mt-3 overflow-hidden rounded-xl border bg-[var(--glass-2)]">
+            {post.image ? (
+              <OptionalImage
+                src={post.image}
+                alt="تصویر پیوست پست"
+                fill={false}
+                className="max-h-[360px] w-full object-cover"
+              />
+            ) : (
+              <div className="text-ink-4 grid h-36 place-items-center">
+                <Icon name="book" size={28} />
+              </div>
+            )}
+          </div>
+        )}
+      </Link>
+    </article>
+  );
+}
 
 function sortPinnedFirst<T extends { isPinned?: boolean }>(posts: T[]) {
   return [...posts].sort((a, b) => Number(Boolean(b.isPinned)) - Number(Boolean(a.isPinned)));

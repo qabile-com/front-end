@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/core/lib/cn';
 import { formatPersianNumber, toPersianDigits } from '@/core/lib/persian';
@@ -12,7 +13,6 @@ import { useProfile } from '../../application/use-profile';
 import { useXpHistory } from '../../application/use-xp-history';
 import type { XpHistoryItem } from '../../domain/profile-repository';
 import {
-  Button,
   DashboardPageShell,
   ErrorState,
   Icon,
@@ -55,6 +55,34 @@ export function FireHistoryPage() {
       Math.abs(items.filter((item) => item.amount < 0).reduce((sum, item) => sum + item.amount, 0)),
     [items],
   );
+
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
+  const [listOffset, setListOffset] = useState(0);
+  const hasNextPage = Boolean(history.hasNextPage);
+  const isFetchingNextPage = history.isFetchingNextPage;
+  const fetchNextPage = history.fetchNextPage;
+
+  useLayoutEffect(() => {
+    setListOffset(listContainerRef.current?.offsetTop ?? 0);
+  }, [items.length]);
+
+  const virtualizer = useWindowVirtualizer({
+    count: items.length,
+    estimateSize: () => 100,
+    overscan: 8,
+    gap: 12,
+    scrollMargin: listOffset,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+  const lastVirtualItem = virtualItems[virtualItems.length - 1];
+
+  useEffect(() => {
+    if (!lastVirtualItem || !hasNextPage || isFetchingNextPage) return;
+    if (lastVirtualItem.index < items.length - 1) return;
+
+    void fetchNextPage();
+  }, [lastVirtualItem, hasNextPage, isFetchingNextPage, fetchNextPage, items.length]);
 
   return (
     <MotionPage>
@@ -144,26 +172,38 @@ export function FireHistoryPage() {
                 initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
                 animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                 exit={shouldReduceMotion ? undefined : { opacity: 0, y: -8 }}
-                className="space-y-3"
               >
-                {items.map((item, index) => (
-                  <HistoryRow key={item.id} item={item} index={index} />
-                ))}
+                <div
+                  ref={listContainerRef}
+                  className="relative w-full"
+                  style={{ height: virtualizer.getTotalSize() }}
+                >
+                  {virtualItems.map((virtualItem) => {
+                    const item = items[virtualItem.index];
+                    if (!item) return null;
 
-                {history.hasNextPage && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="mt-5 w-full"
-                    disabled={history.isFetchingNextPage}
-                    onClick={() => history.fetchNextPage()}
-                  >
-                    {history.isFetchingNextPage ? (
-                      <InlineSkeleton className="h-4 w-24" />
-                    ) : (
-                      'نمایش بیشتر'
-                    )}
-                  </Button>
+                    return (
+                      <div
+                        key={item.id}
+                        data-index={virtualItem.index}
+                        ref={virtualizer.measureElement}
+                        className="absolute inset-x-0 top-0"
+                        style={{
+                          transform: `translateY(${virtualItem.start - virtualizer.options.scrollMargin}px)`,
+                        }}
+                      >
+                        <div className="pb-3">
+                          <HistoryRow item={item} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {isFetchingNextPage && (
+                  <div className="mt-5 flex justify-center">
+                    <InlineSkeleton className="h-4 w-24" />
+                  </div>
                 )}
               </motion.div>
             )}
@@ -204,18 +244,13 @@ function SummaryBox({
   );
 }
 
-function HistoryRow({ item, index }: { item: XpHistoryItem; index: number }) {
+function HistoryRow({ item }: { item: XpHistoryItem }) {
   const isPositive = item.amount >= 0;
   const sourceLabel = SOURCE_LABELS[item.sourceType] ?? item.sourceType;
   const title = item.title ?? getMetaTitle(item) ?? sourceLabel;
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.03, 0.24), duration: 0.22 }}
-      className="border-hair group relative overflow-hidden rounded-[20px] border p-4 transition-[border-color,transform] [background:var(--glass)] hover:-translate-y-0.5 hover:border-[rgba(255,98,0,.34)]"
-    >
+    <article className="border-hair group relative overflow-hidden rounded-[20px] border p-4 transition-[border-color,transform] [background:var(--glass)] hover:-translate-y-0.5 hover:border-[rgba(255,98,0,.34)]">
       <div className="flex min-w-0 items-start gap-3">
         <span
           className={cn(
@@ -256,7 +291,7 @@ function HistoryRow({ item, index }: { item: XpHistoryItem; index: number }) {
           </div>
         </div>
       </div>
-    </motion.article>
+    </article>
   );
 }
 

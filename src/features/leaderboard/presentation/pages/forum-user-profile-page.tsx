@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { useFollowToggle } from '../../application/use-follow-toggle';
 import { useBlockToggle } from '../../application/use-block-toggle';
 import { useUserPosts } from '../../application/use-user-posts';
 import { useUserProfile } from '../../application/use-user-profile';
+import type { UserProfilePost } from '../../domain/user-profile-repository';
 import { followRepo, userProfileRepo } from '../../infrastructure/repository-factory';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
 import { toPersianDigits } from '@/core/lib/persian';
@@ -63,6 +65,36 @@ export function ForumUserProfilePage() {
     return false;
   };
 
+  const userPosts = sortPinnedFirst(postsQuery.data?.pages.flat() ?? []);
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
+  const [listOffset, setListOffset] = useState(0);
+  const hasNextPage = Boolean(postsQuery.hasNextPage);
+  const isFetchingNextPage = postsQuery.isFetchingNextPage;
+  const fetchNextPage = postsQuery.fetchNextPage;
+
+  useLayoutEffect(() => {
+    if (activeTab !== 'posts') return;
+    setListOffset(listContainerRef.current?.offsetTop ?? 0);
+  }, [activeTab, userPosts.length]);
+
+  const virtualizer = useWindowVirtualizer({
+    count: activeTab === 'posts' ? userPosts.length : 0,
+    estimateSize: () => 170,
+    overscan: 6,
+    gap: 12,
+    scrollMargin: listOffset,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+  const lastVirtualItem = virtualItems[virtualItems.length - 1];
+
+  useEffect(() => {
+    if (activeTab !== 'posts' || !lastVirtualItem || !hasNextPage || isFetchingNextPage) return;
+    if (lastVirtualItem.index < userPosts.length - 1) return;
+
+    void fetchNextPage();
+  }, [activeTab, lastVirtualItem, hasNextPage, isFetchingNextPage, fetchNextPage, userPosts.length]);
+
   if (profile.loading) {
     return (
       <DashboardPageShell size="narrow">
@@ -101,7 +133,6 @@ export function ForumUserProfilePage() {
   const blocked = Boolean(user.blockedByMe);
   const canFollow = (Boolean(user.canFollow) || !isLoggedIn) && !blocked && !isOwnProfile;
   const canBlock = !user.isAdam && !isOwnProfile;
-  const userPosts = sortPinnedFirst(postsQuery.data?.pages.flat() ?? []);
   const userAchievements = sortAchievementsByUnlocked(user.achievements ?? []);
   const backTarget =
     from === 'post' && fromPostId ? `/social/${encodeURIComponent(fromPostId)}` : '/social';
@@ -249,89 +280,48 @@ export function ForumUserProfilePage() {
                     هنوز پستی ثبت نشده است.
                   </p>
                 )}
-                {userPosts.map((post) => (
-                  <article
-                    key={post.id}
-                    className={cn(
-                      'relative rounded-2xl border bg-black/20 p-4 transition-colors',
-                      post.isPinned
-                        ? 'border-gold/45 hover:border-gold/60'
-                        : 'border-hair hover:border-[var(--color-hair-2)]',
-                    )}
+                {userPosts.length > 0 && (
+                  <div
+                    ref={listContainerRef}
+                    className="relative w-full"
+                    style={{ height: virtualizer.getTotalSize() }}
                   >
-                    {post.isPinned && (
-                      <span className="text-gold border-gold/25 bg-gold/10 absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black">
-                        <Icon name="star" size={11} />
-                        سنجاق شده
-                      </span>
-                    )}
-                    {isOwnProfile && (
-                      <button
-                        type="button"
-                        disabled={deleteOwnPost.isPending}
-                        onClick={() => setPostToDelete(post.id)}
-                        className="text-danger absolute top-3 left-3 z-10 rounded-lg p-1 hover:text-red-400 disabled:opacity-60"
-                        aria-label="حذف پست"
-                      >
-                        <Icon name="trash" size={16} />
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        router.push(
-                          `/social/${post.id}?from=user-profile&userId=${encodeURIComponent(user.id)}`,
-                        )
-                      }
-                      className={cn(
-                        'block w-full text-start',
-                        isOwnProfile && 'ps-8',
-                        post.isPinned && 'pt-8',
-                      )}
-                    >
-                      <p className="text-ink-2 line-clamp-3 text-sm leading-7">{post.text}</p>
-                      {(post.image || post.hasImage) && (
-                        <div className="border-hair mt-3 overflow-hidden rounded-xl border bg-[var(--glass-2)]">
-                          {post.image ? (
-                            <OptionalImage
-                              src={post.image}
-                              alt="تصویر پیوست پست"
-                              fill={false}
-                              className="max-h-[360px] w-full object-cover"
+                    {virtualItems.map((virtualItem) => {
+                      const post = userPosts[virtualItem.index];
+                      if (!post) return null;
+
+                      return (
+                        <div
+                          key={post.id}
+                          data-index={virtualItem.index}
+                          ref={virtualizer.measureElement}
+                          className="absolute inset-x-0 top-0"
+                          style={{
+                            transform: `translateY(${virtualItem.start - virtualizer.options.scrollMargin}px)`,
+                          }}
+                        >
+                          <div className="pb-3">
+                            <UserProfilePostCard
+                              post={post}
+                              isOwnProfile={isOwnProfile}
+                              isDeletePending={deleteOwnPost.isPending}
+                              onOpen={() =>
+                                router.push(
+                                  `/social/${post.id}?from=user-profile&userId=${encodeURIComponent(user.id)}`,
+                                )
+                              }
+                              onDeleteClick={() => setPostToDelete(post.id)}
                             />
-                          ) : (
-                            <div className="text-ink-4 grid h-40 place-items-center">
-                              <Icon name="book" size={28} />
-                            </div>
-                          )}
+                          </div>
                         </div>
-                      )}
-                      <div className="text-ink-4 mt-3 flex items-center justify-between gap-3 text-xs">
-                        <span className="flex items-center gap-3">
-                          <span className="inline-flex items-center gap-1">
-                            <Icon name="heart" size={15} />
-                            {toPersianDigits(post.likes)}
-                          </span>
-                          <span className="inline-flex items-center gap-1">
-                            <Icon name="msg" size={15} />
-                            {toPersianDigits(post.commentsCount ?? post.comments.length)}
-                          </span>
-                        </span>
-                        <time>{formatRelativeTime(post.time)}</time>
-                      </div>
-                    </button>
-                  </article>
-                ))}
-                {postsQuery.hasNextPage && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full"
-                    disabled={postsQuery.isFetchingNextPage}
-                    onClick={() => void postsQuery.fetchNextPage()}
-                  >
-                    {postsQuery.isFetchingNextPage ? '...' : 'نمایش بیشتر'}
-                  </Button>
+                      );
+                    })}
+                  </div>
+                )}
+                {isFetchingNextPage && (
+                  <div className="flex justify-center py-3">
+                    <InlineSpinner className="text-ember size-5" />
+                  </div>
                 )}
               </div>
             ) : (
@@ -409,6 +399,85 @@ function UserProfileTabSwitcher({
 
 function sortPinnedFirst<T extends { isPinned?: boolean }>(posts: T[]) {
   return [...posts].sort((a, b) => Number(Boolean(b.isPinned)) - Number(Boolean(a.isPinned)));
+}
+
+function UserProfilePostCard({
+  post,
+  isOwnProfile,
+  isDeletePending,
+  onOpen,
+  onDeleteClick,
+}: {
+  post: UserProfilePost;
+  isOwnProfile: boolean;
+  isDeletePending: boolean;
+  onOpen: () => void;
+  onDeleteClick: () => void;
+}) {
+  return (
+    <article
+      className={cn(
+        'relative rounded-2xl border bg-black/20 p-4 transition-colors',
+        post.isPinned
+          ? 'border-gold/45 hover:border-gold/60'
+          : 'border-hair hover:border-[var(--color-hair-2)]',
+      )}
+    >
+      {post.isPinned && (
+        <span className="text-gold border-gold/25 bg-gold/10 absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black">
+          <Icon name="star" size={11} />
+          سنجاق شده
+        </span>
+      )}
+      {isOwnProfile && (
+        <button
+          type="button"
+          disabled={isDeletePending}
+          onClick={onDeleteClick}
+          className="text-danger absolute top-3 left-3 z-10 rounded-lg p-1 hover:text-red-400 disabled:opacity-60"
+          aria-label="حذف پست"
+        >
+          <Icon name="trash" size={16} />
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onOpen}
+        className={cn('block w-full text-start', isOwnProfile && 'ps-8', post.isPinned && 'pt-8')}
+      >
+        <p className="text-ink-2 line-clamp-3 text-sm leading-7">{post.text}</p>
+        {(post.image || post.hasImage) && (
+          <div className="border-hair mt-3 overflow-hidden rounded-xl border bg-[var(--glass-2)]">
+            {post.image ? (
+              <OptionalImage
+                src={post.image}
+                alt="تصویر پیوست پست"
+                fill={false}
+                className="max-h-[360px] w-full object-cover"
+              />
+            ) : (
+              <div className="text-ink-4 grid h-40 place-items-center">
+                <Icon name="book" size={28} />
+              </div>
+            )}
+          </div>
+        )}
+        <div className="text-ink-4 mt-3 flex items-center justify-between gap-3 text-xs">
+          <span className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1">
+              <Icon name="heart" size={15} />
+              {toPersianDigits(post.likes)}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Icon name="msg" size={15} />
+              {toPersianDigits(post.commentsCount ?? post.comments.length)}
+            </span>
+          </span>
+          <time>{formatRelativeTime(post.time)}</time>
+        </div>
+      </button>
+    </article>
+  );
 }
 
 function ProfileStat({ label, value }: { label: string; value: number }) {
