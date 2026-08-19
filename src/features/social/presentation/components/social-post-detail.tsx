@@ -193,7 +193,7 @@ export function SocialPostDetail({
             {post.attachment?.url || post.image ? (
               <PostAttachmentImage
                 src={post.attachment?.url ?? post.image ?? ''}
-                maxHeight="min(640px, 75vh)"
+                mobileHeight="min(640px, 75vh)"
                 desktopHeight={520}
                 className="border-hair mt-5 border"
               />
