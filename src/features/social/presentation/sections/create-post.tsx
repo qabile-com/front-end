@@ -32,6 +32,7 @@ interface Props {
   achievement?: AchievementCard | null;
   currentUserId?: string | null;
   currentUserVerified?: boolean;
+  bare?: boolean;
 }
 
 export function CreatePost({
@@ -40,6 +41,7 @@ export function CreatePost({
   achievement,
   currentUserId,
   currentUserVerified,
+  bare,
 }: Props) {
   const hasAchievement = Boolean(achievement?.title);
   const [text, setText] = useState(
@@ -150,7 +152,12 @@ export function CreatePost({
   };
 
   return (
-    <article className="border-hair rounded-[20px] border bg-(--glass) p-5">
+    <article
+      className={cn(
+        'p-5',
+        !bare && 'border-hair rounded-[20px] border bg-(--glass)',
+      )}
+    >
       {hasAchievement && achievement && (
         <div className="border-hair mb-3 rounded-2xl border bg-[#120904] p-4">
           <div className="flex items-start gap-3">

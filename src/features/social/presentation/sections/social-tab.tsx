@@ -452,6 +452,7 @@ export function SocialTab({
             onPublished={() => setIsCreatePostOpen(false)}
             currentUserId={currentProfile?.id}
             currentUserVerified={currentProfile?.verified}
+            bare
           />
         </div>
       </BaseModal>
