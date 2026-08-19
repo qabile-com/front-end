@@ -15,6 +15,7 @@ export { InlineSpinner } from './inline-spinner';
 export { PhoenixArt } from './phoenix-art';
 export { LandingPhoenix } from './landing-phoenix';
 export { OptionalImage } from './optional-image';
+export { PostAttachmentImage } from './post-attachment-image';
 export { UserAvatar } from './user-avatar';
 export { Panel } from './panel';
 export { PullToRefresh } from './pull-to-refresh';

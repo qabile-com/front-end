@@ -2,7 +2,14 @@
 
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Icon, InlineSpinner, OptionalImage, UserAvatar, type IconName } from '@/shared/ui';
+import {
+  Icon,
+  InlineSpinner,
+  OptionalImage,
+  PostAttachmentImage,
+  UserAvatar,
+  type IconName,
+} from '@/shared/ui';
 import { AdamAvatar } from '@/features/dashboard/presentation/sections/dashboard-sidebar';
 import { cn } from '@/core/lib/cn';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
@@ -276,20 +283,18 @@ export function PostCard({
             </div>
           )}
           {(post.attachment?.url || post.image || post.hasImage) && (
-            <div className="mt-3 overflow-hidden rounded-[14px] [background:var(--glass-2)]">
+            <>
               {post.attachment?.url || post.image ? (
-                <OptionalImage
+                <PostAttachmentImage
                   src={post.attachment?.url ?? post.image ?? ''}
-                  alt="تصویر پیوست پست"
-                  fill={false}
-                  className="max-h-[420px] w-full object-cover"
+                  className="mt-3"
                 />
               ) : (
-                <div className="text-ink-4 grid h-44 place-items-center">
+                <div className="text-ink-4 mt-3 grid h-44 place-items-center overflow-hidden rounded-[14px] [background:var(--glass-2)]">
                   <Icon name="book" size={34} />
                 </div>
               )}
-            </div>
+            </>
           )}
 
           {/* Like, comment, share */}
