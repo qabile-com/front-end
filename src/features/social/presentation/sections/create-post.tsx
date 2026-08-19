@@ -248,15 +248,20 @@ export function CreatePost({
           type="button"
           disabled={!canSubmit}
           onClick={() => void publish()}
-          className="rounded-md px-5 py-2 font-bold text-[#1a0a00] transition-opacity [background:var(--fire-grad)] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+          className="inline-flex items-center gap-1.5 rounded-md px-5 py-2 font-bold text-[#1a0a00] transition-opacity [background:var(--fire-grad)] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {isPublishing
-            ? 'در حال انتشار...'
-            : isCheckingImage
-              ? 'در حال بررسی تصویر...'
-              : postLocked
-                ? `انتشار تا ${formatPostingRemainingTime(remainingSeconds)} دیگر`
-                : 'انتشار'}
+          {isPublishing ? (
+            'در حال انتشار...'
+          ) : isCheckingImage ? (
+            'در حال بررسی تصویر...'
+          ) : postLocked ? (
+            <>
+              <Icon name="clock" size={15} />
+              {formatPostingRemainingTime(remainingSeconds)}
+            </>
+          ) : (
+            'انتشار'
+          )}
         </button>
       </div>
     </article>
