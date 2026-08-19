@@ -11,8 +11,8 @@ import { moderateAvatarImage } from '@/features/profile/application/avatar-conte
 import { compressImage } from '@/features/profile/application/image-compression';
 import { showError } from '@/shared/lib/toast';
 import { socialRepo } from '../../infrastructure/repository-factory';
-import { useUserProfile } from '@/features/leaderboard/application/use-user-profile';
-import { userProfileRepo } from '@/features/leaderboard/infrastructure/repository-factory';
+import { useIsVerifiedUser } from '@/features/profile/application/use-is-verified-user';
+import { POST_CHAR_LIMIT_DEFAULT, POST_CHAR_LIMIT_VERIFIED } from '@/shared/lib/content-limits';
 import {
   formatPostingRemainingTime,
   getPostingRemainingSeconds,
@@ -21,9 +21,6 @@ import {
   usePostingStatus,
 } from '../../application/use-posting-status';
 import type { PostingStatus } from '../../domain/social-repository';
-
-const POST_CHAR_LIMIT_DEFAULT = 480;
-const POST_CHAR_LIMIT_VERIFIED = 2000;
 
 interface Props {
   onPublish: (
@@ -34,17 +31,22 @@ interface Props {
   onPublished?: () => void;
   achievement?: AchievementCard | null;
   currentUserId?: string | null;
+  currentUserVerified?: boolean;
 }
 
-export function CreatePost({ onPublish, onPublished, achievement, currentUserId }: Props) {
+export function CreatePost({
+  onPublish,
+  onPublished,
+  achievement,
+  currentUserId,
+  currentUserVerified,
+}: Props) {
   const hasAchievement = Boolean(achievement?.title);
   const [text, setText] = useState(
     hasAchievement ? `من دستاورد ${achievement?.title} را در قبیله ققنوس دریافت کردم. 🎉` : '',
   );
-  const myForumProfile = useUserProfile(userProfileRepo, currentUserId ?? '');
-  const charLimit = myForumProfile.data?.verified
-    ? POST_CHAR_LIMIT_VERIFIED
-    : POST_CHAR_LIMIT_DEFAULT;
+  const isVerified = useIsVerifiedUser(currentUserId, currentUserVerified);
+  const charLimit = isVerified ? POST_CHAR_LIMIT_VERIFIED : POST_CHAR_LIMIT_DEFAULT;
   const isNearCharLimit = text.length >= charLimit * 0.9;
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

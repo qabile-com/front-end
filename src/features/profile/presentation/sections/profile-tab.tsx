@@ -264,6 +264,7 @@ export function ProfileTab({
             onPublish={handlePublishPost}
             onPublished={() => setIsSharePostOpen(false)}
             currentUserId={profile.id}
+            currentUserVerified={profile.verified}
           />
         </BaseModal>
       )}

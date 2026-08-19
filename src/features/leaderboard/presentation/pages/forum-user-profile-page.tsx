@@ -20,6 +20,7 @@ import {
   MotionPage,
   OptionalImage,
   Skeleton,
+  TruncatedPostText,
   UserAvatar,
 } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
@@ -445,7 +446,10 @@ function UserProfilePostCard({
         onClick={onOpen}
         className={cn('block w-full text-start', isOwnProfile && 'ps-8', post.isPinned && 'pt-8')}
       >
-        <p className="text-ink-2 line-clamp-3 text-sm leading-7 whitespace-pre-line">{post.text}</p>
+        <TruncatedPostText
+          text={post.text}
+          className="text-ink-2 text-sm leading-7 whitespace-pre-line"
+        />
         {(post.image || post.hasImage) && (
           <div className="border-hair mt-3 overflow-hidden rounded-xl border bg-[var(--glass-2)]">
             {post.image ? (

@@ -12,6 +12,8 @@ import {
   getAchievementAssetUrl,
 } from '@/features/dashboard/domain/achievement-normalizer';
 import { socialRepo } from '@/features/social/infrastructure/repository-factory';
+import { useUser } from '@/features/dashboard/application/use-user';
+import { userRepo } from '@/features/dashboard/infrastructure/repository-factory';
 
 // CreatePost pulls in the NSFW-moderation stack (@tensorflow/tfjs + nsfwjs),
 // which is large and only needed once someone actually opens the share form -
@@ -41,6 +43,7 @@ interface AchievementEarnedModalProps {
 export function AchievementEarnedModal({ achievement, onClose }: AchievementEarnedModalProps) {
   const queryClient = useQueryClient();
   const [isSharePostOpen, setIsSharePostOpen] = useState(false);
+  const { user } = useUser(userRepo);
 
   if (!achievement) return null;
 
@@ -138,6 +141,7 @@ export function AchievementEarnedModal({ achievement, onClose }: AchievementEarn
             }}
             onPublish={handlePublishPost}
             onPublished={onClose}
+            currentUserId={user?.id}
           />
         </BaseModal>
       )}
