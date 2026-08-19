@@ -450,6 +450,7 @@ export function SocialTab({
           <CreatePost
             onPublish={(text, imageFile?) => onPublish(text, imageFile)}
             onPublished={() => setIsCreatePostOpen(false)}
+            currentUserId={currentProfile?.id}
           />
         </div>
       </BaseModal>

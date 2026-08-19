@@ -4,11 +4,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Icon, OptionalImage } from '@/shared/ui';
+import { cn } from '@/core/lib/cn';
+import { toPersianDigits } from '@/core/lib/persian';
 import type { AchievementCard } from '../../domain/social.data';
 import { moderateAvatarImage } from '@/features/profile/application/avatar-content-moderation';
 import { compressImage } from '@/features/profile/application/image-compression';
 import { showError } from '@/shared/lib/toast';
 import { socialRepo } from '../../infrastructure/repository-factory';
+import { useUserProfile } from '@/features/leaderboard/application/use-user-profile';
+import { userProfileRepo } from '@/features/leaderboard/infrastructure/repository-factory';
 import {
   formatPostingRemainingTime,
   getPostingRemainingSeconds,
@@ -18,6 +22,9 @@ import {
 } from '../../application/use-posting-status';
 import type { PostingStatus } from '../../domain/social-repository';
 
+const POST_CHAR_LIMIT_DEFAULT = 480;
+const POST_CHAR_LIMIT_VERIFIED = 2000;
+
 interface Props {
   onPublish: (
     text: string,
@@ -26,13 +33,19 @@ interface Props {
   ) => void | Promise<void>;
   onPublished?: () => void;
   achievement?: AchievementCard | null;
+  currentUserId?: string | null;
 }
 
-export function CreatePost({ onPublish, onPublished, achievement }: Props) {
+export function CreatePost({ onPublish, onPublished, achievement, currentUserId }: Props) {
   const hasAchievement = Boolean(achievement?.title);
   const [text, setText] = useState(
     hasAchievement ? `من دستاورد ${achievement?.title} را در قبیله ققنوس دریافت کردم. 🎉` : '',
   );
+  const myForumProfile = useUserProfile(userProfileRepo, currentUserId ?? '');
+  const charLimit = myForumProfile.data?.verified
+    ? POST_CHAR_LIMIT_VERIFIED
+    : POST_CHAR_LIMIT_DEFAULT;
+  const isNearCharLimit = text.length >= charLimit * 0.9;
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -49,6 +62,7 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
     !isPublishing &&
     !isCheckingImage &&
     !postLocked &&
+    text.length <= charLimit &&
     Boolean(text.trim() || hasAchievement || imageFile);
 
   useEffect(
@@ -74,7 +88,8 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
   }, [postingStatus?.isLocked, refetchPostingStatus, remainingSeconds]);
 
   const publish = async () => {
-    if (isPublishing || isCheckingImage || (!text.trim() && !hasAchievement && !imageFile)) return;
+    if (isPublishing || isCheckingImage || text.length > charLimit) return;
+    if (!text.trim() && !hasAchievement && !imageFile) return;
 
     setIsPublishing(true);
     try {
@@ -155,8 +170,17 @@ export function CreatePost({ onPublish, onPublished, achievement }: Props) {
         onChange={(e) => setText(e.target.value)}
         placeholder={hasAchievement ? 'متن پست خودت رو بنویس...' : 'جرقه‌ی بعدی را ثبت کن...'}
         rows={hasAchievement ? 4 : 5}
+        maxLength={charLimit}
         className="text-ink placeholder:text-ink-3 w-full resize-none rounded-xl bg-(--glass-2) p-4 outline-none"
       />
+      <div
+        className={cn(
+          'mt-1.5 text-left text-[11px] font-bold tabular-nums',
+          isNearCharLimit ? 'text-danger' : 'text-ink-4',
+        )}
+      >
+        {toPersianDigits(text.length)}/{toPersianDigits(charLimit)}
+      </div>
 
       {postLocked && (
         <div className="border-hair border-ember/40 mt-3 rounded-xl border bg-[rgba(255,98,0,.08)] px-4 py-3 text-right">

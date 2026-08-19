@@ -10,6 +10,7 @@ import {
   InlineSkeleton,
   InlineSpinner,
   OptionalImage,
+  TruncatedPostText,
   UserAvatar,
 } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
@@ -262,6 +263,7 @@ export function ProfileTab({
             }}
             onPublish={handlePublishPost}
             onPublished={() => setIsSharePostOpen(false)}
+            currentUserId={profile.id}
           />
         </BaseModal>
       )}
@@ -600,7 +602,10 @@ function ProfilePostCard({
         href={`/social/${post.id}?from=profile&userId=${encodeURIComponent(profileId)}`}
         className="focus-visible:ring-ember hover:text-gold block rounded-xl transition-colors focus-visible:ring-2 focus-visible:outline-none"
       >
-        <p className="text-ink-2 text-sm leading-7">{post.text}</p>
+        <TruncatedPostText
+          text={post.text}
+          className="text-ink-2 text-sm leading-7 whitespace-pre-line"
+        />
         {(post.image || post.hasImage) && (
           <div className="border-hair mt-3 overflow-hidden rounded-xl border bg-[var(--glass-2)]">
             {post.image ? (
