@@ -1,11 +1,22 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { formatRelativeTime } from '@/core/lib/format-relative-time';
 import { toPersianDigits } from '@/core/lib/persian';
-import { AuthorBadges, Button, Icon, Input, OptionalImage, UserAvatar, type IconName } from '@/shared/ui';
+import {
+  AuthorBadges,
+  Button,
+  Icon,
+  Input,
+  PostAttachmentImage,
+  UserAvatar,
+  type IconName,
+} from '@/shared/ui';
 import { AdamAvatar } from '@/features/dashboard/presentation/sections/dashboard-sidebar';
+import { cn } from '@/core/lib/cn';
+import { useMediaQuery } from '@/shared/hooks/use-media-query';
 import type { Post, PostComment } from '../../domain/social.data';
 import { formatUsername } from '../lib/format-username';
 
@@ -42,9 +53,13 @@ export function SocialPostDetail({
 }: SocialPostDetailProps) {
   const [commentText, setCommentText] = useState('');
   const composerRef = useRef<HTMLDivElement>(null);
+  const commentInputRef = useRef<HTMLInputElement>(null);
   const scrollParentRef = useRef<HTMLDivElement | null>(null);
   const shouldScrollAfterSubmitRef = useRef(false);
   const commentsTotal = post.commentsCount ?? post.comments.length;
+  // Matches MobileNav's own breakpoint (lg:hidden) so the composer bar and the
+  // bottom tab bar always appear/disappear together.
+  const isMobileComposer = useMediaQuery('(max-width: 1023px)');
 
   const virtualizer = useVirtualizer({
     count: post.comments.length,
@@ -55,6 +70,10 @@ export function SocialPostDetail({
   });
 
   const handleScrollToComposer = () => {
+    if (isMobileComposer) {
+      commentInputRef.current?.focus();
+      return;
+    }
     composerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -81,6 +100,41 @@ export function SocialPostDetail({
       setCommentText((current) => (current ? current : text));
     }
   };
+
+  const composer = (
+    <div
+      ref={composerRef}
+      className={cn(
+        'border-hair flex items-center gap-3 border-t bg-[var(--color-panel)] p-4 sm:px-6',
+        isMobileComposer &&
+          'fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 shadow-[0_-8px_30px_-16px_rgba(0,0,0,.6)]',
+      )}
+    >
+      <UserAvatar
+        name={currentUserName ?? '?'}
+        avatar={currentUserAvatar ?? undefined}
+        className="size-9 text-xs"
+      />
+      <Input
+        ref={commentInputRef}
+        placeholder="نظرت رو بنویس..."
+        value={commentText}
+        onChange={(event) => setCommentText(event.target.value)}
+        className="flex-1"
+        onKeyDown={(event) => event.key === 'Enter' && handleSubmitComment()}
+      />
+      <Button
+        type="button"
+        variant="primary"
+        size="sm"
+        className="shrink-0"
+        onClick={handleSubmitComment}
+        disabled={!commentText.trim() || isAddingComment}
+      >
+        {isAddingComment ? '...' : 'ارسال'}
+      </Button>
+    </div>
+  );
 
   return (
     <article className="border-hair overflow-hidden rounded-[24px] border bg-[var(--color-panel)] shadow-[0_30px_90px_-54px_var(--glow)]">
@@ -135,20 +189,20 @@ export function SocialPostDetail({
         )}
 
         {(post.attachment?.url || post.image || post.hasImage) && (
-          <div className="border-hair mt-5 overflow-hidden rounded-[18px] border bg-[var(--glass-2)]">
+          <>
             {post.attachment?.url || post.image ? (
-              <OptionalImage
+              <PostAttachmentImage
                 src={post.attachment?.url ?? post.image ?? ''}
-                alt="تصویر پیوست پست"
-                fill={false}
-                className="max-h-[min(640px,75vh)] w-full object-cover"
+                maxHeight="min(640px, 75vh)"
+                desktopHeight={520}
+                className="border-hair mt-5 border"
               />
             ) : (
-              <div className="text-ink-4 grid h-52 place-items-center">
+              <div className="text-ink-4 border-hair mt-5 grid h-52 place-items-center overflow-hidden rounded-[18px] border [background:var(--glass-2)]">
                 <Icon name="book" size={34} />
               </div>
             )}
-          </div>
+          </>
         )}
 
         <div className="border-hair mt-5 flex flex-wrap items-center justify-between gap-3 border-y py-3">
@@ -188,35 +242,9 @@ export function SocialPostDetail({
         </div>
       </div>
 
-      <div
-        ref={composerRef}
-        className="border-hair flex items-center gap-3 border-t bg-[var(--color-panel)] p-4 sm:px-6"
-      >
-        <UserAvatar
-          name={currentUserName ?? '?'}
-          avatar={currentUserAvatar ?? undefined}
-          className="size-9 text-xs"
-        />
-        <Input
-          placeholder="نظرت رو بنویس..."
-          value={commentText}
-          onChange={(event) => setCommentText(event.target.value)}
-          className="flex-1"
-          onKeyDown={(event) => event.key === 'Enter' && handleSubmitComment()}
-        />
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          className="shrink-0"
-          onClick={handleSubmitComment}
-          disabled={!commentText.trim() || isAddingComment}
-        >
-          {isAddingComment ? '...' : 'ارسال'}
-        </Button>
-      </div>
+      {!isMobileComposer && composer}
 
-      <section className="border-hair border-t p-4 sm:p-6">
+      <section className={cn('border-hair border-t p-4 sm:p-6', isMobileComposer && 'pb-40')}>
         <h2 className="text-ink-2 mb-4 flex items-center gap-2 text-sm font-black">
           <span>نظرات هم‌قبیله‌ای‌ها</span>
           <span className="text-gold px-2 py-0.5 text-xs">
@@ -260,6 +288,8 @@ export function SocialPostDetail({
           </div>
         )}
       </section>
+
+      {isMobileComposer && typeof document !== 'undefined' && createPortal(composer, document.body)}
     </article>
   );
 }
