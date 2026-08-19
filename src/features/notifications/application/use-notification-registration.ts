@@ -17,6 +17,11 @@ const TOKEN_STORAGE_KEY = 'qabile:fcm-token';
 const TOKEN_USER_STORAGE_KEY = 'qabile:fcm-token-user-id';
 const DEVICE_ID_STORAGE_KEY = 'qabile:notification-device-id';
 
+export function getStoredNotificationToken() {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(TOKEN_STORAGE_KEY);
+}
+
 export type NotificationAvailability =
   | 'loading'
   | 'requires-install'

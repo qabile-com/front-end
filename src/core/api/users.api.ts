@@ -58,6 +58,30 @@ export const registerMyPushToken = (body: { token: string; platform: 'web'; devi
 export const deleteMyPushToken = (token: string) =>
   httpClient.delete('/api/v1/users/me/push-tokens', { data: { token } });
 
+export type PushNotificationMode = 'all' | 'medium' | 'weak';
+
+export interface PushTokenDeviceDto {
+  id: string;
+  platform?: string | null;
+  deviceId?: string | null;
+  lastSeenAt: string;
+  createdAt: string;
+  isCurrent: boolean;
+  notificationMode: PushNotificationMode;
+}
+
+export const getMyPushTokens = (token: string, options?: { signal?: AbortSignal }) =>
+  httpClient.get<{ data: PushTokenDeviceDto[] }>('/api/v1/users/me/push-tokens', {
+    params: { token },
+    signal: options?.signal,
+  });
+
+export const updateMyPushTokenMode = (tokenId: string, notificationMode: PushNotificationMode) =>
+  httpClient.patch<{ success: boolean; data: PushTokenDeviceDto }>(
+    `/api/v1/users/me/push-tokens/${tokenId}/mode`,
+    { notificationMode },
+  );
+
 export const requestEmailVerification = (email: string) =>
   httpClient.post('/api/v1/users/me/email/verification/request', { email });
 
