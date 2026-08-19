@@ -15,15 +15,19 @@ import { extractTrueTradeReferralLink } from '@/shared/lib/referral-link';
 import { useMediaQuery } from '@/shared/hooks/use-media-query';
 import { useProfile } from '@/features/profile/application/use-profile';
 import { profileRepo } from '@/features/profile/infrastructure/repository-factory';
+import { useIsVerifiedUser } from '@/features/profile/application/use-is-verified-user';
+import { COMMENT_CHAR_LIMIT_DEFAULT, COMMENT_CHAR_LIMIT_VERIFIED } from '@/shared/lib/content-limits';
 import {
   AuthorBadges,
   Button,
+  CommentComposer,
   CopyField,
   Icon,
   InlineSkeleton,
   Input,
   OptionalImage,
   Skeleton,
+  TruncatedPostText,
   UserAvatar,
   type IconName,
 } from '@/shared/ui';
@@ -90,7 +94,10 @@ export function SessionContent({
 }: SessionContentProps) {
   const shouldReduceMotion = useReducedMotion();
   const queryClient = useQueryClient();
-  const usedReferralCode = useProfile(profileRepo).data?.usedReferralCode;
+  const myProfile = useProfile(profileRepo).data;
+  const usedReferralCode = myProfile?.usedReferralCode;
+  const isVerified = useIsVerifiedUser(myProfile?.id, myProfile?.verified);
+  const commentCharLimit = isVerified ? COMMENT_CHAR_LIMIT_VERIFIED : COMMENT_CHAR_LIMIT_DEFAULT;
   const sessionReferral = extractTrueTradeReferralLink(session.description, usedReferralCode);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const watchedRangesRef = useRef<{ start: number; end: number }[]>([]);
@@ -577,6 +584,7 @@ export function SessionContent({
                   isAddingComment={isAddingComment}
                   userName={userName}
                   userAvatar={userAvatar}
+                  commentCharLimit={commentCharLimit}
                 />
               </AnimatedPanel>
             )}
@@ -1198,6 +1206,7 @@ function CommentsPanel({
   isAddingComment,
   userName,
   userAvatar,
+  commentCharLimit,
 }: {
   allComments: Comment[];
   commentsQuery: UseInfiniteQueryResult<InfiniteData<PaginatedComments>>;
@@ -1208,6 +1217,7 @@ function CommentsPanel({
   isAddingComment: boolean;
   userName?: string;
   userAvatar?: string | null;
+  commentCharLimit: number;
 }) {
   const scrollParentRef = useRef<HTMLDivElement | null>(null);
   const shouldScrollAfterSubmitRef = useRef(false);
@@ -1297,31 +1307,18 @@ function CommentsPanel({
         </h3>
       </div>
 
-      <div className="flex min-w-0 items-center gap-2 rounded-[18px] border border-[var(--session-border)] bg-black/25 p-2.5 sm:gap-3 sm:p-3">
-        <UserAvatar
-          name={userName ?? '?'}
-          avatar={userAvatar ?? undefined}
-          className="size-9 text-xs"
-        />
-        <Input
-          placeholder="نظرت رو بنویس..."
-          value={commentText}
-          onChange={(event) => setCommentText(event.target.value)}
-          className="min-w-0 flex-1"
-          onKeyDown={(event) => event.key === 'Enter' && submitAndFollowComment()}
-        />
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          onClick={submitAndFollowComment}
-          disabled={!commentText.trim() || isAddingComment}
-          className="min-h-11 shrink-0 px-3 sm:px-4"
-        >
-          {isAddingComment ? 'در حال انتشار...' : 'انتشار'}
-          <Icon name="send" size={15} />
-        </Button>
-      </div>
+      <CommentComposer
+        value={commentText}
+        onChange={setCommentText}
+        onSubmit={submitAndFollowComment}
+        isSubmitting={isAddingComment}
+        submitLabel="انتشار"
+        submittingLabel="در حال انتشار..."
+        userName={userName}
+        userAvatar={userAvatar}
+        charLimit={commentCharLimit}
+        rowClassName="rounded-[18px] border border-[var(--session-border)] bg-black/25 p-2.5 sm:p-3"
+      />
 
       {isLocked ? (
         <p className="text-ink-3 rounded-[16px] border border-[var(--session-border)] bg-[var(--session-surface-2)] p-5 text-center text-sm leading-7">
@@ -1406,7 +1403,10 @@ function CommentItem({ comment }: { comment: Comment }) {
             className="flex shrink-0 items-center gap-1"
           />
         </div>
-        <p className="text-ink-3 text-sm leading-7 whitespace-pre-line">{comment.text}</p>
+        <TruncatedPostText
+          text={comment.text}
+          className="text-ink-3 text-sm leading-7 whitespace-pre-line"
+        />
         <div className="flex justify-end">
           <time className="text-ink-4 text-xs font-bold" dateTime={comment.createdAt}>
             {comment.time ?? comment.createdAt ?? ''}

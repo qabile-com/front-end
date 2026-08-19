@@ -7,16 +7,18 @@ import { formatRelativeTime } from '@/core/lib/format-relative-time';
 import { toPersianDigits } from '@/core/lib/persian';
 import {
   AuthorBadges,
-  Button,
+  CommentComposer,
   Icon,
-  Input,
   PostAttachmentImage,
+  TruncatedPostText,
   UserAvatar,
   type IconName,
 } from '@/shared/ui';
 import { AdamAvatar } from '@/features/dashboard/presentation/sections/dashboard-sidebar';
 import { cn } from '@/core/lib/cn';
 import { useMediaQuery } from '@/shared/hooks/use-media-query';
+import { useIsVerifiedUser } from '@/features/profile/application/use-is-verified-user';
+import { COMMENT_CHAR_LIMIT_DEFAULT, COMMENT_CHAR_LIMIT_VERIFIED } from '@/shared/lib/content-limits';
 import type { Post, PostComment } from '../../domain/social.data';
 import { formatUsername } from '../lib/format-username';
 
@@ -60,6 +62,8 @@ export function SocialPostDetail({
   // Matches MobileNav's own breakpoint (lg:hidden) so the composer bar and the
   // bottom tab bar always appear/disappear together.
   const isMobileComposer = useMediaQuery('(max-width: 1023px)');
+  const isVerified = useIsVerifiedUser(currentUserId);
+  const commentCharLimit = isVerified ? COMMENT_CHAR_LIMIT_VERIFIED : COMMENT_CHAR_LIMIT_DEFAULT;
 
   const virtualizer = useVirtualizer({
     count: post.comments.length,
@@ -105,34 +109,21 @@ export function SocialPostDetail({
     <div
       ref={composerRef}
       className={cn(
-        'border-hair flex items-center gap-3 border-t bg-[var(--color-panel)] p-4 sm:px-6',
+        'border-hair border-t bg-[var(--color-panel)] p-4 sm:px-6',
         isMobileComposer &&
           'fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 shadow-[0_-8px_30px_-16px_rgba(0,0,0,.6)]',
       )}
     >
-      <UserAvatar
-        name={currentUserName ?? '?'}
-        avatar={currentUserAvatar ?? undefined}
-        className="size-9 text-xs"
-      />
-      <Input
+      <CommentComposer
         ref={commentInputRef}
-        placeholder="نظرت رو بنویس..."
         value={commentText}
-        onChange={(event) => setCommentText(event.target.value)}
-        className="flex-1"
-        onKeyDown={(event) => event.key === 'Enter' && handleSubmitComment()}
+        onChange={setCommentText}
+        onSubmit={handleSubmitComment}
+        isSubmitting={isAddingComment}
+        userName={currentUserName ?? undefined}
+        userAvatar={currentUserAvatar}
+        charLimit={commentCharLimit}
       />
-      <Button
-        type="button"
-        variant="primary"
-        size="sm"
-        className="shrink-0"
-        onClick={handleSubmitComment}
-        disabled={!commentText.trim() || isAddingComment}
-      >
-        {isAddingComment ? '...' : 'ارسال'}
-      </Button>
     </div>
   );
 
@@ -354,7 +345,10 @@ function PostCommentItem({
             )}
           </span>
         </div>
-        <p className="text-ink-2 mt-1 text-sm leading-7 whitespace-pre-line">{comment.text}</p>
+        <TruncatedPostText
+          text={comment.text}
+          className="text-ink-2 mt-1 text-sm leading-7 whitespace-pre-line"
+        />
       </div>
     </div>
   );
