@@ -7,6 +7,7 @@ import {
   InlineSpinner,
   OptionalImage,
   PostAttachmentImage,
+  TruncatedPostText,
   UserAvatar,
   type IconName,
 } from '@/shared/ui';
@@ -268,7 +269,12 @@ export function PostCard({
               )}
             </div>
           </div>
-          <p className="mt-3.5 text-[14.5px] leading-[1.8] whitespace-pre-line">{post.text}</p>
+          <div className="mt-3.5">
+            <TruncatedPostText
+              text={post.text}
+              className="text-[14.5px] leading-[1.8] whitespace-pre-line"
+            />
+          </div>
           {post.achievement && (
             <div className="mt-3 flex items-center gap-3 rounded-[14px] border border-[rgba(255,98,0,.3)] p-3.5 [background:rgba(255,98,0,.08)]">
               <span className="text-ember grid size-11 shrink-0 place-items-center rounded-xl [background:rgba(255,98,0,.18)]">

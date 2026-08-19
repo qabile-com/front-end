@@ -16,6 +16,7 @@ export { PhoenixArt } from './phoenix-art';
 export { LandingPhoenix } from './landing-phoenix';
 export { OptionalImage } from './optional-image';
 export { PostAttachmentImage } from './post-attachment-image';
+export { TruncatedPostText } from './truncated-post-text';
 export { UserAvatar } from './user-avatar';
 export { Panel } from './panel';
 export { PullToRefresh } from './pull-to-refresh';
