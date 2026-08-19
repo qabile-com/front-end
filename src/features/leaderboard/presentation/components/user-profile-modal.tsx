@@ -228,7 +228,9 @@ export function UserProfileModal({
                     سنجاق شده
                   </span>
                 )}
-                <p className="text-ink-2 text-right text-sm leading-relaxed">{post.text}</p>
+                <p className="text-ink-2 text-right text-sm leading-relaxed whitespace-pre-line">
+                  {post.text}
+                </p>
                 {(post.attachment?.url || post.image || post.hasImage) && (
                   <div className="border-hair mt-3 overflow-hidden rounded-lg border bg-black/20">
                     {post.attachment?.url || post.image ? (

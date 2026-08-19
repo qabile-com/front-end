@@ -354,7 +354,7 @@ function PostCommentItem({
             )}
           </span>
         </div>
-        <p className="text-ink-2 mt-1 text-sm leading-7">{comment.text}</p>
+        <p className="text-ink-2 mt-1 text-sm leading-7 whitespace-pre-line">{comment.text}</p>
       </div>
     </div>
   );
