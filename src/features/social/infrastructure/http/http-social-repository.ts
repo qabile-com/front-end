@@ -6,6 +6,7 @@ import {
   deleteForumPost,
   followForumUser,
   getForumFeed,
+  getMyForumPosts,
   getForumComments,
   getForumPost,
   getForumPostingStatus,
@@ -57,6 +58,16 @@ export class HttpSocialRepository implements ISocialRepository {
       activeUsers: (res.data.activeUsers ?? []).map(apiUserToDomain),
     };
 
+    return res.data.data.map(apiForumPostToDomain);
+  }
+
+  async getMyPosts(
+    limit = 10,
+    offset = 0,
+    q?: string,
+    options?: { signal?: AbortSignal },
+  ): Promise<Post[]> {
+    const res = await getMyForumPosts({ limit, offset, q }, options);
     return res.data.data.map(apiForumPostToDomain);
   }
 

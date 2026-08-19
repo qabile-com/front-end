@@ -22,6 +22,7 @@ export interface PostingStatus {
 
 export interface ISocialRepository {
   getFeed(limit?: number, offset?: number, filters?: SocialFeedFilters, options?: { signal?: AbortSignal }): Promise<Post[]>;
+  getMyPosts(limit?: number, offset?: number, q?: string, options?: { signal?: AbortSignal }): Promise<Post[]>;
   getPost(postId: string, options?: { signal?: AbortSignal }): Promise<Post>;
   getPostComments(postId: string, limit?: number, offset?: number, options?: { signal?: AbortSignal }): Promise<PostComment[]>;
   getPostingStatus(options?: { signal?: AbortSignal }): Promise<PostingStatus>;

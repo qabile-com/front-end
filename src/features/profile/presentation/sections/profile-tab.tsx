@@ -37,8 +37,7 @@ import { usePinOwnPost } from '@/features/social/application/use-pin-own-post';
 import { DeletePostConfirmModal } from '@/features/social/presentation/components/delete-post-confirm-modal';
 import { getPostPublishErrorMessage } from '@/features/social/application/social-error-message';
 import { invalidateSocialPostCreation } from '@/features/social/application/social-cache';
-import { useUserPosts } from '@/features/leaderboard/application/use-user-posts';
-import { userProfileRepo } from '@/features/leaderboard/infrastructure/repository-factory';
+import { useInfiniteMyPosts } from '@/features/social/application/use-infinite-my-posts';
 import { shareUrl } from '@/shared/lib/native-share';
 
 // Both pull in the NSFW-moderation stack (@tensorflow/tfjs + nsfwjs) for
@@ -363,7 +362,7 @@ function UserPostsTab({
   profileId: string;
   posts: NonNullable<MyProfile['posts']>;
 }) {
-  const postsQuery = useUserPosts(userProfileRepo, profileId);
+  const postsQuery = useInfiniteMyPosts(socialRepo, undefined);
   const deleteOwnPost = useDeleteOwnPost(socialRepo);
   const pinOwnPost = usePinOwnPost(socialRepo);
   const [pinnedOverrides, setPinnedOverrides] = useState<Record<string, boolean>>({});

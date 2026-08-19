@@ -146,6 +146,11 @@ export const getForumFeed = (params?: {
   followingOnly?: boolean;
 }, options?: { signal?: AbortSignal }) => httpClient.get<ForumFeedResponse>('/api/v1/forum/feed', { params, signal: options?.signal });
 
+export const getMyForumPosts = (
+  params?: { limit?: number; offset?: number; q?: string },
+  options?: { signal?: AbortSignal },
+) => httpClient.get<ForumFeedResponse>('/api/v1/forum/me/posts', { params, signal: options?.signal });
+
 export const getForumUserPosts = (
   userId: string,
   params?: { limit?: number; offset?: number; q?: string; hashtag?: string; author?: string },

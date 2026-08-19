@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useUser } from '@/features/dashboard/application/use-user';
 import { useInfiniteFeed } from '@/features/social/application/use-infinite-feed';
+import { useInfiniteMyPosts } from '@/features/social/application/use-infinite-my-posts';
 import { useSocialData } from '@/features/social/application/use-social-data';
 import { userRepo } from '@/features/dashboard/infrastructure/repository-factory';
 import { useProfile } from '@/features/profile/application/use-profile';
@@ -21,14 +22,13 @@ export function SocialPage() {
   const [feed, setFeed] = useState<Feed>('for-you');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
+  const parsedSearch = parseSocialSearch(debouncedSearch);
   const feedFilters = {
-    ...parseSocialSearch(debouncedSearch),
+    ...parsedSearch,
     ...(feed === 'following' ? { followingOnly: true } : {}),
-    ...(feed === 'mine' && user?.id ? { authorId: user.id } : {}),
   };
-  const feedQuery = useInfiniteFeed(socialRepo, feedFilters, {
-    enabled: feed !== 'mine' || Boolean(user?.id),
-  });
+  const feedQuery = useInfiniteFeed(socialRepo, feedFilters, { enabled: feed !== 'mine' });
+  const myPostsQuery = useInfiniteMyPosts(socialRepo, parsedSearch.q, { enabled: feed === 'mine' });
   const { currentReward, enqueueReward, dismissCurrentReward } = useActionRewardQueue();
   const social = useSocialData(socialRepo, enqueueReward);
   const profile = useProfile(profileRepo);
@@ -37,7 +37,7 @@ export function SocialPage() {
     <MotionPage>
       <DashboardPageShell size="wide">
       <SocialTab
-        feedQuery={feedQuery}
+        feedQuery={feed === 'mine' ? myPostsQuery : feedQuery}
         feed={feed}
         onFeedChange={setFeed}
         tags={social.tags}

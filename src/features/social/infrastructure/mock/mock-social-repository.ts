@@ -35,6 +35,20 @@ export class MockSocialRepository implements ISocialRepository {
       .slice(offset, offset + limit);
   }
 
+  async getMyPosts(limit = 10, offset = 0, q?: string): Promise<Post[]> {
+    await delay(400);
+    const query = q?.trim().toLowerCase();
+
+    return this.posts
+      .map(withFollowState)
+      .filter((post) => {
+        if (post.authorId !== 'me') return false;
+        if (query && !post.text.toLowerCase().includes(query)) return false;
+        return true;
+      })
+      .slice(offset, offset + limit);
+  }
+
   async getPost(postId: string): Promise<Post> {
     await delay(250);
     const post = this.posts.find((p) => p.id === postId);
