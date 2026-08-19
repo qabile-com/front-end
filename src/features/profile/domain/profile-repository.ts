@@ -45,6 +45,7 @@ export interface MyProfile {
   isPhoneVerified?: boolean;
   email?: string | null;
   isEmailVerified?: boolean;
+  verified?: boolean;
   role?: string;
   isCompleteOnboarding?: boolean;
   securitySettings: ProfileSecuritySettings;
