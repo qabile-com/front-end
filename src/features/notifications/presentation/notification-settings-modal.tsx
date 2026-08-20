@@ -4,7 +4,11 @@ import { BaseModal, Icon, Toggle } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { showError } from '@/shared/lib/toast';
 import { getApiErrorMessage } from '@/core/api/api-error-message';
-import { useNotificationRegistration } from '../application/use-notification-registration';
+import {
+  clearStoredNotificationToken,
+  getStoredNotificationToken,
+  useNotificationRegistration,
+} from '../application/use-notification-registration';
 import {
   useMyPushTokenDevice,
   useRemovePushTokenDevice,
@@ -52,12 +56,16 @@ export function NotificationSettingsModal({ isOpen, onClose }: NotificationSetti
 
 function NotificationsSection() {
   const notifications = useNotificationRegistration();
-  const canQueryDevice = notifications.isSupported && notifications.permission === 'granted';
-  const deviceQuery = useMyPushTokenDevice({ enabled: canQueryDevice });
+  // The device-list fetch is async and can lag behind a register/disable action, so the
+  // toggle itself reflects the two synchronous signals we already have: browser permission
+  // and whether this browser holds a registered token. The device fetch only feeds the
+  // mode selector below, not the toggle's on/off state.
+  const hasStoredToken = Boolean(getStoredNotificationToken());
+  const isEnabled = notifications.isSupported && notifications.permission === 'granted' && hasStoredToken;
+  const deviceQuery = useMyPushTokenDevice({ enabled: isEnabled });
   const updateMode = useUpdatePushTokenMode();
   const removeDevice = useRemovePushTokenDevice();
   const device = deviceQuery.data;
-  const isEnabled = canQueryDevice && Boolean(device);
   const isToggling = notifications.isRegistering || removeDevice.isPending;
 
   const handleToggle = async (checked: boolean) => {
@@ -72,6 +80,7 @@ function NotificationsSection() {
       } else {
         await notifications.unregister();
       }
+      clearStoredNotificationToken();
     } catch (error) {
       showError(getApiErrorMessage(error, 'غیرفعال‌سازی اعلان‌ها انجام نشد.'));
     }

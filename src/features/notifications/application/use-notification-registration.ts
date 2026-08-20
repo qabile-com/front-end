@@ -22,6 +22,12 @@ export function getStoredNotificationToken() {
   return window.localStorage.getItem(TOKEN_STORAGE_KEY);
 }
 
+export function clearStoredNotificationToken() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+  window.localStorage.removeItem(TOKEN_USER_STORAGE_KEY);
+}
+
 export type NotificationAvailability =
   | 'loading'
   | 'requires-install'
