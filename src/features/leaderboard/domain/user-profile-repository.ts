@@ -17,6 +17,7 @@ export interface UserProfileData {
   role?: string;
   isAdam?: boolean;
   verified?: boolean;
+  rebirthCount?: number;
   followedByMe?: boolean;
   blockedByMe?: boolean;
   canFollow?: boolean;

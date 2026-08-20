@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
+  AuthorBadges,
   Icon,
   InlineSpinner,
-  OptionalImage,
   PostAttachmentImage,
   TruncatedPostText,
   UserAvatar,
@@ -165,7 +165,12 @@ export function PostCard({
               {post.isAdam ? (
                 <AdamAvatar className="size-11" />
               ) : (
-                <UserAvatar name={post.author} avatar={post.avatar} className="size-11 text-sm" />
+                <UserAvatar
+                  name={post.author}
+                  avatar={post.avatar}
+                  rebirthCount={post.rebirthCount}
+                  className="size-11 text-sm"
+                />
               )}
             </button>
             <div
@@ -177,20 +182,12 @@ export function PostCard({
             >
               <div className="mb-1 flex items-center gap-1.5">
                 <b className="truncate text-sm font-extrabold">{post.author}</b>
-                {post.verified && (
-                  <span className="relative inline-block size-6 shrink-0">
-                    <OptionalImage
-                      src="/assets/verified-user.webp"
-                      alt="verified"
-                      className="object-contain"
-                    />
-                  </span>
-                )}
-                {post.isAdam && (
-                  <span className="text-gold rounded-xs border border-[rgba(255,98,0,.18)] px-2 py-1 text-[10px] font-extrabold shadow-[0_4px_16px_-8px_rgba(255,98,0,.25)] [background:linear-gradient(135deg,rgba(255,98,0,.16),rgba(243,186,99,.08))]">
-                    موسس
-                  </span>
-                )}
+                <AuthorBadges
+                  verified={post.verified}
+                  isAdam={post.isAdam}
+                  rebirthCount={post.rebirthCount}
+                  className="flex shrink-0 items-center gap-1.5"
+                />
               </div>
               {(() => {
                 const username = formatUsername(post.authorUsername);

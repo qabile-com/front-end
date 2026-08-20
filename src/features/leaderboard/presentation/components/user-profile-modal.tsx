@@ -4,6 +4,7 @@
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
 import { toPersianDigits } from '@/core/lib/persian';
 import {
+  AuthorBadges,
   BaseModal,
   GlassCard,
   Button,
@@ -80,9 +81,22 @@ export function UserProfileModal({
         {/* Profile Info */}
         <div className="flex flex-col items-start px-6 pt-6">
           <div className="flex w-full items-baseline justify-start gap-4">
-            <UserAvatar name={user.name} avatar={user.avatar} className="size-20 text-2xl" />
+            <UserAvatar
+              name={user.name}
+              avatar={user.avatar}
+              rebirthCount={user.rebirthCount}
+              className="size-20 text-2xl"
+            />
             <div className="text-right">
-              <h2 className="text-ink text-2xl font-bold">{user.name}</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-ink text-2xl font-bold">{user.name}</h2>
+                <AuthorBadges
+                  verified={user.verified}
+                  isAdam={user.isAdam}
+                  rebirthCount={user.rebirthCount}
+                  className="flex shrink-0 items-center gap-1.5"
+                />
+              </div>
               {formatUsername(user.username) && (
                 <p className="text-ink-3 mt-1 text-sm font-bold">{formatUsername(user.username)}</p>
               )}

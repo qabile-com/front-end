@@ -40,6 +40,7 @@ export class HttpUserProfileRepository implements IUserProfileRepository {
       role: data.role,
       isAdam: data.isAdam,
       verified: data.verified,
+      rebirthCount: data.rebirthCount,
       followedByMe: data.followedByMe ?? data.isFollowedByMe,
       blockedByMe: data.blockedByMe,
       canFollow: data.canFollow,

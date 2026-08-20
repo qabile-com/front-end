@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useQueryClient } from '@tanstack/react-query';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import {
+  AuthorBadges,
   BaseModal,
   Icon,
   type IconName,
@@ -164,6 +165,7 @@ export function ProfileTab({
             <UserAvatar
               name={profile.name}
               avatar={profile.avatar}
+              rebirthCount={profile.rebirthCount}
               className="relative size-28 text-[46px] text-[#1a0a00] sm:size-24 sm:text-[34px]"
             >
               <span className="absolute -end-1 -bottom-1 grid size-11 place-items-center rounded-[18px] border-2 border-[#0e0806] text-sm font-extrabold text-[#1a0a00] [background:var(--fire-grad)] sm:size-8 sm:rounded-full sm:text-xs">
@@ -171,7 +173,14 @@ export function ProfileTab({
               </span>
             </UserAvatar>
             <div className="w-full flex-1 sm:w-auto">
-              <h2 className="text-[24px] font-black sm:text-[26px]">{profile.name}</h2>
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                <h2 className="text-[24px] font-black sm:text-[26px]">{profile.name}</h2>
+                <AuthorBadges
+                  verified={profile.verified}
+                  rebirthCount={profile.rebirthCount}
+                  className="flex shrink-0 items-center gap-1.5"
+                />
+              </div>
               {formatUsername(profile.username) && (
                 <p className="text-ink-3 mt-1 text-sm font-bold">
                   {formatUsername(profile.username)}

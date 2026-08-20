@@ -46,6 +46,7 @@ export interface MyProfile {
   email?: string | null;
   isEmailVerified?: boolean;
   verified?: boolean;
+  rebirthCount?: number;
   role?: string;
   isCompleteOnboarding?: boolean;
   securitySettings: ProfileSecuritySettings;

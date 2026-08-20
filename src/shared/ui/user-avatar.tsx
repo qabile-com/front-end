@@ -10,13 +10,22 @@ interface UserAvatarProps {
   avatar?: string | null;
   className?: string;
   imageClassName?: string;
+  rebirthCount?: number;
   children?: ReactNode;
 }
 
-export function UserAvatar({ name, avatar, className, imageClassName, children }: UserAvatarProps) {
+export function UserAvatar({
+  name,
+  avatar,
+  className,
+  imageClassName,
+  rebirthCount,
+  children,
+}: UserAvatarProps) {
   const isImage = Boolean(
     avatar && !avatar.startsWith('linear-gradient') && !avatar.startsWith('radial-gradient'),
   );
+  const hasRebirthRing = (rebirthCount ?? 0) >= 2;
 
   return (
     <span
@@ -26,6 +35,12 @@ export function UserAvatar({ name, avatar, className, imageClassName, children }
       )}
       style={{ background: isImage ? undefined : (avatar ?? undefined) }}
     >
+      {hasRebirthRing && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -inset-1 -z-10 rounded-full [background:var(--fire-grad)] shadow-[0_0_16px_3px_rgba(255,140,40,.7),0_0_4px_1px_rgba(255,200,120,.9)]"
+        />
+      )}
       {isImage && avatar ? (
         <OptionalImage src={avatar} alt={name} className={cn('rounded-full object-cover', imageClassName)} />
       ) : (

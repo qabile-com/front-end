@@ -138,18 +138,24 @@ export function SocialPostDetail({
           {post.isAdam ? (
             <AdamAvatar className="size-11" />
           ) : (
-            <UserAvatar name={post.author} avatar={post.avatar} className="size-11 text-sm" />
+            <UserAvatar
+              name={post.author}
+              avatar={post.avatar}
+              rebirthCount={post.rebirthCount}
+              className="size-11 text-sm"
+            />
           )}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-ink group-hover:text-gold truncate text-base font-black">
                 {post.author}
               </h1>
-              {post.isAdam && (
-                <span className="text-gold rounded-xs border border-[rgba(255,98,0,.18)] px-2 py-1 text-[10px] font-extrabold [background:linear-gradient(135deg,rgba(255,98,0,.16),rgba(243,186,99,.08))]">
-                  موسس
-                </span>
-              )}
+              <AuthorBadges
+                verified={post.verified}
+                isAdam={post.isAdam}
+                rebirthCount={post.rebirthCount}
+                className="flex shrink-0 items-center gap-1.5"
+              />
             </div>
             {formatUsername(post.authorUsername) && (
               <p className="text-ink-4 mt-1 truncate text-xs font-bold">
@@ -305,7 +311,12 @@ function PostCommentItem({
         className="size-9 shrink-0 rounded-full disabled:cursor-default"
         aria-label={`مشاهده پروفایل ${comment.name}`}
       >
-        <UserAvatar name={comment.name} avatar={comment.avatar} className="size-9 text-xs" />
+        <UserAvatar
+          name={comment.name}
+          avatar={comment.avatar}
+          rebirthCount={comment.rebirthCount}
+          className="size-9 text-xs"
+        />
       </button>
       <div className="min-w-0 flex-1 rounded-[16px] bg-black/20 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -322,6 +333,7 @@ function PostCommentItem({
               <AuthorBadges
                 verified={comment.verified}
                 isAdam={comment.isAdam}
+                rebirthCount={comment.rebirthCount}
                 className="flex shrink-0 items-center gap-1"
               />
             </span>

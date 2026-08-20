@@ -232,6 +232,7 @@ export function apiForumPostToDomain(api: ForumPostDto): Post {
     badge: author.role || api.badge,
     isAdam: author.isAdam ?? api.isAdam,
     verified: author.verified ?? api.verified,
+    rebirthCount: author.rebirthCount ?? api.rebirthCount,
     time: api.createdAt,
     text: api.text,
     achievement: api.achievement
@@ -287,6 +288,7 @@ function apiCommentToDomain(comment: ForumCommentDto): PostComment {
     badge: author?.role,
     isAdam: author?.isAdam,
     verified: author?.verified,
+    rebirthCount: author?.rebirthCount,
   };
 }
 
@@ -301,6 +303,7 @@ function apiUserToDomain(api: ForumUserDto): ActiveUser {
     avatar: api.avatar ?? FALLBACK_AVATAR,
     isAdam: api.isAdam,
     verified: api.verified,
+    rebirthCount: api.rebirthCount,
     followersCount: api.followersCount,
     followedByMe: api.followedByMe ?? api.isFollowedByMe,
     canFollow: api.canFollow,
@@ -322,6 +325,7 @@ function normalizeAuthor(api: ForumPostDto): ActiveUser {
     avatar: api.avatar ?? FALLBACK_AVATAR,
     isAdam: api.isAdam,
     verified: api.verified,
+    rebirthCount: api.rebirthCount,
   };
 }
 

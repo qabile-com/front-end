@@ -15,6 +15,7 @@ export interface ForumUserDto {
   avatar?: string | null;
   isAdam?: boolean;
   verified?: boolean;
+  rebirthCount?: number;
   followersCount?: number;
   followedByMe?: boolean;
   isFollowedByMe?: boolean;
@@ -66,6 +67,7 @@ export interface ForumPostDto {
   badge?: string;
   isAdam?: boolean;
   verified?: boolean;
+  rebirthCount?: number;
   createdAt: string;
   text: string;
   achievement?: {

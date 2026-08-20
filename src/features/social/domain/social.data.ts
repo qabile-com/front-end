@@ -11,6 +11,7 @@ export interface PostComment {
   badge?: string;
   isAdam?: boolean;
   verified?: boolean;
+  rebirthCount?: number;
 }
 
 export interface AchievementCard {
@@ -29,6 +30,7 @@ export interface Post {
   badge?: string;
   isAdam?: boolean;
   verified?: boolean;
+  rebirthCount?: number;
   time: string;
   text: string;
   achievement?: {
@@ -75,6 +77,7 @@ export interface ActiveUser {
   avatar: string;
   isAdam?: boolean;
   verified?: boolean;
+  rebirthCount?: number;
   followersCount?: number;
   followedByMe?: boolean;
   canFollow?: boolean;

@@ -172,12 +172,17 @@ export function ForumUserProfilePage() {
         <section className="border-hair overflow-hidden rounded-[28px] border bg-[var(--color-panel)] shadow-[0_30px_90px_-54px_var(--glow)]">
           <div className="border-hair flex flex-col gap-5 border-b p-5 sm:p-6">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <UserAvatar name={user.name} avatar={user.avatar} className="size-24 text-3xl" />
+              <UserAvatar
+                name={user.name}
+                avatar={user.avatar}
+                rebirthCount={user.rebirthCount}
+                className="size-24 text-3xl"
+              />
 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-ink text-2xl font-black">{user.name}</h1>
-                  {user.verified && (
+                  {(user.verified || (user.rebirthCount ?? 0) >= 1) && (
                     <span className="text-gold rounded-full border border-[rgba(243,186,99,.24)] px-2 py-1 text-[11px] font-black">
                       تایید شده
                     </span>

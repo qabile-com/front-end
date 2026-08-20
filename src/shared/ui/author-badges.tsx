@@ -3,15 +3,17 @@ import { OptionalImage } from './optional-image';
 interface AuthorBadgesProps {
   verified?: boolean;
   isAdam?: boolean;
+  rebirthCount?: number;
   className?: string;
 }
 
-export function AuthorBadges({ verified, isAdam, className }: AuthorBadgesProps) {
-  if (!verified && !isAdam) return null;
+export function AuthorBadges({ verified, isAdam, rebirthCount, className }: AuthorBadgesProps) {
+  const showVerifiedTick = Boolean(verified) || (rebirthCount ?? 0) >= 1;
+  if (!showVerifiedTick && !isAdam) return null;
 
   return (
     <span className={className}>
-      {verified && (
+      {showVerifiedTick && (
         <span className="relative inline-block size-4 shrink-0 align-middle">
           <OptionalImage src="/assets/verified-user.webp" alt="verified" className="object-contain" />
         </span>

@@ -268,6 +268,7 @@ export class HttpProfileRepository implements IProfileRepository {
       email: p.email,
       isEmailVerified: p.isEmailVerified,
       verified: p.verified,
+      rebirthCount: p.rebirthCount,
       role: p.role,
       isCompleteOnboarding: p.isCompleteOnboarding ?? false,
       securitySettings: { ...DEFAULT_SECURITY_SETTINGS, ...p.securitySettings },
