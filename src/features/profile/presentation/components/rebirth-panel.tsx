@@ -30,6 +30,11 @@ export function RebirthPanel({ repo }: RebirthPanelProps) {
   const [result, setResult] = useState<RebirthResult | null>(null);
 
   const handleConfirmRebirth = async () => {
+    const confirmedAgain = window.confirm(
+      'این آخرین هشدار است. با تایید، تولد دوباره برای همیشه انجام می‌شود و امکان بازگشت وجود ندارد. ادامه می‌دهی؟',
+    );
+    if (!confirmedAgain) return;
+
     try {
       const data = await performRebirth.mutateAsync();
       setResult(data);
@@ -98,15 +103,11 @@ export function RebirthPanel({ repo }: RebirthPanelProps) {
 
   return (
     <div className="mx-auto max-w-[560px] py-2 text-right">
-      <div className="flex items-center gap-3">
-        <span className="text-gold grid size-12 shrink-0 place-items-center rounded-2xl border border-[rgba(243,186,99,.24)] bg-black/25">
-          <Icon name="flame" size={22} />
-        </span>
-        <div>
-          <h3 className="text-ink text-[16px] font-black">تولد دوباره</h3>
-          <p className="text-ink-3 mt-0.5 text-[12.5px]">دریافت هویت واقعی و تأییدشده در قبیله</p>
-        </div>
-      </div>
+      <h3 className="text-ink text-center text-[19px] font-black">تولد دوباره</h3>
+      <p className="text-ink-2 mt-2 text-center text-[13px] leading-7">
+        این سیستم برای کسانی طراحی شده که می‌خواهند هویت واقعی و تأییدشده‌ای در قبیله داشته باشند.
+        با فدا کردن پیشرفت فعلی‌ات، برای همیشه هویت تأییدشده دریافت می‌کنی.
+      </p>
 
       <div className="mt-5 rounded-2xl border border-[rgba(255,98,0,.18)] bg-[rgba(255,98,0,.06)] p-4">
         <div className="flex items-center justify-between">

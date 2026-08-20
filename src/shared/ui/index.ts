@@ -13,6 +13,7 @@ export { Eyebrow } from './eyebrow';
 export { SectionHead } from './section-head';
 export { Input } from './input';
 export { InlineSpinner } from './inline-spinner';
+export { Toggle } from './toggle';
 export { PhoenixArt } from './phoenix-art';
 export { LandingPhoenix } from './landing-phoenix';
 export { OptionalImage } from './optional-image';

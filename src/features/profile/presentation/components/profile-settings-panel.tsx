@@ -11,9 +11,8 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
-import { BaseModal, Icon, type IconName } from '@/shared/ui';
+import { BaseModal, Icon, Toggle, type IconName } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
-import { toPersianDigits } from '@/core/lib/persian';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type {
   IProfileRepository,
@@ -27,15 +26,8 @@ import {
   useVerifyPasswordChangeCode,
 } from '../../application/use-profile-settings';
 import { getApiErrorMessage } from '@/core/api/api-error-message';
-import { useNotificationRegistration } from '@/features/notifications/application/use-notification-registration';
-import {
-  useMyPushTokenDevice,
-  useUpdatePushTokenMode,
-} from '@/features/notifications/application/use-push-notification-mode';
-import type { PushNotificationMode } from '@/core/api/users.api';
-import { RebirthPanel } from './rebirth-panel';
 
-type SettingsScreen = 'settings' | 'password-email' | 'password-code' | 'password-new' | 'rebirth';
+type SettingsScreen = 'settings' | 'password-email' | 'password-code' | 'password-new';
 
 interface ProfileSettingsPanelProps {
   profile: MyProfile;
@@ -203,11 +195,8 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
             isBusy={isBusy}
             onToggle={handleToggle}
             onPassword={() => setScreen('password-email')}
-            onRebirth={() => setScreen('rebirth')}
           />
         )}
-
-        {screen === 'rebirth' && <RebirthPanel repo={repo} />}
 
         {screen === 'password-email' && (
           <SingleInputStep
@@ -290,13 +279,11 @@ function SettingsMain({
   isBusy,
   onToggle,
   onPassword,
-  onRebirth,
 }: {
   profile: MyProfile;
   isBusy: boolean;
   onToggle: (field: ProfileSettingField, value: boolean) => void;
   onPassword: () => void;
-  onRebirth: () => void;
 }) {
   return (
     <div className="mx-auto w-full max-w-[620px]">
@@ -319,115 +306,6 @@ function SettingsMain({
           <InfoRow title="ایمیل حساب" value={profile.email ?? 'ایمیلی ثبت نشده است'} icon="mail" />
         </div>
       </div>
-
-      <h3 className="mt-6 mb-4 text-right text-[15px] font-black">اعلان‌ها</h3>
-      <div className="rounded-[16px] border border-[rgba(255,98,0,.16)] bg-[rgba(255,98,0,.035)] p-2 sm:p-3">
-        <NotificationsSection />
-      </div>
-
-      <h3 className="mt-6 mb-4 text-right text-[15px] font-black">تولد دوباره</h3>
-      <button
-        type="button"
-        onClick={onRebirth}
-        className="flex min-h-15 w-full items-center gap-3 rounded-[16px] border border-[rgba(255,98,0,.18)] bg-[rgba(255,98,0,.035)] px-3.5 py-3 text-right transition-colors hover:border-[rgba(255,98,0,.3)]"
-      >
-        <span className="text-gold grid size-10 shrink-0 place-items-center rounded-[12px] border border-[rgba(243,186,99,.24)] bg-black/25">
-          <Icon name="flame" size={18} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <b className="text-ink block text-[13px] font-black">تولد دوباره و دریافت تیک تأیید هویت</b>
-          <span className="text-ink-3 mt-1 block text-[11px] leading-5">
-            {(profile.rebirthCount ?? 0) >= 1
-              ? `سطح تولد دوباره فعلی: ${toPersianDigits(profile.rebirthCount ?? 0)}`
-              : 'با فدا کردن پیشرفتت، هویت خود را برای همیشه تأیید کن'}
-          </span>
-        </span>
-        <Icon name="arrow-left" size={16} className="text-ink-3 shrink-0" />
-      </button>
-    </div>
-  );
-}
-
-const NOTIFICATION_MODE_OPTIONS: { mode: PushNotificationMode; label: string; description: string }[] = [
-  { mode: 'all', label: 'همه', description: 'دریافت تمام اعلان‌ها' },
-  { mode: 'medium', label: 'متوسط', description: 'دریافت اعلان‌های مهم‌تر' },
-  { mode: 'weak', label: 'کم', description: 'فقط اعلان‌های ضروری' },
-];
-
-function NotificationsSection() {
-  const notifications = useNotificationRegistration();
-  const isEnabled = notifications.isSupported && notifications.permission === 'granted';
-  const deviceQuery = useMyPushTokenDevice({ enabled: isEnabled });
-  const updateMode = useUpdatePushTokenMode();
-  const device = deviceQuery.data;
-
-  const handleToggle = async (checked: boolean) => {
-    if (checked) {
-      await notifications.register();
-    } else {
-      await notifications.unregister();
-    }
-  };
-
-  const handleModeChange = (mode: PushNotificationMode) => {
-    if (!device || device.notificationMode === mode) return;
-    updateMode.mutate({ tokenId: device.id, mode });
-  };
-
-  if (!notifications.isSupported) {
-    return (
-      <p className="text-ink-3 px-1 py-2 text-[11.5px] leading-6">
-        {notifications.availability === 'requires-install'
-          ? 'برای فعال‌سازی اعلان‌ها، ابتدا قبیله را روی صفحه اصلی گوشی نصب کن.'
-          : 'اعلان‌ها روی این مرورگر یا دستگاه پشتیبانی نمی‌شود.'}
-      </p>
-    );
-  }
-
-  return (
-    <div className="grid gap-2">
-      <div className="grid min-h-13 w-full min-w-0 grid-cols-[32px_minmax(0,1fr)] items-start gap-x-2 gap-y-2 rounded-[9px] border border-[rgba(255,98,0,.12)] bg-[rgba(255,98,0,.08)] px-2.5 py-2.5 sm:grid-cols-[36px_minmax(0,1fr)_44px] sm:items-center sm:gap-3 sm:px-3 sm:py-2">
-        <span className="text-gold grid size-8 shrink-0 place-items-center rounded-[8px] bg-[rgba(243,186,99,.08)] sm:size-9">
-          <Icon name="bell" size={17} />
-        </span>
-        <div className="min-w-0 flex-1 text-right">
-          <b className="block text-[12.5px] font-black">اعلان‌های فوری</b>
-          <span className="text-ink-3 mt-1 block text-[10.5px] leading-5 sm:truncate">
-            یادآوری کورس‌ها، پاداش‌ها و خبرهای مهم قبیله
-          </span>
-        </div>
-        <div className="col-span-2 flex justify-end sm:col-span-1 sm:block">
-          <Toggle checked={isEnabled} disabled={notifications.isRegistering} onChange={handleToggle} />
-        </div>
-      </div>
-
-      {isEnabled && device && (
-        <div className="rounded-[9px] border border-[rgba(255,98,0,.12)] bg-[rgba(255,98,0,.08)] px-2.5 py-2.5 sm:px-3">
-          <b className="block text-right text-[12px] font-black">میزان دریافت اعلان</b>
-          <div className="mt-2.5 grid grid-cols-3 gap-1.5">
-            {NOTIFICATION_MODE_OPTIONS.map((option) => (
-              <button
-                key={option.mode}
-                type="button"
-                disabled={updateMode.isPending}
-                onClick={() => handleModeChange(option.mode)}
-                className={cn(
-                  'rounded-[7px] border px-1.5 py-2 text-center text-[11px] font-black transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-                  device.notificationMode === option.mode
-                    ? 'border-ember text-[#1a0a00] [background:var(--fire-grad)]'
-                    : 'border-hair text-ink-2 hover:border-hair-2',
-                )}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-          <p className="text-ink-3 mt-2 text-right text-[10.5px] leading-5">
-            {NOTIFICATION_MODE_OPTIONS.find((option) => option.mode === device.notificationMode)
-              ?.description ?? ''}
-          </p>
-        </div>
-      )}
     </div>
   );
 }
@@ -458,39 +336,6 @@ function SettingToggleRow({
         <Toggle checked={checked} disabled={disabled} onChange={onChange} />
       </div>
     </div>
-  );
-}
-
-function Toggle({
-  checked,
-  disabled,
-  onChange,
-}: {
-  checked: boolean;
-  disabled: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className={cn(
-        'relative h-7 w-11 shrink-0 justify-self-end rounded-[8px] border transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-        checked
-          ? 'border-ember bg-[linear-gradient(90deg,var(--color-ember),var(--color-gold))]'
-          : 'border-hair bg-black/70',
-      )}
-    >
-      <span
-        className={cn(
-          'absolute top-1 size-5 rounded-[5px] bg-white shadow-[0_6px_12px_-8px_black] transition-[left,right]',
-          checked ? 'right-1' : 'left-1',
-        )}
-      />
-    </button>
   );
 }
 

@@ -21,6 +21,8 @@ import { showError, showSuccess } from '@/shared/lib/toast';
 import { Panel } from '@/shared/ui';
 import { useLogout } from '@/features/auth/application/use-auth-guard';
 import { ProfileSettingsPanel } from '../components/profile-settings-panel';
+import { RebirthModal } from '../components/rebirth-modal';
+import { NotificationSettingsModal } from '@/features/notifications/presentation/notification-settings-modal';
 import { AchievementModal } from '../components/achievement-modal';
 import { AchievementsGrid } from '../components/achievements-grid';
 import { getAchievementKey, sortAchievementsByUnlocked } from '../components/achievement-helpers';
@@ -75,6 +77,8 @@ export function ProfileTab({
   const [selectedAchievementKey, setSelectedAchievementKey] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ProfileBottomTab>('posts');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isNotificationSettingsOpen, setIsNotificationSettingsOpen] = useState(false);
+  const [isRebirthOpen, setIsRebirthOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(initialEditProfileOpen);
   const [isSharePostOpen, setIsSharePostOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -238,6 +242,8 @@ export function ProfileTab({
             <ProfileSettingsTab
               onOpenSettings={() => setIsSettingsOpen(true)}
               onEditProfile={() => setIsEditProfileOpen(true)}
+              onNotificationSettings={() => setIsNotificationSettingsOpen(true)}
+              onRebirth={() => setIsRebirthOpen(true)}
               onLogout={logout}
             />
           )}
@@ -292,6 +298,17 @@ export function ProfileTab({
           />
         </BaseModal>
       )}
+
+      <NotificationSettingsModal
+        isOpen={isNotificationSettingsOpen}
+        onClose={() => setIsNotificationSettingsOpen(false)}
+      />
+
+      <RebirthModal
+        isOpen={isRebirthOpen}
+        onClose={() => setIsRebirthOpen(false)}
+        repo={profileRepo}
+      />
 
       {isEditProfileOpen && (
         <BaseModal
@@ -643,10 +660,14 @@ function sortPinnedFirst<T extends { isPinned?: boolean }>(posts: T[]) {
 function ProfileSettingsTab({
   onOpenSettings,
   onEditProfile,
+  onNotificationSettings,
+  onRebirth,
   onLogout,
 }: {
   onOpenSettings: () => void;
   onEditProfile: () => void;
+  onNotificationSettings: () => void;
+  onRebirth: () => void;
   onLogout: () => void;
 }) {
   return (
@@ -660,9 +681,21 @@ function ProfileSettingsTab({
         />
         <ProfileActionButton
           title="تنظیمات حساب"
-          description="امنیت، اعلان‌ها و تغییر رمز عبور"
+          description="امنیت و تغییر رمز عبور"
           icon="settings"
           onClick={onOpenSettings}
+        />
+        <ProfileActionButton
+          title="تنظیمات اعلان‌ها"
+          description="روشن یا خاموش کردن و سطح اعلان‌ها"
+          icon="bell"
+          onClick={onNotificationSettings}
+        />
+        <ProfileActionButton
+          title="تولد دوباره"
+          description="دریافت تیک تأیید هویت دائمی"
+          icon="flame"
+          onClick={onRebirth}
         />
       </div>
 
