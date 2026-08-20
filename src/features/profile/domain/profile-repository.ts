@@ -98,6 +98,37 @@ export interface PaginatedXpHistory {
   offset: number;
 }
 
+export interface RebirthRuleSummary {
+  rebirthNumber: number;
+  title: string;
+  requiredXp: number;
+  isActive: boolean;
+}
+
+export interface RebirthStatus {
+  rebirthCount: number;
+  maxRebirthCount: number;
+  verified: boolean;
+  rebirthVerifiedAt?: string | null;
+  canRebirth: boolean;
+  maxReached: boolean;
+  requiredXp?: number | null;
+  currentXp: number;
+  xpShortage?: number | null;
+  nextRule?: RebirthRuleSummary | null;
+}
+
+export interface RebirthResult {
+  rebirthCount: number;
+  verified: boolean;
+  rebirthVerifiedAt: string;
+  completedRebirthNumber: number;
+  burnedXp: number;
+  requiredXp: number;
+  nextAvailableRebirthNumber?: number | null;
+  maxRebirthCount: number;
+}
+
 export interface IProfileRepository {
   getMyProfile(): Promise<MyProfile>;
   getXpHistory(
@@ -125,6 +156,8 @@ export interface IProfileRepository {
   ): Promise<void>;
   claimAchievement(achievementId: string): Promise<AchievementClaimResult>;
   getMyAchievements(options?: { signal?: AbortSignal }): Promise<Achievement[]>;
+  getRebirthStatus(options?: { signal?: AbortSignal }): Promise<RebirthStatus>;
+  performRebirth(): Promise<RebirthResult>;
 }
 
 export interface AchievementClaimResult {

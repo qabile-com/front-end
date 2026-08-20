@@ -1,11 +1,35 @@
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   IProfileRepository,
   MyProfile,
   ProfileSettingField,
 } from '../domain/profile-repository';
+
+export const rebirthStatusQueryKey = ['profile', 'rebirth-status'] as const;
+
+export function useRebirthStatus(repo: IProfileRepository) {
+  return useQuery({
+    queryKey: rebirthStatusQueryKey,
+    queryFn: ({ signal }) => repo.getRebirthStatus({ signal }),
+    staleTime: 15_000,
+  });
+}
+
+export function usePerformRebirth(repo: IProfileRepository) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => repo.performRebirth(),
+    meta: { skipGlobalErrorToast: true },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: rebirthStatusQueryKey });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'user', 'current'] });
+    },
+  });
+}
 
 export function useUpdateProfileSetting(repo: IProfileRepository) {
   const queryClient = useQueryClient();

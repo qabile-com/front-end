@@ -6,7 +6,9 @@ import {
   deleteMyAccount,
   deleteMyProfileAvatar,
   getMyProfile,
+  getMyRebirthStatus,
   getMyXpHistory,
+  performMyRebirth,
   requestPasswordChangeCode,
   requestEmailVerification,
   requestPhoneChangeCode,
@@ -25,6 +27,8 @@ import type {
   ProfileStats,
   ProfileSecuritySettings,
   ProfileSettingField,
+  RebirthResult,
+  RebirthStatus,
   UpdateProfileInput,
   VerificationResult,
   XpHistoryItem,
@@ -240,6 +244,16 @@ export class HttpProfileRepository implements IProfileRepository {
       unlocked: data.unlocked ?? false,
       reward: data.unlocked ? normalizeActionRewardResult({ unlockedAchievements: [data] }) : null,
     };
+  }
+
+  async getRebirthStatus(options?: { signal?: AbortSignal }): Promise<RebirthStatus> {
+    const res = await getMyRebirthStatus(options);
+    return res.data.data;
+  }
+
+  async performRebirth(): Promise<RebirthResult> {
+    const res = await performMyRebirth();
+    return res.data.data;
   }
 
   private normalizeProfile(p: MyProfileDto, rewardPayload?: unknown): MyProfile {

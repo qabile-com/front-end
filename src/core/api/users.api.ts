@@ -111,6 +111,45 @@ export const verifyPhoneChangeCode = (currentPhone: string, code: string) =>
 export const confirmPhoneChange = (newPhone: string, verificationToken: string) =>
   httpClient.patch('/api/v1/users/me/phone', { newPhone, verificationToken });
 
+export interface RebirthRuleSummaryDto {
+  rebirthNumber: number;
+  title: string;
+  requiredXp: number;
+  isActive: boolean;
+}
+
+export interface RebirthStatusDto {
+  rebirthCount: number;
+  maxRebirthCount: number;
+  verified: boolean;
+  rebirthVerifiedAt?: string | null;
+  canRebirth: boolean;
+  maxReached: boolean;
+  requiredXp?: number | null;
+  currentXp: number;
+  xpShortage?: number | null;
+  nextRule?: RebirthRuleSummaryDto | null;
+}
+
+export interface RebirthResultDto {
+  rebirthCount: number;
+  verified: boolean;
+  rebirthVerifiedAt: string;
+  completedRebirthNumber: number;
+  burnedXp: number;
+  requiredXp: number;
+  nextAvailableRebirthNumber?: number | null;
+  maxRebirthCount: number;
+}
+
+export const getMyRebirthStatus = (options?: { signal?: AbortSignal }) =>
+  httpClient.get<{ data: RebirthStatusDto }>('/api/v1/users/me/rebirth', {
+    signal: options?.signal,
+  });
+
+export const performMyRebirth = () =>
+  httpClient.post<{ success: boolean; data: RebirthResultDto }>('/api/v1/users/me/rebirth');
+
 export const requestPasswordChangeCode = (email: string) =>
   httpClient.post('/api/v1/users/me/password-change/request', { email });
 

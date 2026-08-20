@@ -461,6 +461,41 @@ export class MockProfileRepository implements IProfileRepository {
     const profile = await this.getMyProfile();
     return profile.achievements;
   }
+
+  async getRebirthStatus() {
+    await delay(200);
+    const profile = await this.getMyProfile();
+    const requiredXp = 100000;
+
+    return {
+      rebirthCount: 0,
+      maxRebirthCount: 3,
+      verified: Boolean(profile.verified),
+      rebirthVerifiedAt: null,
+      canRebirth: profile.xp >= requiredXp,
+      maxReached: false,
+      requiredXp,
+      currentXp: profile.xp,
+      xpShortage: Math.max(0, requiredXp - profile.xp),
+      nextRule: { rebirthNumber: 1, title: 'Rebirth #1', requiredXp, isActive: true },
+    };
+  }
+
+  async performRebirth() {
+    await delay(300);
+    const profile = await this.getMyProfile();
+
+    return {
+      rebirthCount: 1,
+      verified: true,
+      rebirthVerifiedAt: new Date().toISOString(),
+      completedRebirthNumber: 1,
+      burnedXp: profile.xp,
+      requiredXp: 100000,
+      nextAvailableRebirthNumber: 2,
+      maxRebirthCount: 3,
+    };
+  }
 }
 
 // ---------- User Detail Repository (for modal) ----------

@@ -13,6 +13,7 @@ import {
 } from 'react';
 import { BaseModal, Icon, type IconName } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
+import { toPersianDigits } from '@/core/lib/persian';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type {
   IProfileRepository,
@@ -32,8 +33,9 @@ import {
   useUpdatePushTokenMode,
 } from '@/features/notifications/application/use-push-notification-mode';
 import type { PushNotificationMode } from '@/core/api/users.api';
+import { RebirthPanel } from './rebirth-panel';
 
-type SettingsScreen = 'settings' | 'password-email' | 'password-code' | 'password-new';
+type SettingsScreen = 'settings' | 'password-email' | 'password-code' | 'password-new' | 'rebirth';
 
 interface ProfileSettingsPanelProps {
   profile: MyProfile;
@@ -201,8 +203,11 @@ export function ProfileSettingsPanel({ profile, repo, onClose }: ProfileSettings
             isBusy={isBusy}
             onToggle={handleToggle}
             onPassword={() => setScreen('password-email')}
+            onRebirth={() => setScreen('rebirth')}
           />
         )}
+
+        {screen === 'rebirth' && <RebirthPanel repo={repo} />}
 
         {screen === 'password-email' && (
           <SingleInputStep
@@ -285,11 +290,13 @@ function SettingsMain({
   isBusy,
   onToggle,
   onPassword,
+  onRebirth,
 }: {
   profile: MyProfile;
   isBusy: boolean;
   onToggle: (field: ProfileSettingField, value: boolean) => void;
   onPassword: () => void;
+  onRebirth: () => void;
 }) {
   return (
     <div className="mx-auto w-full max-w-[620px]">
@@ -317,6 +324,26 @@ function SettingsMain({
       <div className="rounded-[16px] border border-[rgba(255,98,0,.16)] bg-[rgba(255,98,0,.035)] p-2 sm:p-3">
         <NotificationsSection />
       </div>
+
+      <h3 className="mt-6 mb-4 text-right text-[15px] font-black">تولد دوباره</h3>
+      <button
+        type="button"
+        onClick={onRebirth}
+        className="flex min-h-15 w-full items-center gap-3 rounded-[16px] border border-[rgba(255,98,0,.18)] bg-[rgba(255,98,0,.035)] px-3.5 py-3 text-right transition-colors hover:border-[rgba(255,98,0,.3)]"
+      >
+        <span className="text-gold grid size-10 shrink-0 place-items-center rounded-[12px] border border-[rgba(243,186,99,.24)] bg-black/25">
+          <Icon name="flame" size={18} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <b className="text-ink block text-[13px] font-black">تولد دوباره و دریافت تیک تأیید هویت</b>
+          <span className="text-ink-3 mt-1 block text-[11px] leading-5">
+            {profile.verified
+              ? `سطح تولد دوباره فعلی: ${toPersianDigits(profile.rebirthCount ?? 0)}`
+              : 'با فدا کردن پیشرفتت، هویت خود را برای همیشه تأیید کن'}
+          </span>
+        </span>
+        <Icon name="arrow-left" size={16} className="text-ink-3 shrink-0" />
+      </button>
     </div>
   );
 }
