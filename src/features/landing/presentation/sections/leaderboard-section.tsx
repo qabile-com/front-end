@@ -1,4 +1,4 @@
-import { Container, GlassCard, Icon, OptionalImage, Reveal, SectionHead } from '@/shared/ui';
+import { Container, GlassCard, Icon, Reveal, SectionHead, UserAvatar } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
 import { cn } from '@/core/lib/cn';
 import type { PodiumPlace, LeaderboardRow } from '../../domain/landing.types';
@@ -47,14 +47,15 @@ export function LeaderboardSection({ podium, leaderboard }: LeaderboardSectionPr
                 >
                   {toPersianDigits(place.rank)}
                 </span>
-                <span
+                <UserAvatar
+                  name={place.name}
+                  avatar={place.avatar}
                   className={cn(
-                    'mx-auto block rounded-full',
+                    'mx-auto text-lg',
                     first
                       ? 'size-[78px] border-2 border-[rgba(243,186,99,.6)]'
                       : 'border-hair-2 size-16 border',
                   )}
-                  style={{ background: place.avatar }}
                 />
                 <p className="mt-3 text-[15px] font-extrabold">{place.name}</p>
                 <div className="flex items-center justify-center gap-1">
@@ -105,10 +106,7 @@ export function LeaderboardSection({ podium, leaderboard }: LeaderboardSectionPr
                 >
                   {toPersianDigits(row.rank)}
                 </span>
-                <span
-                  className="size-[38px] shrink-0 rounded-full"
-                  style={{ background: row.avatar }}
-                />
+                <UserAvatar name={row.name} avatar={row.avatar} className="size-[38px] shrink-0 text-xs" />
                 <span className="leading-tight">
                   <b className="text-sm font-bold">{row.name}</b>
                   <small
