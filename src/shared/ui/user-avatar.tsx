@@ -27,24 +27,33 @@ export function UserAvatar({
   );
   const hasRebirthRing = (rebirthCount ?? 0) >= 2;
 
+  const fallbackBackground = isImage ? undefined : (avatar ?? undefined);
+  const avatarContent =
+    isImage && avatar ? (
+      <OptionalImage src={avatar} alt={name} className={cn('rounded-full object-cover', imageClassName)} />
+    ) : (
+      getAvatarInitial(name)
+    );
+
   return (
     <span
       className={cn(
         'relative grid shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,#cc4308,#ff6200,#f3ba63)] font-black text-white',
         className,
       )}
-      style={{ background: isImage ? undefined : (avatar ?? undefined) }}
+      style={!hasRebirthRing ? { background: fallbackBackground } : undefined}
     >
-      {hasRebirthRing && (
-        <span
-          aria-hidden
-          className="pointer-events-none absolute -inset-1 -z-10 rounded-full [background:var(--fire-grad)] shadow-[0_0_16px_3px_rgba(255,140,40,.7),0_0_4px_1px_rgba(255,200,120,.9)]"
-        />
-      )}
-      {isImage && avatar ? (
-        <OptionalImage src={avatar} alt={name} className={cn('rounded-full object-cover', imageClassName)} />
+      {hasRebirthRing ? (
+        <span className="absolute inset-0 grid place-items-center rounded-full p-[2.5px] [background:var(--fire-grad)] shadow-[0_0_14px_2px_rgba(255,140,40,.65)]">
+          <span
+            className="relative grid size-full place-items-center overflow-hidden rounded-full"
+            style={{ background: fallbackBackground }}
+          >
+            {avatarContent}
+          </span>
+        </span>
       ) : (
-        getAvatarInitial(name)
+        avatarContent
       )}
       {children}
     </span>
