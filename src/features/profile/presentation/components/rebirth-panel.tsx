@@ -104,6 +104,10 @@ export function RebirthPanel({ repo }: RebirthPanelProps) {
 
   const requiredXp = status.requiredXp ?? status.nextRule?.requiredXp ?? 0;
   const xpProgress = requiredXp > 0 ? Math.min(100, (status.currentXp / requiredXp) * 100) : 0;
+  // Backend's canRebirth is authoritative, but cross-check the raw XP numbers too -
+  // don't enable the button on a bare flag alone for an action this consequential.
+  const hasEnoughXp = requiredXp === 0 || status.currentXp >= requiredXp;
+  const canStartRebirth = status.canRebirth && hasEnoughXp;
 
   return (
     <div className="mx-auto max-w-[560px] py-2 text-right">
@@ -134,9 +138,10 @@ export function RebirthPanel({ repo }: RebirthPanelProps) {
         </div>
         <div className="text-ink-3 mt-2 flex items-center justify-between text-[11px] font-bold">
           <span>آتش فعلی: {toPersianDigits(status.currentXp)}</span>
-          {!status.canRebirth && status.xpShortage ? (
+          {!hasEnoughXp ? (
             <span className="text-danger">
-              {toPersianDigits(status.xpShortage)} آتش دیگر لازم داری
+              {toPersianDigits(status.xpShortage ?? Math.max(0, requiredXp - status.currentXp))} آتش
+              دیگر لازم داری
             </span>
           ) : null}
         </div>
@@ -163,7 +168,7 @@ export function RebirthPanel({ repo }: RebirthPanelProps) {
 
       <button
         type="button"
-        disabled={!status.canRebirth}
+        disabled={!canStartRebirth}
         onClick={() => setIsConfirming(true)}
         className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-gradient-to-l from-[#cc4308] to-[#ff6200] text-[13.5px] font-black text-white shadow-[0_18px_40px_-22px_var(--glow)] transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
       >
