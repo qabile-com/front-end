@@ -66,17 +66,17 @@ function BrightFireIcon({ className }: { className?: string }) {
   );
 }
 
-function StreakWeekProgress({ streak }: { streak: number }) {
+// Per-day completion for the current week, as reported by the backend. Not sent by any
+// endpoint yet - StreakSuccessModal only renders this row once real data is available.
+function StreakWeekProgress({ completedDays }: { completedDays: boolean[] }) {
   const todayIndex = (new Date().getDay() + 1) % 7;
-  const litCount = Math.max(0, Math.min(streak, todayIndex + 1));
-  const firstLitIndex = todayIndex - litCount + 1;
 
   return (
     <div dir="rtl" className="mt-5 flex items-start justify-between">
       {WEEK_DAY_LABELS.map((label, index) => {
         const isToday = index === todayIndex;
-        const isLit = index >= firstLitIndex && index <= todayIndex;
-        const isNextLit = index < WEEK_DAY_LABELS.length - 1 && isLit && index + 1 <= todayIndex;
+        const isLit = Boolean(completedDays[index]);
+        const isNextLit = index < WEEK_DAY_LABELS.length - 1 && isLit && Boolean(completedDays[index + 1]);
 
         return (
           <div key={label} className="flex flex-1 flex-col items-center gap-1.5">
@@ -121,6 +121,8 @@ interface StreakSuccessModalProps {
   streak: number;
   freezesRemaining?: number;
   freezeUsed?: boolean;
+  /** Per-day completion for the current week. Omit until the backend sends real day-level data. */
+  weekProgress?: boolean[] | null;
   onClose: () => void;
 }
 
@@ -129,6 +131,7 @@ export function StreakSuccessModal({
   streak,
   freezesRemaining,
   freezeUsed = false,
+  weekProgress,
   onClose,
 }: StreakSuccessModalProps) {
   return (
@@ -154,7 +157,9 @@ export function StreakSuccessModal({
           زنجیره‌ات به {toPersianDigits(streak)} روز رسید.
         </h3>
 
-        <StreakWeekProgress streak={streak} />
+        {weekProgress && weekProgress.length === 7 && (
+          <StreakWeekProgress completedDays={weekProgress} />
+        )}
 
         {(freezeUsed || typeof freezesRemaining === 'number') && (
           <p className="text-ink-3 mt-3 text-[12px] leading-6">
