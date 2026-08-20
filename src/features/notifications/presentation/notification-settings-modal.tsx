@@ -114,7 +114,7 @@ function NotificationsSection() {
           </span>
         </div>
         <div className="col-span-2 flex justify-end sm:col-span-1 sm:block">
-          <Toggle checked={isEnabled} disabled={isToggling} onChange={handleToggle} />
+          <Toggle checked={isEnabled} isLoading={isToggling} onChange={handleToggle} />
         </div>
       </div>
 
