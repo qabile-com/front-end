@@ -82,6 +82,9 @@ export const updateMyPushTokenMode = (tokenId: string, notificationMode: PushNot
     { notificationMode },
   );
 
+export const deleteMyPushTokenById = (tokenId: string) =>
+  httpClient.delete<{ success: boolean }>(`/api/v1/users/me/push-tokens/${tokenId}`);
+
 export const requestEmailVerification = (email: string) =>
   httpClient.post('/api/v1/users/me/email/verification/request', { email });
 

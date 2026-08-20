@@ -2,8 +2,14 @@
 
 import { BaseModal, Icon, Toggle } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
+import { showError } from '@/shared/lib/toast';
+import { getApiErrorMessage } from '@/core/api/api-error-message';
 import { useNotificationRegistration } from '../application/use-notification-registration';
-import { useMyPushTokenDevice, useUpdatePushTokenMode } from '../application/use-push-notification-mode';
+import {
+  useMyPushTokenDevice,
+  useRemovePushTokenDevice,
+  useUpdatePushTokenMode,
+} from '../application/use-push-notification-mode';
 import type { PushNotificationMode } from '@/core/api/users.api';
 
 const NOTIFICATION_MODE_OPTIONS: { mode: PushNotificationMode; label: string; description: string }[] = [
@@ -46,16 +52,28 @@ export function NotificationSettingsModal({ isOpen, onClose }: NotificationSetti
 
 function NotificationsSection() {
   const notifications = useNotificationRegistration();
-  const isEnabled = notifications.isSupported && notifications.permission === 'granted';
-  const deviceQuery = useMyPushTokenDevice({ enabled: isEnabled });
+  const canQueryDevice = notifications.isSupported && notifications.permission === 'granted';
+  const deviceQuery = useMyPushTokenDevice({ enabled: canQueryDevice });
   const updateMode = useUpdatePushTokenMode();
+  const removeDevice = useRemovePushTokenDevice();
   const device = deviceQuery.data;
+  const isEnabled = canQueryDevice && Boolean(device);
+  const isToggling = notifications.isRegistering || removeDevice.isPending;
 
   const handleToggle = async (checked: boolean) => {
     if (checked) {
       await notifications.register();
-    } else {
-      await notifications.unregister();
+      return;
+    }
+
+    try {
+      if (device) {
+        await removeDevice.mutateAsync(device.id);
+      } else {
+        await notifications.unregister();
+      }
+    } catch (error) {
+      showError(getApiErrorMessage(error, 'غیرفعال‌سازی اعلان‌ها انجام نشد.'));
     }
   };
 
@@ -81,13 +99,13 @@ function NotificationsSection() {
           <Icon name="bell" size={17} />
         </span>
         <div className="min-w-0 flex-1 text-right">
-          <b className="block text-[12.5px] font-black">اعلان‌های فوری</b>
+          <b className="block text-[12.5px] font-black">اعلان‌ها</b>
           <span className="text-ink-3 mt-1 block text-[10.5px] leading-5 sm:truncate">
             یادآوری کورس‌ها، پاداش‌ها و خبرهای مهم قبیله
           </span>
         </div>
         <div className="col-span-2 flex justify-end sm:col-span-1 sm:block">
-          <Toggle checked={isEnabled} disabled={notifications.isRegistering} onChange={handleToggle} />
+          <Toggle checked={isEnabled} disabled={isToggling} onChange={handleToggle} />
         </div>
       </div>
 

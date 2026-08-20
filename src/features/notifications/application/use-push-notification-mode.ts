@@ -1,7 +1,12 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getMyPushTokens, updateMyPushTokenMode, type PushNotificationMode } from '@/core/api/users.api';
+import {
+  deleteMyPushTokenById,
+  getMyPushTokens,
+  updateMyPushTokenMode,
+  type PushNotificationMode,
+} from '@/core/api/users.api';
 import { getStoredNotificationToken } from './use-notification-registration';
 
 export function useMyPushTokenDevice(options?: { enabled?: boolean }) {
@@ -24,6 +29,17 @@ export function useUpdatePushTokenMode() {
   return useMutation({
     mutationFn: ({ tokenId, mode }: { tokenId: string; mode: PushNotificationMode }) =>
       updateMyPushTokenMode(tokenId, mode),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['push-tokens', 'me'] });
+    },
+  });
+}
+
+export function useRemovePushTokenDevice() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (tokenId: string) => deleteMyPushTokenById(tokenId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['push-tokens', 'me'] });
     },
