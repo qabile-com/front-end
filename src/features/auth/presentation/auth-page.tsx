@@ -36,8 +36,8 @@ export function AuthPage() {
     return params.get('ref') ?? params.get('referralCode') ?? '';
   });
   const { stats } = useLandingPublicData(landingPublicRepo);
-  const totalMembers = stats.data?.totalMembers ?? 52000;
-  const rating = stats.data?.rating ?? 4.9;
+  const totalMembers = stats.data?.activeMembersCount ?? 52000;
+  const completedCourses = stats.data?.completedCoursesCount ?? 10000;
 
   const getRedirectTo = useCallback(() => {
     return getSafeRedirectPath(new URLSearchParams(window.location.search).get('next'), '/home');
@@ -106,7 +106,7 @@ export function AuthPage() {
                   ))
                 : [
                     { b: `${toPersianDigits(totalMembers)}+`, s: 'عضو فعال' },
-                    { b: `${rating} ★`, s: 'رضایت کاربران' },
+                    { b: `${toPersianDigits(completedCourses)}+`, s: 'دوره تکمیل‌شده' },
                     { b: 'رایگان', s: 'شروع بدون هزینه' },
                   ].map((t) => (
                     <MotionItem key={t.s} className="flex flex-col gap-0.75">

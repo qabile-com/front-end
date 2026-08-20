@@ -27,11 +27,7 @@ export function LandingPage() {
       <SiteNav />
       <main className="landing-page relative w-full overflow-x-clip">
         {/* Hero section receives dynamic stats and chips */}
-        <HeroSection
-          totalMembers={stats.data?.totalMembers}
-          rating={stats.data?.rating}
-          chips={userData?.chips}
-        />
+        <HeroSection totalMembers={stats.data?.activeMembersCount} chips={userData?.chips} />
 
         {/* Stats section - can show skeleton while loading */}
         <div className="py-14 md:py-20">
@@ -42,28 +38,33 @@ export function LandingPage() {
               stats={[
                 {
                   icon: 'users',
-                  count: 52000,
-                  suffix: ' هزار+',
+                  count: stats.data.activeMembersCount,
+                  suffix: '+',
                   label: 'عضو فعال قبیله',
-                },
-                { icon: 'book', count: 890, suffix: ' هزار', label: 'درس و دوره‌ی کامل‌شده' },
-                {
-                  icon: 'ai',
-                  count: 4.5,
-                  decimals: 1,
-                  suffix: ' میلیون',
-                  label: 'گفت‌وگو با منتور هوش مصنوعی',
                 },
                 {
                   icon: 'target',
-                  count: 98,
-                  decimals: 1,
-                  suffix: '٪',
-                  label: 'نرخ رضایت اعضا',
+                  count: stats.data.completedLessonsAndCoursesCount,
+                  suffix: '+',
+                  label: 'درس و دوره تکمیل‌شده',
+                },
+                {
+                  icon: 'episodes',
+                  count: stats.data.completedLessonsCount,
+                  suffix: '+',
+                  label: 'درس تکمیل‌شده',
+                },
+                {
+                  icon: 'book',
+                  count: stats.data.completedCoursesCount,
+                  suffix: '+',
+                  label: 'دوره تکمیل‌شده',
                 },
               ]}
-            /> // need to adjust: StatsSection expects array of StatItem, but we only have totalMembers/rating. I'll explain below.
-          ) : null}
+            />
+          ) : (
+            <div className="text-ink-3 text-center">داده‌ای موجود نیست</div>
+          )}
         </div>
 
         {/* Static sections */}

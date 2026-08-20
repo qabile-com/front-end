@@ -3,7 +3,12 @@ import { LEADERBOARD, PODIUM, TESTIMONIALS } from '../domain/landing.data';
 
 export class StaticLandingPublicRepository implements ILandingPublicRepository {
   async getStats() {
-    return { totalMembers: 52000, rating: 4.9 };
+    return {
+      activeMembersCount: 52000,
+      completedLessonsAndCoursesCount: 890000,
+      completedLessonsCount: 880000,
+      completedCoursesCount: 10000,
+    };
   }
 
   async getTestimonials() {

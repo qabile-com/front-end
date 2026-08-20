@@ -1,5 +1,5 @@
-import { StaticLandingPublicRepository } from './static-landing-public-repository';
+import { HttpLandingPublicRepository } from './http-landing-public-repository';
 import { HttpLandingUserRepository } from './http-landing-user-repository';
 
-export const landingPublicRepo = new StaticLandingPublicRepository();
+export const landingPublicRepo = new HttpLandingPublicRepository();
 export const landingUserRepo = new HttpLandingUserRepository();

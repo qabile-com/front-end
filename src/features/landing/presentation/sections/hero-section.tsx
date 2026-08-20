@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { Button, Container, Icon, OptionalImage, type IconName } from '@/shared/ui';
 import { toPersianDigits } from '@/core/lib/persian';
+import { APP_VERSION } from '@/core/config/app-version';
 import { AuthEntryLink } from '../components/auth-entry-link';
 
 const TRUST_AVATARS = [
@@ -21,11 +22,10 @@ const CHIP_POSITIONS = [
 
 interface HeroSectionProps {
   totalMembers?: number;
-  rating?: number;
   chips?: { icon: string; value: string; label: string }[] | null;
 }
 
-export function HeroSection({ totalMembers = 52000, rating = 4.9, chips }: HeroSectionProps) {
+export function HeroSection({ totalMembers = 52000, chips }: HeroSectionProps) {
   const imgRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
 
@@ -85,7 +85,7 @@ export function HeroSection({ totalMembers = 52000, rating = 4.9, chips }: HeroS
           <div>
             <span className="border-hair text-ink-2 mb-6 inline-flex items-center gap-2.25 rounded-full border py-1.5 ps-2 pe-3.5 text-[13px] font-semibold [backdrop-filter:blur(var(--glass-blur))] [background:var(--glass)]">
               <span className="rounded-full px-2.25 py-0.75 text-[10.5px] font-extrabold text-[#1a0a00] [background:var(--gold-grad)]">
-                نسخه ۲٫۰
+                نسخه {toPersianDigits(APP_VERSION)}
               </span>
               بیش از {toPersianDigits(totalMembers)}+ ققنوس در حال پرواز
             </span>
@@ -130,7 +130,6 @@ export function HeroSection({ totalMembers = 52000, rating = 4.9, chips }: HeroS
                 <p className="text-ink-2">
                   <b className="text-ink">{toPersianDigits(totalMembers)}+</b> عضو فعال قبیله
                 </p>
-                <p className="text-gold">★★★★★ امتیاز {rating} از ۵</p>
               </div>
             </div>
           </div>
