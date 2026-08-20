@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { motion } from 'framer-motion';
 import {
+  AuthorBadges,
   BaseModal,
   Button,
   ErrorState,
@@ -341,12 +342,24 @@ export function SocialTab({
                     {u.isAdam ? (
                       <AdamAvatar className="size-9" />
                     ) : (
-                      <UserAvatar name={u.name} avatar={u.avatar} className="size-9 text-xs" />
+                      <UserAvatar
+                        name={u.name}
+                        avatar={u.avatar}
+                        rebirthCount={u.rebirthCount}
+                        className="size-9 text-xs"
+                      />
                     )}
                     <span className="min-w-0 flex-1 leading-tight">
-                      <b className="group-hover:text-gold block truncate text-[13px] font-bold transition-colors">
-                        {u.name}
-                      </b>
+                      <span className="flex min-w-0 items-center gap-1">
+                        <b className="group-hover:text-gold block truncate text-[13px] font-bold transition-colors">
+                          {u.name}
+                        </b>
+                        <AuthorBadges
+                          verified={u.verified}
+                          rebirthCount={u.rebirthCount}
+                          className="flex shrink-0 items-center gap-1"
+                        />
+                      </span>
                       {formatUsername(u.username) && (
                         <small className="text-ink-4 block truncate text-[11px] font-bold">
                           {formatUsername(u.username)}
