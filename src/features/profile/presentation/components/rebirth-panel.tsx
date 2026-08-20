@@ -9,14 +9,16 @@ import { showError, showSuccess } from '@/shared/lib/toast';
 import type { IProfileRepository, RebirthResult } from '../../domain/profile-repository';
 import { usePerformRebirth, useRebirthStatus } from '../../application/use-profile-settings';
 
-const LOSS_ITEMS = [
-  'تمام آتش‌های موجود در حساب صفر می‌شود',
-  'همه دستاوردهای معمولی و مخفی پاک می‌شوند',
-  'تمام بج‌ها و مدال‌ها حذف می‌شوند',
-  'پیشرفت دوره‌ها و عادت‌ها ریست می‌شود',
+const LOSS_ROWS = [
+  { label: 'تمام آتش‌ها', description: 'تمام آتش موجود در حساب صفر می‌شود' },
+  { label: 'تمام دستاوردها', description: 'همه دستاوردهای معمولی و مخفی پاک می‌شوند' },
+  { label: 'تمام بج‌ها', description: 'تمام بج‌ها و مدال‌ها حذف می‌شوند' },
+  { label: 'پیشرفت‌ها', description: 'پیشرفت دوره‌ها و عادت‌ها ریست می‌شود' },
 ];
 
-const GAIN_ITEMS = ['تیک تأیید هویت به‌صورت دائمی روی پروفایل نمایش داده می‌شود'];
+const GAIN_ROWS = [
+  { label: 'تیک تأیید هویت', description: 'هویت به‌صورت دائمی روی پروفایل نمایش داده می‌شود' },
+];
 
 interface RebirthPanelProps {
   repo: IProfileRepository;
@@ -109,16 +111,20 @@ export function RebirthPanel({ repo }: RebirthPanelProps) {
         با فدا کردن پیشرفت فعلی‌ات، برای همیشه هویت تأییدشده دریافت می‌کنی.
       </p>
 
-      <div className="mt-5 rounded-2xl border border-[rgba(255,98,0,.18)] bg-[rgba(255,98,0,.06)] p-4">
-        <div className="flex items-center justify-between">
-          <span className="text-ink-2 text-[12.5px] font-bold">
-            هزینه تولد دوباره {status.nextRule ? `#${toPersianDigits(status.nextRule.rebirthNumber)}` : ''}
-          </span>
-          <span className="text-gold text-[14px] font-black">
-            {toPersianDigits(requiredXp)} آتش
-          </span>
-        </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/30">
+      <RebirthTable
+        title="هزینه ریبرث"
+        valueHeader="مقدار"
+        rows={[
+          {
+            label: `هزینه انجام ریبرث${status.nextRule ? ` (تولد دوباره #${toPersianDigits(status.nextRule.rebirthNumber)})` : ''}`,
+            description: `${toPersianDigits(requiredXp)} آتش`,
+          },
+        ]}
+        tone="gold"
+      />
+
+      <div className="mt-3 rounded-2xl border border-[rgba(255,98,0,.18)] bg-[rgba(255,98,0,.06)] p-4">
+        <div className="h-2 overflow-hidden rounded-full bg-black/30">
           <div
             className="h-full [background:var(--fire-grad)]"
             style={{ width: `${xpProgress}%` }}
@@ -134,15 +140,8 @@ export function RebirthPanel({ repo }: RebirthPanelProps) {
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <RebirthList
-          title="چیزی که از دست می‌دهی"
-          items={LOSS_ITEMS}
-          icon="trash"
-          tone="danger"
-        />
-        <RebirthList title="چیزی که به دست می‌آوری" items={GAIN_ITEMS} icon="shield" tone="gold" />
-      </div>
+      <RebirthTable title="چیزی که از دست می‌دهید" valueHeader="توضیح" rows={LOSS_ROWS} tone="danger" />
+      <RebirthTable title="چیزی که به دست می‌آورید" valueHeader="توضیح" rows={GAIN_ROWS} tone="gold" />
 
       <div className="border-danger/30 mt-4 rounded-xl border bg-[rgba(255,60,60,.06)] px-4 py-3">
         <p className="text-danger text-[12.5px] font-extrabold leading-6">
@@ -163,40 +162,40 @@ export function RebirthPanel({ repo }: RebirthPanelProps) {
   );
 }
 
-function RebirthList({
+function RebirthTable({
   title,
-  items,
-  icon,
+  valueHeader,
+  rows,
   tone,
 }: {
   title: string;
-  items: string[];
-  icon: 'trash' | 'shield';
+  valueHeader: string;
+  rows: { label: string; description: string }[];
   tone: 'danger' | 'gold';
 }) {
+  const toneText = tone === 'danger' ? 'text-danger' : 'text-gold';
+
   return (
-    <div
-      className={cn(
-        'rounded-2xl border p-4',
-        tone === 'danger'
-          ? 'border-danger/25 bg-[rgba(255,60,60,.05)]'
-          : 'border-[rgba(243,186,99,.24)] bg-[rgba(243,186,99,.06)]',
-      )}
-    >
-      <div className="flex items-center gap-2">
-        <Icon name={icon} size={15} className={tone === 'danger' ? 'text-danger' : 'text-gold'} />
-        <b className={cn('text-[12.5px] font-black', tone === 'danger' ? 'text-danger' : 'text-gold')}>
-          {title}
-        </b>
-      </div>
-      <ul className="text-ink-2 mt-3 space-y-2 text-[12px] leading-6">
-        {items.map((item) => (
-          <li key={item} className="flex items-start gap-1.5">
-            <span className={cn('mt-2 size-1 shrink-0 rounded-full', tone === 'danger' ? 'bg-danger' : 'bg-gold')} />
-            {item}
-          </li>
+    <div className="mt-5">
+      <h4 className={cn('mb-2 text-[13px] font-black', toneText)}>{title}</h4>
+      <div className="overflow-hidden rounded-xl border border-[rgba(255,98,0,.18)]">
+        <div className="flex [background:var(--fire-grad)]">
+          <div className="flex-[1.6] px-3 py-2 text-[11px] font-black text-[#1a0a00]">{valueHeader}</div>
+          <div className="flex-1 border-l border-black/15 px-3 py-2 text-[11px] font-black text-[#1a0a00]">
+            مورد
+          </div>
+        </div>
+        {rows.map((row, index) => (
+          <div key={row.label} className={cn('flex bg-black/30', index > 0 && 'border-t border-white/5')}>
+            <div className="flex-[1.6] px-3 py-2.5 text-[11.5px] leading-6 text-ink-2">
+              {row.description}
+            </div>
+            <div className={cn('flex-1 border-l border-white/5 px-3 py-2.5 text-[11.5px] font-bold', toneText)}>
+              {row.label}
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
