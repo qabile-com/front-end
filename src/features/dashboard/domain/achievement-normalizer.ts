@@ -1,4 +1,4 @@
-import type { Achievement, ActionRewardResult } from './dashboard.types';
+import type { Achievement, ActionRewardResult, StreakReward } from './dashboard.types';
 
 export type AchievementDto = Partial<Achievement> & {
   id?: string;
@@ -107,6 +107,39 @@ export function normalizeAchievementCollection(items?: AchievementDto[] | null):
   return normalizeAchievements(items);
 }
 
+// Different actions report the streak update under different shapes:
+// episode watch-progress already matches StreakReward ({increased, previous, current, ...}),
+// roadmap step completion uses {shouldShow, newStreak, previousStreak, freezeRemaining, ...}.
+function normalizeStreakReward(streakSource: unknown): StreakReward | null {
+  if (!streakSource || typeof streakSource !== 'object') return null;
+  const s = streakSource as Record<string, unknown>;
+
+  if (typeof s.newStreak === 'number') {
+    const previous = typeof s.previousStreak === 'number' ? s.previousStreak : 0;
+    return {
+      increased: Boolean(s.shouldShow ?? s.newStreak > previous),
+      previous,
+      current: s.newStreak,
+      freezeUsed: Boolean(s.freezeUsed),
+      freezesRemaining: typeof s.freezeRemaining === 'number' ? s.freezeRemaining : undefined,
+      reset: Boolean(s.reset),
+    };
+  }
+
+  if (typeof s.current === 'number') {
+    return {
+      increased: Boolean(s.increased),
+      previous: typeof s.previous === 'number' ? s.previous : 0,
+      current: s.current,
+      freezeUsed: Boolean(s.freezeUsed),
+      freezesRemaining: typeof s.freezesRemaining === 'number' ? s.freezesRemaining : undefined,
+      reset: Boolean(s.reset),
+    };
+  }
+
+  return null;
+}
+
 export function normalizeActionRewardResult(payload?: unknown): ActionRewardResult | null {
   if (!payload) return null;
 
@@ -118,8 +151,7 @@ export function normalizeActionRewardResult(payload?: unknown): ActionRewardResu
   const legacyAchievements = normalizeAchievements(reward.achievements ?? source.achievements);
   const achievements = unlockedAchievements.length ? unlockedAchievements : legacyAchievements;
   const xpGranted = reward.xpGranted ?? source.xpGranted;
-  const streakSource = reward.streak ?? source.streak;
-  const streak = typeof streakSource === 'object' ? streakSource : null;
+  const streak = normalizeStreakReward(reward.streak ?? source.streak);
 
   if (!xpGranted && !streak && achievements.length === 0) return null;
 

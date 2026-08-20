@@ -337,7 +337,7 @@ function SettingsMain({
         <span className="min-w-0 flex-1">
           <b className="text-ink block text-[13px] font-black">تولد دوباره و دریافت تیک تأیید هویت</b>
           <span className="text-ink-3 mt-1 block text-[11px] leading-5">
-            {profile.verified
+            {(profile.rebirthCount ?? 0) >= 1
               ? `سطح تولد دوباره فعلی: ${toPersianDigits(profile.rebirthCount ?? 0)}`
               : 'با فدا کردن پیشرفتت، هویت خود را برای همیشه تأیید کن'}
           </span>
