@@ -44,14 +44,20 @@ export function UserAvatar({
       style={!hasRebirthRing ? { background: fallbackBackground } : undefined}
     >
       {hasRebirthRing ? (
-        <span className="absolute inset-0 grid place-items-center rounded-full p-[2.5px] [background:var(--fire-grad)] shadow-[0_0_14px_2px_rgba(255,140,40,.65)]">
+        <>
+          {/* Rotating gradient stays a fixed circle - only the transform (GPU-cheap) animates,
+              the avatar content below never rotates. Skips animation under prefers-reduced-motion. */}
           <span
-            className="relative grid size-full place-items-center overflow-hidden rounded-full"
+            aria-hidden
+            className="absolute inset-0 rounded-full [background:var(--fire-grad)] shadow-[0_0_14px_2px_rgba(255,140,40,.65)] motion-safe:animate-[spin_7s_linear_infinite]"
+          />
+          <span
+            className="absolute inset-[2.5px] grid place-items-center overflow-hidden rounded-full"
             style={{ background: fallbackBackground }}
           >
             {avatarContent}
           </span>
-        </span>
+        </>
       ) : (
         avatarContent
       )}
