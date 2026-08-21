@@ -14,6 +14,7 @@ export type AchievementDto = Partial<Achievement> & {
   timesAchieved?: number;
   earnedCount?: number;
   shareable?: boolean;
+  categoryType?: string;
 };
 
 export type RewardPayload = Partial<ActionRewardResult> & {
@@ -100,6 +101,7 @@ export function normalizeAchievement(item: AchievementDto, fallbackIndex = 0): A
     unlocked: item.unlocked ?? true,
     count,
     isShareable: item.isShareable ?? item.shareable,
+    categoryType: item.categoryType,
   };
 }
 

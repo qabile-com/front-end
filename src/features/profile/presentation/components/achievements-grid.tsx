@@ -13,8 +13,7 @@ import {
 import {
   ACHIEVEMENT_CATEGORY_ORDER,
   ACHIEVEMENT_CATEGORY_TITLES,
-  getAchievementCategoryType,
-  type AchievementCategoryType,
+  isKnownAchievementCategory,
 } from '@/features/dashboard/domain/achievement-categories';
 import { getAchievementCount, getAchievementImage, isAchievementEarned } from './achievement-helpers';
 
@@ -70,7 +69,9 @@ function groupAchievementsByCategory(achievements: Achievement[]) {
   const grouped = new Map<string, Achievement[]>();
 
   for (const achievement of achievements) {
-    const key = getAchievementCategoryType(achievement.slug) ?? OTHER_CATEGORY;
+    const key = isKnownAchievementCategory(achievement.categoryType)
+      ? achievement.categoryType
+      : OTHER_CATEGORY;
     const items = grouped.get(key) ?? [];
     items.push(achievement);
     grouped.set(key, items);
@@ -81,10 +82,7 @@ function groupAchievementsByCategory(achievements: Achievement[]) {
   return orderedKeys
     .map((key) => ({
       key,
-      title:
-        key === OTHER_CATEGORY
-          ? OTHER_CATEGORY_TITLE
-          : ACHIEVEMENT_CATEGORY_TITLES[key as AchievementCategoryType],
+      title: key === OTHER_CATEGORY ? OTHER_CATEGORY_TITLE : ACHIEVEMENT_CATEGORY_TITLES[key],
       items: grouped.get(key) ?? [],
     }))
     .filter((category) => category.items.length > 0);

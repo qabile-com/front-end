@@ -80,6 +80,7 @@ export interface Achievement {
   count?: number;
   conditions?: AchievementCondition[];
   isShareable?: boolean;
+  categoryType?: string;
 }
 
 export interface AchievementCondition {
