@@ -77,16 +77,6 @@ export function LeaderboardSection({ podium, leaderboard }: LeaderboardSectionPr
         </Reveal>
 
         <Reveal as="div" delay={1}>
-          <div className="mb-4 flex items-center justify-between">
-            <span className="border-hair inline-flex items-center gap-2.25 rounded-full border px-3.25 py-[7px] text-[12.5px] font-bold [background:var(--glass-2)]">
-              <span className="grid size-5 place-items-center rounded-[6px] text-[#1a0a00] [background:var(--fire-grad)]">
-                <Icon name="trophy" size={12} />
-              </span>
-              لیگ ققنوس طلایی · فصل ۷
-            </span>
-            <span className="text-ink-3 text-[12.5px]">۶ روز تا پایان فصل</span>
-          </div>
-
           <div className="flex flex-col gap-2.5">
             {leaderboard.map((row) => (
               <div
