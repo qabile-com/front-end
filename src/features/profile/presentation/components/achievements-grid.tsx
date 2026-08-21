@@ -3,6 +3,7 @@
 import { OptionalImage } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
+import { publicEnv } from '@/core/config/public-env';
 import type { Achievement } from '@/features/dashboard/domain/dashboard.types';
 import {
   DEFAULT_ACHIEVEMENT_IMAGE,
@@ -21,7 +22,9 @@ export function AchievementsGrid({
   onAchievementClick,
   emptyMessage = 'هنوز دستاوردی برای نمایش نیست.',
 }: AchievementsGridProps) {
-  const achievements = allAchievements.filter(hasAchievementAssetImage);
+  const achievements = publicEnv.showAchievementFallbackImage
+    ? allAchievements
+    : allAchievements.filter(hasAchievementAssetImage);
 
   if (achievements.length === 0) {
     return (

@@ -17,9 +17,22 @@ function read(value: string | undefined, fallback: string): string {
   return (value ?? '').trim() || fallback;
 }
 
+function readBoolean(value: string | undefined, fallback: boolean): boolean {
+  const trimmed = (value ?? '').trim();
+  if (trimmed === 'true') return true;
+  if (trimmed === 'false') return false;
+  return fallback;
+}
+
 export const publicEnv = {
   apiBaseUrl: read(process.env.NEXT_PUBLIC_API_BASE_URL, DEFAULTS.apiBaseUrl),
   googleClientId: read(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID, DEFAULTS.googleClientId),
+  // Unset -> true in dev, false in prod/anywhere else, so achievements without a local
+  // image are hidden by default and only shown with a fallback image when opted in.
+  showAchievementFallbackImage: readBoolean(
+    process.env.NEXT_PUBLIC_SHOW_ACHIEVEMENT_FALLBACK_IMAGE,
+    process.env.NODE_ENV === 'development',
+  ),
 };
 
 export interface FirebaseMessagingConfig {
