@@ -4,7 +4,10 @@ import { OptionalImage } from '@/shared/ui';
 import { cn } from '@/core/lib/cn';
 import { toPersianDigits } from '@/core/lib/persian';
 import type { Achievement } from '@/features/dashboard/domain/dashboard.types';
-import { DEFAULT_ACHIEVEMENT_IMAGE } from '@/features/dashboard/domain/achievement-normalizer';
+import {
+  DEFAULT_ACHIEVEMENT_IMAGE,
+  hasAchievementAssetImage,
+} from '@/features/dashboard/domain/achievement-normalizer';
 import { getAchievementCount, getAchievementImage, isAchievementEarned } from './achievement-helpers';
 
 interface AchievementsGridProps {
@@ -14,10 +17,12 @@ interface AchievementsGridProps {
 }
 
 export function AchievementsGrid({
-  achievements,
+  achievements: allAchievements,
   onAchievementClick,
   emptyMessage = 'هنوز دستاوردی برای نمایش نیست.',
 }: AchievementsGridProps) {
+  const achievements = allAchievements.filter(hasAchievementAssetImage);
+
   if (achievements.length === 0) {
     return (
       <p className="text-ink-3 rounded-[16px] border border-[var(--color-hair)] bg-black/20 p-5 text-center text-sm">

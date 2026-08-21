@@ -77,6 +77,11 @@ export function getAchievementAssetUrl(achievement: Pick<Achievement, 'slug'>) {
   return asset ?? DEFAULT_ACHIEVEMENT_IMAGE;
 }
 
+export function hasAchievementAssetImage(achievement: Pick<Achievement, 'slug'>) {
+  const slug = achievement.slug?.trim();
+  return Boolean(slug && ACHIEVEMENT_IMAGE_BY_SLUG[slug]);
+}
+
 export interface WithActionReward<T> {
   data: T;
   reward?: ActionRewardResult | null;

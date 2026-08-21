@@ -223,7 +223,7 @@ export class HttpProfileRepository implements IProfileRepository {
   }
 
   async getMyAchievements(options?: { signal?: AbortSignal }): Promise<Achievement[]> {
-    const res = await getMyAchievements({ limit: 100 }, options);
+    const res = await getMyAchievements({ limit: -1 }, options);
     const payload = (res.data ?? {}) as { data?: unknown };
     const items = (Array.isArray(payload) ? payload : (payload.data ?? [])) as AchievementDto[];
     return normalizeAchievements(items);
