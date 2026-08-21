@@ -20,7 +20,7 @@ export class HttpLandingPublicRepository implements ILandingPublicRepository {
     const res = await getLandingData();
     const rows = res.data.data.leaderboard;
 
-    const podium: PodiumPlace[] = rows.slice(0, 3).map((row, index) => ({
+    const topThree = rows.slice(0, 3).map((row, index) => ({
       rank: row.rank,
       name: normalizeLandingName(row),
       score: row.xp,
@@ -28,6 +28,11 @@ export class HttpLandingPublicRepository implements ILandingPublicRepository {
       avatar: row.avatar ?? FALLBACK_AVATAR,
       tone: PODIUM_TONES[index] ?? 'bronze',
     }));
+    // Podium is a 3-col RTL grid, so DOM order maps to right/middle/left - reorder to
+    // [3rd, 1st, 2nd] so rank 1 lands in the middle, rank 2 on the left, rank 3 on the right.
+    const podium: PodiumPlace[] = [topThree[2], topThree[0], topThree[1]].filter(
+      (place): place is PodiumPlace => Boolean(place),
+    );
 
     const leaderboard: LeaderboardRow[] = rows.slice(3).map((row) => ({
       rank: row.rank,
